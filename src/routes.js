@@ -1,8 +1,7 @@
 import React from 'react'
+import LogBook from './views/Driver/logbook/LogBook'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
-const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
-const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 
 // Base
 const Accordion = React.lazy(() => import('./views/base/accordion/Accordion'))
@@ -20,6 +19,36 @@ const Spinners = React.lazy(() => import('./views/base/spinners/Spinners'))
 const Tabs = React.lazy(() => import('./views/base/tabs/Tabs'))
 const Tables = React.lazy(() => import('./views/base/tables/Tables'))
 const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
+
+// Drivers
+const Logbook = React.lazy(() => import('./views/Driver/logbook/LogBook.js'))
+const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
+const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
+
+// Supervisor
+const VehicleExpenses = React.lazy(
+  () => import('./views/Supervisor/vehicle-expenses/VehicleExpenses.js'),
+)
+const VehicleDriverBills = React.lazy(
+  () => import('./views/Supervisor/billing/VehicleDriverBills.js'),
+)
+const SubDetails = React.lazy(() => import('./views/Supervisor/sub-details/SubDetails.js'))
+
+// Expenses Management
+const PurchaseParts = React.lazy(
+  () => import('./views/Expenses-Management/purchase-parts/PurchacePartsBill.js'),
+)
+const DriverExpenses = React.lazy(
+  () => import('./views/Expenses-Management/driver-expenses/DriverExpensesBill.js'),
+)
+const VehicleExpensesBill = React.lazy(
+  () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.js'),
+)
+const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
+
+// Road Side Assistance
+const BreakDownAssis = React.lazy(() => import('./views/road-side-assistance/BreakDownAssis.js'))
+const RepairServices = React.lazy(() => import('./views/road-side-assistance/RepairServices.js'))
 
 // Buttons
 const Buttons = React.lazy(() => import('./views/buttons/buttons/Buttons'))
@@ -54,9 +83,6 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/theme', name: 'Theme', element: Colors, exact: true },
-  { path: '/theme/colors', name: 'Colors', element: Colors },
-  { path: '/theme/typography', name: 'Typography', element: Typography },
   { path: '/base', name: 'Base', element: Cards, exact: true },
   { path: '/base/accordion', name: 'Accordion', element: Accordion },
   { path: '/base/breadcrumbs', name: 'Breadcrumbs', element: Breadcrumbs },
@@ -97,6 +123,29 @@ const routes = [
   { path: '/notifications/modals', name: 'Modals', element: Modals },
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
+
+  /**DRIVER */
+
+  { path: '/logbook', name: 'Logbook', element: Logbook },
+  { path: '/cash', name: 'Cash', element: Cash },
+  { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
+
+  /**SUPERVISOR */
+
+  { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
+  { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
+  { path: '/SubDetails', name: 'Sub Details', element: SubDetails },
+
+  /**EXPENSES MANAGEMENT */
+
+  { path: '/PurchacePartsBill', name: 'Purchase Parts', element: PurchaseParts },
+  { path: '/DriverExpenseBill', name: 'Driver Expenses', element: DriverExpenses },
+  { path: '/VehicleExpensesBill', name: 'Vehicle Expenses', element: VehicleExpensesBill },
+  { path: '/Bills', name: 'Bills', element: Bills },
+
+  /**ROAD SIDE ASSISTANCE */
+  { path: '/BreakdownAssis', name: 'Road Side Assistance', element: BreakDownAssis },
+  { path: '/RepairServices', name: 'Repair Services', element: RepairServices },
 ]
 
 export default routes

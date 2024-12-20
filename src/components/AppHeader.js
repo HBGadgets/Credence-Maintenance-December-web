@@ -1,7 +1,7 @@
 // src/AppHeader.js
-import React, { useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useRef, useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
   CDropdown,
@@ -14,8 +14,8 @@ import {
   CNavLink,
   CNavItem,
   useColorModes,
-} from '@coreui/react';
-import CIcon from '@coreui/icons-react';
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
 import {
   cilBell,
   cilContrast,
@@ -24,21 +24,21 @@ import {
   cilMenu,
   cilMoon,
   cilSun,
-} from '@coreui/icons';
+} from '@coreui/icons'
 
 const AppHeader = () => {
-  const headerRef = useRef();
-  const { colorMode, setColorMode } = useColorModes();
+  const headerRef = useRef()
+  const { colorMode, setColorMode } = useColorModes()
 
-  const dispatch = useDispatch();
-  const sidebarShow = useSelector((state) => state.sidebarShow);
+  const dispatch = useDispatch()
+  const sidebarShow = useSelector((state) => state.sidebarShow)
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current &&
-        headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0);
-    });
-  }, []);
+        headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
+    })
+  }, [])
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
@@ -49,13 +49,13 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav className="d-none d-md-flex">
+        {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
             <CNavLink to="/dashboard" as={NavLink}>
               Dashboard
             </CNavLink>
           </CNavItem>
-        </CHeaderNav>
+        </CHeaderNav> */}
         <CHeaderNav className="ms-auto">
           <CNavItem>
             <CNavLink href="#">
@@ -119,7 +119,7 @@ const AppHeader = () => {
         {/* Breadcrumb component here */}
       </CContainer>
     </CHeader>
-  );
-};
+  )
+}
 
-export default AppHeader;
+export default AppHeader
