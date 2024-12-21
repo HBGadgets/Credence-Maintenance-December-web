@@ -14,13 +14,15 @@ import {
   cilStar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import { LayoutDashboard, UserRound, Handshake, ReceiptText } from 'lucide-react'
+import { MdOutlineSupervisorAccount } from 'react-icons/md'
 
 const _nav = [
   {
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+    icon: <LayoutDashboard />,
   },
   {
     component: CNavTitle,
@@ -32,7 +34,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Drivers',
     to: '/Drivers',
-    icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    icon: <UserRound />,
     items: [
       {
         component: CNavItem,
@@ -117,7 +119,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Supervisor',
     to: '/buttons',
-    icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+    icon: <MdOutlineSupervisorAccount size={30} />,
     items: [
       {
         component: CNavItem,
@@ -126,7 +128,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Bill of all Vehicles and Drivers',
+        name: 'Bill of all Vehicles & Drivers',
         to: '/VehicleDriverBills',
       },
       {
@@ -141,7 +143,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Expenses Management',
-    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    icon: <ReceiptText />,
     items: [
       {
         component: CNavItem,
@@ -190,7 +192,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Road Side Assistance',
-    icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
+    icon: <Handshake />,
     items: [
       {
         component: CNavItem,
