@@ -1,5 +1,5 @@
 // src/AppHeader.js
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -15,7 +15,7 @@ import {
   CNavItem,
   useColorModes,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
+import { CIcon } from '@coreui/icons-react'
 import {
   cilBell,
   cilContrast,
@@ -26,10 +26,12 @@ import {
   cilSun,
 } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
+import { User, Headset, LogOut } from 'lucide-react'
 
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes()
+  const [view, setView] = useState(false)
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -42,6 +44,10 @@ const AppHeader = () => {
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
   }, [])
+
+  const handleView = () => {
+    setView(!view)
+  }
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
@@ -59,14 +65,15 @@ const AppHeader = () => {
             </CNavLink>
           </CNavItem>
         </CHeaderNav> */}
-        <CHeaderNav className="ms-auto">
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilBell} size="lg" />
-            </CNavLink>
-          </CNavItem>
-        </CHeaderNav>
         <CHeaderNav>
+          <CDropdown>
+            <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
+              <CIcon icon={cilBell} size="lg" />
+            </CDropdownToggle>
+            <CDropdownMenu>
+              <CDropdownItem>Notification 1</CDropdownItem>
+            </CDropdownMenu>
+          </CDropdown>
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
@@ -113,9 +120,30 @@ const AppHeader = () => {
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
-          <CNavLink href="#">
-            <CIcon icon={cilList} size="lg" />
-          </CNavLink>
+          <CDropdown>
+            <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
+              <img
+                src="https://api.dicebear.com/9.x/initials/svg?seed=User Name"
+                alt="avatar"
+                className="rounded-circle"
+                style={{ width: '30px', height: '30px' }}
+              />
+            </CDropdownToggle>
+            <CDropdownMenu>
+              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+                {' '}
+                <User /> User Name
+              </CDropdownItem>
+              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+                {' '}
+                <Headset /> Help & Support
+              </CDropdownItem>
+              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+                {' '}
+                <LogOut /> Logout
+              </CDropdownItem>
+            </CDropdownMenu>
+          </CDropdown>
         </CHeaderNav>
       </CContainer>
       {/* <CContainer className="px-4" fluid>
