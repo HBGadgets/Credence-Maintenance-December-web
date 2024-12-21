@@ -50,6 +50,9 @@ const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses
 const BreakDownAssis = React.lazy(() => import('./views/road-side-assistance/BreakDownAssis.js'))
 const RepairServices = React.lazy(() => import('./views/road-side-assistance/RepairServices.js'))
 
+// Help and Support
+const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
+
 // Buttons
 const Buttons = React.lazy(() => import('./views/buttons/buttons/Buttons'))
 const ButtonGroups = React.lazy(() => import('./views/buttons/button-groups/ButtonGroups'))
@@ -146,6 +149,9 @@ const routes = [
   /**ROAD SIDE ASSISTANCE */
   { path: '/BreakdownAssis', name: 'Road Side Assistance', element: BreakDownAssis },
   { path: '/RepairServices', name: 'Repair Services', element: RepairServices },
+
+  /**HELP AND SUPPORT */
+  { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
 ]
 
 export default routes
