@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   CAvatar,
   CCard,
@@ -13,33 +13,46 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-} from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilCog, cilDollar, cilGridSlash, cilListRich, cilMap, cilPaintBucket, cilPeople, cilShieldAlt, cilSpeedometer, cilTruck, cilUser, cilWarning } from '@coreui/icons';
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import {
+  cilCog,
+  cilDollar,
+  cilGridSlash,
+  cilListRich,
+  cilMap,
+  cilPaintBucket,
+  cilPeople,
+  cilShieldAlt,
+  cilSpeedometer,
+  cilTruck,
+  cilUser,
+  cilWarning,
+} from '@coreui/icons'
 
-import avatar1 from 'src/assets/images/avatars/1.jpg';
-import avatar2 from 'src/assets/images/avatars/2.jpg';
+import avatar1 from 'src/assets/images/avatars/1.jpg'
+import avatar2 from 'src/assets/images/avatars/2.jpg'
 
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
-  const activeDrivers = 12;
-  const inactiveDrivers = 3;
-  const activeVehicles = 8;
-  const inactiveVehicles = 2;
-  const totalExpenses = 15340;
-  const underMaintenanceVehicles = 2;
-  const goodConditionVehicles = 6;
-  const presentDrivers = 10;
-  const absentDrivers = 5;
-  const currentLocation = 8;
-  const roadSide = 5;
+  const activeDrivers = 12
+  const inactiveDrivers = 3
+  const activeVehicles = 8
+  const inactiveVehicles = 2
+  const totalExpenses = 15340
+  const underMaintenanceVehicles = 2
+  const goodConditionVehicles = 6
+  const presentDrivers = 10
+  const absentDrivers = 5
+  const currentLocation = 8
+  const roadSide = 5
   const expiringInsurances = [
     { name: 'Vehicle A', insuranceExpiryDate: '2024-12-30' },
-    { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' }
-  ];
+    { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' },
+  ]
 
   // Calculate the count of expiring insurances
-  const expiringInsuranceCount = expiringInsurances.length;
+  const expiringInsuranceCount = expiringInsurances.length
 
   const tableData = [
     {
@@ -82,7 +95,7 @@ const Dashboard = () => {
       },
       status: 'Inactive',
     },
-  ];
+  ]
 
   return (
     <>
@@ -142,7 +155,9 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Total: ₹{totalExpenses.toLocaleString()}</h5>
-                <p className="text-muted">Total expenses for the fleet, including driver and vehicle costs</p>
+                <p className="text-muted">
+                  Total expenses for the fleet, including driver and vehicle costs
+                </p>
               </CCardBody>
             </CCard>
           </CCol>
@@ -156,7 +171,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">On Duty: {presentDrivers}</h5>
-                <p className="text-muted">Drivers currently on their work duties</p>
+                <p className="text-muted">All the Drivers who are currently on their work duties</p>
               </CCardBody>
             </CCard>
           </CCol>
@@ -170,7 +185,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-danger">Expiring Soon: {expiringInsuranceCount}</h5>
-                <p className="text-muted">Vehicles with insurance expiring soon</p>
+                <p className="text-muted"> All Vehicles with their insurance expiring soon</p>
               </CCardBody>
             </CCard>
           </CCol>
@@ -204,7 +219,6 @@ const Dashboard = () => {
           </CCol>
         </CRow>
       </CCardGroup>
-
 
       <CRow>
         <CCol xs>
@@ -252,7 +266,9 @@ const Dashboard = () => {
                         </div>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <span className={trip.status === 'Active' ? 'text-success' : 'text-warning'}>
+                        <span
+                          className={trip.status === 'Active' ? 'text-success' : 'text-warning'}
+                        >
                           {trip.status}
                         </span>
                       </CTableDataCell>
@@ -265,7 +281,7 @@ const Dashboard = () => {
         </CCol>
       </CRow>
     </>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard
