@@ -181,16 +181,10 @@ const Dashboard = () => {
   return (
     <>
       {/* <WidgetsDropdown className="mb-4" /> */}
-      <CCard className="md-5">
-        <DropdownComponent/>
-      </CCard >
-      <br/>
 
-        <GoogleMapComponent className="mb-5" />
+      {/* <CCard className="mb-5">
 
-      <CCard className="mb-5">
-   
-        {/* <CCardBody>
+        <CCardBody>
           <CRow>
             <CCol sm={5}>
               <h4 id="traffic" className="card-title mb-0">
@@ -241,17 +235,17 @@ const Dashboard = () => {
               </CCol>
             ))}
           </CRow>
-        </CCardFooter> */}
-   
-      </CCard>
+        </CCardFooter>
+
+      </CCard> */}
       <WidgetsBrand className="mb-5" withCharts />
- 
-      {/* <CRow>
+
+      <CRow>
         <CCol xs>
           <CCard className="mb-4">
-            <CCardHeader>Traffic {' & '} Sales</CCardHeader>
+            <CCardHeader>Drives {' & '} Vehicles Expenses</CCardHeader>
             <CCardBody>
-              <CRow>
+              {/* <CRow>
                 <CCol xs={12} md={6} xl={6}>
                   <CRow>
                     <CCol xs={6}>
@@ -333,7 +327,7 @@ const Dashboard = () => {
                 </CCol>
               </CRow>
 
-              <br />
+              <br /> */}
 
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
@@ -341,7 +335,7 @@ const Dashboard = () => {
                     <CTableHeaderCell className="bg-body-tertiary text-center">
                       <CIcon icon={cilPeople} />
                     </CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">User</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary">Drivers</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary text-center">
                       Country
                     </CTableHeaderCell>
@@ -391,7 +385,7 @@ const Dashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
-      </CRow> */}
+      </CRow>
     </>
   )
 }

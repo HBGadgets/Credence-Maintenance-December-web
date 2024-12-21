@@ -25,6 +25,7 @@ import {
   cilMoon,
   cilSun,
 } from '@coreui/icons'
+import { AppBreadcrumb } from './index'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -115,9 +116,9 @@ const AppHeader = () => {
           </CNavLink>
         </CHeaderNav>
       </CContainer>
-      <CContainer className="px-4" fluid>
-        {/* Breadcrumb component here */}
-      </CContainer>
+      {/* <CContainer className="px-4" fluid>
+        <AppBreadcrumb />
+      </CContainer> */}
     </CHeader>
   )
 }

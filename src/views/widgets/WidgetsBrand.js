@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { CWidgetStatsD, CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cibFacebook, cibLinkedin, cibTwitter, cilCalendar } from '@coreui/icons'
+import { cibFacebook, cibLinkedin, cibTwitter, cilCalendar, cilGarage, cilUser } from '@coreui/icons'
 import { CChart } from '@coreui/react-chartjs'
 
 const WidgetsBrand = (props) => {
@@ -60,13 +60,13 @@ const WidgetsBrand = (props) => {
               />
             ),
           })}
-          icon={<CIcon icon={cibFacebook} height={52} className="my-4 text-white" />}
+          icon={<CIcon icon={cilGarage} height={52} className="my-4 text-white" />}
           values={[
-            { title: 'friends', value: '89K' },
-            { title: 'feeds', value: '459' },
+            { title: 'Active Vehicle', value: '20' },
+            { title: 'Inactive Vehicle', value: '10' },
           ]}
           style={{
-            '--cui-card-cap-bg': '#3b5998',
+            '--cui-card-cap-bg': '#80ac47',
           }}
         />
       </CCol>
@@ -81,7 +81,7 @@ const WidgetsBrand = (props) => {
                   labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
                   datasets: [
                     {
-                      backgroundColor: 'rgba(255,255,255,.1)',
+                      backgroundColor: '#80ac47',
                       borderColor: 'rgba(255,255,255,.55)',
                       pointHoverBackgroundColor: '#fff',
                       borderWidth: 2,
@@ -94,10 +94,10 @@ const WidgetsBrand = (props) => {
               />
             ),
           })}
-          icon={<CIcon icon={cibTwitter} height={52} className="my-4 text-white" />}
+          icon={<CIcon icon={cilUser} height={52} className="my-4 text-white" />}
           values={[
-            { title: 'followers', value: '973k' },
-            { title: 'tweets', value: '1.792' },
+            { title: 'Active Driver', value: '15' },
+            { title: 'Inactive Driver', value: '5' },
           ]}
           style={{
             '--cui-card-cap-bg': '#00aced',

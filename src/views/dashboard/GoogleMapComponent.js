@@ -13,7 +13,7 @@ const center = {
   lng: -122.4194 // Longitude for San Francisco
 };
 
-const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+const apiKey = 'AIzaSyAvHHoPKPwRFui0undeEUrz00-8w6qFtik';
 
 const GoogleMapComponent = () => {
   return (
