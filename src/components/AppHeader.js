@@ -37,7 +37,6 @@ const AppHeader = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
 
-
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current &&
@@ -65,6 +64,8 @@ const AppHeader = () => {
             </CNavLink>
           </CNavItem>
         </CHeaderNav> */}
+
+        {/* NOTIFICATION */}
         <CHeaderNav>
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
@@ -77,6 +78,8 @@ const AppHeader = () => {
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
+
+          {/* THEME */}
           <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
@@ -120,6 +123,7 @@ const AppHeader = () => {
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
+          {/* USER PROFILE */}
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
               <img
@@ -130,18 +134,27 @@ const AppHeader = () => {
               />
             </CDropdownToggle>
             <CDropdownMenu>
-              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
-                {' '}
-                <User /> User Name
-              </CDropdownItem>
-              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+              <CNavItem>
+                <CDropdownItem className="d-flex align-items-center gap-4 disable">
+                  {' '}
+                  <User /> User Name
+                </CDropdownItem>
+              </CNavItem>
+              <CDropdownItem
+                className="d-flex align-items-center gap-4"
+                type="button"
+                to="/HelpAndSupport"
+                as={NavLink}
+              >
                 {' '}
                 <Headset /> Help & Support
               </CDropdownItem>
-              <CDropdownItem className="d-flex align-items-center gap-4" type="button">
-                {' '}
-                <LogOut /> Logout
-              </CDropdownItem>
+              <CNavItem>
+                <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+                  {' '}
+                  <LogOut /> Logout
+                </CDropdownItem>
+              </CNavItem>
             </CDropdownMenu>
           </CDropdown>
         </CHeaderNav>
