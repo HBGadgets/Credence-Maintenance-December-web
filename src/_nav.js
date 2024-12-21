@@ -22,7 +22,12 @@ const _nav = [
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
-    icon: <LayoutDashboard className="nav-icon" />,
+    icon: (
+      <LayoutDashboard
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
   },
   {
     component: CNavTitle,
@@ -34,7 +39,12 @@ const _nav = [
     component: CNavGroup,
     name: 'Drivers',
     to: '/Drivers',
-    icon: <UserRound className="nav-icon" />,
+    icon: (
+      <UserRound
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
     items: [
       {
         component: CNavItem,
@@ -119,7 +129,12 @@ const _nav = [
     component: CNavGroup,
     name: 'Supervisor',
     to: '/buttons',
-    icon: <MdOutlineSupervisorAccount size={30} className="nav-icon" />,
+    icon: (
+      <MdOutlineSupervisorAccount
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px' }}
+      />
+    ),
     items: [
       {
         component: CNavItem,
@@ -143,7 +158,12 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Expenses Management',
-    icon: <ReceiptText className="nav-icon" />,
+    icon: (
+      <ReceiptText
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
     items: [
       {
         component: CNavItem,
@@ -192,7 +212,12 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Road Side Assistance',
-    icon: <Handshake className="nav-icon" />,
+    icon: (
+      <Handshake
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
     items: [
       {
         component: CNavItem,
