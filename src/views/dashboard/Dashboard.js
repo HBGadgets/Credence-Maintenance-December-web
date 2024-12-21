@@ -19,6 +19,10 @@ import { cilCog, cilDollar, cilGridSlash, cilListRich, cilMap, cilPaintBucket, c
 
 import avatar1 from 'src/assets/images/avatars/1.jpg';
 import avatar2 from 'src/assets/images/avatars/2.jpg';
+import avatar3 from 'src/assets/images/avatars/3.jpg';
+import avatar4 from 'src/assets/images/avatars/4.jpg';
+import avatar5 from 'src/assets/images/avatars/5.jpg';
+import { MdOutlineCurrencyRupee } from 'react-icons/md';
 
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
@@ -66,6 +70,66 @@ const Dashboard = () => {
       driver: {
         name: 'Jane Smith',
         avatar: avatar2,
+        status: 'warning',
+      },
+      vehicle: {
+        model: 'Honda Civic',
+        plate: 'XYZ-789',
+      },
+      route: 'Raipur → Mumbai',
+      date: 'Mar 10, 2024',
+      duration: '5 hours',
+      totalExpense: 400,
+      expenses: {
+        driver: 130,
+        vehicle: 270,
+      },
+      status: 'Active',
+    },
+    {
+      driver: {
+        name: 'Stive Smith',
+        avatar: avatar3,
+        status: 'success',
+      },
+      vehicle: {
+        model: 'Honda Accord',
+        plate: 'XYZ-887',
+      },
+      route: 'Mumbai → Pune',
+      date: 'Aug 16, 2024',
+      duration: '5 hours',
+      totalExpense: 10000,
+      expenses: {
+        driver: 2500,
+        vehicle: 3700,
+      },
+      status: 'Inactive',
+    },
+    {
+      driver: {
+        name: 'Jane Smith',
+        avatar: avatar4,
+        status: 'warning',
+      },
+      vehicle: {
+        model: 'Honda Civic',
+        plate: 'XYZ-789',
+      },
+      route: 'Raipur → Mumbai',
+      date: 'Mar 10, 2024',
+      duration: '5 hours',
+      totalExpense: 400,
+      expenses: {
+        driver: 130,
+        vehicle: 270,
+      },
+      status: 'Active',
+    },
+    {
+      driver: {
+        name: 'Jane Smith',
+        avatar: avatar5,
         status: 'warning',
       },
       vehicle: {
@@ -137,7 +201,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilDollar} size="lg" />
+                <MdOutlineCurrencyRupee />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
