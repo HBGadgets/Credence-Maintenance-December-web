@@ -184,7 +184,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Current Location: {currentLocation} </h5>
-                <p className="text-muted">Real-time location of the vehicle</p>
+                <p className="text-muted">Real-time location of all the transports vehicles</p>
               </CCardBody>
             </CCard>
           </CCol>
@@ -198,7 +198,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Used Service: {roadSide}</h5>
-                <p className="text-muted">Total vehicles used this services</p>
+                <p className="text-muted">Total vehicles used this Roadside Assitance services</p>
               </CCardBody>
             </CCard>
           </CCol>
