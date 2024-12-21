@@ -24,6 +24,8 @@ import avatar4 from 'src/assets/images/avatars/4.jpg';
 import avatar5 from 'src/assets/images/avatars/5.jpg';
 import { MdOutlineCurrencyRupee } from 'react-icons/md';
 
+
+
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
   const activeDrivers = 12;
