@@ -27,6 +27,7 @@ import {
 } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
 import { User, Headset, LogOut } from 'lucide-react'
+import '../index.css'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -87,7 +88,7 @@ const AppHeader = () => {
               ) : colorMode === 'auto' ? (
                 <CIcon icon={cilContrast} size="lg" />
               ) : (
-                <CIcon icon={cilSun} size="lg" />
+                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" />
               )}
             </CDropdownToggle>
             <CDropdownMenu>
@@ -98,7 +99,7 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('light')}
               >
-                <CIcon className="me-2" icon={cilSun} size="lg" /> Light
+                <CIcon className="me-2 rotate-on-hover" icon={cilSun} size="lg" /> Light
               </CDropdownItem>
               <CDropdownItem
                 active={colorMode === 'dark'}
@@ -120,6 +121,7 @@ const AppHeader = () => {
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
+
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>

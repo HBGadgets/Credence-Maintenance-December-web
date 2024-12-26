@@ -47,7 +47,12 @@ const VehicleExpensesBill = React.lazy(
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
 
 // Road Side Assistance
-const BreakDownAssis = React.lazy(() => import('./views/road-side-assistance/BreakDownAssis.js'))
+const ExpenseSheet = React.lazy(
+  () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
+)
+const BudgetAllocation = React.lazy(
+  () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js'),
+)
 const RepairServices = React.lazy(() => import('./views/road-side-assistance/RepairServices.js'))
 
 // Help and Support
@@ -147,7 +152,8 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
 
   /**ROAD SIDE ASSISTANCE */
-  { path: '/BreakdownAssis', name: 'Road Side Assistance', element: BreakDownAssis },
+  { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
+  { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
   { path: '/RepairServices', name: 'Repair Services', element: RepairServices },
 
   /**HELP AND SUPPORT */
