@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react/prop-types */
 import React from 'react'
-import { useState } from 'react'
 import {
   CCard,
   CCardBody,
@@ -35,23 +34,29 @@ const Table = ({ columns, data, title, handleView }) => {
                       {column}
                     </CTableHeaderCell>
                   ))}
-                  <CTableHeaderCell className="text-center" scope="col">
-                    Actions
-                  </CTableHeaderCell>
+                  {handleView && (
+                    <CTableHeaderCell className="text-center" scope="col">
+                      Actions
+                    </CTableHeaderCell>
+                  )}
                 </CTableRow>
               </CTableHead>
               <CTableBody>
                 {data.map((row, rowIndex) => (
                   <CTableRow key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
+                    {Object.values(row).map((cell, cellIndex) => (
                       <CTableDataCell key={cellIndex} className="text-center">
                         {cell}
                       </CTableDataCell>
                     ))}
-                    {/* View button */}
-                    <CTableDataCell className="text-center">
-                      <Eye size={20} onClick={() => handleView()} role="button" />
-                    </CTableDataCell>
+                    {handleView && (
+                      <CTableDataCell className="text-center">
+                        <CButton color="primary" size="sm" onClick={() => handleView(row)}>
+                          <Eye className="me-1" size={16} />
+                          View
+                        </CButton>
+                      </CTableDataCell>
+                    )}
                   </CTableRow>
                 ))}
               </CTableBody>

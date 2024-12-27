@@ -24,7 +24,7 @@ import {
 } from '@coreui/react'
 import './index.css'
 
-const ExpenseSheet = ({ record, onSelectRecord }) => {
+const ExpenseSheet = ({ record, onSelectRecord, onFlyToLocation }) => {
   const columns = ['Date', 'Service Type', 'Cost', 'Location', 'Service Provider']
   return (
     <>
@@ -60,6 +60,7 @@ const ExpenseSheet = ({ record, onSelectRecord }) => {
                       <CTableDataCell className="text-center">
                         {record.serviceProvider}
                       </CTableDataCell>
+                      <CTableDataCell className="text-center"></CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
@@ -75,6 +76,7 @@ const ExpenseSheet = ({ record, onSelectRecord }) => {
 ExpenseSheet.propTypes = {
   record: ServiceRecord,
   onSelectRecord: PropTypes.func.isRequired,
+  onFlyToLocation: PropTypes.func.isRequired,
 }
 
 export default ExpenseSheet

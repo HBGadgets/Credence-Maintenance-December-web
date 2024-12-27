@@ -225,31 +225,14 @@ const _nav = [
       //   to: '/BreakdownAssis',
       // },
       {
-        component: CNavGroup,
-        name: 'Expense Sheet',
-        icon: (
-          <ReceiptText
-            className="nav-icon"
-            style={{
-              color: '#ec7426',
-              marginRight: '10px',
-              fill: 'none',
-              pointerEvents: 'none',
-            }}
-          />
-        ),
-        items: [
-          {
-            component: CNavItem,
-            name: 'Total Expenses',
-            to: '/TotalExpenses',
-          },
-          {
-            component: CNavItem,
-            name: 'Budget Allocation',
-            to: '/BudgetAllocation',
-          },
-        ],
+        component: CNavItem,
+        name: 'Total Expenses',
+        to: '/TotalExpenses',
+      },
+      {
+        component: CNavItem,
+        name: 'Budget Allocation',
+        to: '/BudgetAllocation',
       },
       {
         component: CNavItem,
@@ -258,6 +241,23 @@ const _nav = [
       },
     ],
   },
+
+  // {
+  //   component: CNavGroup,
+  //   name: 'Expense Sheet',
+  //   icon: (
+  //     <ReceiptText
+  //       className="nav-icon"
+  //       style={{
+  //         color: '#ec7426',
+  //         marginRight: '10px',
+  //         fill: 'none',
+  //         pointerEvents: 'none',
+  //       }}
+  //     />
+  //   ),
+  //   items: [],
+  // },
 
   // {
   //   component: CNavItem,

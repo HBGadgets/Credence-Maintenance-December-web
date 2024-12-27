@@ -23,6 +23,7 @@ import {
 } from '@coreui/react'
 import ExpenseSheet from './ExpenseSheet'
 import Budget from './Budget'
+import { serviceRecords, trip } from '../../data'
 
 const BudgetAllocation = () => {
   const title = 'Budget Allocation'
@@ -36,64 +37,20 @@ const BudgetAllocation = () => {
     'Percentage Spent (%)',
   ]
 
-  // Sample trip data
-  const sampleServiceRecords = [
-    {
-      id: '1',
-      driverId: 'D1',
-      vehicleId: 'V1',
-      serviceType: 'Tire Puncture',
-      cost: 500,
-      date: '2024-03-10',
-      location: {
-        lat: 19.076,
-        lng: 72.8777,
-        address: 'Mumbai, Maharashtra',
-      },
-      serviceProvider: 'Quick Fix Garage',
-      receiptImage: 'https://example.com/receipt1.jpg',
-    },
-    {
-      id: '2',
-      driverId: 'D1',
-      vehicleId: 'V1',
-      serviceType: 'Fuel Refill',
-      cost: 2000,
-      date: '2024-03-11',
-      location: {
-        lat: 18.5204,
-        lng: 73.8567,
-        address: 'Pune, Maharashtra',
-      },
-      serviceProvider: 'Highway Fuel Station',
-      receiptImage: 'https://example.com/receipt2.jpg',
-    },
-  ]
+  // Calculate budget details for the trip
+  const totalSpent = Math.min(
+    trip.serviceRecords.reduce((sum, record) => sum + record.cost, 0),
+    trip.allocatedBudget,
+  )
+  const remainingBudget = Math.max(trip.allocatedBudget - totalSpent, 0)
+  const spentPercentage = trip.allocatedBudget > 0 ? (totalSpent / trip.allocatedBudget) * 100 : 0
 
-  const sampleTrip = {
-    id: 'T1',
-    driverId: 'D1',
-    vehicleId: 'V1',
-    startLocation: 'Mumbai',
-    endLocation: 'Bangalore',
-    startDate: '2024-03-10',
-    endDate: '2024-03-15',
-    allocatedBudget: 10000,
-    serviceRecords: sampleServiceRecords,
-  }
-
-  // Derived data
-  const totalSpent = sampleTrip.serviceRecords.reduce((sum, record) => sum + record.cost, 0)
-  const remainingBudget = sampleTrip.allocatedBudget - totalSpent
-  const spentPercentage = (totalSpent / sampleTrip.allocatedBudget) * 100
-
-  // Sample budget data
   const budgetData = [
     {
-      driver: 'D1',
-      startDate: sampleTrip.startDate,
-      endDate: sampleTrip.endDate,
-      allocatedBudget: sampleTrip.allocatedBudget,
+      driver: trip.driverId,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      allocatedBudget: trip.allocatedBudget,
       spentBudget: totalSpent,
       remainingBudget: remainingBudget,
       percentageSpent: spentPercentage.toFixed(1),
@@ -120,12 +77,12 @@ const BudgetAllocation = () => {
 
   const handleFilterChange = (e) => {
     setFilter(e.target.value)
-    // Filter the data based on the "Driver" column (or any column you want)
+    // Filter the data based on the "Driver" column
     const filteredData = budgetData.filter((row) =>
       row.driver.toLowerCase().includes(e.target.value.toLowerCase()),
     )
     setData(filteredData)
-    setCurrentPage(1) // reset the current page to 1 when the filter changes
+    setCurrentPage(1) // Reset the current page to 1 when the filter changes
   }
 
   // Pagination logic
@@ -178,7 +135,9 @@ const BudgetAllocation = () => {
                     <CTableRow key={rowIndex}>
                       <CTableDataCell className="text-center">{row.driver}</CTableDataCell>
                       <CTableDataCell className="text-center">{row.startDate}</CTableDataCell>
-                      <CTableDataCell className="text-center">{row.endDate}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        {row.endDate ? row.endDate : 'Pending...'}
+                      </CTableDataCell>
                       <CTableDataCell className="text-center">{row.allocatedBudget}</CTableDataCell>
                       <CTableDataCell className="text-center">{row.spentBudget}</CTableDataCell>
                       <CTableDataCell className="text-center">{row.remainingBudget}</CTableDataCell>
@@ -192,6 +151,12 @@ const BudgetAllocation = () => {
                   ))}
                 </CTableBody>
               </CTable>
+              {/* No results message */}
+              {data.length === 0 && (
+                <div className="text-center text-muted">
+                  No results found for &quot;{filter}&quot;
+                </div>
+              )}
             </CCardBody>
           </CCard>
         </CCol>
@@ -199,11 +164,15 @@ const BudgetAllocation = () => {
 
       {/* Pagination */}
       <div className="d-flex justify-content-center">
-        <Pagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          handlePageChange={handlePageChange}
-        />
+        {totalPages >= 2 && (
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            handlePageChange={handlePageChange}
+            disablePrev={currentPage === 1}
+            disableNext={currentPage === totalPages}
+          />
+        )}
       </div>
 
       {/* Dialog box */}
@@ -212,8 +181,11 @@ const BudgetAllocation = () => {
           <CModalTitle>Expenses details for {selectedDriver?.driver}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <ExpenseSheet record={sampleServiceRecords} onSelectRecord={setSelectedRecord} />
-          <Budget trip={sampleTrip} />
+          {/* Expense Sheet */}
+          <ExpenseSheet record={serviceRecords} onSelectRecord={setSelectedRecord} />
+
+          {/* Trip Budget */}
+          <Budget trip={trip} />
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setOpen(false)}>
