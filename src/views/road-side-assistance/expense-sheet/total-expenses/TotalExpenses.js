@@ -15,7 +15,17 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
+  CButton,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
+import { debounce } from 'lodash'
+import { Plus } from 'lucide-react'
+import VehicleLog from '../../vehicle-logs/VehicleLog'
+import DriverLog from '../../driver-logs/DriverLog'
 
 const TotalExpenses = () => {
   const title = 'Total Expenses'
@@ -28,24 +38,30 @@ const TotalExpenses = () => {
     'Cost (₹)',
     'Service Provider',
   ]
-
   const initialData = serviceRecords
-
+  const [openDriverModal, setOpenDriverModal] = useState(false)
+  const [openVehicleModal, setOpenVehicleModal] = useState(false)
   const [data, setData] = useState(initialData)
+  const [selectedDriver, setSelectedDriver] = useState(null)
+  const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value)
-    // Filter the data based on the "Driver" & "Vehicle" column
+  // Logic for Filter
+  const debouncedFilterChange = debounce((value) => {
     const filteredData = initialData.filter(
       (row) =>
-        row.driverId.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        row.vehicleId.toLowerCase().includes(e.target.value.toLowerCase()),
+        row.driverId.toLowerCase().includes(value.toLowerCase()) ||
+        row.vehicleId.toLowerCase().includes(value.toLowerCase()),
     )
     setData(filteredData)
-    setCurrentPage(1) // reset the current page to 1 when the filter changes
+    setCurrentPage(1)
+  }, 300)
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value)
+    debouncedFilterChange(e.target.value)
   }
 
   // Pagination logic
@@ -59,20 +75,49 @@ const TotalExpenses = () => {
     }
   }
 
+  // table data
   const tableData = currentData.map((record) => ({
-    vehicleNo: record.vehicleId,
-    driver: record.driverId,
+    vehicleNo: (
+      <div className="d-flex align-items-center justify-content-center">
+        {record.vehicleId}
+        <Plus
+          className="ms-2 cursor-pointer"
+          onClick={() => handleClickOpenVehicle(record.vehicleId)}
+          size={16}
+          type="button"
+        />
+      </div>
+    ),
+    driver: (
+      <div className="d-flex align-items-center justify-content-center">
+        {record.driverId}
+        <Plus
+          className="ms-2 cursor-pointer"
+          onClick={() => handleClickOpenDriver(record.driverId)}
+          size={16}
+          type="button"
+        />
+      </div>
+    ),
     date: record.date,
     location: record.location.address,
     serviceType: record.serviceType,
-    cost: record.cost,
+    cost: `₹${record.cost.toLocaleString()}`,
     serviceProvider: record.serviceProvider,
   }))
 
-  const handleView = (row) => {
-    console.log('Viewing record:', row)
-    // Add logic to view detailed record
+  const handleClickOpenDriver = (driver) => {
+    setSelectedDriver(driver)
+    setOpenDriverModal(true)
   }
+
+  const handleClickOpenVehicle = (vehicle) => {
+    setSelectedVehicle(vehicle)
+    setOpenVehicleModal(true)
+  }
+
+  const handleCloseDriverModal = () => setOpenDriverModal(false)
+  const handleCloseVehicleModal = () => setOpenVehicleModal(false)
 
   return (
     <>
@@ -127,6 +172,50 @@ const TotalExpenses = () => {
           </CCard>
         </CCol>
       </CRow>
+
+      {/**DIALOG BOXES */}
+
+      {/* Dialog box for drivers */}
+      <CModal
+        alignment="center"
+        scrollable
+        visible={openDriverModal}
+        onClose={handleCloseDriverModal}
+        size="lg"
+      >
+        <CModalHeader closeButton>
+          <CModalTitle>Driver Information</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <DriverLog driverId={selectedDriver} />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleCloseDriverModal}>
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Dialog box for vehicles */}
+      <CModal
+        alignment="center"
+        scrollable
+        visible={openVehicleModal}
+        onClose={handleCloseVehicleModal}
+        fullscreen
+      >
+        <CModalHeader closeButton>
+          <CModalTitle>30 days logs for Vehicle: {selectedVehicle}</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <VehicleLog vehicleId={selectedVehicle} />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={handleCloseVehicleModal}>
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       {/* Pagination */}
       <div className="d-flex justify-content-center">

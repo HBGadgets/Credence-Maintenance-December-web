@@ -1,17 +1,22 @@
 /* eslint-disable prettier/prettier */
-import React, { useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { ServiceRecord } from '../../types'
+import React from 'react'
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { format } from 'date-fns'
 import './index.css'
+import { ServiceRecord } from '../../types'
 
 const ServiceMap = ({ serviceRecords }) => {
   const center = serviceRecords[0]?.location || { lat: 20.5937, lng: 78.9629 } // Default to India's center
-  console.log(serviceRecords[0]?.location)
+
+  // Extract the lat-lng pairs for the polyline
+  const polylinePositions = serviceRecords.map((record) => [
+    record.location.lat,
+    record.location.lng,
+  ])
 
   return (
-    <div className="rounded overflow-hidden" style={{ width: '800px', height: '400px' }}>
+    <div className="rounded-3 overflow-hidden" style={{ width: '800px', height: '400px' }}>
       <MapContainer center={[center.lat, center.lng]} zoom={7}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -19,7 +24,7 @@ const ServiceMap = ({ serviceRecords }) => {
         />
         {serviceRecords.map((record) => (
           <Marker key={record.id} position={[record.location.lat, record.location.lng]}>
-            <Popup>
+            <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent={false}>
               <div className="p-2">
                 <h3 className="fw-semibold">{record.serviceType}</h3>
                 <p>Cost: ₹{record.cost}</p>
@@ -27,9 +32,22 @@ const ServiceMap = ({ serviceRecords }) => {
                 <p>Provider: {record.serviceProvider}</p>
                 <p className="small text-muted">{record.location.address}</p>
               </div>
-            </Popup>
+            </Tooltip>
           </Marker>
         ))}
+        <Polyline
+          positions={polylinePositions}
+          color="blue"
+          weight={5}
+          dashArray="5, 10"
+          opacity={0.8}
+          arrowheads={{
+            size: '10px',
+            frequency: 'all',
+            fill: true,
+            fillColor: 'blue',
+          }}
+        />
       </MapContainer>
     </div>
   )
@@ -38,4 +56,5 @@ const ServiceMap = ({ serviceRecords }) => {
 ServiceMap.propTypes = {
   serviceRecords: ServiceRecord,
 }
+
 export default ServiceMap
