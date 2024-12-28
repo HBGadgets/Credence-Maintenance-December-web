@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
 
-const LogBook = () => {
+const DriversLogBook = () => {
   return (
     <>
       <h1>LogBook</h1>
@@ -9,4 +9,4 @@ const LogBook = () => {
   )
 }
 
-export default LogBook
+export default DriversLogBook

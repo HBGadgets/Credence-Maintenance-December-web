@@ -14,7 +14,7 @@ import {
   cilStar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, UserRound, Handshake, ReceiptText } from 'lucide-react'
+import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car } from 'lucide-react'
 import { MdOutlineSupervisorAccount } from 'react-icons/md'
 
 const _nav = [
@@ -34,6 +34,26 @@ const _nav = [
     name: 'Maintenance',
   },
 
+  // VEHICLE
+  {
+    component: CNavGroup,
+    name: 'Vehicle',
+    to: '/vehicle',
+    icon: (
+      <Car
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Log Book',
+        to: '/VehiclesLogBook',
+      },
+    ],
+  },
+
   // DRIVERS
   {
     component: CNavGroup,
@@ -49,7 +69,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Log Book',
-        to: '/LogBook',
+        to: '/DriversLogBook',
       },
       {
         component: CNavItem,

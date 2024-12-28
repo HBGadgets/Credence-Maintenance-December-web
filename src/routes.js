@@ -1,5 +1,4 @@
 import React from 'react'
-import LogBook from './views/Driver/logbook/LogBook'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
@@ -20,8 +19,10 @@ const Tabs = React.lazy(() => import('./views/base/tabs/Tabs'))
 const Tables = React.lazy(() => import('./views/base/tables/Tables'))
 const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 
+// Vehicle
+
 // Drivers
-const Logbook = React.lazy(() => import('./views/Driver/logbook/LogBook.js'))
+const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
 const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
 const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
 
@@ -132,9 +133,11 @@ const routes = [
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
 
+  /**VEHICLE */
+
   /**DRIVER */
 
-  { path: '/logbook', name: 'Logbook', element: Logbook },
+  { path: '/DriversLogBook', name: 'Logbook', element: DriversLogbook },
   { path: '/cash', name: 'Cash', element: Cash },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
 
