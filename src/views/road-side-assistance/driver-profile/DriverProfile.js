@@ -23,7 +23,7 @@ import {
 import PropTypes from 'prop-types'
 import { UserRound } from 'lucide-react'
 
-const DriverLog = ({ driverId }) => {
+const DriverProfile = ({ driverId }) => {
   return (
     <>
       <div
@@ -93,8 +93,8 @@ const DriverLog = ({ driverId }) => {
   )
 }
 
-DriverLog.propTypes = {
+DriverProfile.propTypes = {
   driverId: PropTypes.string.isRequired,
 }
 
-export default DriverLog
+export default DriverProfile

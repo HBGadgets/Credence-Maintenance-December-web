@@ -25,7 +25,7 @@ import {
 import { debounce } from 'lodash'
 import { Plus } from 'lucide-react'
 import VehicleLog from '../../vehicle-logs/VehicleLog'
-import DriverLog from '../../driver-logs/DriverLog'
+import DriverProfile from '../../driver-profile/DriverProfile'
 
 const TotalExpenses = () => {
   const title = 'Total Expenses'
@@ -187,7 +187,7 @@ const TotalExpenses = () => {
           <CModalTitle>Driver Information</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <DriverLog driverId={selectedDriver} />
+          <DriverProfile driverId={selectedDriver} />
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={handleCloseDriverModal}>
