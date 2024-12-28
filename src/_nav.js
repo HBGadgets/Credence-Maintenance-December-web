@@ -38,7 +38,7 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Vehicle',
-    to: '/vehicle',
+    to: '/Vehicle',
     icon: (
       <Car
         className="nav-icon"
@@ -48,8 +48,8 @@ const _nav = [
     items: [
       {
         component: CNavItem,
-        name: 'Log Book',
-        to: '/VehiclesLogBook',
+        name: 'Maintenance Log Book',
+        to: '/VehicleMaintenanceLogBook',
       },
     ],
   },
