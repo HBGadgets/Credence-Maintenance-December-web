@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
 export const MaintenanceRecord = {
   id: String,
-  dateOfService: String,
-  mileageOfService: Number,
+  serviceDate: String,
+  mileage: Number,
   workedPerformed: String,
-  serviceProvider: String,
-  cost: Number,
-  Notes: String,
+  performedBy: String,
+  cost: String,
+  notes: String,
 }
 
 export const Vehicle = {
