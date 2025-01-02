@@ -4,59 +4,82 @@ import DateRangeFilter from '../attendance/DateRangeFilter';
 import AttendanceStats from '../attendance/AttendanceStats';
 import LeaveRequests from '../attendance/LeaveRequests';
 import AttendanceTable from '../attendance/AttendanceTable';
-import { CCard, CCardBody, CCardHeader, CRow, CCol } from '@coreui/react';
+import { ChevronRight } from 'lucide-react';
+import { CButton, CCard, CCardBody, CCol, CModal, CModalBody, CModalHeader, CModalTitle, CRow } from '@coreui/react';
 
 const AttendanceSection = ({ driverId }) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [open, setOpen] = useState(false);
 
+    const handleOpen = () => {
+        setOpen(true);
+    }
     const filteredAttendance = attendance
-        .filter((a) => a.driverId === driverId)
-        .filter((a) => {
+        .filter(a => a.driverId === driverId)
+        .filter(a => {
             if (!startDate || !endDate) return true;
             const date = new Date(a.date);
             return date >= new Date(startDate) && date <= new Date(endDate);
         });
 
-    const handleApproveLeave = (id) => {
-        console.log('Approving leave:', id);
-    };
-
-    const handleDenyLeave = (id) => {
-        console.log('Denying leave:', id);
-    };
-
     return (
-        <CCard className="mb-4">
-            <CCardHeader>
-                <h2>Attendance</h2>
-            </CCardHeader>
-            <CCardBody>
-                <CRow>
-                    <CCol xs="12" sm="6" md="4">
-                        <DateRangeFilter
-                            startDate={startDate}
-                            endDate={endDate}
-                            onStartDateChange={setStartDate}
-                            onEndDateChange={setEndDate}
-                        />
-                    </CCol>
-                </CRow>
-                <AttendanceStats attendanceData={filteredAttendance} />
-                <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Leave Requests</h3>
+        <div>
+            <CCard>
+                <CCardBody>
+                    <CRow>
+                        <CCol xs="12" md="6" lg="4">
+                            <DateRangeFilter
+                                startDate={startDate}
+                                endDate={endDate}
+                                onStartDateChange={setStartDate}
+                                onEndDateChange={setEndDate}
+                            />
+                        </CCol>
+                    </CRow>
+
+                    <AttendanceStats attendanceData={filteredAttendance} />
                     <LeaveRequests
                         requests={filteredAttendance}
-                        onApprove={handleApproveLeave}
-                        onDeny={handleDenyLeave}
+                        onApprove={(id) => console.log('Approve:', id)}
+                        onDeny={(id) => console.log('Deny:', id)}
                     />
-                </div>
-                <div>
-                    <h3 className="text-lg font-semibold mb-4">Attendance Records</h3>
+
+                    <div className="mt-4">
+                        <CButton
+                            onClick={handleOpen}
+                            color="link"
+                            className="d-flex align-items-center text-primary"
+                        >
+                            View Full Attendance History
+                            <ChevronRight size={16} />
+                        </CButton>
+                    </div>
+                </CCardBody>
+            </CCard>
+
+            <CModal
+                alignment="center"
+                scrollable
+                visible={open}
+                onClose={() => setOpen(false)}
+                fullscreen
+            >
+                <CModalHeader>
+                    <CModalTitle>Full Attendance History</CModalTitle>
+                </CModalHeader>
+
+                <CModalBody className="d-flex flex-column gap-3">
+                    <DateRangeFilter
+                        startDate={startDate}
+                        endDate={endDate}
+                        onStartDateChange={setStartDate}
+                        onEndDateChange={setEndDate}
+                    />
                     <AttendanceTable attendanceData={filteredAttendance} />
-                </div>
-            </CCardBody>
-        </CCard>
+                </CModalBody>
+            </CModal>
+        </div>
     );
 };
 

@@ -130,8 +130,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
           onClose={() => setOpen(false)}
           fullscreen
         >
-          <CModalHeader closeButton />
-          <CModalTitle className="d-flex align-items-center"></CModalTitle>
+          <CModalHeader>
+            <CModalTitle className="d-flex align-items-center"><h5>Driver Profile</h5></CModalTitle>
+          </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
               <CImage
@@ -162,7 +163,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
             <hr />
 
             {/* Tabs */}
-            <CTabs activeItemKey={2}>
+            <CTabs activeItemKey={1}>
               <CTabList variant="underline">
                 <CTab aria-controls="attendance" itemKey={1}>
                   Attendances
