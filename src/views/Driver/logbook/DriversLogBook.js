@@ -252,9 +252,7 @@ const LogBook = () => {
 
       <div
         style={{
-          overflowX: 'auto',
-          backgroundColor: '#212631',
-          borderRadius: '10px',
+          borderRadius: '5px',
           marginBottom: showPagination ? '0' : '20px', // Add margin if pagination is disabled
         }}
       >
