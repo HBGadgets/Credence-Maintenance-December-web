@@ -27,7 +27,7 @@ const VehiclesMaintenanceLogbook = React.lazy(
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
-const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
+const Trips = React.lazy(() => import('./views/Driver/tripdetails/Trips.js'))
 const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
 
 // Supervisor
@@ -93,6 +93,9 @@ const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
+// DriverExperts
+const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -147,7 +150,7 @@ const routes = [
   /**DRIVER */
 
   { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
-  { path: '/cash', name: 'Cash', element: Cash },
+  { path: '/tripdetails', name: 'Trips', element: Trips },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
 
   /**SUPERVISOR */
@@ -170,6 +173,10 @@ const routes = [
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
+
+  //  /**DRIVER EXPERTS */
+  { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
+
 ]
 
 export default routes

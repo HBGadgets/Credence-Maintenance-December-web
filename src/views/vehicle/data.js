@@ -42,6 +42,14 @@ export const vehicles = [
         performedBy: 'Quick Tire Service',
         cost: 29.99,
       },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
     ],
   },
 ]

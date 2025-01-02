@@ -78,8 +78,8 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Cash',
-        to: '/Cash',
+        name: 'Trips',
+        to: '/tripdetails',
       },
       // {
       //   component: CNavItem,
@@ -279,12 +279,12 @@ const _nav = [
   //   items: [],
   // },
 
-  // {
-  //   component: CNavItem,
-  //   name: 'Road Side Assistance',
-  //   to: '/RoadSideAssistance',
-  //   icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
-  // },
+  {
+    component: CNavItem,
+    name: 'DriverExperts',
+    to: '/DriverExp',
+    icon: <CIcon icon={cilStar} customClassName="nav-icon" style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }} />,
+  },
   // {
   //   component: CNavGroup,
   //   name: 'Notifications',
