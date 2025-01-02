@@ -7,8 +7,10 @@ export const vehicles = [
     model: 'Camry',
     licenseNumber: 'ABC123',
     documents: [
-      { name: 'Insurance Policy', type: 'pdf', url: '#' },
-      { name: 'Registration', type: 'pdf', url: '#' },
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
     ],
     maintenanceLogs: [
       {
@@ -42,8 +44,10 @@ export const vehicles = [
     model: 'Civic',
     licenseNumber: 'XYZ789',
     documents: [
-      { name: 'Insurance Policy', type: 'pdf', url: '#' },
-      { name: 'Registration', type: 'pdf', url: '#' },
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
     ],
     maintenanceLogs: [
       {

@@ -19,7 +19,13 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
+import { CTab, CTabContent, CTabList, CTabPanel, CTabs } from '@coreui/react'
+import VehicleDocuments from './VehicleDocuments'
+import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
 function VehicleProfile({ open, setOpen, vehicle }) {
+  const handleClose = () => {
+    setOpen(false)
+  }
   return (
     <>
       <CModal
@@ -44,6 +50,9 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                 <span className="text-body-secondary">License Plate: {vehicle.licenseNumber}</span>
               </div>
             </div>
+            <hr />
+            {/**Documents */}
+            <VehicleDocuments document={vehicle.documents} />
             <hr />
             {/**Maintenance Schedule Remainder */}
             <div className="d-flex flex-column gap-3">
@@ -71,23 +80,38 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                 </div>
               </div>
             </div>
-            {/**Maintenance Log */}
-            <div>
-              <div>
-                <h5>Maintenance Log</h5>
-              </div>
-              <div></div>
-              {/* <div>
-              <VehicleMaintenanceModal
-                selectedVehicle={selectedVehicle}
-                handleDateFilter={handleDateFilter}
-                open={open}
-                setOpen={setOpen}
-                filteredLogs={filteredLogs}
-              />
-            </div> */}
-            </div>
+            <hr />
+            {/**Tabs */}
+            <CTabs activeItemKey={2}>
+              <CTabList variant="underline">
+                <CTab aria-controls="maintenance-log" itemKey={1}>
+                  Maintenance Log
+                </CTab>
+                <CTab aria-controls="vehicle-trip" itemKey={2}>
+                  Trip
+                </CTab>
+                <CTab aria-controls="vehicle-expenses" itemKey={3}>
+                  Expenses
+                </CTab>
+              </CTabList>
+              <CTabContent>
+                <CTabPanel className="p-3" aria-labelledby="maintenance-log" itemKey={1}>
+                  <VehicleMaintenanceLog logs={vehicle.maintenanceLogs} />
+                </CTabPanel>
+                <CTabPanel className="p-3" aria-labelledby="vehicle-trip" itemKey={2}>
+                  Profile tab content
+                </CTabPanel>
+                <CTabPanel className="p-3" aria-labelledby="vehicle-expenses" itemKey={3}>
+                  Contact tab content
+                </CTabPanel>
+              </CTabContent>
+            </CTabs>
           </div>
+          <CModalFooter>
+            <button onClick={() => handleClose()} className="btn btn-secondary">
+              close
+            </button>
+          </CModalFooter>
         </CModalBody>
       </CModal>
     </>
