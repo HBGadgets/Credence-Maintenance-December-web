@@ -11,14 +11,25 @@ import {
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import {
+  CCard,
+  CCardHeader,
+  CCol,
+  CRow,
   CTable,
   CTableBody,
-  CTableDataCell,
   CTableHead,
   CTableHeaderCell,
+  CTableDataCell,
   CTableRow,
+  CButton,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import signature from './Signature/signature.svg'
+import DateRangeFilter from './DateRangeFilter'
 
 const data = [
   {
@@ -28,13 +39,7 @@ const data = [
     LogKm: '76 km',
     GpsKm: '76km',
   },
-  {
-    Date: '10-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '86 km',
-    GpsKm: '96km',
-  },
+
   {
     Date: '11-12-24',
     Tripstart: '11-09-24 5:00 am',
@@ -42,41 +47,7 @@ const data = [
     LogKm: '46 km',
     GpsKm: '76km',
   },
-  {
-    Date: '12-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '36 km',
-    GpsKm: '70km',
-  },
-  {
-    Date: '13-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '86 km',
-    GpsKm: '100km',
-  },
-  {
-    Date: '14-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '98 km',
-    GpsKm: '100km',
-  },
-  {
-    Date: '14-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '98 km',
-    GpsKm: '100km',
-  },
-  {
-    Date: '14-12-24',
-    Tripstart: '11-09-24 5:00 am',
-    TripEnd: '12-09-2024 8:00 pm',
-    LogKm: '98 km',
-    GpsKm: '100km',
-  },
+
   {
     Date: '14-12-24',
     Tripstart: '11-09-24 5:00 am',
@@ -184,20 +155,33 @@ const LogBook = () => {
   const [selectedImage, setSelectedImage] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const recordsPerPage = 10
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
 
   const handleSearchIconClick = () => {
     setShowSearch(!showSearch)
     if (!showSearch) setSearchQuery('')
   }
+  const handleDateFilter = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
+  }
 
   // Filter data based on search query
   const filteredData = data.filter((item) => {
+    const itemDate = new Date(item.Date.split('-').reverse().join('-'))
     const searchLower = searchQuery.toLowerCase()
-    return (
+
+    // Check if the search query matches any of the fields
+    const isMatch =
       item.Date.toLowerCase().includes(searchLower) ||
       item.Tripstart.toLowerCase().includes(searchLower) ||
       item.TripEnd.toLowerCase().includes(searchLower)
-    )
+
+    // Check if the item date is within the selected date range
+    const isWithinDateRange =
+      (!dateRange.startDate || itemDate >= new Date(dateRange.startDate)) &&
+      (!dateRange.endDate || itemDate <= new Date(dateRange.endDate))
+
+    return isMatch && isWithinDateRange
   })
 
   const npage = Math.ceil(filteredData.length / recordsPerPage)
@@ -229,6 +213,9 @@ const LogBook = () => {
     setCurrentPage(id)
   }
 
+  // Conditional pagination logic
+  const showPagination = filteredData.length > recordsPerPage
+
   return (
     <div>
       <div
@@ -239,9 +226,10 @@ const LogBook = () => {
           paddingBottom: '10px',
         }}
       >
-        <Typography variant="h4" gutterBottom>
-          Log Book
-        </Typography>
+        <div>
+          <DateRangeFilter onFilter={handleDateFilter} />
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {showSearch && (
             <InputBase
@@ -267,63 +255,81 @@ const LogBook = () => {
           overflowX: 'auto',
           backgroundColor: '#212631',
           borderRadius: '10px',
+          marginBottom: showPagination ? '0' : '20px', // Add margin if pagination is disabled
         }}
       >
-        <TableContainer component={Paper} style={{ width: '100%' }}>
-          <CTable align="middle" className="mb-0 border" hover responsive>
-            <CTableHead className="text-nowrap">
-              <CTableRow>
-                <CTableHeaderCell className="bg-body-tertiary text-center">Date</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">
-                  Trip Start
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">
-                  Trip End
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">Log Km</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">GPS Km</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">Sign</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {records.map((item, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell className="text-center">{item.Date}</CTableDataCell>
-                  <CTableDataCell className="text-center">{item.Tripstart}</CTableDataCell>
-                  <CTableDataCell className="text-center">{item.TripEnd}</CTableDataCell>
-                  <CTableDataCell className="text-center">{item.LogKm}</CTableDataCell>
-                  <CTableDataCell className="text-center">{item.GpsKm}</CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    <Button variant="text" onClick={() => handleOpenModal(signature)}>
-                      View Sign
-                    </Button>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </TableContainer>
-        <nav>
-          <ul className="pagination">
-            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={prePage} disabled={currentPage === 1}>
-                Prev
-              </button>
-            </li>
-            {numbers.map((n) => (
-              <li className={`page-item ${currentPage === n ? 'active' : ''}`} key={n}>
-                <button className="page-link" onClick={(e) => changeCPage(e, n)}>
-                  {n}
+        <CRow>
+          <CCol xs={12}>
+            <CCard className="mb-4">
+              <CCardHeader>
+                <strong>Vehicle Maintenance Log</strong>
+              </CCardHeader>
+              {/* <TableContainer component={Paper} style={{ width: '100%' }}> */}
+              {filteredData.length === 0 ? (
+                <p className="text-center">No logs found for the selected date range.</p>
+              ) : (
+                <CTable align="middle" className="mb-0 border" hover responsive>
+                  <CTableHead>
+                    <CTableRow scope="col">
+                      <CTableHeaderCell className="text-center">Date</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Tripstart </CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">TripEnd</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">LogKm</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">GpsKm</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Sign</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {records.map((item, index) => (
+                      <CTableRow key={index}>
+                        <CTableDataCell className="text-center">{item.Date}</CTableDataCell>
+                        <CTableDataCell className="text-center">{item.Tripstart}</CTableDataCell>
+                        <CTableDataCell className="text-center">{item.TripEnd}</CTableDataCell>
+                        <CTableDataCell className="text-center">{item.LogKm}</CTableDataCell>
+                        <CTableDataCell className="text-center">{item.GpsKm}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <Button variant="text" onClick={() => handleOpenModal(signature)}>
+                            View Sign
+                          </Button>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              )}
+            </CCard>
+          </CCol>
+        </CRow>
+
+        {showPagination && (
+          <nav
+            style={{
+              marginTop: '20px',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <ul className="pagination">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={prePage} disabled={currentPage === 1}>
+                  Prev
                 </button>
               </li>
-            ))}
-            <li className={`page-item ${currentPage === npage ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={nextPage} disabled={currentPage === npage}>
-                Next
-              </button>
-            </li>
-          </ul>
-        </nav>
+              {numbers.map((n) => (
+                <li className={`page-item ${currentPage === n ? 'active' : ''}`} key={n}>
+                  <button className="page-link" onClick={(e) => changeCPage(e, n)}>
+                    {n}
+                  </button>
+                </li>
+              ))}
+              <li className={`page-item ${currentPage === npage ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={nextPage} disabled={currentPage === npage}>
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        )}
       </div>
 
       {/* Modal for Image */}

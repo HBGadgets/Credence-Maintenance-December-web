@@ -213,7 +213,7 @@ const VehicleTable = ({ vehicles }) => {
 VehicleTable.propTypes = {
   vehicles: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number.isRequired,
+      id: PropTypes.string.isRequired,
       make: PropTypes.string.isRequired,
       year: PropTypes.number.isRequired,
       model: PropTypes.string.isRequired,

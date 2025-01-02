@@ -32,8 +32,9 @@ const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
-const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
+const Trips = React.lazy(() => import('./views/Driver/tripdetails/Trips.js'))
 const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
+const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
 
 // Supervisor
 const VehicleExpenses = React.lazy(
@@ -98,6 +99,9 @@ const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
+// DriverExperts
+const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -152,9 +156,12 @@ const routes = [
   { path: '/VehicleProfile', name: 'Vehicle Profile', element: VehicleProfile },
   // { path: '/Vehicle-Maintenance-Modal', element: VehicleMaintenanceModal },
 
-  /**DRIVER */ { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
+  /**DRIVER */
+
+  { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
   { path: '/cash', name: 'Cash', element: Cash },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
+  { path: '/Trips', name: 'Trips', element: Trips },
 
   /**SUPERVISOR */
 
@@ -176,6 +183,10 @@ const routes = [
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
+
+  //  /**DRIVER EXPERTS */
+  { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
+
 ]
 
 export default routes
