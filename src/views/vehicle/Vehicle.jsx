@@ -4,9 +4,7 @@ import VehicleList from '../../components/VehicleList'
 function Vehicle() {
   return (
     <>
-      <div>
-        <VehicleList />
-      </div>
+      <VehicleList />
     </>
   )
 }

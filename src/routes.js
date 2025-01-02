@@ -21,13 +21,6 @@ const Tables = React.lazy(() => import('./views/base/tables/Tables'))
 const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 
 // Vehicle
-const VehiclesMaintenanceLogbook = React.lazy(
-  () => import('./views/vehicle/vehicle-Maintenance-Log/VehicleMaintenanceLogs.js'),
-)
-const VehicleProfile = React.lazy(() => import('./views/vehicle/vehicle-profile/VehicleProfile.js'))
-const VehicleMaintenanceModal = React.lazy(
-  () => import('./views/vehicle/vehicle-Maintenance-Log/VehicleMaintenanceModal.js'),
-)
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 
 // Drivers
@@ -64,7 +57,6 @@ const ExpenseSheet = React.lazy(
 const BudgetAllocation = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js'),
 )
-const RepairServices = React.lazy(() => import('./views/road-side-assistance/RepairServices.js'))
 
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
@@ -148,13 +140,6 @@ const routes = [
 
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
-  {
-    path: '/VehicleMaintenanceLogBook',
-    name: 'Vehicle Logbook',
-    element: VehiclesMaintenanceLogbook,
-  },
-  { path: '/VehicleProfile', name: 'Vehicle Profile', element: VehicleProfile },
-  // { path: '/Vehicle-Maintenance-Modal', element: VehicleMaintenanceModal },
 
   /**DRIVER */
 
@@ -179,14 +164,12 @@ const routes = [
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
   { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
-  { path: '/RepairServices', name: 'Repair Services', element: RepairServices },
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
 
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
-
 ]
 
 export default routes

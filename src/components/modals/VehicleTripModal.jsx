@@ -57,7 +57,7 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
                   <p className="text-center">No trips match the filter criteria.</p>
                 ) : (
                   <div className="table-responsive">
-                    <CTable>
+                    <CTable striped hover responsive bordered>
                       <CTableHead>
                         <CTableRow>
                           {columns.map((column, index) => (

@@ -67,7 +67,7 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
                   {filteredLogs.length === 0 ? (
                     <p className="text-center">No logs match the filter criteria.</p>
                   ) : (
-                    <CTable>
+                    <CTable striped hover responsive bordered>
                       <CTableHead>
                         <CTableRow>
                           {columns.map((column, index) => (

@@ -55,7 +55,7 @@ function VehicleMaintenanceLog({ logs }) {
               {logs.length === 0 ? (
                 <p className="text-center">No Logs to show.</p>
               ) : (
-                <CTable>
+                <CTable striped hover responsive bordered>
                   <CTableHead>
                     <CTableRow>
                       {columns.map((column, index) => (
@@ -86,7 +86,7 @@ function VehicleMaintenanceLog({ logs }) {
                 </CTable>
               )}
               <div className="d-flex justify-content-end">
-                <button className="btn btn-primary" onClick={handleClickView}>
+                <button type="button" className="btn btn-secondary" onClick={handleClickView}>
                   View More
                 </button>
               </div>

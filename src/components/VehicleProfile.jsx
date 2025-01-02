@@ -84,6 +84,7 @@ function VehicleProfile({ open, setOpen, vehicle }) {
               </CTabContent>
             </CTabs>
           </div>
+          {/** Modal Box */}
           <CModalFooter>
             <button onClick={() => handleClose()} className="btn btn-secondary">
               close

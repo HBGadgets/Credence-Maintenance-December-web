@@ -61,7 +61,7 @@ const VehicleList = () => {
               {vehicles.length === 0 ? (
                 <p className="text-center">No vehicles available.</p>
               ) : (
-                <CTable>
+                <CTable striped hover responsive bordered>
                   <CTableHead>
                     <CTableRow>
                       {columns.map((column, index) => (
