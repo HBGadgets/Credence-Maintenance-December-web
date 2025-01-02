@@ -34,6 +34,7 @@ const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
 const Trips = React.lazy(() => import('./views/Driver/tripdetails/Trips.js'))
 const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
+const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
 
 // Supervisor
 const VehicleExpenses = React.lazy(
@@ -160,6 +161,7 @@ const routes = [
   { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
   { path: '/cash', name: 'Cash', element: Cash },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
+  { path: '/Trips', name: 'Trips', element: Trips },
 
   /**SUPERVISOR */
 
