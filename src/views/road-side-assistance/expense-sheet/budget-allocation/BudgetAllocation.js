@@ -117,7 +117,7 @@ const BudgetAllocation = () => {
               <strong>{title}</strong>
             </CCardHeader>
             <CCardBody>
-              <CTable>
+              <CTable striped hover responsive bordered>
                 <CTableHead>
                   <CTableRow>
                     {columns.map((column, index) => (

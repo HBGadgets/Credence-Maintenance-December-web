@@ -78,7 +78,9 @@ const Budget = ({ trip }) => {
                 <ServiceMap serviceRecords={trip.serviceRecords || []} />
               </div>
               <div className="mb-4 mt-5">
-                <h3 className="h4 mb-3">Trip Details</h3>
+                <h3 className="h4 mb-3" style={{ fontWeight: '700' }}>
+                  Trip Details
+                </h3>
                 <div className="row">
                   <div className="col-6">
                     <p className="text-muted small mb-1">From</p>

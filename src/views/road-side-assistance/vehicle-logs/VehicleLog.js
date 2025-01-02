@@ -52,7 +52,7 @@ const VehicleLog = ({ vehicleId }) => {
             <strong>Logs</strong>
           </CCardHeader>
           <CCardBody>
-            <CTable>
+            <CTable striped hover responsive bordered>
               <CTableHead>
                 <CTableRow>
                   {columns.map((column, index) => (

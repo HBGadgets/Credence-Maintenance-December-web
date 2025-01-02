@@ -15,12 +15,6 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-  CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
 } from '@coreui/react'
 import './index.css'
 
@@ -36,7 +30,7 @@ const ExpenseSheet = ({ record, onSelectRecord, onFlyToLocation }) => {
               <strong>Total Expense Sheet</strong>
             </CCardHeader>
             <CCardBody>
-              <CTable className="table-hover">
+              <CTable striped hover responsive bordered>
                 <CTableHead>
                   <CTableRow>
                     {columns.map((column, index) => (
