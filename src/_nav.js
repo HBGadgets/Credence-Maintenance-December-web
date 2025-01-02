@@ -48,10 +48,26 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Vehicle Profile',
+        to: '/VehicleProfile',
+      },
+      {
+        component: CNavItem,
         name: 'Maintenance Log Book',
         to: '/VehicleMaintenanceLogBook',
       },
     ],
+  },
+  {
+    component: CNavItem,
+    name: 'Vehicle',
+    to: '/Vehicle',
+    icon: (
+      <Car
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
   },
 
   // DRIVERS
