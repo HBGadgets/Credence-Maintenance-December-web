@@ -21,7 +21,7 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import PropTypes from 'prop-types'
-import DateRangeFilter from './DateRangeFilter'
+import VehicleMaintenanceModal from './VehicleMaintenanceModal'
 
 const VehicleTable = ({ vehicles }) => {
   const columns = ['Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']
@@ -70,7 +70,7 @@ const VehicleTable = ({ vehicles }) => {
               ) : (
                 <CTable>
                   <CTableHead>
-                    <CTableRow>
+                    <CTableRow scope="col">
                       {columns.map((column, index) => (
                         <CTableHeaderCell key={index} className="text-center" scope="col">
                           {column}
@@ -102,7 +102,18 @@ const VehicleTable = ({ vehicles }) => {
       </CRow>
 
       {/** DIALOG BOX */}
+
       {selectedVehicle && (
+        <VehicleMaintenanceModal
+          selectedVehicle={selectedVehicle}
+          handleDateFilter={handleDateFilter}
+          open={open}
+          setOpen={setOpen}
+          filteredLogs={filteredLogs}
+        />
+      )}
+
+      {/* {selectedVehicle && (
         <CModal
           alignment="center"
           scrollable
@@ -183,7 +194,7 @@ const VehicleTable = ({ vehicles }) => {
             </CButton>
           </CModalFooter>
         </CModal>
-      )}
+      )} */}
 
       {/* Pagination */}
       <div className="d-flex justify-content-center">

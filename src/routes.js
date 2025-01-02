@@ -24,6 +24,11 @@ const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 const VehiclesMaintenanceLogbook = React.lazy(
   () => import('./views/vehicle/vehicle-Maintenance-Log/VehicleMaintenanceLogs.js'),
 )
+const VehicleProfile = React.lazy(() => import('./views/vehicle/vehicle-profile/VehicleProfile.js'))
+const VehicleMaintenanceModal = React.lazy(
+  () => import('./views/vehicle/vehicle-Maintenance-Log/VehicleMaintenanceModal.js'),
+)
+const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
@@ -138,15 +143,16 @@ const routes = [
   { path: '/widgets', name: 'Widgets', element: Widgets },
 
   /**VEHICLE */
+  { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
   {
     path: '/VehicleMaintenanceLogBook',
     name: 'Vehicle Logbook',
     element: VehiclesMaintenanceLogbook,
   },
+  { path: '/VehicleProfile', name: 'Vehicle Profile', element: VehicleProfile },
+  // { path: '/Vehicle-Maintenance-Modal', element: VehicleMaintenanceModal },
 
-  /**DRIVER */
-
-  { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
+  /**DRIVER */ { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
   { path: '/cash', name: 'Cash', element: Cash },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
 

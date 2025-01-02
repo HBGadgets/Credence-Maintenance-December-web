@@ -6,6 +6,10 @@ export const vehicles = [
     year: 2020,
     model: 'Camry',
     licenseNumber: 'ABC123',
+    documents: [
+      { name: 'Insurance Policy', type: 'pdf', url: '#' },
+      { name: 'Registration', type: 'pdf', url: '#' },
+    ],
     maintenanceLogs: [
       {
         id: 'M001',
@@ -26,6 +30,10 @@ export const vehicles = [
         invoiceUrl: 'https://example.com/invoice/M002',
       },
     ],
+    trips: [
+      { date: '2024-02-10', destination: 'New York', distance: '300 miles' },
+      { date: '2024-02-05', destination: 'Boston', distance: '250 miles' },
+    ],
   },
   {
     id: 'V002',
@@ -33,6 +41,10 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    documents: [
+      { name: 'Insurance Policy', type: 'pdf', url: '#' },
+      { name: 'Registration', type: 'pdf', url: '#' },
+    ],
     maintenanceLogs: [
       {
         id: 'M003',
@@ -42,6 +54,10 @@ export const vehicles = [
         performedBy: 'Quick Tire Service',
         cost: 29.99,
       },
+    ],
+    trips: [
+      { date: '2024-02-10', destination: 'New York', distance: '300 miles' },
+      { date: '2024-02-05', destination: 'Boston', distance: '250 miles' },
     ],
   },
 ]
