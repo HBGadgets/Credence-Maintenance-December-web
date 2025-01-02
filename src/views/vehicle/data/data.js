@@ -33,8 +33,58 @@ export const vehicles = [
       },
     ],
     trips: [
-      { date: '2024-02-10', destination: 'New York', distance: '300 miles' },
-      { date: '2024-02-05', destination: 'Boston', distance: '250 miles' },
+      {
+        tripId: 'trip-001',
+        driver: 'D1',
+        startLocation: 'Mumbai',
+        endLocation: 'Pune',
+        startDate: '2024-02-10',
+        endDate: '2024-02-10',
+        distance: 150, // miles
+        duration: 2, // hours
+        totalCost: 1000, // in currency units
+        vehicle: 'MH12-XY1234',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Delhi',
+        endLocation: 'Jaipur',
+        startDate: '2024-02-12',
+        endDate: '2024-02-12',
+        distance: 170, // miles
+        duration: 3, // hours
+        totalCost: 1500, // in currency units
+        vehicle: 'DL01-AB5678',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-003',
+        driver: 'D1',
+        startLocation: 'Bangalore',
+        endLocation: 'Mysore',
+        startDate: '2024-02-15',
+        endDate: '2024-02-15',
+        distance: 90, // miles
+        duration: 1.5, // hours
+        totalCost: 800, // in currency units
+        vehicle: 'KA03-CD9012',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-004',
+        driver: 'D3',
+        startLocation: 'Chennai',
+        endLocation: 'Coimbatore',
+        startDate: '2024-02-18',
+        endDate: '2024-02-18',
+        distance: 310, // miles
+        duration: 5, // hours
+        totalCost: 2500, // in currency units
+        vehicle: 'TN10-EF3456',
+        status: 'in-progress',
+      },
     ],
   },
   {
@@ -60,8 +110,32 @@ export const vehicles = [
       },
     ],
     trips: [
-      { date: '2024-02-10', destination: 'New York', distance: '300 miles' },
-      { date: '2024-02-05', destination: 'Boston', distance: '250 miles' },
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
     ],
   },
 ]

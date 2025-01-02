@@ -8,8 +8,18 @@ const DateRangeFilter = ({ onFilter }) => {
 
   const handleFilter = () => {
     if (startDate && endDate) {
+      if (new Date(startDate) > new Date(endDate)) {
+        alert('End date must be greater than or equal to the start date.')
+        return
+      }
       onFilter(new Date(startDate), new Date(endDate))
     }
+  }
+
+  const handleClearFilter = () => {
+    setStartDate('')
+    setEndDate('')
+    onFilter(null, null)
   }
 
   return (
@@ -21,6 +31,7 @@ const DateRangeFilter = ({ onFilter }) => {
         <input
           type="date"
           id="startDate"
+          aria-label="Select start date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
           className="form-control"
@@ -33,14 +44,18 @@ const DateRangeFilter = ({ onFilter }) => {
         <input
           type="date"
           id="endDate"
+          aria-label="Select end date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           className="form-control"
         />
       </div>
-      <button onClick={handleFilter} className="btn btn-primary">
+      <button onClick={handleFilter} className="btn btn-primary btn-sm">
         Apply Filter
       </button>
+      {/* <button onClick={handleClearFilter} className="btn btn-secondary btn-sm">
+        Clear Filter
+      </button> */}
     </div>
   )
 }

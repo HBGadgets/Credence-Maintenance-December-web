@@ -1,27 +1,10 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CRow,
-  CTable,
-  CTableBody,
-  CTableHead,
-  CTableHeaderCell,
-  CTableDataCell,
-  CTableRow,
-  CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CTab, CTabContent, CTabList, CTabPanel, CTabs } from '@coreui/react'
 import VehicleDocuments from './VehicleDocuments'
 import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
+import VehicelTripInfo from './tabs/VehicleTripInfo'
 function VehicleProfile({ open, setOpen, vehicle }) {
   const handleClose = () => {
     setOpen(false)
@@ -90,19 +73,13 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                 <CTab aria-controls="vehicle-trip" itemKey={2}>
                   Trip
                 </CTab>
-                <CTab aria-controls="vehicle-expenses" itemKey={3}>
-                  Expenses
-                </CTab>
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="maintenance-log" itemKey={1}>
                   <VehicleMaintenanceLog logs={vehicle.maintenanceLogs} />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="vehicle-trip" itemKey={2}>
-                  Profile tab content
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="vehicle-expenses" itemKey={3}>
-                  Contact tab content
+                  <VehicelTripInfo trips={vehicle.trips} />
                 </CTabPanel>
               </CTabContent>
             </CTabs>

@@ -16,11 +16,6 @@ import {
   CTableDataCell,
   CTableRow,
   CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
 } from '@coreui/react'
 const VehicleList = () => {
   const columns = ['Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']

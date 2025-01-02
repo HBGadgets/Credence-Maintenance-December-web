@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
+import { useState } from 'react'
 import {
   CCard,
   CCardBody,
@@ -19,7 +20,11 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
+import VehicleMaintenanceLogModal from '../modals/VehicleMaintenanceLogModal'
 function VehicleMaintenanceLog({ logs }) {
+  const [showAllLogs, setShowAllLogs] = useState(false)
+  const [viewDoc, setViewDoc] = useState(false)
+
   const columns = [
     'Service Date',
     'Mileage',
@@ -29,6 +34,15 @@ function VehicleMaintenanceLog({ logs }) {
     'Invoice/Receipt',
     'Notes',
   ]
+
+  const handleClickView = () => {
+    setShowAllLogs(true)
+  }
+
+  const handleViewDoc = () => {
+    setViewDoc(true)
+  }
+
   return (
     <>
       <CRow>
@@ -38,8 +52,8 @@ function VehicleMaintenanceLog({ logs }) {
               <strong>Maintenance Log</strong>
             </CCardHeader>
             <CCardBody>
-              {logs === 0 ? (
-                <p className="text-center">No vehicles available.</p>
+              {logs.length === 0 ? (
+                <p className="text-center">No Logs to show.</p>
               ) : (
                 <CTable>
                   <CTableHead>
@@ -59,20 +73,46 @@ function VehicleMaintenanceLog({ logs }) {
                         <CTableDataCell className="text-center">{row.workPerformed}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.performedBy}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.cost}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.invoiceUrl}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <button className="btn btn-primary" onClick={handleViewDoc}>
+                            View
+                          </button>
+                          {/* {row.invoiceUrl} */}
+                        </CTableDataCell>
                         <CTableDataCell className="text-center">{row.notes}</CTableDataCell>
                       </CTableRow>
                     ))}
                   </CTableBody>
                 </CTable>
               )}
+              <div className="d-flex justify-content-end">
+                <button className="btn btn-primary" onClick={handleClickView}>
+                  View More
+                </button>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
-      <div className="d-flex justify-content-end">
-        <button className="btn btn-primary">View More</button>
-      </div>
+
+      <CModal
+        alignment="center"
+        scrollable
+        visible={viewDoc}
+        onClose={() => setViewDoc(false)}
+        size="md"
+      >
+        <CModalHeader closeButton />
+        <CModalBody className="d-flex flex-column gap-3">receipt</CModalBody>
+      </CModal>
+
+      <VehicleMaintenanceLogModal
+        show={showAllLogs}
+        setShow={setShowAllLogs}
+        onClose={() => setShowAllLogs(false)}
+        logs={logs}
+        columns={columns}
+      />
     </>
   )
 }
