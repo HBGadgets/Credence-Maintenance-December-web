@@ -70,7 +70,7 @@ export const vehicles = [
         duration: 1.5, // hours
         totalCost: 800, // in currency units
         vehicle: 'KA03-CD9012',
-        status: 'completed',
+        status: 'cancelled',
       },
       {
         tripId: 'trip-004',

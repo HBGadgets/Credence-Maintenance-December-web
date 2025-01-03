@@ -164,6 +164,11 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Trip',
+        to: '/Trip',
+      },
+      {
+        component: CNavItem,
         name: 'Vehicle Expenses',
         to: '/VehicleExpenses',
       },
