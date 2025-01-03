@@ -61,7 +61,7 @@ const Dashboard = () => {
   const tableData = [
     {
       driver: {
-        name: 'John Doe',
+        name: 'Dove Lara',
         avatar: avatar1,
         status: 'success',
       },
@@ -81,7 +81,7 @@ const Dashboard = () => {
     },
     {
       driver: {
-        name: 'Jane Smith',
+        name: 'Jane Dom',
         avatar: avatar2,
         status: 'warning',
       },
@@ -121,9 +121,9 @@ const Dashboard = () => {
     },
     {
       driver: {
-        name: 'Jane Smith',
+        name: 'July Kim',
         avatar: avatar4,
-        status: 'warning',
+        status: 'success',
       },
       vehicle: {
         model: 'Honda Civic',
@@ -141,7 +141,7 @@ const Dashboard = () => {
     },
     {
       driver: {
-        name: 'Jane Smith',
+        name: 'Jurry Atnone',
         avatar: avatar5,
         status: 'warning',
       },
@@ -263,7 +263,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Current Location: {currentLocation} </h5>
-                <p className="text-muted">Real-time location of all the transports vehicles</p>
+                <p className="text-muted">Real-time location of all the live vehicles</p>
               </CCardBody>
             </CCard>
           </CCol>
@@ -277,7 +277,7 @@ const Dashboard = () => {
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Used Service: {roadSide}</h5>
-                <p className="text-muted">Total vehicles used this Roadside Assitance services</p>
+                <p className="text-muted">Total vehicles use Roadside Assitance</p>
               </CCardBody>
             </CCard>
           </CCol>

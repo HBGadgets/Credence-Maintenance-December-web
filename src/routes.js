@@ -21,16 +21,16 @@ const Tables = React.lazy(() => import('./views/base/tables/Tables'))
 const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 
 // Vehicle
-const VehiclesMaintenanceLogbook = React.lazy(
-  () => import('./views/vehicle/vehicle-Maintenance-Log/VehicleMaintenanceLogs.js'),
-)
+const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
-const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
+const Trips = React.lazy(() => import('./views/Driver/tripdetails/Trips.js'))
 const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExpense.js'))
+const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
 
 // Supervisor
+const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const VehicleExpenses = React.lazy(
   () => import('./views/Supervisor/vehicle-expenses/VehicleExpenses.js'),
 )
@@ -61,7 +61,6 @@ const ExpenseSheet = React.lazy(
 const BudgetAllocation = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js'),
 )
-const RepairServices = React.lazy(() => import('./views/road-side-assistance/RepairServices.js'))
 
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
@@ -95,6 +94,9 @@ const Modals = React.lazy(() => import('./views/notifications/modals/Modals'))
 const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
+
+// DriverExperts
+const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -141,20 +143,18 @@ const routes = [
   { path: '/widgets', name: 'Widgets', element: Widgets },
 
   /**VEHICLE */
-  {
-    path: '/VehicleMaintenanceLogBook',
-    name: 'Vehicle Logbook',
-    element: VehiclesMaintenanceLogbook,
-  },
+  { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
 
   /**DRIVER */
 
   { path: '/DriversLogBook', name: 'Driver Logbook', element: DriversLogbook },
   { path: '/cash', name: 'Cash', element: Cash },
   { path: '/DriverExpense', name: 'Driver Expense', element: DriverExpense },
+  { path: '/Trips', name: 'Trips', element: Trips },
 
   /**SUPERVISOR */
 
+  { path: '/Trip', name: 'Trip', element: Trip },
   { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
   { path: '/SubDetails', name: 'Sub Details', element: SubDetails },
@@ -172,10 +172,12 @@ const routes = [
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
   { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
-  { path: '/RepairServices', name: 'Repair Services', element: RepairServices },
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
+
+  //  /**DRIVER EXPERTS */
+  { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
 ]
 
 export default routes

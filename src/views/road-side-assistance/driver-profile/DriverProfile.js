@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import {
   CCard,
   CCardBody,
-  CCardHeader,
   CCol,
   CRow,
   CTable,
@@ -12,12 +11,6 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-  CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
 } from '@coreui/react'
 
 import PropTypes from 'prop-types'
@@ -51,7 +44,7 @@ const DriverProfile = ({ driverId }) => {
             <CCol xs={12}>
               <CCard className="mb-4">
                 <CCardBody>
-                  <CTable>
+                  <CTable striped hover responsive bordered>
                     <CTableHead>
                       <CTableRow>
                         <CTableHeaderCell scope="col"></CTableHeaderCell>
