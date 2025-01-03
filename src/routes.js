@@ -50,6 +50,9 @@ const VehicleExpensesBill = React.lazy(
   () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.js'),
 )
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
+const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
+const LR =React.lazy(()=>import('./views/Expenses-Management/LR/Lr.jsx'))
+
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -162,6 +165,9 @@ const routes = [
   { path: '/DriverExpenseBill', name: 'Driver Expenses', element: DriverExpenses },
   { path: '/VehicleExpensesBill', name: 'Vehicle Expenses', element: VehicleExpensesBill },
   { path: '/Bills', name: 'Bills', element: Bills },
+  { path: '/Invoice', name: 'Invoice', element: Invoice },
+  { path: '/LR', name: 'LR', element: LR },
+
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

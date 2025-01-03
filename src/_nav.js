@@ -205,6 +205,16 @@ const _nav = [
         name: 'Bill Expenses',
         to: '/Bills',
       },
+      {
+        component: CNavItem,
+        name: 'Invoice',
+        to: '/Invoice',
+      },
+      {
+        component: CNavItem,
+        name: 'LR',
+        to: '/LR',
+      },
       // {
       //   component: CNavItem,
       //   name: 'Input Group',
