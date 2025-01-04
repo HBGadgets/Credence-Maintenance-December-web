@@ -15,7 +15,9 @@ import {
   CTableRow,
   CModal,
   CModalBody,
+  CModalFooter,
   CModalHeader,
+  CButton,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
@@ -108,6 +110,11 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
             </CCol>
           </CRow>
         </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShow(false)}>
+            Close
+          </CButton>
+        </CModalFooter>
       </CModal>
       <CModal
         alignment="center"

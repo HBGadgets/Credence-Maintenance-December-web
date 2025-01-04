@@ -15,7 +15,9 @@ import {
   CTableRow,
   CModal,
   CModalBody,
+  CModalFooter,
   CModalHeader,
+  CButton,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 
@@ -94,6 +96,11 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
             </CCard>
           </CCol>
         </CRow>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setOpen(false)}>
+            Close
+          </CButton>
+        </CModalFooter>
       </CModalBody>
     </CModal>
   )
