@@ -6,7 +6,7 @@ import {
   TextareaAutosize,
   InputAdornment
 } from '@mui/material';
-import axios from 'axios';
+// import axios from 'axios';
 // import { Close, Person, LocationOn, Inventory, MonetizationOn } from '@mui/icons-material';
 import { Close, DateRange, DirectionsCar, Person, LocationOn, Inventory, AttachMoney, MonetizationOn, LocalShipping, Receipt, Percent, Scale, Straighten, LocalOffer, Home } from '@mui/icons-material';
 
@@ -74,7 +74,7 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
 
     try {
       // Post the form data to the backend API
-      const response = await axios.post('http://localhost:5000/lrs', formData);
+      // const response = await axios.post('http://localhost:5000/lrs', formData);
       console.log('LR Created:', response.data);
 
       // Clear the form after successful submission

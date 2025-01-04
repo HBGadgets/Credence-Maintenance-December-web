@@ -1,6 +1,7 @@
 import React,{useEffect} from 'react';
 import {
-  
+  CRow,
+  CCol,
   CTable,
   CTableHead,
   CTableRow,
@@ -9,7 +10,11 @@ import {
   CTableDataCell,
   CButton,
   CBadge,
+  CCard,
+  CCardHeader,
+  CCardBody
 } from '@coreui/react';
+import { Edit, Eye, Trash2 } from 'lucide-react'
 import { FormControl, Select, MenuItem,TableContainer,} from '@mui/material';
 
 const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFilteredInvoices }) => {
@@ -92,37 +97,90 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
     { label: 'Items', key: 'items' },
     { label: 'Actions', key: 'actions' },
   ];
-
-  
-
   return (
-<TableContainer style={{border:'1px solid black', borderRadius:'10px'}}>
-      <CTable hover striped responsive >
-        <CTableHead>
-          <CTableRow>
-            {columns.map((column, index) => (
-              <CTableHeaderCell  key={index} style={{ whiteSpace: 'nowrap' }}>
+    <>
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="mb-4">
+            <CCardHeader>
+              <strong>Invoices List</strong>
+              {/* <CButton
+                color="primary"
+                className="float-end"
+                onClick={() => setAddModalOpen(true)}
+              >
+                ADD Invoice
+              </CButton> */}
+            </CCardHeader>
+            <CCardBody>
+              {invoices.length === 0 ? (
+                <p className="text-center">No Invoive available.</p>
+              ) : (
+                <CTable striped hover responsive bordered>
+                  <CTableHead>
+                    <CTableRow className='text-nowrap'>
+                      <CTableHeaderCell className="text-center" scope="col">
+                        SN
+                      </CTableHeaderCell>
+                     
+                      {columns.map((column, index) => (
+              <CTableHeaderCell  key={index} className="text-center" scope="col">
                 {column.label}
               </CTableHeaderCell>
             ))}
-          </CTableRow>
-        </CTableHead>
-        <CTableBody>
-          {invoices.slice().reverse().map((invoice) => (
-            <CTableRow key={invoice._id} style={{ height: '40px' }}>
+                      
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {/* {data.map((driver, index) => (
+                      <CTableRow key={driver.id}>
+                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell> 
+                        <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          {driver.contactNumber}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">{driver.email}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <CButton
+                            color="primary"
+                            size="sm"
+                            onClick={() => handleViewClick(driver)}
+                            className="text-center"
+                          >
+                            <Eye className="me-2" size={16} />
+                            View Profile
+                          </CButton>
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <CButton
+                            color="warning"
+                            size="sm"
+                            onClick={() => handleEditDriver(driver)}
+                          >
+                            <Edit size={16} /> 
+                          </CButton>
+                          <CButton
+                            color="danger"
+                            size="sm"
+                            className="ms-2"
+                            onClick={() => handleDeleteDriver(driver.id)}
+                          >
+                            <Trash2 size={16} /> 
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))} */}
+                    {invoices.slice().reverse().map((invoice, index) => (
+            <CTableRow key={invoice._id } className='text-nowrap'
+            // style={{ height: '40px' }}
+            >
+              <CTableDataCell className="text-center">{index+1}</CTableDataCell>
               {columns.map((column, index) => {
                 const value = column.key === 'status' ? (
-                  <CBadge color={invoice[column.key] === 'Paid' ? 'success' : 'warning'} style={{minWidth:'4rem'}}>
+                  <CBadge color={invoice[column.key] === 'paid' ? 'success' : 'warning'} style={{minWidth:'4rem'}}>
                     {invoice[column.key]}
                   </CBadge>
                 ) : column.key === 'items' ? (
-                  // <ul>
-                  //   {invoice[column.key]?.map((item, index) => (
-                  //     <li key={index}>
-                  //       {item.name}-{item.description} - {item.quantity} x {item.unitPrice} = {item.total}
-                  //     </li>
-                  //   ))}
-                  // </ul>
                   <FormControl fullWidth variant="outlined" margin="normal" sx={{margin:'0'}}>
                 <Select
                   // label="Select Item"
@@ -139,7 +197,7 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
               </FormControl>
                 ) : column.key === 'actions' ? (
                   <div style={{display:'flex'}}>
-                    <CButton
+                    {/* <CButton
                       color="primary"
                       variant="outline"
                       size="sm"
@@ -147,8 +205,15 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                       onClick={() => handleEdit(invoice)}
                     >
                       Edit
-                    </CButton>
+                    </CButton> */}
                     <CButton
+                            color="warning"
+                            size="sm"
+                            onClick={() => handleEdit(invoice)}
+                          >
+                            <Edit size={16} /> 
+                          </CButton>
+                    {/* <CButton
                       color="danger"
                       variant="outline"
                       size="sm"
@@ -156,7 +221,15 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                       onClick={() => handleDelete(invoice._id)}
                     >
                       Delete
-                    </CButton>
+                    </CButton> */}
+                    <CButton
+                            color="danger"
+                            size="sm"
+                            className="ms-2"
+                            onClick={() => handleDelete(invoice.id)}
+                          >
+                            <Trash2 size={16} /> 
+                          </CButton>
                     <CButton
                       color="info"
                       variant="outline"
@@ -173,15 +246,20 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                  (
                   invoice[column.key]
                 )
-                return <CTableDataCell key={index} style={{ whiteSpace: 'nowrap' }}>{value}</CTableDataCell>;
+
+                return <CTableDataCell key={index} className="text-center">{value}</CTableDataCell>;
               })}
             </CTableRow>
           ))}
-        </CTableBody>
-      </CTable>
-      </TableContainer>
+                  </CTableBody>
+                </CTable>
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
       
-  
+      </>
   );
 };
 
