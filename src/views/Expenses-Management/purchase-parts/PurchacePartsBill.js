@@ -1,185 +1,165 @@
-// Sample React.js Component for Purchasing New Parts
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import { Button, TextField, Typography, Modal, Box } from '@mui/material';
+import PurchaseForm from './PurchaseForm';
+import PurchaseList from './PurchaseList';
+import ViewPurchaseModal from './ViewPurchaseModal';
+import EditPurchaseForm from './EditPurchaseForm';
+import purchasesData from './data';
 
-const PurchaseNewParts = () => {
-  const [formData, setFormData] = useState({
-    partName: '',
-    category: '',
-    vendor: '',
-    quantity: 1,
-    costPerUnit: 0,
-    purchaseDate: '',
-    invoiceNumber: '',
-  });
+const Purchase = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [purchases, setPurchases] = useState(purchasesData);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [currentPurchase, setCurrentPurchase] = useState(null);
 
-  const [message, setMessage] = useState('');
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
-
-  useEffect(() => {
-    // Fetch existing purchases when the component loads
-    const fetchPurchaseHistory = async () => {
-      try {
-        const response = await axios.get('/api/purchases');
-        setPurchaseHistory(Array.isArray(response.data) ? response.data : []);
-      } catch (error) {
-        console.error('Error fetching purchase history:', error);
-        setPurchaseHistory([]);
-      }
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
     };
 
-    fetchPurchaseHistory();
-  }, []);
+    const handleAddPurchase = (purchase) => {
+        setPurchases([...purchases, purchase]);
+        setIsAddModalOpen(false);
+    };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+    const handleEditPurchase = (updatedPurchase) => {
+        setPurchases(
+            purchases.map((purchase) =>
+                purchase.id === updatedPurchase.id ? updatedPurchase : purchase
+            )
+        );
+        setIsEditModalOpen(false);
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleOpenAddModal = () => {
+        setIsAddModalOpen(true);
+    };
 
-    try {
-      const response = await axios.post('/api/purchases', formData);
-      if (response.status === 200) {
-        setMessage('Purchase successfully recorded!');
-        setFormData({
-          partName: '',
-          category: '',
-          vendor: '',
-          quantity: 1,
-          costPerUnit: 0,
-          purchaseDate: '',
-          invoiceNumber: '',
-        });
-        setPurchaseHistory((prev) => [...prev, response.data]);
-      }
-    } catch (error) {
-      console.error('Error saving purchase:', error);
-      setMessage('Error recording purchase. Please try again.');
-    }
-  };
+    const handleCloseAddModal = () => {
+        setIsAddModalOpen(false);
+    };
 
-  return (
-    <div className="purchase-form">
-      <h2>Purchase New Parts</h2>
-      {message && <p>{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Part Name:
-          <input
-            type="text"
-            name="partName"
-            value={formData.partName}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Category:
-          <input
-            type="text"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Vendor:
-          <input
-            type="text"
-            name="vendor"
-            value={formData.vendor}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Quantity:
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            min="1"
-            required
-          />
-        </label>
-        <label>
-          Cost Per Unit:
-          <input
-            type="number"
-            name="costPerUnit"
-            value={formData.costPerUnit}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-          />
-        </label>
-        <label>
-          Purchase Date:
-          <input
-            type="date"
-            name="purchaseDate"
-            value={formData.purchaseDate}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Invoice Number:
-          <input
-            type="text"
-            name="invoiceNumber"
-            value={formData.invoiceNumber}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <button type="submit">Submit</button>
-      </form>
+    const handleOpenViewModal = (purchase) => {
+        setCurrentPurchase(purchase);
+        setIsViewModalOpen(true);
+    };
 
-      <h2>Purchase History</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Part Name</th>
-            <th>Category</th>
-            <th>Vendor</th>
-            <th>Quantity</th>
-            <th>Cost Per Unit</th>
-            <th>Total Cost</th>
-            <th>Purchase Date</th>
-            <th>Invoice Number</th>
-          </tr>
-        </thead>
-        <tbody>
-          {purchaseHistory.length === 0 ? (
-            <tr>
-              <td colSpan="8" style={{ textAlign: 'center' }}>
-                No purchase records available.
-              </td>
-            </tr>
-          ) : (
-            purchaseHistory.map((purchase, index) => (
-              <tr key={index}>
-                <td>{purchase.partName}</td>
-                <td>{purchase.category}</td>
-                <td>{purchase.vendor}</td>
-                <td>{purchase.quantity}</td>
-                <td>{purchase.costPerUnit}</td>
-                <td>{purchase.quantity * purchase.costPerUnit}</td>
-                <td>{purchase.purchaseDate}</td>
-                <td>{purchase.invoiceNumber}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+    const handleCloseViewModal = () => {
+        setIsViewModalOpen(false);
+    };
+
+    const handleOpenEditModal = (purchase) => {
+        setCurrentPurchase(purchase);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+    };
+
+    const handleDelete = (purchase) => {
+        if (window.confirm(`Are you sure you want to delete ${purchase.partName}?`)) {
+            setPurchases(purchases.filter((p) => p.id !== purchase.id));
+        }
+    };
+
+    const handlePrint = (purchase) => {
+        const printOption = window.prompt(
+            'Enter your choice: 1 for PDF, 2 for Excel'
+        );
+
+        if (printOption === '1') {
+            alert('Generating PDF for: ' + purchase.partName);
+        } else if (printOption === '2') {
+            alert('Generating Excel for: ' + purchase.partName);
+        } else {
+            alert('Invalid choice');
+        }
+    };
+
+    return (
+        <div>
+            <Typography variant="h4" gutterBottom>
+                Purchase Expenses
+            </Typography>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <TextField
+                    label="Search"
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                />
+                <Button variant="contained" color="primary" onClick={handleOpenAddModal}>
+                    Add New Purchased Item
+                </Button>
+            </div>
+
+            <PurchaseList 
+                purchases={purchases} 
+                searchTerm={searchTerm} 
+                onView={handleOpenViewModal} 
+                onEdit={handleOpenEditModal} 
+                onDelete={handleDelete} 
+                onPrint={handlePrint} 
+            />
+
+            <Modal open={isAddModalOpen} onClose={handleCloseAddModal}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <PurchaseForm onAddPurchase={handleAddPurchase} onCancel={handleCloseAddModal} />
+                </Box>
+            </Modal>
+
+            <Modal open={isViewModalOpen} onClose={handleCloseViewModal}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <ViewPurchaseModal purchase={currentPurchase} onClose={handleCloseViewModal} />
+                </Box>
+            </Modal>
+
+            <Modal open={isEditModalOpen} onClose={handleCloseEditModal}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <EditPurchaseForm 
+                        purchase={currentPurchase} 
+                        onEditPurchase={handleEditPurchase} 
+                        onCancel={handleCloseEditModal} 
+                    />
+                </Box>
+            </Modal>
+        </div>
+    );
 };
 
-export default PurchaseNewParts;
+export default Purchase;

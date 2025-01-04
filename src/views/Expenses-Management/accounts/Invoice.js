@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import InvoiceForm from './InvoiceForm';
 import InvoiceList from './InvoiceList';
 // import InvoiceSummary from './InvoiceSummary';
-import axios from 'axios';
+// import axios from 'axios';
 import { Button } from '@mui/material';
+import fileData from "./data"
 
 function Invoices() {
   const [invoices, setInvoices] = useState([]); // All invoices
@@ -22,9 +23,11 @@ function Invoices() {
   
   const fetchInvoices = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/Invoice'); // Adjust endpoint as needed
-      setInvoices(response.data);
-      setFilteredInvoices(response.data); // Initialize filtered invoices with all invoices
+      // const response = await axios.get('http://localhost:5000/Invoice'); // Adjust endpoint as needed
+      // setInvoices(response.data);
+      // setFilteredInvoices(response.data); // Initialize filtered invoices with all invoices
+      setInvoices(fileData)
+      setFilteredInvoices(fileData)
     } catch (err) {
       console.error('Error fetching invoices:', err);
       alert('Error fetching invoices');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 
 const ExpenseForm = ({ onExpensesUpdate }) => {
     const [formData, setFormData] = useState({
@@ -12,26 +12,26 @@ const ExpenseForm = ({ onExpensesUpdate }) => {
     const [vehicles, setVehicles] = useState([]); // To store vehicle data
 
     // Fetch vehicles from the database
-    useEffect(() => {
-        const fetchVehicles = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/vehicles'); // Assuming this is your route for fetching vehicles
-                setVehicles(response.data); // Save the fetched vehicles to state
-            } catch (error) {
-                alert('Error fetching vehicles: ' + error.message);
-            }
-        };
-        // const fetchVehicles = async () => {
-        //     const mockVehicles = [
-        //         { _id: '1', licensePlate: 'ABC123', model: 'Toyota Camry' },
-        //         { _id: '2', licensePlate: 'XYZ456', model: 'Ford F-150' },
-        //         { _id: '3', licensePlate: 'LMN789', model: 'Chevrolet Silverado' }
-        //     ];
-        //     setVehicles(mockVehicles)
-        // }
+    // useEffect(() => {
+    //     const fetchVehicles = async () => {
+    //         try {
+    //             const response = await axios.get('http://localhost:5000/vehicles'); // Assuming this is your route for fetching vehicles
+    //             setVehicles(response.data); // Save the fetched vehicles to state
+    //         } catch (error) {
+    //             alert('Error fetching vehicles: ' + error.message);
+    //         }
+    //     };
+    //     // const fetchVehicles = async () => {
+    //     //     const mockVehicles = [
+    //     //         { _id: '1', licensePlate: 'ABC123', model: 'Toyota Camry' },
+    //     //         { _id: '2', licensePlate: 'XYZ456', model: 'Ford F-150' },
+    //     //         { _id: '3', licensePlate: 'LMN789', model: 'Chevrolet Silverado' }
+    //     //     ];
+    //     //     setVehicles(mockVehicles)
+    //     // }
 
-        fetchVehicles();
-    }, []);
+    //     fetchVehicles();
+    // }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,13 +52,13 @@ const ExpenseForm = ({ onExpensesUpdate }) => {
         data.append('vendor', formData.vendor);
         // data.append('receipt', formData.receipt); // If you decide to include receipt
 
-        try {
-            const response = await axios.post('http://localhost:5000/expenses', data);
-            alert('Expense logged successfully!');
-            onExpensesUpdate((prevExpenses) => [...prevExpenses, response.data]);
-        } catch (error) {
-            alert('Error logging expense: ' + error.message);
-        }
+        // try {
+        //     const response = await axios.post('http://localhost:5000/expenses', data);
+        //     alert('Expense logged successfully!');
+        //     onExpensesUpdate((prevExpenses) => [...prevExpenses, response.data]);
+        // } catch (error) {
+        //     alert('Error logging expense: ' + error.message);
+        // }
     };
 
     return (
