@@ -79,7 +79,11 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
                             <CTableDataCell className="text-center">{row.endDate}</CTableDataCell>
                             <CTableDataCell className="text-center">{row.duration}</CTableDataCell>
                             <CTableDataCell className="text-center">{row.totalCost}</CTableDataCell>
-                            <CTableDataCell className="text-center">{row.status}</CTableDataCell>
+                            <CTableDataCell
+                              className={`text-center ${row.status === 'completed' ? 'text-success' : row.status === 'in-progress' ? 'text-warning' : 'text-danger'}`}
+                            >
+                              {row.status}
+                            </CTableDataCell>
                           </CTableRow>
                         ))}
                       </CTableBody>

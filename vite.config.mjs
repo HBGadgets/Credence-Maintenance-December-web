@@ -22,6 +22,7 @@ export default defineConfig(() => {
       exclude: [],
     },
     optimizeDeps: {
+      include: ['@mui/material', '@emotion/react', '@emotion/styled'],
       force: true,
       esbuildOptions: {
         loader: {

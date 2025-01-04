@@ -30,6 +30,7 @@ const DriverExpense = React.lazy(() => import('./views/Driver/expenses/DriverExp
 const Cash = React.lazy(() => import('./views/Driver/cash/Cash.js'))
 
 // Supervisor
+const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const VehicleExpenses = React.lazy(
   () => import('./views/Supervisor/vehicle-expenses/VehicleExpenses.js'),
 )
@@ -49,6 +50,9 @@ const VehicleExpensesBill = React.lazy(
   () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.js'),
 )
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
+const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
+const LR =React.lazy(()=>import('./views/Expenses-Management/LR/Lr.jsx'))
+
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -150,6 +154,7 @@ const routes = [
 
   /**SUPERVISOR */
 
+  { path: '/Trip', name: 'Trip', element: Trip },
   { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
   { path: '/SubDetails', name: 'Sub Details', element: SubDetails },
@@ -160,6 +165,9 @@ const routes = [
   { path: '/DriverExpenseBill', name: 'Driver Expenses', element: DriverExpenses },
   { path: '/VehicleExpensesBill', name: 'Vehicle Expenses', element: VehicleExpensesBill },
   { path: '/Bills', name: 'Bills', element: Bills },
+  { path: '/Invoice', name: 'Invoice', element: Invoice },
+  { path: '/LR', name: 'LR', element: LR },
+
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

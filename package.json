@@ -19,6 +19,7 @@
     "@mui/material": "^6.3.0",
     "@popperjs/core": "^2.11.8",
     "@react-google-maps/api": "^2.19.3",
+    "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "classnames": "^2.5.1",
     "core-js": "^3.37.1",

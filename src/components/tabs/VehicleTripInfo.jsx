@@ -72,7 +72,11 @@ function VehicelTripInfo({ trips }) {
                         <CTableDataCell className="text-center">{trip.endDate}</CTableDataCell>
                         <CTableDataCell className="text-center">{trip.duration}</CTableDataCell>
                         <CTableDataCell className="text-center">{trip.totalCost}</CTableDataCell>
-                        <CTableDataCell className="text-center">{trip.status}</CTableDataCell>
+                        <CTableDataCell
+                          className={`text-center ${trip.status === 'completed' ? 'text-success' : 'text-danger'}`}
+                        >
+                          {trip.status}
+                        </CTableDataCell>
                       </CTableRow>
                     ))}
                   </CTableBody>
