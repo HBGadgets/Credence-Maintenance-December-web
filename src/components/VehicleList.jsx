@@ -1,8 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useState } from 'react'
 import { vehicles } from '../views/vehicle/data/data'
-import VehicleProfile from './VehicleProfile'
-import Pagination from '../views/base/paginations/Pagination'
 import {
   CCard,
   CCardBody,
@@ -17,6 +15,8 @@ import {
   CTableRow,
   CButton,
 } from '@coreui/react'
+const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
+const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
 const VehicleList = () => {
   const columns = ['Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']
   const [selectedVehicle, setSelectedVehicle] = useState(null)

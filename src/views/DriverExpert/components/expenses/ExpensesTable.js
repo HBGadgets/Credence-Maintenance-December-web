@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
   CButton,
+  CPagination,
+  CPaginationItem,
   CTable,
   CTableBody,
   CTableHead,
@@ -22,10 +24,17 @@ export default function ExpensesTable({ expenses }) {
   const [open, setOpen] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10 // Number of items per page in modal table
 
   const handleOpen = () => {
+    setCurrentPage(1) // Reset to the first page when opening modal
     setOpen(true)
   }
+
+  // Sort expenses by date (descending) for the latest 5 entries
+  const sortedExpenses = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
+  const latestExpenses = sortedExpenses.slice(0, 5)
 
   // Filter expenses based on the date range
   const filteredExpenses = expenses.filter((expense) => {
@@ -33,6 +42,11 @@ export default function ExpensesTable({ expenses }) {
     const date = new Date(expense.date)
     return date >= new Date(startDate) && date <= new Date(endDate)
   })
+
+  // Pagination logic for modal table
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const currentExpenses = filteredExpenses.slice(startIndex, startIndex + itemsPerPage)
 
   // Table component for displaying expenses
   const ExpensesContent = ({ data }) => (
@@ -79,7 +93,7 @@ export default function ExpensesTable({ expenses }) {
           <strong>Expenses</strong>
         </CCardHeader>
         <div className="overflow-auto">
-          <ExpensesContent data={filteredExpenses.slice(0, 5)} />
+          <ExpensesContent data={latestExpenses} />
         </div>
         <div className="mt-4">
           <CButton
@@ -110,7 +124,33 @@ export default function ExpensesTable({ expenses }) {
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
             />
-            <ExpensesContent data={filteredExpenses} />
+            <ExpensesContent data={currentExpenses} />
+            {/* Pagination for modal table */}
+            {totalPages > 1 && filteredExpenses.length > itemsPerPage && (
+              <CPagination align="center" className="mt-4">
+                <CPaginationItem
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                >
+                  Previous
+                </CPaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <CPaginationItem
+                    key={i + 1}
+                    active={i + 1 === currentPage}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </CPaginationItem>
+                ))}
+                <CPaginationItem
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                >
+                  Next
+                </CPaginationItem>
+              </CPagination>
+            )}
           </CModalBody>
         </CModal>
       </CCard>
