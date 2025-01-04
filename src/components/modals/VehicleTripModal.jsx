@@ -17,7 +17,7 @@ import {
   CModalBody,
   CModalHeader,
 } from '@coreui/react'
-import DateRangeFilter from '../DateRangeFilter'
+const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 
 function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
   const [filteredLogs, setFilteredLogs] = useState(trip)

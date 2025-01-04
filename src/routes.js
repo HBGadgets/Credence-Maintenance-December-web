@@ -1,6 +1,4 @@
-import { element } from 'prop-types'
 import React from 'react'
-
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
 // Base
@@ -51,8 +49,7 @@ const VehicleExpensesBill = React.lazy(
 )
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
-const LR =React.lazy(()=>import('./views/Expenses-Management/LR/Lr.jsx'))
-
+const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -167,7 +164,6 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'LR', element: LR },
-
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

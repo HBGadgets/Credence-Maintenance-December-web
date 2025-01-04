@@ -2,9 +2,12 @@
 import React from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CTab, CTabContent, CTabList, CTabPanel, CTabs } from '@coreui/react'
-import VehicleDocuments from './VehicleDocuments'
-import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
-import VehicelTripInfo from './tabs/VehicleTripInfo'
+// import VehicleDocuments from './VehicleDocuments'
+const VehicleDocuments = React.lazy(() => import('./VehicleDocuments'))
+const VehicleMaintenanceLog = React.lazy(() => import('./tabs/VehicleMaintenanceLog'))
+// import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
+const VehicleTripInfo = React.lazy(() => import('./tabs/VehicleTripInfo'))
+// import VehicelTripInfo from './tabs/VehicleTripInfo'
 function VehicleProfile({ open, setOpen, vehicle }) {
   const handleClose = () => {
     setOpen(false)
@@ -79,7 +82,7 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                   <VehicleMaintenanceLog logs={vehicle.maintenanceLogs} />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="vehicle-trip" itemKey={2}>
-                  <VehicelTripInfo trips={vehicle.trips} />
+                  <VehicleTripInfo trips={vehicle.trips} />
                 </CTabPanel>
               </CTabContent>
             </CTabs>

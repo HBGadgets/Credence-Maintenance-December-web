@@ -17,7 +17,7 @@ import {
   CModalBody,
   CModalHeader,
 } from '@coreui/react'
-import DateRangeFilter from '../DateRangeFilter'
+const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
   const [viewDoc, setViewDoc] = useState(false)
   const [filteredLogs, setFilterdLogs] = useState(logs)

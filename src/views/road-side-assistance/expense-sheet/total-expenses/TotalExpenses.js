@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 
 import React, { useState } from 'react'
-import Pagination from '../../../base/paginations/Pagination'
 import { serviceRecords } from '../../data'
 import {
   CCard,
@@ -24,8 +23,9 @@ import {
 } from '@coreui/react'
 import { debounce } from 'lodash'
 import { Plus } from 'lucide-react'
-import VehicleLog from '../../vehicle-logs/VehicleLog'
-import DriverProfile from '../../driver-profile/DriverProfile'
+const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
+const VehicleLog = React.lazy(() => import('../../vehicle-logs/VehicleLog'))
+const DriverProfile = React.lazy(() => import('../../driver-profile/DriverProfile'))
 
 const TotalExpenses = () => {
   const title = 'Total Expenses'

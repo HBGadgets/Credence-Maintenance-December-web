@@ -13,7 +13,8 @@ import {
   CCardHeader,
   CRow,
 } from '@coreui/react'
-import TripAssignmentTable from './TripAssignmentTable'
+const TripAssignmentTable = React.lazy(() => import('./TripAssignmentTable'))
+
 function TripAssignmentForm() {
   const [formData, setFormData] = useState({
     vehicleId: '',
