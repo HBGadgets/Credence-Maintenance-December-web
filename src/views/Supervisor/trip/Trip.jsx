@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
-import TripAssignmentForm from '../../../components/TripAssignmentForm'
+const TripAssignmentForm = React.lazy(() => import('../../../components/TripAssignmentForm'))
 
 function Trip() {
   return (

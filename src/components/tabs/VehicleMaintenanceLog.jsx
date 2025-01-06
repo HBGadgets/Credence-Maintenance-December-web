@@ -13,14 +13,11 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-  CButton,
   CModal,
   CModalBody,
-  CModalFooter,
   CModalHeader,
-  CModalTitle,
 } from '@coreui/react'
-import VehicleMaintenanceLogModal from '../modals/VehicleMaintenanceLogModal'
+const VehicleMaintenanceLogModal = React.lazy(() => import('../modals/VehicleMaintenanceLogModal'))
 function VehicleMaintenanceLog({ logs }) {
   const [showAllLogs, setShowAllLogs] = useState(false)
   const [viewDoc, setViewDoc] = useState(false)

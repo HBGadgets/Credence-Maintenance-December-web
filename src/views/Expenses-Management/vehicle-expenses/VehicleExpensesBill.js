@@ -2,9 +2,10 @@ import React, { useState,useEffect } from 'react';
 import ExpenseForm from './VehicleExpenseForm';
 import ExpenseList from './VehicleExpenseTable';
 import { Modal, Button, Box, Typography, TextField, InputAdornment} from '@mui/material';
-import axios from 'axios';
+// import axios from 'axios';
 import { FaSearch } from "react-icons/fa";
 import { Search } from "@mui/icons-material";
+import fileData from "./data"
 
 const VehicleExpenses = () => {
     const [expenses, setExpenses] = useState([]);
@@ -27,12 +28,17 @@ const VehicleExpenses = () => {
     useEffect(() => {
         const fetchExpenses = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/expenses');
-                console.log("fetch data to show in vehicle expenses table",response.data);
-                //   // Fetch all expenses (no vehicleId needed)
-                //onExpensesUpdate(response.data);
-                setExpenses(response.data)
-                setFilteredExpenses(response.data)
+                // const response = await axios.get('http://localhost:5000/expenses');
+                // console.log("fetch data to show in vehicle expenses table",response.data);
+                // //   // Fetch all expenses (no vehicleId needed)
+                // //onExpensesUpdate(response.data);
+                // setExpenses(response.data)
+                // setFilteredExpenses(response.data)
+
+                // here we will use dummy data
+                setExpenses(fileData)
+                setFilteredExpenses(fileData)
+
             } catch (error) {
                 alert('Error fetching expenses: ' + error.message);
             }

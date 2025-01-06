@@ -15,15 +15,7 @@ import {
   CButton,
 } from '@coreui/react'
 function TripAssignmentTable({ trip }) {
-  const columns = [
-    'Vehicle ID',
-    'Driver ID',
-    'Start Location',
-    'End Location',
-    'Start Date',
-    'Budget Alloted',
-    'Distance',
-  ]
+  const columns = ['Vehicle ID', 'Driver ID', 'Route', 'Start Date', 'Budget Alloted']
   return (
     <>
       <CRow className="mt-4">
@@ -51,8 +43,9 @@ function TripAssignmentTable({ trip }) {
                       <CTableRow key={rowIndex}>
                         <CTableDataCell className="text-center">{row.vehicleId}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.driverId}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.startLocation}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.endLocation}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          {row.startLocation} &rarr; {row.endLocation}
+                        </CTableDataCell>
                         <CTableDataCell className="text-center">{row.startDate}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.budgetAlloted}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.distance}</CTableDataCell>

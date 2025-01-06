@@ -6,7 +6,8 @@ import LRTable from './LrTable';
 // import EditAction from './EditAction';
 // import DeleteAction from './DeleteAction';
 // import PrintAction from './PrintAction';
-import axios from 'axios';
+import fileData from './data'
+// import axios from 'axios';
 import { Typography,Button, Box } from '@mui/material';
 
 const LR = () => {
@@ -37,9 +38,12 @@ const LR = () => {
   };
   const fetchLrs = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/lrs'); // Adjust endpoint as needed
-      setAllLrs(response.data);
-      setFilteredLrs(response.data); // Initialize filtered invoices with all invoices
+      // const response = await axios.get('http://localhost:5000/lrs'); // Adjust endpoint as needed
+      // setAllLrs(response.data);
+      // setFilteredLrs(response.data); 
+      //dummy data
+      setAllLrs(fileData)
+      setFilteredLrs(fileData)
     } catch (err) {
       console.error('Error fetching LRs:', err);
       alert('Error fetching LRs');

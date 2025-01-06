@@ -21,7 +21,7 @@ import {
 } from '@coreui/react'
 import VehicleTripModal from '../modals/VehicleTripModal'
 
-function VehicelTripInfo({ trips }) {
+function VehicleTripInfo({ trips }) {
   const [open, setOpen] = useState(false)
   const columns = [
     'Driver',
@@ -102,4 +102,4 @@ function VehicelTripInfo({ trips }) {
     </>
   )
 }
-export default VehicelTripInfo
+export default VehicleTripInfo
