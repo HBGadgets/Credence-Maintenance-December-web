@@ -165,8 +165,8 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Sub details',
-        to: '/SubDetails',
+        name: 'Company details',
+        to: '/ComDetails',
       },
     ],
   },
