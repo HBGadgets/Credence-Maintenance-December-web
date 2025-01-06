@@ -29,32 +29,32 @@ import {
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
-// import { trips } from '../DriverExpert/data/trips' // Ensure this import is correct
-// import { expenses } from '../DriverExpert/data/expenses' // Import expenses
-// import { salaries } from '../DriverExpert/data/salaries' // Import salaries
-// import TripsTable from '../DriverExpert/components/trips/TripsTable' // Ensure this import is correct
-// import ExpensesTable from '../DriverExpert/components/expenses/ExpensesTable' // Ensure this import is correct
-// import SalarySlipTable from '../DriverExpert/components/salary/SalarySlipTable' // Import the SalarySlipTable component
-// import AttendanceSection from '../DriverExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
+// import { trips } from '../compainesExpert/data/trips' // Ensure this import is correct
+// import { expenses } from '../compainesExpert/data/expenses' // Import expenses
+// import { salaries } from '../compainesExpert/data/salaries' // Import salaries
+// import TripsTable from '../compainesExpert/components/trips/TripsTable' // Ensure this import is correct
+// import ExpensesTable from '../compainesExpert/components/expenses/ExpensesTable' // Ensure this import is correct
+// import SalarySlipTable from '../compainesExpert/components/salary/SalarySlipTable' // Import the SalarySlipTable component
+// import AttendanceSection from '../compainesExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
 
 const compainesExp = ({ setselectedCompanyId }) => {
   const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
-  const [compaines, setcompaines] = useState(initialcompaines) // Use state for the driver list
+  const [compaines, setcompaines] = useState(initialcompaines) // Use state for the compaines list
   const [selectedCompany, setselectedCompany] = useState(null)
   const [open, setOpen] = useState(false)
   const [addModalOpen, setAddModalOpen] = useState(false)
-  const [newDriver, setNewDriver] = useState({
+  const [newcompaines, setNewcompaines] = useState({
     name: '',
     contactNumber: '',
     address: '',
     gstNumber: '',
     password: '',
-    profileImage: null,  // State to store the selected image
+    // profileImage: null,  // State to store the selected image
   })
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
-  const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
+  const [compainesToEdit, setcompainesToEdit] = useState(null) // State for the compaines being edited
 
   const [data, setData] = useState(compaines); // Assuming compaines are available
   const [filter, setFilter] = useState('');
@@ -74,68 +74,68 @@ const compainesExp = ({ setselectedCompanyId }) => {
   };
 
   // Handle file input change
-  const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setNewDriver({ ...newDriver, profileImage: file });
-    }
-  };
+  // const handleProfileImageChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setNewcompaines({ ...newcompaines, profileImage: file });
+  //   }
+  // };
 
-  // Group trips by driverId
+  // Group trips by compainesId
   // const groupedTrips = trips.reduce((acc, trip) => {
-  //   if (!acc[trip.driverId]) {
-  //     acc[trip.driverId] = []
+  //   if (!acc[trip.compainesId]) {
+  //     acc[trip.compainesId] = []
   //   }
-  //   acc[trip.driverId].push(trip)
+  //   acc[trip.compainesId].push(trip)
   //   return acc
   // }, {})
 
-  // Group expenses by driverId
+  // Group expenses by compainesId
   // const groupedExpenses = expenses.reduce((acc, expense) => {
-  //   if (!acc[expense.driverId]) {
-  //     acc[expense.driverId] = []
+  //   if (!acc[expense.compainesId]) {
+  //     acc[expense.compainesId] = []
   //   }
-  //   acc[expense.driverId].push(expense)
+  //   acc[expense.compainesId].push(expense)
   //   return acc
   // }, {})
 
-  // Group salaries by driverId (assuming you have a similar salaries data)
+  // Group salaries by compainesId (assuming you have a similar salaries data)
   // const groupedSalaries = salaries.reduce((acc, salary) => {
-  //   if (!acc[salary.driverId]) {
-  //     acc[salary.driverId] = []
+  //   if (!acc[salary.compainesId]) {
+  //     acc[salary.compainesId] = []
   //   }
-  //   acc[salary.driverId].push(salary)
+  //   acc[salary.compainesId].push(salary)
   //   return acc
   // }, {})
 
-  const handleViewClick = (driver) => {
-    setselectedCompany(driver)
+  const handleViewClick = (compaines) => {
+    setselectedCompany(compaines)
     setOpen(true)
   }
 
-  const handleAddDriver = () => {
-    // Add new driver logic here (e.g., send to API or update state)
-    setcompaines([...compaines, newDriver])
+  const handleAddcompaines = () => {
+    // Add new compaines logic here (e.g., send to API or update state)
+    setcompaines([...compaines, newcompaines])
     setAddModalOpen(false)
-    alert('New driver added!')
+    alert('New compaines added!')
   }
 
-  const handleDeleteDriver = (driverId) => {
-    // Delete the driver by filtering it out from the state
-    setcompaines(compaines.filter(driver => driver.id !== driverId))
+  const handleDeletecompaines = (compainesId) => {
+    // Delete the compaines by filtering it out from the state
+    setcompaines(compaines.filter(compaines => compaines.id !== compainesId))
   }
 
-  const handleEditDriver = (driver) => {
-    setDriverToEdit(driver)
+  const handleEditcompaines = (compaines) => {
+    setcompainesToEdit(compaines)
     setEditModalOpen(true)
   }
 
   const handleSaveEdit = () => {
-    setcompaines(compaines.map(driver =>
-      driver.id === driverToEdit.id ? driverToEdit : driver
+    setcompaines(compaines.map(compaines =>
+      compaines.id === compainesToEdit.id ? compainesToEdit : compaines
     ))
     setEditModalOpen(false)
-    alert('Driver updated successfully!')
+    alert('compaines updated successfully!')
   }
 
   return (
@@ -186,19 +186,19 @@ const compainesExp = ({ setselectedCompanyId }) => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {data.map((driver, index) => (
-                      <CTableRow key={driver.id}>
+                    {data.map((compaines, index) => (
+                      <CTableRow key={compaines.id}>
                         <CTableDataCell className="text-center">{index + 1}</CTableDataCell> {/* Serial Number */}
-                        <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
+                        <CTableDataCell className="text-center">{compaines.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
-                          {driver.contactNumber}
+                          {compaines.contactNumber}
                         </CTableDataCell>
-                        <CTableDataCell className="text-center">{driver.address}</CTableDataCell>
+                        <CTableDataCell className="text-center">{compaines.address}</CTableDataCell>
                         <CTableDataCell className="text-center">
                           <CButton
                             color="primary"
                             size="sm"
-                            onClick={() => handleViewClick(driver)}
+                            onClick={() => handleViewClick(compaines)}
                             className="text-center"
                           >
                             <Eye className="me-2" size={16} />
@@ -209,7 +209,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                           <CButton
                             color="warning"
                             size="sm"
-                            onClick={() => handleEditDriver(driver)}
+                            onClick={() => handleEditcompaines(compaines)}
                           >
                             <Edit size={16} /> {/* Edit Icon */}
                           </CButton>
@@ -217,7 +217,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             color="danger"
                             size="sm"
                             className="ms-2"
-                            onClick={() => handleDeleteDriver(driver.id)}
+                            onClick={() => handleDeletecompaines(compaines.id)}
                           >
                             <Trash2 size={16} /> {/* Delete Icon */}
                           </CButton>
@@ -242,7 +242,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
           fullscreen
         >
           <CModalHeader>
-            <CModalTitle className="d-flex align-items-center"><h5>Comapny Profile</h5></CModalTitle>
+            <CModalTitle className="d-flex align-items-center"><h5>{selectedCompany.name}</h5></CModalTitle>
           </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
@@ -273,22 +273,22 @@ const compainesExp = ({ setselectedCompanyId }) => {
             <CTabs activeItemKey={1}>
               <CTabList variant="underline">
                 <CTab aria-controls="attendance" itemKey={1}>
-                  Attendances
+                  Branches
                 </CTab>
                 <CTab aria-controls="expenses" itemKey={2}>
-                  Expenses
+                  Vehicles
                 </CTab>
                 <CTab aria-controls="trip-details" itemKey={3}>
-                  Trip Details
+                  Drivers
                 </CTab>
                 <CTab aria-controls="salary-slips" itemKey={4}>
-                  Salary Slips
+                  Total Bugets
                 </CTab>
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
                   {/* Replace with actual attendance details */}
-                  {/* <AttendanceSection driverId={selectedCompany.id} /> */}
+                  {/* <AttendanceSection compainesId={selectedCompany.id} /> */}
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
                   {/* Replace with actual expenses table */}
@@ -308,11 +308,11 @@ const compainesExp = ({ setselectedCompanyId }) => {
         </CModal>
       )}
 
-      {/* Edit Driver Modal */}
-      {editModalOpen && driverToEdit && (
+      {/* Edit compaines Modal */}
+      {editModalOpen && compainesToEdit && (
         <CModal alignment="center" visible={editModalOpen} onClose={() => setEditModalOpen(false)}>
           <CModalHeader>
-            <CModalTitle>Edit Driver</CModalTitle>
+            <CModalTitle>Edit compaines</CModalTitle>
           </CModalHeader>
           <CModalBody>
             <CForm>
@@ -320,40 +320,40 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CFormLabel>Name</CFormLabel>
                 <CFormInput
                   type="text"
-                  value={driverToEdit.name}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
+                  value={compainesToEdit.name}
+                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, name: e.target.value })}
                 />
               </div>
               <div className="mb-2">
                 <CFormLabel>Contact Number</CFormLabel>
                 <CFormInput
                   type="text"
-                  value={driverToEdit.contactNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })}
+                  value={compainesToEdit.contactNumber}
+                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })}
                 />
               </div>
               <div className="mb-2">
-                <CFormLabel>address</CFormLabel>
+                <CFormLabel>Address</CFormLabel>
                 <CFormInput
                   type="text"
-                  value={driverToEdit.address}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, address: e.target.value })}
+                  value={compainesToEdit.address}
+                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, address: e.target.value })}
                 />
               </div>
               <div className="mb-2">
                 <CFormLabel>GST Number</CFormLabel>
                 <CFormInput
                   type="text"
-                  value={driverToEdit.gstNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, gstNumber: e.target.value })}
+                  value={compainesToEdit.gstNumber}
+                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })}
                 />
               </div>
               <div className="mb-2">
                 <CFormLabel>Password</CFormLabel>
                 <CFormInput
                   type="password"
-                  value={driverToEdit.password}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, password: e.target.value })}
+                  value={compainesToEdit.password}
+                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, password: e.target.value })}
                 />
               </div>
               <CButton color="primary" onClick={handleSaveEdit}>
@@ -364,10 +364,10 @@ const compainesExp = ({ setselectedCompanyId }) => {
         </CModal>
       )}
 
-      {/* Add Driver Modal */}
+      {/* Add compaines Modal */}
       <CModal alignment="center" visible={addModalOpen} onClose={() => setAddModalOpen(false)}>
         <CModalHeader>
-          <CModalTitle>Add Driver</CModalTitle>
+          <CModalTitle>Add compaines</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
@@ -375,50 +375,50 @@ const compainesExp = ({ setselectedCompanyId }) => {
               <CFormLabel>Name</CFormLabel>
               <CFormInput
                 type="text"
-                value={newDriver.name}
-                onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
+                value={newcompaines.name}
+                onChange={(e) => setNewcompaines({ ...newcompaines, name: e.target.value })}
               />
             </div>
             <div className="mb-2">
               <CFormLabel>Contact Number</CFormLabel>
               <CFormInput
                 type="text"
-                value={newDriver.contactNumber}
-                onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
+                value={newcompaines.contactNumber}
+                onChange={(e) => setNewcompaines({ ...newcompaines, contactNumber: e.target.value })}
               />
             </div>
             <div className="mb-2">
-              <CFormLabel>address</CFormLabel>
+              <CFormLabel>Address</CFormLabel>
               <CFormInput
                 type="text"
-                value={newDriver.address}
-                onChange={(e) => setNewDriver({ ...newDriver, address: e.target.value })}
+                value={newcompaines.address}
+                onChange={(e) => setNewcompaines({ ...newcompaines, address: e.target.value })}
               />
             </div>
             <div className="mb-2">
               <CFormLabel>GST Number</CFormLabel>
               <CFormInput
                 type="text"
-                value={newDriver.gstNumber}
-                onChange={(e) => setNewDriver({ ...newDriver, gstNumber: e.target.value })}
+                value={newcompaines.gstNumber}
+                onChange={(e) => setNewcompaines({ ...newcompaines, gstNumber: e.target.value })}
               />
             </div>
             <div className="mb-2">
               <CFormLabel>Password</CFormLabel>
               <CFormInput
                 type="Password"
-                value={newDriver.password}
-                onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
+                value={newcompaines.password}
+                onChange={(e) => setNewcompaines({ ...newcompaines, password: e.target.value })}
               />
             </div>
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <CFormLabel>Profile Picture</CFormLabel>
               <CFormInput
                 type="file"
                 onChange={handleProfileImageChange}
               />
-            </div>
-            <CButton color="primary" onClick={() => handleAddDriver(newDriver)}>
+            </div> */}
+            <CButton color="primary" onClick={() => handleAddcompaines(newcompaines)}>
               Submit
             </CButton>
           </CForm>

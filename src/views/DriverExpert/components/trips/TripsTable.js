@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import {
   CButton,
   CPagination,
@@ -22,20 +22,32 @@ import { Button } from '@mui/material';
 import signature from '../../Signature/signature.svg';
 
 const TripsTable = ({ trips }) => {
-  const [open, setOpen] = useState(false)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10 // Number of items per page in modal table
+  const [open, setOpen] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Number of items per page in modal table
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+
+  const handleOpenModal = (image) => {
+    setSelectedImage(image);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedImage('');
+  };
 
   const handleOpen = () => {
-    setCurrentPage(1) // Reset to the first page when opening modal
-    setOpen(true)
-  }
+    setCurrentPage(1); // Reset to the first page when opening modal
+    setOpen(true);
+  };
 
   // Sort trips by date (descending) for the latest 5 entries
-  const sortedTrips = [...trips].sort((a, b) => new Date(b.date) - new Date(a.date))
-  const latestTrips = sortedTrips.slice(0, 5)
+  const sortedTrips = [...trips].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const latestTrips = sortedTrips.slice(0, 5);
 
   // Filter trips based on the date range
   const filteredTrips = trips.filter((trip) => {
@@ -45,9 +57,9 @@ const TripsTable = ({ trips }) => {
   });
 
   // Pagination logic for modal table
-  const totalPages = Math.ceil(filteredTrips.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentTrips = filteredTrips.slice(startIndex, startIndex + itemsPerPage)
+  const totalPages = Math.ceil(filteredTrips.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTrips = filteredTrips.slice(startIndex, startIndex + itemsPerPage);
 
   // Table component for displaying trips
   const TripsContent = ({ data }) => (
@@ -119,6 +131,7 @@ const TripsTable = ({ trips }) => {
           </CButton>
         </div>
 
+        {/* Main Modal */}
         <CModal
           alignment="center"
           scrollable
@@ -138,6 +151,7 @@ const TripsTable = ({ trips }) => {
               onEndDateChange={setEndDate}
             />
             <TripsContent data={currentTrips} />
+
             {/* Pagination for modal table */}
             {totalPages > 1 && filteredTrips.length > itemsPerPage && (
               <CPagination align="center" className="mt-4">
@@ -163,6 +177,22 @@ const TripsTable = ({ trips }) => {
                   Next
                 </CPaginationItem>
               </CPagination>
+            )}
+          </CModalBody>
+        </CModal>
+
+        {/* Signature Modal */}
+        <CModal alignment="center" visible={openModal} onClose={handleCloseModal}>
+          <CModalHeader>
+            <CModalTitle>Customer Signature</CModalTitle>
+          </CModalHeader>
+          <CModalBody className="d-flex justify-content-center">
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt="Customer Signature"
+                style={{ maxWidth: '100%', maxHeight: '400px' }}
+              />
             )}
           </CModalBody>
         </CModal>
