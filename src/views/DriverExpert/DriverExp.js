@@ -24,7 +24,7 @@ import {
   CTabList,
   CTabPanel,
   CTabContent,
-  CTabs
+  CTabs,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
@@ -52,35 +52,54 @@ const DriversExp = ({ setSelectedDriverId }) => {
     licenseNumber: '',
     aadharNumber: '',
     password: '',
-    profileImage: null,  // State to store the selected image
+    profileImage: null, // State to store the selected image
   })
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
 
-  const [data, setData] = useState(drivers); // Assuming drivers are available
-  const [filter, setFilter] = useState('');
+  const [data, setData] = useState(drivers) // Assuming drivers are available
+  const [filter, setFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10 // Number of items per page
 
-  // Logic for Filter
   const debouncedFilterChange = debounce((value) => {
-    const filteredData = drivers.filter(
-      (row) =>
-        row.name.toLowerCase().includes(value.toLowerCase())
-    );
-    setData(filteredData);
-  }, 300);
+    const filteredData = drivers.filter((row) =>
+      row.name.toLowerCase().includes(value.toLowerCase()),
+    )
+    setData(filteredData)
+    setCurrentPage(1) // Reset to the first page on filter change
+  }, 300)
 
   const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-    debouncedFilterChange(e.target.value);
-  };
+    setFilter(e.target.value)
+    debouncedFilterChange(e.target.value)
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(data.length / itemsPerPage)
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem)
 
   // Handle file input change
   const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]
     if (file) {
-      setNewDriver({ ...newDriver, profileImage: file });
+      setNewDriver({ ...newDriver, profileImage: file })
     }
-  };
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
 
   // Group trips by driverId
   const groupedTrips = trips.reduce((acc, trip) => {
@@ -123,7 +142,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
 
   const handleDeleteDriver = (driverId) => {
     // Delete the driver by filtering it out from the state
-    setDrivers(drivers.filter(driver => driver.id !== driverId))
+    setDrivers(drivers.filter((driver) => driver.id !== driverId))
   }
 
   const handleEditDriver = (driver) => {
@@ -132,16 +151,13 @@ const DriversExp = ({ setSelectedDriverId }) => {
   }
 
   const handleSaveEdit = () => {
-    setDrivers(drivers.map(driver =>
-      driver.id === driverToEdit.id ? driverToEdit : driver
-    ))
+    setDrivers(drivers.map((driver) => (driver.id === driverToEdit.id ? driverToEdit : driver)))
     setEditModalOpen(false)
     alert('Driver updated successfully!')
   }
 
   return (
     <>
-
       {/* Filter */}
       <div className="mb-3">
         <input
@@ -158,11 +174,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
           <CCard className="mb-4">
             <CCardHeader>
               <strong>Drivers List</strong>
-              <CButton
-                color="primary"
-                className="float-end"
-                onClick={() => setAddModalOpen(true)}
-              >
+              <CButton color="primary" className="float-end" onClick={() => setAddModalOpen(true)}>
                 Add Driver
               </CButton>
             </CCardHeader>
@@ -189,7 +201,8 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CTableBody>
                     {data.map((driver, index) => (
                       <CTableRow key={driver.id}>
-                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell> {/* Serial Number */}
+                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell>{' '}
+                        {/* Serial Number */}
                         <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
                           {driver.contactNumber}
@@ -228,6 +241,29 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   </CTableBody>
                 </CTable>
               )}
+              {/* Pagination Buttons */}
+              <div className="d-flex justify-content-center align-items-center mt-3">
+                <CButton color="primary" disabled={currentPage === 1} onClick={handlePreviousPage}>
+                  Previous
+                </CButton>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <CButton
+                    key={index}
+                    color={currentPage === index + 1 ? 'primary' : 'secondary'}
+                    className="mx-1"
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </CButton>
+                ))}
+                <CButton
+                  color="primary"
+                  disabled={currentPage === totalPages}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </CButton>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
@@ -243,7 +279,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
           fullscreen
         >
           <CModalHeader>
-            <CModalTitle className="d-flex align-items-center"><h5>Driver Profile</h5></CModalTitle>
+            <CModalTitle className="d-flex align-items-center">
+              <h5>Driver Profile</h5>
+            </CModalTitle>
           </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
@@ -333,7 +371,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.contactNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -349,7 +389,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.licenseNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -357,7 +399,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.aadharNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -433,15 +477,13 @@ const DriversExp = ({ setSelectedDriverId }) => {
             </div>
             <div className="mb-2">
               <CFormLabel>Profile Picture</CFormLabel>
-              <CFormInput
-                type="file"
-                onChange={handleProfileImageChange}
-              />
+              <CFormInput type="file" onChange={handleProfileImageChange} />
             </div>
             <CButton color="primary" onClick={() => handleAddDriver(newDriver)}>
               Submit
             </CButton>
           </CForm>
+          {/* Pagination Buttons */}
         </CModalBody>
       </CModal>
     </>

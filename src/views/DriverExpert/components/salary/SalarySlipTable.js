@@ -4,12 +4,12 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CCol,
-  CRow,
   CModal,
   CModalBody,
   CModalHeader,
   CModalTitle,
+  CPagination,
+  CPaginationItem,
 } from '@coreui/react'
 import { ChevronRight } from 'lucide-react'
 import SalaryDetail from './SalaryCard'
@@ -19,8 +19,11 @@ const SalarySlipTable = ({ salaries }) => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [open, setOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5 // Number of items per page in modal table
 
   const handleOpen = () => {
+    setCurrentPage(1) // Reset to the first page when opening modal
     setOpen(true)
   }
 
@@ -31,14 +34,18 @@ const SalarySlipTable = ({ salaries }) => {
     return date >= new Date(startDate) && date <= new Date(endDate)
   })
 
+  // Pagination logic for modal table
+  const totalPages = Math.ceil(filteredSalaries.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const currentSalaries = filteredSalaries.slice(startIndex, startIndex + itemsPerPage)
+
   // Salary content for each salary slip
   const SalaryContent = ({ data }) => (
     <div className="space-y-4">
       {data.map((salary) => (
         <CCard key={salary.id} className="mb-4">
           <CCardHeader>
-            Salary Slip -{' '}
-            {new Date(salary.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            Salary Slip - {new Date(salary.month).toLocaleDateString('en-US', {})}
           </CCardHeader>
           <CCardBody>
             <div className="space-y-2">
@@ -96,7 +103,33 @@ const SalarySlipTable = ({ salaries }) => {
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
           />
-          <SalaryContent data={filteredSalaries} />
+          <SalaryContent data={currentSalaries} />
+          {/* Pagination for modal table */}
+          {totalPages > 1 && filteredSalaries.length > itemsPerPage && (
+            <CPagination align="center" className="mt-4">
+              <CPaginationItem
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </CPaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <CPaginationItem
+                  key={i + 1}
+                  active={i + 1 === currentPage}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </CPaginationItem>
+              ))}
+              <CPaginationItem
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                Next
+              </CPaginationItem>
+            </CPagination>
+          )}
         </CModalBody>
       </CModal>
     </div>
