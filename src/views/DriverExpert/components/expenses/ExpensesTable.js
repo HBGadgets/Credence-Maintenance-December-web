@@ -50,7 +50,7 @@ export default function ExpensesTable({ expenses }) {
 
   // Table component for displaying expenses
   const ExpensesContent = ({ data }) => (
-    <CTable hover responsive bordered>
+    <CTable hover responsive bordered striped>
       <CTableHead>
         <CTableRow>
           <CTableHeaderCell>Date</CTableHeaderCell>
