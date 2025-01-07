@@ -53,11 +53,11 @@ const AttendanceSection = ({ driverId }) => {
           </CRow>
 
           <AttendanceStats attendanceData={filteredAttendance} />
-          <LeaveRequests
+          {/* <LeaveRequests
             requests={filteredAttendance}
             onApprove={(id) => console.log('Approve:', id)}
             onDeny={(id) => console.log('Deny:', id)}
-          />
+          /> */}
 
           <div className="mt-4">
             <CButton

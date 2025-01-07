@@ -1,31 +1,5 @@
 import React, { useState } from 'react'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CRow,
-  CTable,
-  CTableBody,
-  CTableHead,
-  CTableHeaderCell,
-  CTableDataCell,
-  CTableRow,
-  CButton,
-  CModal,
-  CModalBody,
-  CModalHeader,
-  CModalTitle,
-  CImage,
-  CForm,
-  CFormInput,
-  CFormLabel,
-  CTab,
-  CTabList,
-  CTabPanel,
-  CTabContent,
-  CTabs,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CTable, CTableBody, CTableHead, CTableHeaderCell, CTableDataCell, CTableRow, CButton, CModal, CModalBody, CModalHeader, CModalTitle, CImage, CForm, CFormInput, CFormLabel, CTab, CTabList, CTabPanel, CTabContent, CTabs, } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
 import { drivers } from '../DriverExpert/data/drivers' // Ensure this import is correct
@@ -199,9 +173,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {data.map((driver, index) => (
+                    {currentItems.map((driver, index) => (
                       <CTableRow key={driver.id}>
-                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell>{' '}
+                        <CTableDataCell className="text-center">{(currentPage - 1) * itemsPerPage + index + 1}</CTableDataCell>{' '}
                         {/* Serial Number */}
                         <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
@@ -241,6 +215,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   </CTableBody>
                 </CTable>
               )}
+
               {/* Pagination Buttons */}
               <div className="d-flex justify-content-center align-items-center mt-3">
                 <CButton color="primary" disabled={currentPage === 1} onClick={handlePreviousPage}>
@@ -321,7 +296,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   Expenses
                 </CTab>
                 <CTab aria-controls="trip-details" itemKey={3}>
-                  Trip Details
+                  Logbook Details
                 </CTab>
                 <CTab aria-controls="salary-slips" itemKey={4}>
                   Salary Slips
