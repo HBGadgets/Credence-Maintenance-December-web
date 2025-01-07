@@ -155,6 +155,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Leave Requests',
+        to: '/LeaveRequests',
+      },
+      {
+        component: CNavItem,
         name: 'Vehicle Expenses',
         to: '/VehicleExpenses',
       },
