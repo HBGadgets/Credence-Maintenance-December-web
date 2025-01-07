@@ -157,12 +157,8 @@ const routes = [
   { path: '/Trip', name: 'Trip', element: Trip },
   { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
-<<<<<<< HEAD
-  { path: '/SubDetails', name: 'Sub Details', element: SubDetails },
-  { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
-=======
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
->>>>>>> 6907dc62db23917a069e606488036a5846d774b1
+  { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
 
   /**EXPENSES MANAGEMENT */
 
