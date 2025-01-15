@@ -29,6 +29,14 @@ import {
   cilUser,
   cilWarning,
 } from '@coreui/icons'
+import { IoPersonSharp } from 'react-icons/io5'
+import { FaTruckMoving } from 'react-icons/fa6'
+import { IoSettingsSharp } from 'react-icons/io5'
+import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
+import { TbTruckDelivery } from 'react-icons/tb'
+import { IoAlertCircle } from 'react-icons/io5'
+import { FaMapLocationDot } from 'react-icons/fa6'
+import { FaHandshakeSimple } from 'react-icons/fa6'
 
 import avatar1 from 'src/assets/images/avatars/1.jpg'
 import avatar2 from 'src/assets/images/avatars/2.jpg'
@@ -169,7 +177,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilUser} size="lg" />
+                <IoPersonSharp style={{ fontSize: '21px' }} />
                 <span className="font-weight-bold">Drivers</span>
               </CCardHeader>
               <CCardBody>
@@ -184,7 +192,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilTruck} size="lg" />
+                <FaTruckMoving style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Vehicles</span>
               </CCardHeader>
               <CCardBody>
@@ -199,7 +207,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilCog} size="lg" />
+                <IoSettingsSharp style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Maintenance Status</span>
               </CCardHeader>
               <CCardBody>
@@ -214,7 +222,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <MdOutlineCurrencyRupee />
+                <RiMoneyRupeeCircleFill style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
@@ -230,7 +238,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilListRich} size="lg" />
+                <TbTruckDelivery style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Live on Work</span>
               </CCardHeader>
               <CCardBody>
@@ -244,7 +252,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilShieldAlt} size="lg" />
+                <IoAlertCircle style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Insurance Alert</span>
               </CCardHeader>
               <CCardBody>
@@ -258,7 +266,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilMap} size="lg" />
+                <FaMapLocationDot style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Vehicle Location</span>
               </CCardHeader>
               <CCardBody>
@@ -272,7 +280,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <CIcon icon={cilWarning} size="lg" />
+                <FaHandshakeSimple style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Roadside Assitance</span>
               </CCardHeader>
               <CCardBody>
