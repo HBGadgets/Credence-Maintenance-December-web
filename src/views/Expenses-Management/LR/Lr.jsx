@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import LRForm from './LrForm';
+import LRForm from './LRFormCoreUi';
 import LRFormEdit from './LrFormEdit';
 //import Actions from './Actions';
 import LRTable from './LrTable';
@@ -8,7 +8,9 @@ import LRTable from './LrTable';
 // import PrintAction from './PrintAction';
 import fileData from './data'
 // import axios from 'axios';
-import { Typography,Button, Box } from '@mui/material';
+import { Typography,Button, Box, TextField, InputAdornment } from '@mui/material';
+import { Search } from '@mui/icons-material';
+
 
 const LR = () => {
   const [formData, setFormData] = useState([]);
@@ -70,7 +72,8 @@ const LR = () => {
           (lr.consigneeName && lr.consigneeName.toLowerCase().includes(term)) ||
           (lr.customer && lr.customer.toLowerCase().includes(term)) ||
           (lr.from && lr.from.toLowerCase().includes(term)) ||
-          (lr.to && lr.to.toLowerCase().includes(term))
+          (lr.to && lr.to.toLowerCase().includes(term)) ||
+          (lr.vehicleNumber && lr.vehicleNumber.toLowerCase().includes(term))
         );
       });
       console.log("this are filtered records",filtered);
@@ -84,27 +87,36 @@ const LR = () => {
      
       <header style={{display:'flex',justifyContent:'space-between'}}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    Lorry Receipt - Challan
+                     
                 </Typography>
                 <div style={{display:'flex'}}>
-        <input
-          type="text"
-          id="search"
-          placeholder="Search here"
-          value={searchTerm}
-          onChange={handleSearch}
-          style={{
-            width: "300px",
-            padding: "10px",
-            fontSize: "16px",
-            border: "none",
-            borderRadius: "6px",
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-            marginRight: "10px",
-            height: "40px",
-            outline: "none",
-          }}
-        />
+        
+        <TextField
+      id="search"
+      placeholder="Search here"
+      value={searchTerm}
+      onChange={handleSearch}
+      variant="outlined"
+      size="small"
+      sx={{
+        width: "300px",
+        
+        marginRight: "1rem",
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "6px",
+          boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+          background: "white",
+          
+        },
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Search />
+          </InputAdornment>
+        ),
+      }}
+    />
         <Button variant="contained"   onClick={handleCreateLR} style={{height: "40px", color:'white', background:'black'}}>
                     Create LR
         </Button>

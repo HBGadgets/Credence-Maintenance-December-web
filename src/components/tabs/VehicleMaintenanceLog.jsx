@@ -16,11 +16,22 @@ import {
   CModal,
   CModalBody,
   CModalHeader,
+  CButton,
+  CModalTitle,
+  CModalFooter,
 } from '@coreui/react'
+import { Plus } from "lucide-react";
 const VehicleMaintenanceLogModal = React.lazy(() => import('../modals/VehicleMaintenanceLogModal'))
 function VehicleMaintenanceLog({ logs }) {
   const [showAllLogs, setShowAllLogs] = useState(false)
   const [viewDoc, setViewDoc] = useState(false)
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const handleIconClick = (row) => {
+    setSelectedRow(row);
+    setModalVisible(true);
+  };
 
   const columns = [
     'Service Date',
@@ -67,7 +78,18 @@ function VehicleMaintenanceLog({ logs }) {
                       <CTableRow key={rowIndex}>
                         <CTableDataCell className="text-center">{row.serviceDate}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.mileage}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.workPerformed}</CTableDataCell>
+
+                        {/*  */}
+                        <CTableDataCell className="text-center">
+                          {row.workPerformed}
+                            <Plus size={16} 
+                              className="ms-2 cursor-pointer"
+                              onClick={() => handleIconClick(row)}
+                            />
+                          
+                        </CTableDataCell>
+                       
+                        {/*  */}
                         <CTableDataCell className="text-center">{row.performedBy}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.cost}</CTableDataCell>
                         <CTableDataCell className="text-center">
@@ -110,6 +132,48 @@ function VehicleMaintenanceLog({ logs }) {
         logs={logs}
         columns={columns}
       />
+
+      
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)} alignment="center">
+        <CModalHeader>
+          <CModalTitle>Details for {selectedRow?.workPerformed}</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <div className="mb-3">
+            <h5 className="text-primary">Service Information</h5>
+            <CTable  bordered hover>
+              <CTableBody>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Service Date</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.serviceDate || "N/A"}</CTableDataCell>
+                </CTableRow>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Mileage</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.mileage || "N/A"}</CTableDataCell>
+                </CTableRow>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Work Performed</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.workPerformed || "N/A"}</CTableDataCell>
+                </CTableRow>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Performed By</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.performedBy || "N/A"}</CTableDataCell>
+                </CTableRow>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Cost</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.cost || "N/A"}</CTableDataCell>
+                </CTableRow>
+                <CTableRow>
+                  <CTableDataCell className="fw-bold">Notes</CTableDataCell>
+                  <CTableDataCell>{selectedRow?.notes || "N/A"}</CTableDataCell>
+                </CTableRow>
+              </CTableBody>
+            </CTable>
+          </div>
+        </CModalBody>
+
+</CModal>
+
     </>
   )
 }
