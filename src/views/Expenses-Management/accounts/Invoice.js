@@ -3,8 +3,34 @@ import InvoiceForm from './InvoiceForm';
 import InvoiceList from './InvoiceList';
 // import InvoiceSummary from './InvoiceSummary';
 // import axios from 'axios';
-import { Button } from '@mui/material';
+import { Button , Modal, Box, TextField, InputAdornment} from '@mui/material';
 import fileData from "./data"
+import DistanceInvoice from "./DistanceInvoive"
+import { CModal, CModalHeader, CModalBody, CModalFooter,CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRow, CCol, CButton } from '@coreui/react';
+// import '@coreui/coreui/dist/css/coreui.min.css';
+
+import NewInvoiceForm from './NewInvoiceForm';
+import { Search } from '@mui/icons-material';
+
+
+const style = {
+  position: 'absolute',
+  top: '60%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '60%',
+  height: '90vh',
+  maxHeight: '90vh',
+  bgcolor: 'white',
+  boxShadow: 24,
+  
+  overflowY: 'auto', // Enable vertical scrolling
+  display: 'flex',
+  flexDirection: 'column',
+  
+  
+}
+
 
 function Invoices() {
   const [invoices, setInvoices] = useState([]); // All invoices
@@ -13,6 +39,8 @@ function Invoices() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState(null); // For editing
+  const [activeTab, setActiveTab] = useState('load');// for invoice tabs
+  const [tabOpen, setTabOpen] = useState(false); // for invoice tabs
   
   // Close both modals
   const handleModalClose = () => {
@@ -20,6 +48,9 @@ function Invoices() {
     setEditModalOpen(false);
     setCurrentInvoice(null); // Clear the current invoice
   };
+  const handleCloseModalTab=()=>{
+    setTabOpen(false);
+  }
   
   const fetchInvoices = async () => {
     try {
@@ -59,7 +90,8 @@ function Invoices() {
   }, []);
 
   const handleCreateNewInvoice = () => {
-    setAddModalOpen(true)
+    setTabOpen(true)
+    // setAddModalOpen(true)
   };
 
  
@@ -67,9 +99,9 @@ function Invoices() {
   return (
     <div>
       <header style={{display:'flex', justifyContent:'space-between'}}>
-        <h1>Invoices</h1>
+        <h1> </h1>
       <div style={{display:'flex'}}>
-        <input
+        {/* <input
           type="text"
           id="search"
           placeholder="Search by invoice number, client name, or email"
@@ -86,15 +118,41 @@ function Invoices() {
             height: "40px",
             outline: "none",
           }}
-        />
-              <Button variant="contained" color="primary" onClick={handleCreateNewInvoice} style={{height: "40px"}}>
+        /> */}
+     <TextField
+      id="search"
+      placeholder="Search here"
+      value={searchTerm}
+      onChange={handleSearch}
+      variant="outlined"
+      size="small"
+      sx={{
+        width: "300px",
+        
+        marginRight: "1rem",
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "6px",
+          boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+          background: "white",
+          
+        },
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Search />
+          </InputAdornment>
+        ),
+      }}
+    />
+              <Button variant="contained" onClick={handleCreateNewInvoice} style={{height: "40px", background:'black', color:'white'}}>
                     Add Invoice
-                </Button>
+              </Button>
 
       </div>
       </header>
 
-      <InvoiceForm invoiceToEdit={currentInvoice} addModalOpen={addModalOpen} setAddModalOpen={setAddModalOpen} editModalOpen={editModalOpen} setEditModalOpen={setEditModalOpen} setFilteredInvoices={setFilteredInvoices} handleModalClose={handleModalClose} fetchInvoices={fetchInvoices}/>
+      {/* <InvoiceForm invoiceToEdit={currentInvoice} addModalOpen={addModalOpen} setAddModalOpen={setAddModalOpen} editModalOpen={editModalOpen} setEditModalOpen={setEditModalOpen} setFilteredInvoices={setFilteredInvoices} handleModalClose={handleModalClose} fetchInvoices={fetchInvoices}/> */}
       {/* <InvoiceSummary invoices={filteredInvoices} /> */}
       <InvoiceList
         invoices={filteredInvoices}
@@ -102,6 +160,142 @@ function Invoices() {
         setEditModalOpen={setEditModalOpen}
         setCurrentInvoice={setCurrentInvoice}
       />
+
+
+      
+      
+        {/* <Modal
+        open={tabOpen}
+        onClose={handleCloseModalTab}
+        style={{
+          height:'80vh',
+          
+        }}
+        >
+          <Box
+        sx={{
+          ...style,
+          backgroundColor: '#f7f9fc',
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+          borderRadius: '12px',
+          
+        }}
+      >
+       
+      <div className="tabs-container container mt-4">
+      <CRow>
+        <CCol>
+          <CNav variant="tabs" className="custom-nav">
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 'load'}
+                onClick={() => setActiveTab('load')}
+                className="custom-tab-link"
+              >
+                Load Wise
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 'distance'}
+                onClick={() => setActiveTab('distance')}
+                className="custom-tab-link"
+              >
+                Distance Wise
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={activeTab === 'third'}
+                onClick={() => setActiveTab('third')}
+                className="custom-tab-link"
+              >
+                Third Tab
+              </CNavLink>
+            </CNavItem>
+          </CNav>
+          <CTabContent className="custom-tab-content" >
+            <CTabPane visible={activeTab === 'load'} className="tab-pane-content" >
+              <NewInvoiceForm  />
+              </CTabPane>
+            <CTabPane visible={activeTab === 'distance'} className="tab-pane-content">
+             <DistanceInvoice />
+            </CTabPane>
+            <CTabPane visible={activeTab === 'third'} className="tab-pane-content">
+              <h5>Third Tab Content</h5>
+              <p>Additional content goes here.</p>
+            </CTabPane>
+          </CTabContent>
+        </CCol>
+      </CRow>
+    </div>
+    </Box>
+    </Modal> */}
+     <CModal visible={tabOpen} onClose={handleCloseModalTab} size="lg" >
+      
+      <CModalBody
+        // style={{
+        //   backgroundColor: '#f7f9fc',
+        //   boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+        //   borderRadius: '12px',
+        // }}
+      >
+        <div className="tabs-container container ">
+          <CRow>
+            <CCol>
+              <CNav variant="tabs" className="custom-nav">
+                <CNavItem>
+                  <CNavLink
+                    active={activeTab === 'load'}
+                    onClick={() => setActiveTab('load')}
+                    className="custom-tab-link"
+                  >
+                    Load Wise
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem>
+                  <CNavLink
+                    active={activeTab === 'distance'}
+                    onClick={() => setActiveTab('distance')}
+                    className="custom-tab-link"
+                  >
+                    Distance Wise
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem>
+                  <CNavLink
+                    active={activeTab === 'third'}
+                    onClick={() => setActiveTab('third')}
+                    className="custom-tab-link"
+                  >
+                    Third Tab
+                  </CNavLink>
+                </CNavItem>
+              </CNav>
+              <CTabContent className="custom-tab-content mt-4" >
+                <CTabPane visible={activeTab === 'load'} className="tab-pane-content">
+                  <NewInvoiceForm />
+                </CTabPane>
+                <CTabPane visible={activeTab === 'distance'} className="tab-pane-content">
+                  <DistanceInvoice />
+                </CTabPane>
+                <CTabPane visible={activeTab === 'third'} className="tab-pane-content">
+                  <h5>Third Tab Content</h5>
+                  <p>Additional content goes here.</p>
+                </CTabPane>
+              </CTabContent>
+            </CCol>
+          </CRow>
+        </div>
+      </CModalBody>
+      <CModalFooter>
+        <CButton color="secondary" onClick={handleCloseModalTab}>
+          Close
+        </CButton>
+      </CModalFooter>
+    </CModal>
+   
+    
     </div>
   );
 }

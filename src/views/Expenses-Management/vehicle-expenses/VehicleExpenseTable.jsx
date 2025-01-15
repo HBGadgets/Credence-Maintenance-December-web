@@ -44,7 +44,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
   return (
     <>
 
-      <CRow>
+      <CRow style={{marginTop:'1rem'}}>
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>

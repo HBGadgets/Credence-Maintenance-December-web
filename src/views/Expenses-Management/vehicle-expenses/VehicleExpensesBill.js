@@ -73,8 +73,8 @@ const VehicleExpenses = () => {
     return (
         <div>
             <header style={{display:'flex',justifyContent:'space-between'}}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Vehicle Expenses
+                <Typography variant="h4" component="h1" gutterBottom style={{fontFamily:'cursive'}}>
+                    {/* Vehicle Expenses */}
                 </Typography>
                 <div style={{display:'flex'}}>
         {/* <input
@@ -95,24 +95,33 @@ const VehicleExpenses = () => {
             outline: "none",
           }}
         /> */}
-        <TextField
-      value={searchTerm}
-      onChange={handleSearch}
-      placeholder="Search by Vehicle, Category, Amount, Vendor"
-      fullWidth
-      variant="outlined"
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Search />
-          </InputAdornment>
-        ),
-      }}
-      sx={{
-        width: 300,
-        height: 40,
-      }}
-    />
+
+                         <TextField
+          id="search"
+          placeholder="Search here"
+          value={searchTerm}
+          onChange={handleSearch}
+          variant="outlined"
+          size="small"
+          sx={{
+            width: "300px",
+            
+            marginRight: "1rem",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "6px",
+              boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+              background: "white",
+              
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
 
         <Button variant="contained"  onClick={handleOpenModal} style={{height: "40px", color:'white', background:'black'}}>
                     Add Expense
@@ -126,22 +135,9 @@ const VehicleExpenses = () => {
                 <ExpenseList expenses={expenses} filteredExpenses={filteredExpenses} setFilteredExpenses={setFilteredExpenses} onExpensesUpdate={handleExpensesUpdate} />
             </div>
 
-            <Modal open={openModal} onClose={handleCloseModal}>
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4,
-                    }}
-                >
-                    <ExpenseForm onExpensesUpdate={handleExpensesUpdate} />
-                </Box>
-            </Modal>
+            
+            <ExpenseForm onExpensesUpdate={handleExpensesUpdate} openModal={openModal} handleCloseModal={handleCloseModal} />
+            
         </div>
     );
 };

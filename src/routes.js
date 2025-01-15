@@ -50,7 +50,11 @@ const VehicleExpensesBill = React.lazy(
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
-
+const TyreDetails =React.lazy(()=> import('./views/Expenses-Management/driver-expenses/TyreDetails.js'))
+// Tyre Management
+const TyreInventory  = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
+const VehicleListForTyre = React.lazy(() => import('./views/Tyre-Management/VehicleList.js'))
+const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
@@ -164,6 +168,11 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'LR', element: LR },
+  {path: '/tyre-details', name: 'Tyre Details', element: TyreDetails},
+  /*Tyre Management*/
+  { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
+  { path: '/VehicleList', name: 'Vehicle List', element: VehicleListForTyre},
+  {path:'/vehicle-details',name: 'Detailed Page', element: DetailedPage},
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

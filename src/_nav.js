@@ -235,6 +235,34 @@ const _nav = [
     ],
   },
 
+  //TYRE MANAGEMENT
+  {
+    component: CNavGroup,
+    name: 'Tyre Management',
+    icon: (
+      <ReceiptText
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Inventory',
+        to: '/Inventory',
+      },
+      {
+        component: CNavItem,
+        name: 'VehicleList',
+        to: '/VehicleList',
+      },
+     
+      
+     
+    
+    ],
+  },
+
   // ROAD SIDE ASSISTANCE
   {
     component: CNavGroup,
