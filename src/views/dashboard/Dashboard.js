@@ -1,11 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   CAvatar,
+  CButton,
   CCard,
   CCardBody,
   CCardGroup,
   CCardHeader,
   CCol,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
   CRow,
   CTable,
   CTableBody,
@@ -161,13 +166,43 @@ const Dashboard = () => {
     },
   ]
 
+  // For cart new dialog box open and close.
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState("");
+
+  const openModal = (cardName) => {
+    setModalContent(cardName);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalContent("");
+  };
+
+
   return (
     <>
+      <style>
+        {`
+          .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+          .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+          }
+          .hover-table tr:hover {
+            background-color: #f1f1f1;
+          }
+        `}
+      </style>
+
       <CCardGroup className="mb-4">
         <CRow className="g-3">
           {/* Active/Inactive Drivers Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Drivers")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilUser} size="lg" />
                 <span className="font-weight-bold">Drivers</span>
@@ -182,7 +217,7 @@ const Dashboard = () => {
 
           {/* Active/Inactive Vehicles Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicles")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilTruck} size="lg" />
                 <span className="font-weight-bold">Vehicles</span>
@@ -197,7 +232,7 @@ const Dashboard = () => {
 
           {/* Vehicle Maintenance Status Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Maintenance")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilCog} size="lg" />
                 <span className="font-weight-bold">Maintenance Status</span>
@@ -212,23 +247,21 @@ const Dashboard = () => {
 
           {/* Total Expenses Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Expenses")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <MdOutlineCurrencyRupee />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Total: ₹{totalExpenses.toLocaleString()}</h5>
-                <p className="text-muted">
-                  Total expenses for the fleet, including driver and vehicle costs
-                </p>
+                <p className="text-muted">Total expenses for the fleet, including driver and vehicle costs</p>
               </CCardBody>
             </CCard>
           </CCol>
 
           {/* Live on Work Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Live on Work")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilListRich} size="lg" />
                 <span className="font-weight-bold">Live on Work</span>
@@ -242,7 +275,7 @@ const Dashboard = () => {
 
           {/* Insurance Alert Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Insurance Alert")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilShieldAlt} size="lg" />
                 <span className="font-weight-bold">Insurance Alert</span>
@@ -256,34 +289,48 @@ const Dashboard = () => {
 
           {/* Vehicle Location Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicle Location")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilMap} size="lg" />
                 <span className="font-weight-bold">Vehicle Location</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Current Location: {currentLocation} </h5>
-                <p className="text-muted">Real-time location of all the live vehicles</p>
+                <p className="text-muted">Real-time location of all live vehicles</p>
               </CCardBody>
             </CCard>
           </CCol>
 
-          {/* Roadside Assitance  Card (New Feature) */}
+          {/* Roadside Assistance Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0">
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Roadside Assistance")}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <CIcon icon={cilWarning} size="lg" />
-                <span className="font-weight-bold">Roadside Assitance</span>
+                <span className="font-weight-bold">Roadside Assistance</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Used Service: {roadSide}</h5>
-                <p className="text-muted">Total vehicles use Roadside Assitance</p>
+                <p className="text-muted">Vehicles using Roadside Assistance</p>
               </CCardBody>
             </CCard>
           </CCol>
         </CRow>
       </CCardGroup>
 
+      {/* Modals for each card */}
+      <CModal visible={modalVisible} onClose={closeModal} size="lg" className='pt-5'>
+        <CModalHeader>
+          <h5>{modalContent} Details</h5>
+        </CModalHeader>
+        <CModalBody>
+          <p>{`Content for ${modalContent} will go here`}</p>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={closeModal}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Recent Trips Table */}
       <CRow>
         <CCol xs>
           <CCard className="mb-4">
