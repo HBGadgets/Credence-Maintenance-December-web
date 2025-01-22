@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import {
@@ -18,11 +17,14 @@ import {
   CModalFooter,
   CModalHeader,
   CButton,
+  CInputGroup,
+  CFormInput,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 
 function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
   const [filteredLogs, setFilteredLogs] = useState(trip)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const handleDateFilter = (startDate, endDate) => {
     if (!trip.length) return
@@ -36,6 +38,16 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
 
   const handleClearFilter = () => {
     setFilteredLogs(trip)
+    setSearchQuery('')
+  }
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+    const lowercasedQuery = query.toLowerCase()
+    const filtered = trip.filter((t) =>
+      Object.values(t).some((value) => String(value).toLowerCase().includes(lowercasedQuery)),
+    )
+    setFilteredLogs(filtered)
   }
 
   return (
@@ -44,9 +56,21 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
       <CModalBody className="d-flex flex-column gap-3">
         <div className="d-flex gap-3 align-items-end">
           <DateRangeFilter onFilter={handleDateFilter} />
-          <button onClick={handleClearFilter} className="btn btn-secondary btn-sm">
-            Clear Filter
-          </button>
+          <CInputGroup className="w-50">
+            <CFormInput
+              type="text"
+              placeholder="Search trips..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+            {/* <CButton
+              color="secondary"
+              onClick={handleClearFilter}
+              title="Clear Search"
+            >
+              Clear
+            </CButton> */}
+          </CInputGroup>
         </div>
         <CRow>
           <CCol xs={12}>

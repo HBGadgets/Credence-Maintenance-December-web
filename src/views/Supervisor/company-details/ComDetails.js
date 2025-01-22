@@ -24,7 +24,7 @@ import {
   CTabList,
   CTabPanel,
   CTabContent,
-  CTabs
+  CTabs,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
@@ -38,6 +38,12 @@ import { compaines } from '../company-details/data/compaines' // Ensure this imp
 // import AttendanceSection from '../compainesExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
+import { IoPerson } from 'react-icons/io5'
+import { IoCall } from 'react-icons/io5'
+import { MdEmail } from 'react-icons/md'
+import { IoDocumentText } from 'react-icons/io5'
+import { FaAddressCard } from 'react-icons/fa'
+import { RiLockPasswordFill } from 'react-icons/ri'
 
 const compainesExp = ({ setselectedCompanyId }) => {
   const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
@@ -56,22 +62,21 @@ const compainesExp = ({ setselectedCompanyId }) => {
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [compainesToEdit, setcompainesToEdit] = useState(null) // State for the compaines being edited
 
-  const [data, setData] = useState(compaines); // Assuming compaines are available
-  const [filter, setFilter] = useState('');
+  const [data, setData] = useState(compaines) // Assuming compaines are available
+  const [filter, setFilter] = useState('')
 
   // Logic for Filter
   const debouncedFilterChange = debounce((value) => {
-    const filteredData = compaines.filter(
-      (row) =>
-        row.name.toLowerCase().includes(value.toLowerCase())
-    );
-    setData(filteredData);
-  }, 300);
+    const filteredData = compaines.filter((row) =>
+      row.name.toLowerCase().includes(value.toLowerCase()),
+    )
+    setData(filteredData)
+  }, 300)
 
   const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-    debouncedFilterChange(e.target.value);
-  };
+    setFilter(e.target.value)
+    debouncedFilterChange(e.target.value)
+  }
 
   // Handle file input change
   // const handleProfileImageChange = (e) => {
@@ -122,7 +127,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
 
   const handleDeletecompaines = (compainesId) => {
     // Delete the compaines by filtering it out from the state
-    setcompaines(compaines.filter(compaines => compaines.id !== compainesId))
+    setcompaines(compaines.filter((compaines) => compaines.id !== compainesId))
   }
 
   const handleEditcompaines = (compaines) => {
@@ -131,40 +136,41 @@ const compainesExp = ({ setselectedCompanyId }) => {
   }
 
   const handleSaveEdit = () => {
-    setcompaines(compaines.map(compaines =>
-      compaines.id === compainesToEdit.id ? compainesToEdit : compaines
-    ))
+    setcompaines(
+      compaines.map((compaines) =>
+        compaines.id === compainesToEdit.id ? compainesToEdit : compaines,
+      ),
+    )
     setEditModalOpen(false)
     alert('compaines updated successfully!')
   }
 
   return (
     <>
-
-      {/* Filter */}
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Filter by Company Name"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </div>
-
       <CRow>
+        <div>
+          {' '}
+          <CButton color="primary" className="float-end mb-2" onClick={() => setAddModalOpen(true)}>
+            Add Company
+          </CButton>
+        </div>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Compaines List</strong>
-              <CButton
-                color="primary"
-                className="float-end"
-                onClick={() => setAddModalOpen(true)}
-              >
-                Add Company
-              </CButton>
+              <CFormInput
+                type="text"
+                placeholder="Search Company..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: filter ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: filter ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
+
             <CCardBody>
               {data.length === 0 ? (
                 <p className="text-center">No compaines available.</p>
@@ -188,7 +194,8 @@ const compainesExp = ({ setselectedCompanyId }) => {
                   <CTableBody>
                     {data.map((compaines, index) => (
                       <CTableRow key={compaines.id}>
-                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell> {/* Serial Number */}
+                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell>{' '}
+                        {/* Serial Number */}
                         <CTableDataCell className="text-center">{compaines.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
                           {compaines.contactNumber}
@@ -242,7 +249,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
           fullscreen
         >
           <CModalHeader>
-            <CModalTitle className="d-flex align-items-center"><h5>{selectedCompany.name}</h5></CModalTitle>
+            <CModalTitle className="d-flex align-items-center">
+              <h5>{selectedCompany.name}</h5>
+            </CModalTitle>
           </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
@@ -329,7 +338,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CFormInput
                   type="text"
                   value={compainesToEdit.contactNumber}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })}
+                  onChange={(e) =>
+                    setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -337,7 +348,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CFormInput
                   type="text"
                   value={compainesToEdit.address}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, address: e.target.value })}
+                  onChange={(e) =>
+                    setcompainesToEdit({ ...compainesToEdit, address: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -345,7 +358,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CFormInput
                   type="text"
                   value={compainesToEdit.gstNumber}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })}
+                  onChange={(e) =>
+                    setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -353,7 +368,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CFormInput
                   type="password"
                   value={compainesToEdit.password}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, password: e.target.value })}
+                  onChange={(e) =>
+                    setcompainesToEdit({ ...compainesToEdit, password: e.target.value })
+                  }
                 />
               </div>
               <CButton color="primary" onClick={handleSaveEdit}>
@@ -365,62 +382,86 @@ const compainesExp = ({ setselectedCompanyId }) => {
       )}
 
       {/* Add compaines Modal */}
-      <CModal alignment="center" visible={addModalOpen} onClose={() => setAddModalOpen(false)}>
+      <CModal
+        alignment="center"
+        visible={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        size="lg"
+      >
         <CModalHeader>
-          <CModalTitle>Add compaines</CModalTitle>
+          <CModalTitle>Add Companies</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <CForm>
-            <div className="mb-2">
-              <CFormLabel>Name</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newcompaines.name}
-                onChange={(e) => setNewcompaines({ ...newcompaines, name: e.target.value })}
-              />
+          <CForm style={{ width: '100%' }}>
+            {' '}
+            {/* Ensures the form takes full width */}
+            <div
+              className="flex-wrap gap-1"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}
+            >
+              <div className="w-100">
+                <IoPerson className="me-2 mb-auto mt-1 mb-6" /> {/* Person Icon */}
+                <CFormLabel>Name</CFormLabel>
+                <CFormInput
+                  type="text"
+                  value={newcompaines.name}
+                  onChange={(e) => setNewcompaines({ ...newcompaines, name: e.target.value })}
+                />
+              </div>
+              <div className="w-100">
+                <IoCall className="me-2 mb-auto mt-1 mb-6" /> {/* Call Icon */}
+                <CFormLabel>Contact Number</CFormLabel>
+                <CFormInput
+                  type="text"
+                  value={newcompaines.contactNumber}
+                  onChange={(e) =>
+                    setNewcompaines({ ...newcompaines, contactNumber: e.target.value })
+                  }
+                />
+              </div>
             </div>
-            <div className="mb-2">
-              <CFormLabel>Contact Number</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newcompaines.contactNumber}
-                onChange={(e) => setNewcompaines({ ...newcompaines, contactNumber: e.target.value })}
-              />
+            <div
+              className="flex-wrap gap-3"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '1rem',
+                marginTop: '1rem',
+              }}
+            >
+              <div className="w-100">
+                <FaAddressCard className="me-2 mb-auto mt-1 mb-6" />
+                <CFormLabel>Address</CFormLabel>
+                <CFormInput
+                  type="text"
+                  value={newcompaines.address}
+                  onChange={(e) => setNewcompaines({ ...newcompaines, address: e.target.value })}
+                />
+              </div>
+              <div className="w-100">
+                <IoDocumentText className="me-2 mb-auto mt-1 mb-6" /> {/* Document Icon */}
+                <CFormLabel>GST Number</CFormLabel>
+                <CFormInput
+                  type="text"
+                  value={newcompaines.gstNumber}
+                  onChange={(e) => setNewcompaines({ ...newcompaines, gstNumber: e.target.value })}
+                />
+              </div>
+              <div className="w-100">
+                <RiLockPasswordFill className="me-2 mb-auto mt-1 mb-6" />
+                <CFormLabel>Password</CFormLabel>
+                <CFormInput
+                  type="password"
+                  value={newcompaines.password}
+                  onChange={(e) => setNewcompaines({ ...newcompaines, password: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="mb-2">
-              <CFormLabel>Address</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newcompaines.address}
-                onChange={(e) => setNewcompaines({ ...newcompaines, address: e.target.value })}
-              />
+            <div className="text-end mt-3">
+              <CButton color="primary" onClick={() => handleAddcompaines(newcompaines)}>
+                Submit
+              </CButton>
             </div>
-            <div className="mb-2">
-              <CFormLabel>GST Number</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newcompaines.gstNumber}
-                onChange={(e) => setNewcompaines({ ...newcompaines, gstNumber: e.target.value })}
-              />
-            </div>
-            <div className="mb-2">
-              <CFormLabel>Password</CFormLabel>
-              <CFormInput
-                type="Password"
-                value={newcompaines.password}
-                onChange={(e) => setNewcompaines({ ...newcompaines, password: e.target.value })}
-              />
-            </div>
-            {/* <div className="mb-2">
-              <CFormLabel>Profile Picture</CFormLabel>
-              <CFormInput
-                type="file"
-                onChange={handleProfileImageChange}
-              />
-            </div> */}
-            <CButton color="primary" onClick={() => handleAddcompaines(newcompaines)}>
-              Submit
-            </CButton>
           </CForm>
         </CModalBody>
       </CModal>

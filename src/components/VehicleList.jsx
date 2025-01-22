@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { vehicles } from '../views/vehicle/data/data'
+import { useNavigate } from 'react-router-dom'
 import {
   CCard,
   CCardBody,
@@ -14,21 +15,47 @@ import {
   CTableDataCell,
   CTableRow,
   CButton,
+  CFormInput,
 } from '@coreui/react'
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
 const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
+
 const VehicleList = () => {
-  const columns = ['Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']
+  const columns = ['SN', 'Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [open, setOpen] = useState(false)
   const [filteredLogs, setFilteredLogs] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('') // Search state
+  const [filteredVehicles, setFilteredVehicles] = useState(vehicles) // Filtered list for display
   const itemsPerPage = 10
+
+  const Navigate = useNavigate()
+
+  useEffect(() => {
+    // Filter vehicles whenever the search query changes
+    const filtered = vehicles.filter((vehicle) => {
+      const search = searchQuery.toLowerCase().trim()
+      return (
+        vehicle.id.toLowerCase().includes(search) || // Search by ID
+        vehicle.make.toLowerCase().includes(search) || // Search by Make
+        vehicle.model.toLowerCase().includes(search) || // Search by Model
+        vehicle.year.toString().includes(search) || // Search by Year
+        vehicle.licenseNumber.toLowerCase().includes(search) // Search by License Number
+      )
+    })
+    setFilteredVehicles(filtered)
+    setCurrentPage(1) // Reset to the first page when search query changes
+  }, [searchQuery])
 
   const handleViewClick = (vehicle) => {
     setSelectedVehicle(vehicle)
+    console.log("vehcile", vehicle);
+    
     setFilteredLogs(vehicle.maintenanceLogs) // Initialize with all logs
     setOpen(true)
+    Navigate(`/VehicleProfile/${vehicle.id}`)
+    
   }
 
   const handleDateFilter = (startDate, endDate) => {
@@ -41,9 +68,9 @@ const VehicleList = () => {
   }
 
   // Pagination logic
-  const totalPages = Math.ceil(vehicles.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentData = vehicles.slice(startIndex, startIndex + itemsPerPage)
+  const currentData = filteredVehicles.slice(startIndex, startIndex + itemsPerPage)
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
@@ -54,12 +81,23 @@ const VehicleList = () => {
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Vehicles</strong>
+              <CFormInput
+                type="text"
+                placeholder="Search vehicles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: searchQuery ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: searchQuery ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
             <CCardBody>
-              {vehicles.length === 0 ? (
-                <p className="text-center">No vehicles available.</p>
+              {filteredVehicles.length === 0 ? (
+                <p className="text-center">No vehicles found.</p>
               ) : (
                 <CTable striped hover responsive bordered>
                   <CTableHead>
@@ -74,15 +112,20 @@ const VehicleList = () => {
                   <CTableBody>
                     {currentData.map((row, rowIndex) => (
                       <CTableRow key={rowIndex}>
+                        <CTableDataCell className="text-center">
+                          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+                        </CTableDataCell>
                         <CTableDataCell className="text-center">{row.id}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.make}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.year}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.model}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell>
                         <CTableDataCell className="text-center">
+                          
                           <CButton onClick={() => handleViewClick(row)} color="primary">
                             View
                           </CButton>
+                          
                         </CTableDataCell>
                       </CTableRow>
                     ))}
@@ -110,7 +153,6 @@ const VehicleList = () => {
             totalPages={totalPages}
             currentPage={currentPage}
             handlePageChange={handlePageChange}
-            filteredLogs={filteredLogs}
           />
         </div>
       )}

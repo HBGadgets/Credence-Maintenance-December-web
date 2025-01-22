@@ -13,6 +13,7 @@ import {
   CTableRow,
   CButton,
   CPagination,
+  CFormInput,
   CPaginationItem,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
@@ -165,20 +166,22 @@ const LeaveRequests = () => {
 
   return (
     <div>
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Filter by Name"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </div>
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Leave Request</strong>
+              <CFormInput
+                type="text"
+                placeholder="Search vehicles..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: filter ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: filter ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
             {leaveData.length === 0 ? (
               <p className="text-center">No logs found.</p>

@@ -173,6 +173,11 @@ const _nav = [
         name: 'Company details',
         to: '/ComDetails',
       },
+      {
+        component: CNavItem,
+        name: 'Tyre Inventory',
+        to: '/Inventory',
+      },
     ],
   },
 
@@ -239,6 +244,8 @@ const _nav = [
       // },
     ],
   },
+
+
 
   // ROAD SIDE ASSISTANCE
   {

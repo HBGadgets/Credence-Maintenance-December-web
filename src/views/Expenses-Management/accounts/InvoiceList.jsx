@@ -9,10 +9,10 @@ import {
   CTableBody,
   CTableDataCell,
   CButton,
-  CBadge,
   CCard,
   CCardHeader,
-  CCardBody
+  CCardBody,
+  CFormSelect
 } from '@coreui/react';
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { FormControl, Select, MenuItem,TableContainer,} from '@mui/material';
@@ -99,7 +99,7 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
   ];
   return (
     <>
-      <CRow>
+      <CRow style={{marginTop:"1rem"}}>
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
@@ -177,24 +177,27 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
               <CTableDataCell className="text-center">{index+1}</CTableDataCell>
               {columns.map((column, index) => {
                 const value = column.key === 'status' ? (
-                  <CBadge color={invoice[column.key] === 'paid' ? 'success' : 'warning'} style={{minWidth:'4rem'}}>
+                  <span
+                    style={{
+                      color: invoice[column.key] === "paid" ? "green" : "red",
+                      // fontWeight: "bold",
+                      minWidth: "4rem",
+                    }}
+                  >
                     {invoice[column.key]}
-                  </CBadge>
+                  </span>
                 ) : column.key === 'items' ? (
-                  <FormControl fullWidth variant="outlined" margin="normal" sx={{margin:'0'}}>
-                <Select
-                  // label="Select Item"
+                  <CFormSelect
                   value={invoice[column.key]?.[0]?.name || ""}
                   onChange={(e) => handleItemChange(invoice._id, e.target.value)}
-                  style={{ height: '35px', padding: '0 10px' }}
+                  style={{ height: "35px", padding: "0 10px", minWidth: "10rem" }}
                 >
                   {invoice[column.key]?.map((item, index) => (
-                    <MenuItem key={index} value={item.name}>
-                      {item.name}- {item.quantity} x {item.unitPrice} = {item.total}
-                    </MenuItem>
+                    <option key={index} value={item.name}>
+                      {item.name}
+                    </option>
                   ))}
-                </Select>
-              </FormControl>
+                </CFormSelect>
                 ) : column.key === 'actions' ? (
                   <div style={{display:'flex'}}>
                     {/* <CButton
@@ -232,11 +235,12 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                           </CButton>
                     <CButton
                       color="info"
-                      variant="outline"
+                      
                       size="sm"
                       onClick={() => handleToggleStatus(invoice._id, invoice.status)}
+                      style={{marginLeft:'7px', minWidth:'6.1rem'}}
                     >
-                      {invoice.status === 'paid' ? 'Mark as Unpaid' : 'Mark as Paid'}
+                      {invoice.status === 'paid' ? 'Mark Unpaid' : 'Mark Paid'}
                     </CButton>
                   </div>
                 ) : column.key === 'date' || column.key === 'paymentDueDate' ? (

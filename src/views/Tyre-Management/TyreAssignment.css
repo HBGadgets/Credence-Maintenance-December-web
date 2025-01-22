@@ -1,0 +1,80 @@
+.tyre-management-container {
+   
+  }
+
+  .tyre-layout{
+    background: white;
+    width: 60%;
+    margin: auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  
+  .tyre-row {
+    display: flex;
+    /* justify-content: space-evenly;  */
+   
+  }
+  
+  .tyre-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 40px; /* Adjust width for the box */
+    height: 40px; /* Adjust height for the box */
+    border: 1px dashed #ccc;
+    cursor: pointer;
+    background-color: #f9f9f9; /* Default background for empty box */
+    text-align: center;
+    margin-left: 5px;
+    column-gap: 10px;
+  }
+  
+  .tyre-box.filled {
+    background-color: #e0ffe0;
+    border: 2px solid green;
+  }
+  
+  .tyre-image {
+    max-width: 100%; /* Image fits within the box */
+    max-height: 100%;
+    object-fit: contain;
+  }
+  
+  span {
+    font-size: 12px;
+    color: #333;
+  }
+  
+  .separator {
+    height: 5px; /* Thickness of the separator */
+    background-color: green; /* Color of the separator */
+    margin: 20px 0; /* Space above and below the separator */
+  }
+
+  .tyre-wrapper{
+width: 6rem
+  }
+
+  .label-container{
+    font-size: 12px;
+  }
+
+  .tyre-layout > div:first-child, /* "Front" text */
+.tyre-layout > div:last-child { /* "Rear" text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px; /* Adjust width as needed */
+  font-weight: bold;
+}
+
+.vertical-text {
+    writing-mode: vertical-rl; /* Text flows from bottom to top */
+    transform: rotate(180deg); /* Flip the text to make it readable */
+    color:green;
+    text-align: center;
+    font-size: larger;
+  }
+  

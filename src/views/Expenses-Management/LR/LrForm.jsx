@@ -553,6 +553,65 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
             />
           </Box>
 
+          {/* <div>
+          <TextField
+              label="Hamali"
+              type="number"
+              name="hamali"
+              value={formData.hamali}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Sur Charges"
+              type="number"
+              name="surCharge"
+              value={formData.surCharge}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="St Charges"
+              type="number"
+              name="stCharge"
+              value={formData.customerFreight}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Risk charges"
+              type="number"
+              name="riskCharge"
+              value={formData.riskCharge}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </div> */}
+
           {/* Submit Button */}
           <Box textAlign="center">
             <Button type="submit" variant="contained" color="primary">
