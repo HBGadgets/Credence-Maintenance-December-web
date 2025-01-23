@@ -1,0 +1,16 @@
+
+.my-custom-modal .modal-dialog{
+    max-width: 100%;
+    max-height: 100%;
+    
+}
+
+.my-custom-modal .modal-content {
+    width: 70vw;
+    height: fit-content;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin: auto;
+    
+  }
+

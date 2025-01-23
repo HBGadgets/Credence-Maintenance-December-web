@@ -6,6 +6,7 @@ export const vehicles = [
     year: 2020,
     model: 'Camry',
     licenseNumber: 'ABC123',
+    category: 'truck',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -93,6 +94,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -152,6 +154,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'taxi',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -211,6 +214,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'bus',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -270,6 +274,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -329,6 +334,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'bus',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -388,6 +394,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'truck',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -447,6 +454,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'truck',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -506,6 +514,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -565,6 +574,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -624,6 +634,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -683,6 +694,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -742,6 +754,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -801,6 +814,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -860,6 +874,7 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },

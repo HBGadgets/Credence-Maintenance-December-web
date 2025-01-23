@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from 'react'
 import { vehicles } from '../views/vehicle/data/data'
+import { useNavigate } from 'react-router-dom'
 import {
   CCard,
   CCardBody,
@@ -38,6 +39,8 @@ const VehicleList = () => {
   const [filteredVehicles, setFilteredVehicles] = useState(vehicles) // Filtered list for display
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }) // Sorting configuration
   const itemsPerPage = 10
+
+  const Navigate = useNavigate()
 
   useEffect(() => {
     // Filter vehicles whenever the search query changes
@@ -85,8 +88,12 @@ const VehicleList = () => {
 
   const handleViewClick = (vehicle) => {
     setSelectedVehicle(vehicle)
+    console.log("vehcile", vehicle);
+    
     setFilteredLogs(vehicle.maintenanceLogs) // Initialize with all logs
     setOpen(true)
+    Navigate(`/VehicleProfile/${vehicle.id}`)
+    
   }
 
   // Pagination logic
@@ -148,9 +155,11 @@ const VehicleList = () => {
                         <CTableDataCell className="text-center">{row.model}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell>
                         <CTableDataCell className="text-center">
+                          
                           <CButton onClick={() => handleViewClick(row)} color="primary">
                             View
                           </CButton>
+                          
                         </CTableDataCell>
                       </CTableRow>
                     ))}
