@@ -25,6 +25,8 @@ import {
   CTabPanel,
   CTabContent,
   CTabs,
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
@@ -46,7 +48,15 @@ import { FaAddressCard } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
 
 const compainesExp = ({ setselectedCompanyId }) => {
-  const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
+  const columns = [
+    { label: 'SN', key: 'sn', sortable: true },
+    { label: 'Company Name', key: 'name', sortable: true },
+    { label: 'Contact', key: 'contact', sortable: true },
+    { label: 'Address', key: 'address', sortable: true },
+    { label: 'View Profile', key: 'profile', sortable: true },
+    { label: 'Action', key: 'action', sortable: false },
+  ]
+  // const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
   const [compaines, setcompaines] = useState(initialcompaines) // Use state for the compaines list
   const [selectedCompany, setselectedCompany] = useState(null)
   const [open, setOpen] = useState(false)
@@ -64,6 +74,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
 
   const [data, setData] = useState(compaines) // Assuming compaines are available
   const [filter, setFilter] = useState('')
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }) // Sorting configuration
 
   // Logic for Filter
   const debouncedFilterChange = debounce((value) => {
@@ -76,6 +87,34 @@ const compainesExp = ({ setselectedCompanyId }) => {
   const handleFilterChange = (e) => {
     setFilter(e.target.value)
     debouncedFilterChange(e.target.value)
+  }
+
+  const handleSort = (key) => {
+    if (!columns.find((column) => column.key === key && column.sortable)) return // Prevent sorting on non-sortable columns
+
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    const sorted = [...filteredVehicles].sort((a, b) => {
+      if (['sn', 'name', 'contact', 'address'].includes(key)) {
+        const aIndex = vehicles.indexOf(a)
+        const bIndex = vehicles.indexOf(b)
+        return direction === 'asc' ? aIndex - bIndex : bIndex - aIndex
+      }
+
+      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1
+      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    setFilteredVehicles(sorted)
+  }
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕'
   }
 
   // Handle file input change
@@ -178,17 +217,16 @@ const compainesExp = ({ setselectedCompanyId }) => {
                 <CTable striped hover responsive bordered>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell className="text-center" scope="col">
-                        SN
-                      </CTableHeaderCell>
                       {columns.map((column, index) => (
-                        <CTableHeaderCell key={index} className="text-center" scope="col">
-                          {column}
+                        <CTableHeaderCell
+                          key={index}
+                          className="text-center"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                          style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        >
+                          {column.label} {column.sortable && getSortIcon(column.key)}
                         </CTableHeaderCell>
                       ))}
-                      <CTableHeaderCell className="text-center" scope="col">
-                        Actions
-                      </CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
@@ -393,69 +431,94 @@ const compainesExp = ({ setselectedCompanyId }) => {
         </CModalHeader>
         <CModalBody>
           <CForm style={{ width: '100%' }}>
-            {' '}
-            {/* Ensures the form takes full width */}
             <div
-              className="flex-wrap gap-1"
+              className="flex-wrap gap-2"
               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}
             >
-              <div className="w-100">
-                <IoPerson className="me-2 mb-auto mt-1 mb-6" /> {/* Person Icon */}
-                <CFormLabel>Name</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={newcompaines.name}
-                  onChange={(e) => setNewcompaines({ ...newcompaines, name: e.target.value })}
-                />
-              </div>
-              <div className="w-100">
-                <IoCall className="me-2 mb-auto mt-1 mb-6" /> {/* Call Icon */}
-                <CFormLabel>Contact Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={newcompaines.contactNumber}
-                  onChange={(e) =>
-                    setNewcompaines({ ...newcompaines, contactNumber: e.target.value })
-                  }
-                />
-              </div>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    name="Enter Name"
+                    placeholder="Enter Name"
+                    value={newcompaines.name}
+                    onChange={(e) => setNewcompaines({ ...newcompaines, name: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter Contact No"
+                    value={newcompaines.contactNumber}
+                    // style={{ flex: 1 }}
+                    onChange={(e) =>
+                      setNewcompaines({ ...newcompaines, contactNumber: e.target.value })
+                    }
+                  />
+                </CInputGroup>
+              </CCol>
             </div>
             <div
-              className="flex-wrap gap-3"
+              className="flex-wrap gap-2"
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
+                gridTemplateColumns: '1fr 1fr',
                 gap: '1rem',
                 marginTop: '1rem',
               }}
             >
-              <div className="w-100">
-                <FaAddressCard className="me-2 mb-auto mt-1 mb-6" />
-                <CFormLabel>Address</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={newcompaines.address}
-                  onChange={(e) => setNewcompaines({ ...newcompaines, address: e.target.value })}
-                />
-              </div>
-              <div className="w-100">
-                <IoDocumentText className="me-2 mb-auto mt-1 mb-6" /> {/* Document Icon */}
-                <CFormLabel>GST Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={newcompaines.gstNumber}
-                  onChange={(e) => setNewcompaines({ ...newcompaines, gstNumber: e.target.value })}
-                />
-              </div>
-              <div className="w-100">
-                <RiLockPasswordFill className="me-2 mb-auto mt-1 mb-6" />
-                <CFormLabel>Password</CFormLabel>
-                <CFormInput
-                  type="password"
-                  value={newcompaines.password}
-                  onChange={(e) => setNewcompaines({ ...newcompaines, password: e.target.value })}
-                />
-              </div>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <FaAddressCard style={{ fontSize: '20px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter Address"
+                    value={newcompaines.address}
+                    onChange={(e) => setNewcompaines({ ...newcompaines, address: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '20px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter GST Number"
+                    value={newcompaines.gstNumber}
+                    onChange={(e) =>
+                      setNewcompaines({ ...newcompaines, gstNumber: e.target.value })
+                    }
+                  />
+                </CInputGroup>
+              </CCol>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <RiLockPasswordFill style={{ fontSize: '20px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="password"
+                    placeholder="Enter Password"
+                    value={newcompaines.password}
+                    onChange={(e) => setNewcompaines({ ...newcompaines, password: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
             </div>
             <div className="text-end mt-3">
               <CButton color="primary" onClick={() => handleAddcompaines(newcompaines)}>

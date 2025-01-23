@@ -16,17 +16,27 @@ import {
   CButton,
   CFormInput,
 } from '@coreui/react'
+
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
 const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
 
 const VehicleList = () => {
-  const columns = ['SN', 'Vehicle ID', 'Make', 'Year', 'Model', 'License Number', 'Action']
+  const columns = [
+    { label: 'SN', key: 'sn', sortable: true },
+    { label: 'Vehicle ID', key: 'id', sortable: true },
+    { label: 'Make', key: 'make', sortable: true },
+    { label: 'Year', key: 'year', sortable: true },
+    { label: 'Model', key: 'model', sortable: true },
+    { label: 'License Number', key: 'licenseNumber', sortable: true },
+    { label: 'Action', key: 'action', sortable: false },
+  ]
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [open, setOpen] = useState(false)
   const [filteredLogs, setFilteredLogs] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('') // Search state
   const [filteredVehicles, setFilteredVehicles] = useState(vehicles) // Filtered list for display
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }) // Sorting configuration
   const itemsPerPage = 10
 
   useEffect(() => {
@@ -45,19 +55,38 @@ const VehicleList = () => {
     setCurrentPage(1) // Reset to the first page when search query changes
   }, [searchQuery])
 
+  const handleSort = (key) => {
+    if (!columns.find((column) => column.key === key && column.sortable)) return // Prevent sorting on non-sortable columns
+
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    const sorted = [...filteredVehicles].sort((a, b) => {
+      if (['sn', 'id', 'model', 'licenseNumber', 'make', 'year'].includes(key)) {
+        const aIndex = vehicles.indexOf(a)
+        const bIndex = vehicles.indexOf(b)
+        return direction === 'asc' ? aIndex - bIndex : bIndex - aIndex
+      }
+
+      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1
+      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    setFilteredVehicles(sorted)
+  }
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕'
+  }
+
   const handleViewClick = (vehicle) => {
     setSelectedVehicle(vehicle)
     setFilteredLogs(vehicle.maintenanceLogs) // Initialize with all logs
     setOpen(true)
-  }
-
-  const handleDateFilter = (startDate, endDate) => {
-    if (!selectedVehicle) return
-    const filtered = selectedVehicle.maintenanceLogs.filter((log) => {
-      const serviceDate = new Date(log.serviceDate)
-      return serviceDate >= new Date(startDate) && serviceDate <= new Date(endDate)
-    })
-    setFilteredLogs(filtered)
   }
 
   // Pagination logic
@@ -96,8 +125,13 @@ const VehicleList = () => {
                   <CTableHead>
                     <CTableRow>
                       {columns.map((column, index) => (
-                        <CTableHeaderCell key={index} className="text-center">
-                          {column}
+                        <CTableHeaderCell
+                          key={index}
+                          className="text-center"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                          style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        >
+                          {column.label} {column.sortable && getSortIcon(column.key)}
                         </CTableHeaderCell>
                       ))}
                     </CTableRow>

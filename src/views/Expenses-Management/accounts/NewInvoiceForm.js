@@ -1,10 +1,42 @@
 import React, { useState, useEffect } from 'react'
 // import axios from 'axios';
 
+import {
+  CRow,
+  CCol,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CInputGroup,
+  CInputGroupText,
+  CFormLabel,
+  CFormCheck,
+  CCard,
+  CCardBody,
+  CCardHeader,
+} from '@coreui/react'
+import {
+  FileText,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  CheckCircle,
+  Edit,
+  Trash,
+  PlusCircle,
+  Tag,
+  Info,
+  DollarSign,
+  Percent,
+} from 'lucide-react'
 
-
-import { CRow, CCol, CFormInput, CFormSelect, CButton, CInputGroup, CInputGroupText, CFormLabel, CFormCheck,CCard, CCardBody, CCardHeader } from '@coreui/react';
-import { FileText, User, Mail, Phone, Calendar, CheckCircle,Edit, Trash, PlusCircle, Tag, Info, DollarSign, Percent} from 'lucide-react';
+import { IoFileTrayFull } from 'react-icons/io5'
+import { IoPersonSharp } from 'react-icons/io5'
+import { MdAlternateEmail } from 'react-icons/md'
+import { FaPhoneAlt } from 'react-icons/fa'
+import { FaCalendarAlt } from 'react-icons/fa'
+import { MdOutlineCurrencyRupee } from 'react-icons/md'
 
 const initialFormState = {
   invoiceNumber: '',
@@ -101,128 +133,120 @@ const NewInvoiceForm = () => {
     })
   }
 
-
   return (
     <>
       {/* // +++++++++++++++++ ADD MODAL - CREATE INVOICE ++++++++++++++++++++++++++++++= */}
       <div style={{ overflow: 'auto' }}>
         <form>
-        <div className="d-grid" style={{ gridTemplateColumns: '1fr 1fr', gridGap: '0rem 2rem' }}>
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <FileText />
-          </CInputGroupText>
-          <CFormInput
-            type="text"
-            placeholder="Invoice Number"
-            name="invoiceNumber"
-            value={invoiceData.invoiceNumber}
-            onChange={handleChange}
-            required
-          />
-        </CInputGroup>
-      </CCol>
+          <div className="d-grid" style={{ gridTemplateColumns: '1fr 1fr', gridGap: '0rem 2rem' }}>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <IoFileTrayFull style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="text"
+                  placeholder="Invoice Number"
+                  name="invoiceNumber"
+                  value={invoiceData.invoiceNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <User />
-          </CInputGroupText>
-          <CFormInput
-            type="text"
-            placeholder="Client Name"
-            name="clientName"
-            value={invoiceData.clientName}
-            onChange={handleChange}
-            required
-          />
-        </CInputGroup>
-      </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <IoPersonSharp style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="text"
+                  placeholder="Client Name"
+                  name="clientName"
+                  value={invoiceData.clientName}
+                  onChange={handleChange}
+                  required
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <Mail />
-          </CInputGroupText>
-          <CFormInput
-            type="email"
-            placeholder="Client Email"
-            name="clientEmail"
-            value={invoiceData.clientEmail}
-            onChange={handleChange}
-            required
-          />
-        </CInputGroup>
-      </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <MdAlternateEmail style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="email"
+                  placeholder="Client Email"
+                  name="clientEmail"
+                  value={invoiceData.clientEmail}
+                  onChange={handleChange}
+                  required
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <Phone />
-          </CInputGroupText>
-          <CFormInput
-            type="text"
-            placeholder="Client Phone"
-            name="clientPhone"
-            value={invoiceData.clientPhone}
-            onChange={handleChange}
-            required
-          />
-        </CInputGroup>
-      </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <FaPhoneAlt style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="text"
+                  placeholder="Client Phone"
+                  name="clientPhone"
+                  value={invoiceData.clientPhone}
+                  onChange={handleChange}
+                  required
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <Calendar />
-          </CInputGroupText>
-          <CFormInput
-            type="date"
-            placeholder="Date"
-            name="date"
-            value={invoiceData.date}
-            onChange={handleChange}
-            required
-            InputLabelProps={{ shrink: true }}
-          />
-        </CInputGroup>
-      </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <FaCalendarAlt style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="date"
+                  placeholder="Date"
+                  name="date"
+                  value={invoiceData.date}
+                  onChange={handleChange}
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CInputGroup className="mb-3">
-          <CInputGroupText>
-            <Calendar />
-          </CInputGroupText>
-          <CFormInput
-            type="date"
-            placeholder="Payment Due Date"
-            name="paymentDueDate"
-            value={invoiceData.paymentDueDate}
-            onChange={handleChange}
-            required
-            InputLabelProps={{ shrink: true }}
-          />
-        </CInputGroup>
-      </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <FaCalendarAlt style={{ fontSize: '22px', color: 'gray' }} />
+                </CInputGroupText>
+                <CFormInput
+                  type="date"
+                  placeholder="Payment Due Date"
+                  name="paymentDueDate"
+                  value={invoiceData.paymentDueDate}
+                  onChange={handleChange}
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+              </CInputGroup>
+            </CCol>
 
-      <CCol>
-        <CFormLabel>Status</CFormLabel>
-        <CFormSelect
-          name="status"
-          value={invoiceData.status}
-
-          onChange={handleChange}
-        >
-          <option value="unpaid">Unpaid</option>
-          <option value="paid">Paid</option>
-        </CFormSelect>
-      </CCol>
-    </div>
+            <CCol>
+              <CFormLabel>Status</CFormLabel>
+              <CFormSelect name="status" value={invoiceData.status} onChange={handleChange}>
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+              </CFormSelect>
+            </CCol>
+          </div>
           {/* Items Section */}
-          <h5>
-            Items
-            </h5>
+          <h5>Items</h5>
           {invoiceData.items.map((item, index) => (
             <CCard key={index} className="mb-3">
               <CCardBody>
@@ -231,10 +255,10 @@ const NewInvoiceForm = () => {
                   <CCol xs={12} sm={6}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <Tag />
+                        <Tag style={{ fontSize: '22px', color: 'gray' }} />
                       </CInputGroupText>
                       <CFormInput
-                        placeholder='Item name'
+                        placeholder="Item name"
                         name="name"
                         value={item.name}
                         onChange={(e) => handleItemChange(index, e)}
@@ -247,7 +271,7 @@ const NewInvoiceForm = () => {
                   <CCol xs={12} sm={6}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <Info />
+                        <Info style={{ fontSize: '22px', color: 'gray' }} />
                       </CInputGroupText>
                       <CFormInput
                         placeholder="Description"
@@ -263,7 +287,7 @@ const NewInvoiceForm = () => {
                   <CCol xs={12} sm={6}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <DollarSign />
+                        <MdOutlineCurrencyRupee style={{ fontSize: '22px', color: 'gray' }} />
                       </CInputGroupText>
                       <CFormInput
                         placeholder="Unit Price"
@@ -280,7 +304,7 @@ const NewInvoiceForm = () => {
                   <CCol xs={12} sm={6}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <PlusCircle />
+                        <PlusCircle style={{ fontSize: '22px', color: 'gray' }} />
                       </CInputGroupText>
                       <CFormInput
                         placeholder="Quantity"
@@ -297,24 +321,15 @@ const NewInvoiceForm = () => {
                   <CCol xs={12} sm={6}>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <DollarSign />
+                        <MdOutlineCurrencyRupee style={{ fontSize: '22px', color: 'gray' }} />
                       </CInputGroupText>
-                      <CFormInput
-                        placeholder="Total"
-                        name="total"
-                        value={item.total}
-                        disabled
-                      />
+                      <CFormInput placeholder="Total" name="total" value={item.total} disabled />
                     </CInputGroup>
                   </CCol>
 
                   {/* Remove Item Button */}
                   <CCol xs={12} sm={6}>
-                    <CButton
-                      color="danger"
-                      onClick={() => removeItem(index)}
-                      fullWidth
-                    >
+                    <CButton color="danger" onClick={() => removeItem(index)} fullWidth>
                       <Trash className="me-2" />
                       Remove Item
                     </CButton>
@@ -330,118 +345,124 @@ const NewInvoiceForm = () => {
             Add Item
           </CButton>
 
-          <CRow style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridGap: '0rem 2rem', marginTop:'1rem'}}>
-          {/* Subtotal */}
-         
+          <CRow
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gridGap: '0rem 2rem',
+              marginTop: '1rem',
+            }}
+          >
+            {/* Subtotal */}
 
-          {/* Tax Type */}
-          <CCol >
-            <CInputGroup className="mb-3">
-              <CInputGroupText>
-                <Percent />
-              </CInputGroupText>
-              <CFormSelect
-                placeholder="Tax Type"
-                name="taxType"
-                value={invoiceData.taxType}
-                onChange={handleChange}
-                required
-              >
-                {taxTypes.map((tax) => (
-                  <option key={tax.value} value={tax.value}>
-                    {tax.label}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CInputGroup>
-          </CCol>
-
-          {/* Tax Rate */}
-          <CCol >
-            <CInputGroup className="mb-3">
-              <CInputGroupText>
-                <Percent />
-              </CInputGroupText>
-              {!customRate ? (
+            {/* Tax Type */}
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <Percent />
+                </CInputGroupText>
                 <CFormSelect
-                  placeholder="Tax Rate"
-                  value={invoiceData.taxRate}
-                  onChange={handleTaxRateChange}
+                  placeholder="Tax Type"
+                  name="taxType"
+                  value={invoiceData.taxType}
+                  onChange={handleChange}
                   required
                 >
-                  {taxRates.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  {taxTypes.map((tax) => (
+                    <option key={tax.value} value={tax.value}>
+                      {tax.label}
                     </option>
                   ))}
                 </CFormSelect>
-              ) : (
+              </CInputGroup>
+            </CCol>
+
+            {/* Tax Rate */}
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <Percent />
+                </CInputGroupText>
+                {!customRate ? (
+                  <CFormSelect
+                    placeholder="Tax Rate"
+                    value={invoiceData.taxRate}
+                    onChange={handleTaxRateChange}
+                    required
+                  >
+                    {taxRates.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                ) : (
+                  <CFormInput
+                    placeholder="Custom Tax Rate"
+                    type="number"
+                    value={invoiceData.taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    required
+                  />
+                )}
+              </CInputGroup>
+            </CCol>
+
+            {/* Tax Amount */}
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <User />
+                </CInputGroupText>
                 <CFormInput
-                  placeholder="Custom Tax Rate"
-                  type="number"
-                  value={invoiceData.taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  required
+                  placeholder="Tax Amount"
+                  name="taxAmount"
+                  value={invoiceData.taxAmount} // Calculate based on taxable value * tax rate
+                  disabled
                 />
-              )}
-            </CInputGroup>
-          </CCol>
+              </CInputGroup>
+            </CCol>
 
-          {/* Tax Amount */}
-          <CCol >
-            <CInputGroup className="mb-3">
-              <CInputGroupText>
-                <User />
-              </CInputGroupText>
-              <CFormInput
-                placeholder="Tax Amount"
-                name="taxAmount"
-                value={invoiceData.taxAmount} // Calculate based on taxable value * tax rate
-                disabled
-              />
-            </CInputGroup>
-          </CCol>
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <User />
+                </CInputGroupText>
+                <CFormInput
+                  placeholder="Subtotal"
+                  name="subTotal"
+                  value={invoiceData.subTotal}
+                  onChange={handleChange}
+                  type="number"
+                  disabled
+                />
+              </CInputGroup>
+            </CCol>
 
-          <CCol >
-            <CInputGroup className="mb-3">
-              <CInputGroupText>
-                <User />
-              </CInputGroupText>
-              <CFormInput
-                placeholder="Subtotal"
-                name="subTotal"
-                value={invoiceData.subTotal}
-                onChange={handleChange}
-                type="number"
-                disabled
-              />
-            </CInputGroup>
-          </CCol>
-
-          {/* Grand Total */}
-          <CCol >
-            <CInputGroup className="mb-3">
-              <CInputGroupText>
-                <User />
-              </CInputGroupText>
-              <CFormInput
-                placeholder="Grand Total"
-                name="grandTotal"
-                value={invoiceData.grandTotal}
-                onChange={handleChange}
-                type="number"
-                disabled
-              />
-            </CInputGroup>
-          </CCol>
-        </CRow>
+            {/* Grand Total */}
+            <CCol>
+              <CInputGroup className="mb-3">
+                <CInputGroupText>
+                  <User />
+                </CInputGroupText>
+                <CFormInput
+                  placeholder="Grand Total"
+                  name="grandTotal"
+                  value={invoiceData.grandTotal}
+                  onChange={handleChange}
+                  type="number"
+                  disabled
+                />
+              </CInputGroup>
+            </CCol>
+          </CRow>
 
           {/* Submit Button */}
           <div style={{ marginTop: '1.5rem' }}>
-      <CButton color="primary" type="submit">
-        Submit
-      </CButton>
-    </div>
+            <CButton color="primary" type="submit">
+              Submit
+            </CButton>
+          </div>
         </form>
       </div>
 
