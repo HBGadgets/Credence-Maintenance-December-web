@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   CAvatar,
   CCard,
@@ -36,6 +36,7 @@ import avatar3 from 'src/assets/images/avatars/3.jpg'
 import avatar4 from 'src/assets/images/avatars/4.jpg'
 import avatar5 from 'src/assets/images/avatars/5.jpg'
 import { MdOutlineCurrencyRupee } from 'react-icons/md'
+import axios from 'axios'
 
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
@@ -57,7 +58,6 @@ const Dashboard = () => {
 
   // Calculate the count of expiring insurances
   const expiringInsuranceCount = expiringInsurances.length
-
   const tableData = [
     {
       driver: {
@@ -160,6 +160,29 @@ const Dashboard = () => {
       status: 'Inactive',
     },
   ]
+
+  const queryParams = new URLSearchParams(window.location.search)
+  const token = queryParams.get('token')
+
+  const sendTokenToServerFromURL = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.SERVER}/auth/validate`,
+        { token },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+    } catch (error) {
+      console.log('Error Message: ', error.message)
+    }
+  }
+
+  useEffect(() => {
+    sendTokenToServerFromURL()
+  }, [])
 
   return (
     <>

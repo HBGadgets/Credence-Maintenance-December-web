@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -20,9 +20,11 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
+
 const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
 const ExpenseSheet = React.lazy(() => import('./ExpenseSheet'))
 const Budget = React.lazy(() => import('./Budget'))
+
 import { serviceRecords, trip } from '../../data'
 
 const BudgetAllocation = () => {
@@ -40,7 +42,7 @@ const BudgetAllocation = () => {
   // Memoized calculations for budget
   const { totalSpent, remainingBudget, spentPercentage } = useMemo(() => {
     const totalSpent = Math.min(
-      trip.serviceRecords.reduce((sum, record) => sum + record.cost, 0),
+      trip.serviceRecords.reduce((sum, record) => sum + (record.cost || 0), 0),
       trip.allocatedBudget,
     )
     const remainingBudget = Math.max(trip.allocatedBudget - totalSpent, 0)
@@ -49,26 +51,9 @@ const BudgetAllocation = () => {
     return { totalSpent, remainingBudget, spentPercentage }
   }, [trip])
 
-  // State management
-  const [data, setData] = useState([
-    {
-      driver: trip.driverId,
-      startDate: trip.startDate,
-      endDate: trip.endDate || 'Pending...',
-      allocatedBudget: trip.allocatedBudget,
-      spentBudget: totalSpent,
-      remainingBudget,
-      percentageSpent: spentPercentage.toFixed(1),
-    },
-  ])
-  const [filter, setFilter] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [modalState, setModalState] = useState({ open: false, selectedRecord: null })
-  const itemsPerPage = 10
-
-  // Update data when memoized values change
-  useEffect(() => {
-    setData([
+  // Memoized data
+  const data = useMemo(() => {
+    return [
       {
         driver: trip.driverId,
         startDate: trip.startDate,
@@ -78,19 +63,33 @@ const BudgetAllocation = () => {
         remainingBudget,
         percentageSpent: spentPercentage.toFixed(1),
       },
-    ])
-  }, [trip, totalSpent, remainingBudget, spentPercentage]) // This is a dependency array
+    ]
+  }, [trip, totalSpent, remainingBudget, spentPercentage])
+
+  const [filter, setFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [modalState, setModalState] = useState({ open: false, selectedRecord: null })
+  const itemsPerPage = 10
+
+  // Filtered data
+  const filteredData = useMemo(() => {
+    return data.filter((row) => row.driver.toLowerCase().includes(filter.toLowerCase().trim()))
+  }, [data, filter])
+
+  // Paginated data
+  const currentData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
 
   // Handlers
   const handleFilterChange = (e) => {
-    const value = e.target.value.toLowerCase().trim()
-    setFilter(value)
-    setData((prevData) => prevData.filter((row) => row.driver.toLowerCase().includes(value)))
-    setCurrentPage(1)
+    setFilter(e.target.value)
+    setCurrentPage(1) // Reset to first page when filter changes
   }
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= Math.ceil(data.length / itemsPerPage)) {
+    if (page >= 1 && page <= Math.ceil(filteredData.length / itemsPerPage)) {
       setCurrentPage(page)
     }
   }
@@ -98,9 +97,7 @@ const BudgetAllocation = () => {
   const handleOpenModal = (record) => setModalState({ open: true, selectedRecord: record })
   const handleCloseModal = () => setModalState({ open: false, selectedRecord: null })
 
-  // Pagination calculation
-  const totalPages = Math.ceil(data.length / itemsPerPage)
-  const currentData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   return (
     <>
@@ -153,7 +150,7 @@ const BudgetAllocation = () => {
                   ))}
                 </CTableBody>
               </CTable>
-              {data.length === 0 && (
+              {filteredData.length === 0 && (
                 <div className="text-center text-muted">
                   No results found for &quot;{filter}&quot;
                 </div>
