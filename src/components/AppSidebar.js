@@ -30,7 +30,7 @@ const AppSidebar = () => {
       className="border-end"
       colorScheme="light"
       position="fixed"
-      unfoldable={unfoldable}
+      unfoldable={!unfoldable}
       visible={sidebarShow}
       onVisibleChange={(visible) => {
         dispatch({ type: 'set', sidebarShow: visible })

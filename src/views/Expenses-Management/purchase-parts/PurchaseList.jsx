@@ -1,78 +1,164 @@
-import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box } from '@mui/material';
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCol,
+  CRow,
+  CCardBody,
+  CCardHeader,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CButtonGroup,
+} from '@coreui/react'
+import { IconButton } from '@mui/material'
+import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
+import { FaPrint } from 'react-icons/fa'
+import { MdOutlinePreview } from 'react-icons/md'
+
+// Define the column structure
+const columns = [
+  { label: 'Part Name', key: 'partName', sortable: true },
+  { label: 'Vehicle', key: 'vehicle', sortable: true },
+  { label: 'Category', key: 'category', sortable: true },
+  { label: 'Vendor', key: 'vendor', sortable: true },
+  { label: 'Quantity', key: 'quantity', sortable: true },
+  { label: 'Cost Per Unit', key: 'costPerUnit', sortable: true },
+  { label: 'Purchase Date', key: 'purchaseDate', sortable: true },
+  { label: 'Invoice/Bill Number', key: 'invoiceNumber', sortable: true },
+  { label: 'Document', key: 'document', sortable: true },
+  { label: 'Actions', key: 'actions', sortable: false },
+]
 
 const PurchaseList = ({ purchases, searchTerm, onView, onEdit, onDelete, onPrint }) => {
-    const filteredPurchases = purchases.filter((purchase) =>
-        purchase.partName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
-    return (
-        <TableContainer>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Part Name</TableCell>
-                        <TableCell>Vehicle</TableCell>
-                        <TableCell>Category</TableCell>
-                        <TableCell>Vendor</TableCell>
-                        <TableCell>Quantity</TableCell>
-                        <TableCell>Cost Per Unit</TableCell>
-                        <TableCell>Purchase Date</TableCell>
-                        <TableCell>Invoice/Bill Number</TableCell>
-                        <TableCell>Document</TableCell>
-                        <TableCell>Actions</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {filteredPurchases.map((purchase) => (
-                        <TableRow key={purchase.id}>
-                            <TableCell>{purchase.partName}</TableCell>
-                            <TableCell>{purchase.vehicle}</TableCell>
-                            <TableCell>{purchase.category}</TableCell>
-                            <TableCell>{purchase.vendor}</TableCell>
-                            <TableCell>{purchase.quantity}</TableCell>
-                            <TableCell>{purchase.costPerUnit}</TableCell>
-                            <TableCell>{purchase.purchaseDate}</TableCell>
-                            <TableCell>{purchase.invoiceNumber}</TableCell>
-                            <TableCell>{purchase.document}</TableCell>
-                            <TableCell>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Button
-                                        variant="contained"
-                                        color="info"
-                                        onClick={() => onView(purchase)}
-                                    >
-                                        View
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="warning"
-                                        onClick={() => onEdit(purchase)}
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        onClick={() => onDelete(purchase)}
-                                    >
-                                        Delete
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="success"
-                                        onClick={() => onPrint(purchase)}
-                                    >
-                                        Print
-                                    </Button>
-                                </Box>
-                            </TableCell>
-                        </TableRow>
+  // Filter purchases based on the search term
+  const filteredPurchases = purchases.filter((purchase) =>
+    purchase.partName.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  // Handle sorting logic
+  const handleSort = (key) => {
+    if (!columns.find((column) => column.key === key && column.sortable)) return
+
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    filteredPurchases.sort((a, b) => {
+      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1
+      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+  }
+
+  // Get sorting icon
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕'
+  }
+
+  // Reusable action buttons
+  const ActionButtons = ({ purchase }) => (
+    <CButtonGroup>
+      <IconButton
+        aria-label="view"
+        onClick={() => onView(purchase)}
+        style={{ margin: '0 5px', color: '#1976d2' }}
+      >
+        <MdOutlinePreview />
+      </IconButton>
+      <IconButton
+        aria-label="edit"
+        onClick={() => onEdit(purchase)}
+        style={{ margin: '0 5px', color: 'orange' }}
+      >
+        <AiFillEdit style={{ fontSize: '20px' }} />
+      </IconButton>
+      <IconButton
+        aria-label="delete"
+        onClick={() => onDelete(purchase)}
+        style={{ margin: '0 5px', color: 'red' }}
+      >
+        <AiFillDelete style={{ fontSize: '20px' }} />
+      </IconButton>
+      <IconButton
+        aria-label="print"
+        onClick={() => onPrint(purchase)}
+        style={{ margin: '0 5px', color: 'green' }}
+      >
+        <FaPrint style={{ fontSize: '20px' }} />
+      </IconButton>
+    </CButtonGroup>
+  )
+
+  return (
+    <CRow style={{ marginTop: '1rem' }}>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardHeader>
+            <strong>Purchase Expenses</strong>
+          </CCardHeader>
+          <CCardBody>
+            {filteredPurchases.length === 0 ? (
+              <p className="text-center">No purchases available.</p>
+            ) : (
+              <CTable striped hover responsive>
+                <CTableHead>
+                  <CTableRow>
+                    {columns.map((column, index) => (
+                      <CTableHeaderCell
+                        key={index}
+                        className="text-center"
+                        onClick={() => column.sortable && handleSort(column.key)}
+                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        role="columnheader"
+                        aria-sort={sortConfig.key === column.key ? sortConfig.direction : 'none'}
+                      >
+                        {column.label} {column.sortable && getSortIcon(column.key)}
+                      </CTableHeaderCell>
                     ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
-    );
-};
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {filteredPurchases.map((purchase, index) => (
+                    <CTableRow key={purchase.id}>
+                      {columns.map((column) => {
+                        if (column.key === 'actions') {
+                          return (
+                            <CTableDataCell
+                              key={column.key}
+                              className="text-center text-nowrap"
+                              style={{ paddingLeft: '15px', paddingRight: '15px' }}
+                            >
+                              <ActionButtons purchase={purchase} />
+                            </CTableDataCell>
+                          )
+                        }
+                        return (
+                          <CTableDataCell
+                            key={column.key}
+                            className="text-center text-nowrap"
+                            style={{ paddingLeft: '15px', paddingRight: '15px' }}
+                          >
+                            {purchase[column.key]?.toString() || ''}
+                          </CTableDataCell>
+                        )
+                      })}
+                    </CTableRow>
+                  ))}
+                </CTableBody>
+              </CTable>
+            )}
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
 
-export default PurchaseList;
+export default PurchaseList

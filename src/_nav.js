@@ -155,6 +155,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Leave Requests',
+        to: '/LeaveRequests',
+      },
+      {
+        component: CNavItem,
         name: 'Vehicle Expenses',
         to: '/VehicleExpenses',
       },
@@ -165,8 +170,13 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Sub details',
-        to: '/SubDetails',
+        name: 'Company details',
+        to: '/ComDetails',
+      },
+      {
+        component: CNavItem,
+        name: 'Tyre Inventory',
+        to: '/Inventory',
       },
     ],
   },
@@ -234,6 +244,8 @@ const _nav = [
       // },
     ],
   },
+
+
 
   // ROAD SIDE ASSISTANCE
   {

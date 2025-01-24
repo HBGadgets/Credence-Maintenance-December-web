@@ -15,6 +15,7 @@ import {
   CTableRow,
   CButton,
   CModal,
+  CFormInput,
   CModalBody,
   CModalFooter,
   CModalHeader,
@@ -51,9 +52,60 @@ const BudgetAllocation = () => {
     return { totalSpent, remainingBudget, spentPercentage }
   }, [trip])
 
+<<<<<<< HEAD:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx
   // Memoized data
   const data = useMemo(() => {
     return [
+=======
+  // State management
+  const [data, setData] = useState([
+    {
+      driver: trip.driverId,
+      startDate: trip.startDate,
+      endDate: trip.endDate || 'Pending...',
+      allocatedBudget: trip.allocatedBudget,
+      spentBudget: totalSpent,
+      remainingBudget,
+      percentageSpent: spentPercentage.toFixed(1),
+    },
+  ])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  // Filtered data based on search query
+  const filteredData = useMemo(() => {
+    const search = searchQuery.toLowerCase().trim()
+    return data.filter(
+      (row) =>
+        row.driver.toLowerCase().includes(search) || // Search by driver
+        row.startDate.toLowerCase().includes(search) || // Search by start date
+        row.endDate.toLowerCase().includes(search), // Search by end date
+    )
+  }, [searchQuery, data])
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const currentData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
+
+  // Handlers
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  const handleOpenModal = (record) => setModalState({ open: true, selectedRecord: record })
+  const handleCloseModal = () => setModalState({ open: false, selectedRecord: null })
+
+  const [modalState, setModalState] = useState({ open: false, selectedRecord: null })
+
+  useEffect(() => {
+    setData([
+>>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js
       {
         driver: trip.driverId,
         startDate: trip.startDate,
@@ -63,6 +115,7 @@ const BudgetAllocation = () => {
         remainingBudget,
         percentageSpent: spentPercentage.toFixed(1),
       },
+<<<<<<< HEAD:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx
     ]
   }, [trip, totalSpent, remainingBudget, spentPercentage])
 
@@ -98,26 +151,30 @@ const BudgetAllocation = () => {
   const handleCloseModal = () => setModalState({ open: false, selectedRecord: null })
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+=======
+    ])
+  }, [trip, totalSpent, remainingBudget, spentPercentage]) // Dependency array
+>>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js
 
   return (
     <>
-      {/* Filter Input */}
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Filter by Driver"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </div>
-
       {/* Budget Table */}
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>{title}</strong>
+              <CFormInput
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: searchQuery ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: searchQuery ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
             <CCardBody>
               <CTable striped hover responsive bordered>
@@ -152,7 +209,7 @@ const BudgetAllocation = () => {
               </CTable>
               {filteredData.length === 0 && (
                 <div className="text-center text-muted">
-                  No results found for &quot;{filter}&quot;
+                  No results found for &quot;{searchQuery}&quot;
                 </div>
               )}
             </CCardBody>

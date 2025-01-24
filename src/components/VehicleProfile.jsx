@@ -8,22 +8,22 @@ const VehicleMaintenanceLog = React.lazy(() => import('./tabs/VehicleMaintenance
 // import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
 const VehicleTripInfo = React.lazy(() => import('./tabs/VehicleTripInfo'))
 // import VehicelTripInfo from './tabs/VehicleTripInfo'
+import {useParams} from 'react-router-dom'
+import { vehicles } from '../views/vehicle/data/data'
+import VehicleTyreTable from './tabs/VehicleTyreTable'
+
 function VehicleProfile({ open, setOpen, vehicle }) {
+
+    const { id } = useParams();
+    //
+     vehicle = vehicles.find((v) => v.id === id);
+  
   const handleClose = () => {
     setOpen(false)
   }
   return (
     <>
-      <CModal
-        alignment="center"
-        scrollable
-        visible={open}
-        onClose={() => setOpen(false)}
-        fullscreen
-        className="bg-light"
-      >
-        <CModalHeader closeButton />
-        <CModalBody>
+      
           <div className="p-3">
             <div>
               <span>
@@ -76,6 +76,9 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                 <CTab aria-controls="vehicle-trip" itemKey={2}>
                   Trip
                 </CTab>
+                <CTab aria-controls="vehicle-tyre" itemKey={3}>
+                  Tyre Management
+                </CTab>
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="maintenance-log" itemKey={1}>
@@ -84,17 +87,13 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                 <CTabPanel className="p-3" aria-labelledby="vehicle-trip" itemKey={2}>
                   <VehicleTripInfo trips={vehicle.trips} />
                 </CTabPanel>
+                <CTabPanel className="p-3" aria-labelledby="vehicle-tyre" itemKey={3}>
+                  <VehicleTyreTable  vehicle={vehicle}/>
+                </CTabPanel>
               </CTabContent>
             </CTabs>
           </div>
-          {/** Modal Box */}
-          <CModalFooter>
-            <button onClick={() => handleClose()} className="btn btn-secondary">
-              close
-            </button>
-          </CModalFooter>
-        </CModalBody>
-      </CModal>
+          
     </>
   )
 }

@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
-  Modal, IconButton, Box, Button,
+  Modal,
+  IconButton,
+  Box,
+  Button,
   TextField,
   Typography,
   TextareaAutosize,
-  InputAdornment
-} from '@mui/material';
+  InputAdornment,
+} from '@mui/material'
 // import axios from 'axios';
 // import { Close, Person, LocationOn, Inventory, MonetizationOn } from '@mui/icons-material';
-import { Close, DateRange, DirectionsCar, Person, LocationOn, Inventory, AttachMoney, MonetizationOn, LocalShipping, Receipt, Percent, Scale, Straighten, LocalOffer, Home } from '@mui/icons-material';
+import {
+  Close,
+  DateRange,
+  DirectionsCar,
+  Person,
+  LocationOn,
+  Inventory,
+  AttachMoney,
+  MonetizationOn,
+  LocalShipping,
+  Receipt,
+  Percent,
+  Scale,
+  Straighten,
+  LocalOffer,
+  Home,
+} from '@mui/icons-material'
 
 import CloseIcon from '@mui/icons-material/Close'
 const style = {
@@ -57,25 +76,24 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
     transporterRateOn: '',
     customerRateOn: '',
     customerFreight: '',
-    transporterFreight: ''
-  });
+    transporterFreight: '',
+  })
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: value
-    });
-  };
-
+      [name]: value,
+    })
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form submission
+    e.preventDefault() // Prevent the default form submission
 
     try {
       // Post the form data to the backend API
       // const response = await axios.post('http://localhost:5000/lrs', formData);
-      console.log('LR Created:', response.data);
+      console.log('LR Created:', response.data)
 
       // Clear the form after successful submission
       setFormData({
@@ -107,16 +125,15 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
         customerRateOn: '',
         customerFreight: '',
         transporterFreight: '',
-      });
+      })
 
       // Close the modal or reset state if needed
-      handleAddModalClose();
+      handleAddModalClose()
     } catch (error) {
-      console.error('Error creating LR:', error.response ? error.response.data : error.message);
-      alert('Failed to create LR. Please try again.');
+      console.error('Error creating LR:', error.response ? error.response.data : error.message)
+      alert('Failed to create LR. Please try again.')
     }
-  };
-
+  }
 
   return (
     <Modal
@@ -134,9 +151,7 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           padding: '30px',
         }}
       >
-        
-
-        <form onSubmit={handleSubmit} style={{ padding: '16px', }}>
+        <form onSubmit={handleSubmit} style={{ padding: '16px' }}>
           {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom={3}>
             <Typography variant="h5">Lorry Receipt (LR) Form</Typography>
@@ -146,7 +161,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Basic Details */}
-          <Typography variant="h6" gutterBottom>Basic Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Basic Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
             <TextField
               label="LR Number"
@@ -205,7 +222,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Consignor Details */}
-          <Typography variant="h6" gutterBottom>Consignor Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Consignor Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
             <TextField
               label="Consignor Name"
@@ -221,7 +240,6 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
               }}
             />
             <TextField
-
               placeholder="Consignor Address"
               name="consignorAddress"
               value={formData.consignorAddress}
@@ -229,7 +247,7 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Home/>
+                    <Home />
                   </InputAdornment>
                 ),
               }}
@@ -237,7 +255,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Consignee Details */}
-          <Typography variant="h6" gutterBottom>Consignee Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Consignee Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
             <TextField
               label="Consignee Name"
@@ -253,7 +273,6 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
               }}
             />
             <TextField
-
               placeholder="Consignee Address"
               name="consigneeAddress"
               value={formData.consigneeAddress}
@@ -267,7 +286,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
               }}
             />
           </Box>
-          <Typography variant="h6" gutterBottom>Customer Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Customer Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
             <TextField
               label="Customer Name"
@@ -283,7 +304,6 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
               }}
             />
             <TextField
-
               placeholder="Customer Address"
               name="customerAddress"
               value={formData.consigneeAddress}
@@ -299,7 +319,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Route Details */}
-          <Typography variant="h6" gutterBottom>Route Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Route Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
             <TextField
               label="From"
@@ -330,7 +352,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Cargo Details */}
-          <Typography variant="h6" gutterBottom>Cargo Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Cargo Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={2} marginBottom={3}>
             {/* <TextField
           label="Item Name"
@@ -436,11 +460,10 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
           </Box>
 
           {/* Freight Details */}
-          <Typography variant="h6" gutterBottom>Freight Details</Typography>
+          <Typography variant="h6" gutterBottom>
+            Freight Details
+          </Typography>
           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} marginBottom={3}>
-
-
-
             <TextField
               label="Customer Rate"
               type="number"
@@ -553,6 +576,65 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
             />
           </Box>
 
+          {/* <div>
+          <TextField
+              label="Hamali"
+              type="number"
+              name="hamali"
+              value={formData.hamali}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Sur Charges"
+              type="number"
+              name="surCharge"
+              value={formData.surCharge}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="St Charges"
+              type="number"
+              name="stCharge"
+              value={formData.customerFreight}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Risk charges"
+              type="number"
+              name="riskCharge"
+              value={formData.riskCharge}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </div> */}
+
           {/* Submit Button */}
           <Box textAlign="center">
             <Button type="submit" variant="contained" color="primary">
@@ -560,12 +642,9 @@ const LRForm = ({ handleAddModalClose, addModalOpen, setAddModalOpen }) => {
             </Button>
           </Box>
         </form>
-
-
-
       </Box>
     </Modal>
-  );
-};
+  )
+}
 
-export default LRForm;
+export default LRForm

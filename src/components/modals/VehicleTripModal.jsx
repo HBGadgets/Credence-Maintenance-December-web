@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import {
@@ -18,12 +17,54 @@ import {
   CModalFooter,
   CModalHeader,
   CButton,
+  CInputGroup,
+  CFormInput,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 
 function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
   const [filteredLogs, setFilteredLogs] = useState(trip)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
+  // Handle sorting
+  const handleSort = (key) => {
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    const sorted = [...filteredLogs].sort((a, b) => {
+      let valueA = a[key]
+      let valueB = b[key]
+
+      // Handle numeric and date sorting
+      if (key === 'startDate' || key === 'endDate') {
+        valueA = new Date(valueA)
+        valueB = new Date(valueB)
+      } else if (typeof valueA === 'number' && typeof valueB === 'number') {
+        valueA = parseFloat(valueA)
+        valueB = parseFloat(valueB)
+      } else {
+        valueA = valueA?.toString().toLowerCase()
+        valueB = valueB?.toString().toLowerCase()
+      }
+
+      if (valueA < valueB) return direction === 'asc' ? -1 : 1
+      if (valueA > valueB) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    setFilteredLogs(sorted)
+  }
+
+  // Get the sort icon
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕'
+  }
+
+  // Handle date filter
   const handleDateFilter = (startDate, endDate) => {
     if (!trip.length) return
 
@@ -34,8 +75,20 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
     setFilteredLogs(filtered)
   }
 
+  // Handle clearing filter
   const handleClearFilter = () => {
     setFilteredLogs(trip)
+    setSearchQuery('')
+  }
+
+  // Handle search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+    const lowercasedQuery = query.toLowerCase()
+    const filtered = trip.filter((t) =>
+      Object.values(t).some((value) => String(value).toLowerCase().includes(lowercasedQuery)),
+    )
+    setFilteredLogs(filtered)
   }
 
   return (
@@ -44,9 +97,17 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
       <CModalBody className="d-flex flex-column gap-3">
         <div className="d-flex gap-3 align-items-end">
           <DateRangeFilter onFilter={handleDateFilter} />
-          <button onClick={handleClearFilter} className="btn btn-secondary btn-sm">
+          <CInputGroup className="w-50">
+            <CFormInput
+              type="text"
+              placeholder="Search trips..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </CInputGroup>
+          <CButton color="secondary" onClick={handleClearFilter} title="Clear Filter">
             Clear Filter
-          </button>
+          </CButton>
         </div>
         <CRow>
           <CCol xs={12}>
@@ -63,8 +124,13 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
                       <CTableHead>
                         <CTableRow>
                           {columns.map((column, index) => (
-                            <CTableHeaderCell key={index} className="text-center">
-                              {column}
+                            <CTableHeaderCell
+                              key={index}
+                              className="text-center"
+                              onClick={() => handleSort(column)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {column} {getSortIcon(column)}
                             </CTableHeaderCell>
                           ))}
                         </CTableRow>
@@ -82,7 +148,13 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
                             <CTableDataCell className="text-center">{row.duration}</CTableDataCell>
                             <CTableDataCell className="text-center">{row.totalCost}</CTableDataCell>
                             <CTableDataCell
-                              className={`text-center ${row.status === 'completed' ? 'text-success' : row.status === 'in-progress' ? 'text-warning' : 'text-danger'}`}
+                              className={`text-center ${
+                                row.status === 'completed'
+                                  ? 'text-success'
+                                  : row.status === 'in-progress'
+                                    ? 'text-warning'
+                                    : 'text-danger'
+                              }`}
                             >
                               {row.status}
                             </CTableDataCell>

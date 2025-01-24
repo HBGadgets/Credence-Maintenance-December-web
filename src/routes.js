@@ -1,3 +1,4 @@
+import { element } from 'prop-types'
 import React from 'react'
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
@@ -20,6 +21,7 @@ const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
+const VehicleProfile = React.lazy(()=> import('./components/VehicleProfile.jsx'))
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
@@ -32,10 +34,12 @@ const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const VehicleExpenses = React.lazy(
   () => import('./views/Supervisor/vehicle-expenses/VehicleExpenses.js'),
 )
+const LeaveRequests = React.lazy(() => import('./views/Supervisor/leave-request/LeaveRequests.jsx'))
+
 const VehicleDriverBills = React.lazy(
   () => import('./views/Supervisor/billing/VehicleDriverBills.js'),
 )
-const SubDetails = React.lazy(() => import('./views/Supervisor/sub-details/SubDetails.js'))
+const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
 
 // Expenses Management
 const PurchaseParts = React.lazy(
@@ -50,7 +54,10 @@ const VehicleExpensesBill = React.lazy(
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
-
+// const TyreDetails =React.lazy(()=> import('./views/Expenses-Management/driver-expenses/TyreDetails.js'))
+// Tyre Management
+const TyreInventory  = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
+const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
@@ -141,6 +148,7 @@ const routes = [
 
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
+  {path: 'VehicleProfile/:id' , name: 'VehicleProfile', element: VehicleProfile},
 
   /**DRIVER */
 
@@ -154,7 +162,8 @@ const routes = [
   { path: '/Trip', name: 'Trip', element: Trip },
   { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
-  { path: '/SubDetails', name: 'Sub Details', element: SubDetails },
+  { path: '/ComDetails', name: 'Company Details', element: ComDetails },
+  { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
 
   /**EXPENSES MANAGEMENT */
 
@@ -164,6 +173,9 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'LR', element: LR },
+  /*Tyre Management*/
+  { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
+  {path:'/vehicle-details',name: 'Detailed Page', element: DetailedPage},
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

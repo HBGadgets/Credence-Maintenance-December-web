@@ -24,7 +24,9 @@ import {
   CTabList,
   CTabPanel,
   CTabContent,
-  CTabs
+  CTabs,
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
@@ -38,6 +40,15 @@ import SalarySlipTable from '../DriverExpert/components/salary/SalarySlipTable' 
 import AttendanceSection from '../DriverExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
+import { useEffect } from 'react'
+import { IoPerson } from 'react-icons/io5'
+import { IoCall } from 'react-icons/io5'
+import { MdEmail } from 'react-icons/md'
+import { IoDocumentText } from 'react-icons/io5'
+import { RiLockPasswordFill } from 'react-icons/ri'
+import { AiFillPicture } from 'react-icons/ai'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const DriversExp = ({ setSelectedDriverId }) => {
   const columns = ['Name', 'Contact', 'Email', 'Profile']
@@ -52,35 +63,54 @@ const DriversExp = ({ setSelectedDriverId }) => {
     licenseNumber: '',
     aadharNumber: '',
     password: '',
-    profileImage: null,  // State to store the selected image
+    profileImage: null, // State to store the selected image
   })
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
 
-  const [data, setData] = useState(drivers); // Assuming drivers are available
-  const [filter, setFilter] = useState('');
+  const [data, setData] = useState(drivers) // Assuming drivers are available
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10 // Number of items per page
 
-  // Logic for Filter
   const debouncedFilterChange = debounce((value) => {
-    const filteredData = drivers.filter(
-      (row) =>
-        row.name.toLowerCase().includes(value.toLowerCase())
-    );
-    setData(filteredData);
-  }, 300);
+    const filteredData = drivers.filter((row) =>
+      row.name.toLowerCase().includes(value.toLowerCase()),
+    )
+    setData(filteredData)
+    setCurrentPage(1) // Reset to the first page on filter change
+  }, 300)
 
   const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-    debouncedFilterChange(e.target.value);
-  };
+    setFilter(e.target.value)
+    debouncedFilterChange(e.target.value)
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(data.length / itemsPerPage)
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem)
 
   // Handle file input change
   const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]
     if (file) {
-      setNewDriver({ ...newDriver, profileImage: file });
+      setNewDriver({ ...newDriver, profileImage: file })
     }
-  };
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
 
   // Group trips by driverId
   const groupedTrips = trips.reduce((acc, trip) => {
@@ -123,7 +153,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
 
   const handleDeleteDriver = (driverId) => {
     // Delete the driver by filtering it out from the state
-    setDrivers(drivers.filter(driver => driver.id !== driverId))
+    setDrivers(drivers.filter((driver) => driver.id !== driverId))
   }
 
   const handleEditDriver = (driver) => {
@@ -132,40 +162,37 @@ const DriversExp = ({ setSelectedDriverId }) => {
   }
 
   const handleSaveEdit = () => {
-    setDrivers(drivers.map(driver =>
-      driver.id === driverToEdit.id ? driverToEdit : driver
-    ))
+    setDrivers(drivers.map((driver) => (driver.id === driverToEdit.id ? driverToEdit : driver)))
     setEditModalOpen(false)
     alert('Driver updated successfully!')
   }
 
   return (
     <>
-
       {/* Filter */}
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Filter by Driver Name"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </div>
-
       <CRow>
+        <div>
+          <CButton color="primary" className="float-end mb-2" onClick={() => setAddModalOpen(true)}>
+            Add Driver
+          </CButton>
+        </div>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
-              <strong>Drivers List</strong>
-              <CButton
-                color="primary"
-                className="float-end"
-                onClick={() => setAddModalOpen(true)}
-              >
-                Add Driver
-              </CButton>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
+              <strong>Vehicles</strong>
+              <CFormInput
+                type="text"
+                placeholder="Search vehicles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: searchQuery ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: searchQuery ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
+
             <CCardBody>
               {data.length === 0 ? (
                 <p className="text-center">No drivers available.</p>
@@ -187,9 +214,12 @@ const DriversExp = ({ setSelectedDriverId }) => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {data.map((driver, index) => (
+                    {currentItems.map((driver, index) => (
                       <CTableRow key={driver.id}>
-                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell> {/* Serial Number */}
+                        <CTableDataCell className="text-center">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </CTableDataCell>{' '}
+                        {/* Serial Number */}
                         <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
                           {driver.contactNumber}
@@ -228,6 +258,30 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   </CTableBody>
                 </CTable>
               )}
+
+              {/* Pagination Buttons */}
+              <div className="d-flex justify-content-center align-items-center mt-3">
+                <CButton color="primary" disabled={currentPage === 1} onClick={handlePreviousPage}>
+                  Previous
+                </CButton>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <CButton
+                    key={index}
+                    color={currentPage === index + 1 ? 'primary' : 'secondary'}
+                    className="mx-1"
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </CButton>
+                ))}
+                <CButton
+                  color="primary"
+                  disabled={currentPage === totalPages}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </CButton>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
@@ -243,7 +297,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
           fullscreen
         >
           <CModalHeader>
-            <CModalTitle className="d-flex align-items-center"><h5>Driver Profile</h5></CModalTitle>
+            <CModalTitle className="d-flex align-items-center">
+              <h5>Driver Profile</h5>
+            </CModalTitle>
           </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
@@ -283,7 +339,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   Expenses
                 </CTab>
                 <CTab aria-controls="trip-details" itemKey={3}>
-                  Trip Details
+                  Logbook Details
                 </CTab>
                 <CTab aria-controls="salary-slips" itemKey={4}>
                   Salary Slips
@@ -333,7 +389,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.contactNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -349,7 +407,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.licenseNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -357,7 +417,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CFormInput
                   type="text"
                   value={driverToEdit.aadharNumber}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })}
+                  onChange={(e) =>
+                    setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
+                  }
                 />
               </div>
               <div className="mb-2">
@@ -377,72 +439,140 @@ const DriversExp = ({ setSelectedDriverId }) => {
       )}
 
       {/* Add Driver Modal */}
-      <CModal alignment="center" visible={addModalOpen} onClose={() => setAddModalOpen(false)}>
+      <CModal
+        alignment="center"
+        visible={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        size="xl"
+      >
         <CModalHeader>
           <CModalTitle>Add Driver</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
-            <div className="mb-2">
-              <CFormLabel>Name</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newDriver.name}
-                onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
-              />
+            {/* Flexbox container for a landscape layout */}
+            <div
+              className=" flex-wrap gap-5"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+            >
+              {/* Name field */}
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter Driver Name"
+                    value={newDriver.name}
+                    onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* Contact Number field */}
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter Contact Number"
+                    value={newDriver.contactNumber}
+                    onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* Email field */}
+              <CCol md={15}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="email"
+                    placeholder="Enter Email Id"
+                    value={newDriver.email}
+                    onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* License Number field */}
+              <CCol md={15}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter License Number"
+                    value={newDriver.licenseNumber}
+                    onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
             </div>
-            <div className="mb-2">
-              <CFormLabel>Contact Number</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newDriver.contactNumber}
-                onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
-              />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginTop: '25px' }}>
+              {/* Aadhar Number field */}
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="text"
+                    placeholder="Enter Aadhar Number"
+                    value={newDriver.aadharNumber}
+                    onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* Password field */}
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput
+                    type="password"
+                    placeholder="Enter Password"
+                    value={newDriver.password}
+                    onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* Profile Picture field */}
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
+                  <CFormInput type="file" onChange={handleProfileImageChange} />
+                </CInputGroup>
+              </CCol>
             </div>
-            <div className="mb-2">
-              <CFormLabel>Email</CFormLabel>
-              <CFormInput
-                type="email"
-                value={newDriver.email}
-                onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
-              />
+            {/* Submit Button */}
+            <div className="d-flex justify-content-end">
+              <CButton color="primary" className="mt-3 " onClick={() => handleAddDriver(newDriver)}>
+                Submit
+              </CButton>
             </div>
-            <div className="mb-2">
-              <CFormLabel>License Number</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newDriver.licenseNumber}
-                onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
-              />
-            </div>
-            <div className="mb-2">
-              <CFormLabel>Aadhar Number</CFormLabel>
-              <CFormInput
-                type="text"
-                value={newDriver.aadharNumber}
-                onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
-              />
-            </div>
-            <div className="mb-2">
-              <CFormLabel>Password</CFormLabel>
-              <CFormInput
-                type="Password"
-                value={newDriver.password}
-                onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
-              />
-            </div>
-            <div className="mb-2">
-              <CFormLabel>Profile Picture</CFormLabel>
-              <CFormInput
-                type="file"
-                onChange={handleProfileImageChange}
-              />
-            </div>
-            <CButton color="primary" onClick={() => handleAddDriver(newDriver)}>
-              Submit
-            </CButton>
           </CForm>
         </CModalBody>
+        <ToastContainer />
       </CModal>
     </>
   )

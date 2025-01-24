@@ -6,6 +6,7 @@ export const vehicles = [
     year: 2020,
     model: 'Camry',
     licenseNumber: 'ABC123',
+    category: 'truck',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },
@@ -93,6 +94,787 @@ export const vehicles = [
     year: 2021,
     model: 'Civic',
     licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V003',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'taxi',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V004',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'bus',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V005',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V006',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'bus',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V007',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'truck',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V008',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'truck',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V009',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0010',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0011',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0012',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0013',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0014',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
+    documents: [
+      { name: 'Insurance', type: 'pdf' },
+      { name: 'RC', type: 'pdf' },
+      { name: 'PUC', type: 'pdf' },
+      { name: 'Fitness Certificate', type: 'pdf' },
+    ],
+    maintenanceLogs: [
+      {
+        id: 'M003',
+        serviceDate: '2023-03-10',
+        mileage: 12000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+      {
+        id: 'M004',
+        serviceDate: '2023-03-10',
+        mileage: 15000,
+        workPerformed: 'Tire Rotation',
+        performedBy: 'Quick Tire Service',
+        cost: 29.99,
+      },
+    ],
+    trips: [
+      {
+        tripId: 'trip-001',
+        driver: 'D4',
+        startLocation: 'Hyderabad',
+        endLocation: 'Vizag',
+        startDate: '2024-02-20',
+        endDate: '2024-02-20',
+        distance: 380, // miles
+        duration: 6, // hours
+        totalCost: 3000, // in currency units
+        vehicle: 'TS09-GH7890',
+        status: 'completed',
+      },
+      {
+        tripId: 'trip-002',
+        driver: 'D2',
+        startLocation: 'Ahmedabad',
+        endLocation: 'Surat',
+        startDate: '2024-02-22',
+        endDate: '2024-02-22',
+        distance: 160, // miles
+        duration: 2.5, // hours
+        totalCost: 1200, // in currency units
+        vehicle: 'GJ05-IJ1234',
+        status: 'completed',
+      },
+    ],
+  },
+  {
+    id: 'V0015',
+    make: 'Honda',
+    year: 2021,
+    model: 'Civic',
+    licenseNumber: 'XYZ789',
+    category: 'car',
     documents: [
       { name: 'Insurance', type: 'pdf' },
       { name: 'RC', type: 'pdf' },

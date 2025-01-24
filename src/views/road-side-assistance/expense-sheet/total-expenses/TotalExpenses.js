@@ -19,6 +19,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CFormInput,
   CModalTitle,
 } from '@coreui/react'
 import { debounce } from 'lodash'
@@ -46,6 +47,8 @@ const TotalExpenses = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [filteredData, setFilteredData] = useState('') // Search state
+
   const itemsPerPage = 10
 
   // Logic for Filter
@@ -121,23 +124,23 @@ const TotalExpenses = () => {
 
   return (
     <>
-      {/* Filter */}
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Filter by Driver or Vehicle"
-          value={filter}
-          onChange={handleFilterChange}
-        />
-      </div>
-
       {/* Table */}
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
-            <CCardHeader>
+            <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>{title}</strong>
+              <CFormInput
+                type="text"
+                placeholder="Search vehicles..."
+                value={filteredData}
+                onChange={(e) => setFilteredData(e.target.value)}
+                className="w-25"
+                style={{
+                  boxShadow: filteredData ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
+                  borderColor: filteredData ? '#007bff' : undefined,
+                }}
+              />
             </CCardHeader>
             <CCardBody>
               <CTable striped hover responsive bordered>

@@ -53,21 +53,16 @@ const AttendanceSection = ({ driverId }) => {
           </CRow>
 
           <AttendanceStats attendanceData={filteredAttendance} />
-          <LeaveRequests
+          {/* <LeaveRequests
             requests={filteredAttendance}
             onApprove={(id) => console.log('Approve:', id)}
             onDeny={(id) => console.log('Deny:', id)}
-          />
+          /> */}
 
-          <div className="mt-4">
-            <CButton
-              onClick={handleOpen}
-              color="link"
-              className="d-flex align-items-center text-primary"
-            >
-              View Full Attendance History
-              <ChevronRight size={16} />
-            </CButton>
+          <div className="d-flex justify-content-end">
+            <button type="button" className="btn btn-secondary m-1" onClick={handleOpen}>
+              View More
+            </button>
           </div>
         </CCardBody>
       </CCard>
