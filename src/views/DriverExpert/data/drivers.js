@@ -9,6 +9,11 @@ export const drivers = [
     password: '123456',
     profileImage:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6SBFO_34s3mUw1zz2SuAVXn83OArtd8D9GQ&s?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1572314493295-09c6d5ec3cdf?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1554774853-719586f82d77?w=800',
+    },
   },
   {
     id: '2',
@@ -19,6 +24,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9013',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800',
+    },
   },
   {
     id: '3',
@@ -29,6 +39,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9014',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=800',
+    },
   },
   {
     id: '4',
@@ -39,6 +54,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9015',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   },
 
   {
@@ -50,6 +70,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   },
   {
     id: '6',
@@ -60,6 +85,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1572314493295-09c6d5ec3cdf?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1554774853-719586f82d77?w=800',
+    },
   },
   {
     id: '7',
@@ -70,6 +100,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800',
+    },
   },
   {
     id: '8',
@@ -80,6 +115,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=800',
+    },
   }, {
     id: '9',
     name: 'Emma Patel',
@@ -89,6 +129,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   }, {
     id: '10',
     name: 'Emma Patel',
@@ -98,6 +143,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   }, {
     id: '11',
     name: 'Emma Patel',
@@ -107,6 +157,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   }, {
     id: '12',
     name: 'Emma Patel',
@@ -116,6 +171,11 @@ export const drivers = [
     aadharNumber: '1234 5678 9016',
     password: '123456',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+    documents: {
+      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
+      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
+      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
+    },
   },
 
 ];
