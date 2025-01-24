@@ -161,20 +161,23 @@ const Dashboard = () => {
   ]
 
   // For cart new dialog box open and close.
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState("");
+  const [modalVisible, setModalVisible] = useState(false)
+  const [modalContent, setModalContent] = useState('')
+  const [showAllLogs, setShowAllLogs] = useState(false)
 
   const openModal = (cardName) => {
-    setModalContent(cardName);
-    setModalVisible(true);
-  };
+    setModalContent(cardName)
+    setModalVisible(true)
+  }
 
   const closeModal = () => {
-    setModalVisible(false);
-    setModalContent("");
-  };
+    setModalVisible(false)
+    setModalContent('')
+  }
 
-
+  const handleClickView = () => {
+    setShowAllLogs(true)
+  }
   return (
     <>
       <style>
@@ -196,7 +199,7 @@ const Dashboard = () => {
         <CRow className="g-3">
           {/* Active/Inactive Drivers Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Drivers")}>
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Drivers')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <IoPersonSharp style={{ fontSize: '21px', color: 'gray' }} />
                 <span className="font-weight-bold">Drivers</span>
@@ -211,7 +214,7 @@ const Dashboard = () => {
 
           {/* Active/Inactive Vehicles Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicles")}>
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Vehicles')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
                 <span className="font-weight-bold">Vehicles</span>
@@ -226,7 +229,10 @@ const Dashboard = () => {
 
           {/* Vehicle Maintenance Status Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Maintenance")}>
+            <CCard
+              className="shadow-sm border-0 hover-card"
+              onClick={() => openModal('Maintenance')}
+            >
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <IoSettingsSharp style={{ fontSize: '22px', color: 'gray' }} />
                 <span className="font-weight-bold">Maintenance Status</span>
@@ -241,21 +247,26 @@ const Dashboard = () => {
 
           {/* Total Expenses Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Expenses")}>
+            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Expenses')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <MdOutlineCurrencyRupee style={{ fontSize: '22px', color: 'gray' }} />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Total: ₹{totalExpenses.toLocaleString()}</h5>
-                <p className="text-muted">Total expenses for the fleet, including driver and vehicle costs</p>
+                <p className="text-muted">
+                  Total expenses for the fleet, including driver and vehicle costs
+                </p>
               </CCardBody>
             </CCard>
           </CCol>
 
           {/* Live on Work Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Live on Work")}>
+            <CCard
+              className="shadow-sm border-0 hover-card"
+              onClick={() => openModal('Live on Work')}
+            >
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <TbTruckDelivery style={{ fontSize: '23px', color: 'gray' }} />
                 <span className="font-weight-bold">Live on Work</span>
@@ -269,7 +280,10 @@ const Dashboard = () => {
 
           {/* Insurance Alert Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Insurance Alert")}>
+            <CCard
+              className="shadow-sm border-0 hover-card"
+              onClick={() => openModal('Insurance Alert')}
+            >
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <IoAlertCircle style={{ fontSize: '23px', color: 'gray' }} />
                 <span className="font-weight-bold">Insurance Alert</span>
@@ -283,7 +297,10 @@ const Dashboard = () => {
 
           {/* Vehicle Location Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicle Location")}>
+            <CCard
+              className="shadow-sm border-0 hover-card"
+              onClick={() => openModal('Vehicle Location')}
+            >
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <FaMapLocationDot style={{ fontSize: '23px', color: 'gray' }} />
                 <span className="font-weight-bold">Vehicle Location</span>
@@ -297,7 +314,10 @@ const Dashboard = () => {
 
           {/* Roadside Assistance Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Roadside Assistance")}>
+            <CCard
+              className="shadow-sm border-0 hover-card"
+              onClick={() => openModal('Roadside Assistance')}
+            >
               <CCardHeader className="d-flex align-items-center justify-content-between">
                 <FaHandshakeSimple style={{ fontSize: '23px', color: 'gray' }} />
                 <span className="font-weight-bold">Roadside Assitance</span>
@@ -312,7 +332,7 @@ const Dashboard = () => {
       </CCardGroup>
 
       {/* Modals for each card */}
-      <CModal visible={modalVisible} onClose={closeModal} size="lg" className='pt-5'>
+      <CModal visible={modalVisible} onClose={closeModal} size="lg" className="pt-5">
         <CModalHeader>
           <h5>{modalContent} Details</h5>
         </CModalHeader>
@@ -320,7 +340,9 @@ const Dashboard = () => {
           <p>{`Content for ${modalContent} will go here`}</p>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={closeModal}>Close</CButton>
+          <CButton color="secondary" onClick={closeModal}>
+            Close
+          </CButton>
         </CModalFooter>
       </CModal>
 
@@ -381,6 +403,11 @@ const Dashboard = () => {
                   ))}
                 </CTableBody>
               </CTable>
+              <div className="d-flex justify-content-end mt-3">
+                <button type="button" className="btn btn-secondary" onClick={handleClickView}>
+                  View More
+                </button>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>

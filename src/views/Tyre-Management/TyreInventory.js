@@ -21,79 +21,29 @@ import {
   CFormInput,
   CFormSelect,
   CTableBody,
-  CInputGroup, CInputGroupText
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
-import { CIcon } from '@coreui/icons-react';
-import { cilSearch } from '@coreui/icons';
+import { CIcon } from '@coreui/icons-react'
+import { cilSearch } from '@coreui/icons'
+
+import { tyreMange } from '../Tyre-Management/Data'
+
+// **********icons**********
+import { PiListNumbersFill } from 'react-icons/pi'
+import { IoPerson } from 'react-icons/io5'
+import { TbBrandBebo } from 'react-icons/tb'
+import { FaHandshake } from 'react-icons/fa6'
+import { IoMdResize } from 'react-icons/io'
+import { TbArrowAutofitWidth } from 'react-icons/tb'
+import { MdOutlineAir } from 'react-icons/md'
+import { FaCalendarAlt } from 'react-icons/fa'
+import { GrStatusDisabledSmall } from 'react-icons/gr'
+import { FaTruckMoving } from 'react-icons/fa'
+import { GiCarWheel } from 'react-icons/gi'
+import { IoFileTrayFull } from 'react-icons/io5'
 
 const TyreInventory = () => {
-  const [tyres, setTyres] = useState([
-    {
-      id: 1,
-      serialNumber: 'TYR12345',
-      vendor: 'Goodyear',
-      brand: 'MRF',
-      pattern: 'Radial',
-      size: '18',
-      treadDepth: '10mm',
-      pressure: '35psi',
-      purchaseDate: '2024-03-15',
-      status: 'New',
-      distance: 12000,
-      document: 'document-link-1.pdf',
-      assignedToVehicle: 'MH34522',
-      wheelPosition: 'Front-Left',
-    },
-    {
-      id: 2,
-      serialNumber: 'TYR12346',
-      vendor: 'Michelin',
-      brand: 'MRF',
-      pattern: 'Radial',
-      size: '18',
-      treadDepth: '10mm',
-      pressure: '35psi',
-      purchaseDate: '2023-08-10',
-      status: 'In Use',
-      distance: 25000,
-      document: 'document-link-2.pdf',
-      assignedToVehicle: 'MH45697',
-      wheelPosition: 'Front-Right',
-    },
-    {
-      id: 3,
-      serialNumber: 'TYR12347',
-      vendor: 'Pirelli',
-      brand: 'MRF',
-      pattern: 'Radial',
-      size: '18',
-      treadDepth: '10mm',
-      pressure: '35psi',
-      purchaseDate: '2023-01-20',
-      status: 'Needs Replacement',
-      distance: 30000,
-      document: 'document-link-3.pdf',
-      assignedToVehicle: 'MH23476',
-      wheelPosition: 'Rear-Right',
-    },
-    {
-      id: 4,
-      serialNumber: 'TYR12348',
-      vendor: 'Pirelli',
-      brand: 'MRF',
-      pattern: 'Radial',
-      size: '18',
-      treadDepth: '10mm',
-      pressure: '35psi',
-      purchaseDate: '2023-01-20',
-      status: 'Needs Replacement',
-      distance: 30000,
-      document: 'document-link-3.pdf',
-      assignedToVehicle: 'MH45675',
-      wheelPosition: 'Rear-Left',
-    },
-  ])
-
   const columns = [
     { label: 'Serial Number', key: 'serialNumber' },
     { label: 'Vendor', key: 'vendor' },
@@ -107,6 +57,7 @@ const TyreInventory = () => {
     { label: 'Vehicle', key: 'assignedToVehicle' },
     { label: 'Position', key: 'wheelPosition' },
     { label: 'Document', key: 'document' },
+    { label: 'Action', key: 'action' },
   ]
 
   const [modalVisible, setModalVisible] = useState(false)
@@ -122,6 +73,7 @@ const TyreInventory = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editIndex, setEditIndex] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [tyres, setTyres] = useState(tyreMange)
 
   // Filtered Data
   const filteredInventory = tyres.filter(
@@ -211,18 +163,17 @@ const TyreInventory = () => {
             <CCardBody>
               <CTable hover responsive striped bordered>
                 <CTableHead>
-                  <CTableRow className='text-nowrap text-center'>
+                  <CTableRow className="text-nowrap text-center">
                     <CTableHeaderCell>Sr. No.</CTableHeaderCell> {/* For Actions */}
                     {columns.map((col) => (
                       <CTableHeaderCell key={col.key}>{col.label}</CTableHeaderCell>
                     ))}
-                    <CTableHeaderCell>Actions</CTableHeaderCell> {/* For Actions */}
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {filteredInventory.length > 0 ? (
                     filteredInventory.map((tyre, index) => (
-                      <CTableRow key={index} className='text-nowrap text-center'>
+                      <CTableRow key={index} className="text-nowrap text-center">
                         <CTableDataCell>{index + 1}</CTableDataCell>
                         {columns.map((col) => (
                           <CTableDataCell key={col.key}>
@@ -241,6 +192,7 @@ const TyreInventory = () => {
                             )}
                           </CTableDataCell>
                         ))}
+
                         <CTableDataCell>
                           <div className="d-flex gap-2">
                             <CButton
@@ -270,7 +222,6 @@ const TyreInventory = () => {
                   )}
                 </CTableBody>
               </CTable>
-              
             </CCardBody>
           </CCard>
         </CCol>
@@ -287,10 +238,19 @@ const TyreInventory = () => {
         <CModalBody>
           <CForm>
             {/* Serial Number, Vendor, and Brand */}
-            <CRow>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Serial Number</CFormLabel>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '20px',
+                marginTop: '20px',
+              }}
+            >
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <PiListNumbersFill style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="serialNumber"
@@ -298,11 +258,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Serial Number"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Vendor</CFormLabel>
+
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="vendor"
@@ -310,11 +273,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Vendor Name"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Brand</CFormLabel>
+
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <TbBrandBebo style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="brand"
@@ -322,15 +288,24 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Tyre Brand"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-            </CRow>
+            </div>
 
             {/* Pattern, Size, and Tread Depth */}
-            <CRow>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Pattern</CFormLabel>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '20px',
+                marginTop: '25px',
+              }}
+            >
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <FaHandshake style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="pattern"
@@ -338,11 +313,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Tyre Pattern"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Size</CFormLabel>
+
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoMdResize style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="size"
@@ -350,11 +328,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Tyre Size"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Tread Depth</CFormLabel>
+
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <TbArrowAutofitWidth style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="treadDepth"
@@ -362,15 +343,23 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Tread Depth"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-            </CRow>
-
+            </div>
             {/* Pressure, Purchase Date, and Status */}
-            <CRow>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Pressure</CFormLabel>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '20px',
+                marginTop: '25px',
+              }}
+            >
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <MdOutlineAir style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="pressure"
@@ -378,37 +367,52 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Pressure (e.g., 35psi)"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Purchase Date</CFormLabel>
+
+              <CCol md={15} style={{ marginTop: '25px' }}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <FaCalendarAlt style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="date"
                     name="purchaseDate"
                     value={newTyre.purchaseDate}
                     onChange={handleInputChange}
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Status</CFormLabel>
+
+              <CCol md={15} style={{ marginTop: '25px' }}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <GrStatusDisabledSmall style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormSelect name="status" value={newTyre.status} onChange={handleInputChange}>
                     <option value="">Select Status</option>
                     <option value="New">New</option>
                     <option value="In Use">In Use</option>
                     <option value="Needs Replacement">Needs Replacement</option>
                   </CFormSelect>
-                </div>
+                </CInputGroup>
               </CCol>
-            </CRow>
+            </div>
 
             {/* Assigned Vehicle, Wheel Position, and Document Link */}
-            <CRow>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Assigned to Vehicle</CFormLabel>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '20px',
+                marginTop: '25px',
+              }}
+            >
+              <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="assignedToVeicle"
@@ -416,11 +420,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Vehicle ID"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Wheel Position</CFormLabel>
+
+              <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <GiCarWheel style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="wheelPosition"
@@ -428,11 +435,14 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Wheel Position (e.g., Front-Left)"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-              <CCol sm={4}>
-                <div className="mb-3">
-                  <CFormLabel>Document Link</CFormLabel>
+
+              <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <IoFileTrayFull style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="document"
@@ -440,9 +450,9 @@ const TyreInventory = () => {
                     onChange={handleInputChange}
                     placeholder="Enter Document Link"
                   />
-                </div>
+                </CInputGroup>
               </CCol>
-            </CRow>
+            </div>
           </CForm>
         </CModalBody>
         <CModalFooter>
