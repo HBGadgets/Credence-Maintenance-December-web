@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from "axios";
 import {
   CCard,
   CCardBody,
@@ -29,8 +30,8 @@ import {
   CInputGroupText,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
-import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
-import { drivers } from '../DriverExpert/data/drivers' // Ensure this import is correct
+// import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
+// import { drivers } from '../DriverExpert/data/drivers' // Ensure this import is correct
 import { trips } from '../DriverExpert/data/trips' // Ensure this import is correct
 import { expenses } from '../DriverExpert/data/expenses' // Import expenses
 import { salaries } from '../DriverExpert/data/salaries' // Import salaries
@@ -51,9 +52,9 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import DocumentLocker from './components/documents/DocumentLocker'
 
-const DriversExp = ({ setSelectedDriverId }) => {
+const DriversExp = () => {
   const columns = ['Name', 'Contact', 'Email', 'Profile']
-  const [drivers, setDrivers] = useState(initialDrivers) // Use state for the driver list
+  const [drivers, setDrivers] = useState([]) // Use state for the driver list
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [open, setOpen] = useState(false)
   const [addModalOpen, setAddModalOpen] = useState(false)
@@ -72,9 +73,10 @@ const DriversExp = ({ setSelectedDriverId }) => {
     },
 
   })
+
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
-
+  // const [newDriver, setNewDriver] = useState()
   const [data, setData] = useState(drivers) // Assuming drivers are available
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -93,11 +95,33 @@ const DriversExp = ({ setSelectedDriverId }) => {
     debouncedFilterChange(e.target.value)
   }
 
+  // Fetch API data
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.SERVER}/api/drivers`) // Replace with your API URL
+      .then((response) => {
+        console.log("response", response.data);
+
+        setDrivers(response.data); // Set drivers data from API
+      })
+      .catch((error) => {
+        console.error("Error fetching drivers:", error);
+      });
+  }, []);
+
+  // Filtered Data
+  const filteredDrivers = Array.isArray(drivers)
+    ? drivers.filter((driver) =>
+      driver.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : [];
+
+
   // Pagination logic
-  const totalPages = Math.ceil(data.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem)
+  const currentItems = filteredDrivers.slice(indexOfFirstItem, indexOfLastItem)
 
   // Handle file input change
   const handleProfileImageChange = (e) => {
@@ -160,10 +184,10 @@ const DriversExp = ({ setSelectedDriverId }) => {
   }, {})
 
   // Populate grouped documents (example logic)
-  const groupedDocuments = drivers.reduce((acc, driver) => {
-    acc[driver.id] = driver.documents;
-    return acc;
-  }, {});
+  // const groupedDocuments = drivers.reduce((acc, driver) => {
+  //   acc[driver.id] = driver.documents;
+  //   return acc;
+  // }, {});
 
 
   const handleViewClick = (driver) => {
@@ -221,7 +245,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
             </CCardHeader>
 
             <CCardBody>
-              {data.length === 0 ? (
+              {currentItems.length === 0 ? (
                 <p className="text-center">No drivers available.</p>
               ) : (
                 <CTable striped hover responsive bordered>
@@ -498,7 +522,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="text"
                     placeholder="Enter Driver Name"
-                    value={newDriver.name}
+                    // value={newDriver.name}
                     onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
                   />
                 </CInputGroup>
@@ -514,7 +538,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="text"
                     placeholder="Enter Contact Number"
-                    value={newDriver.contactNumber}
+                    // value={newDriver.contactNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
                   />
                 </CInputGroup>
@@ -530,7 +554,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="email"
                     placeholder="Enter Email Id"
-                    value={newDriver.email}
+                    // value={newDriver.email}
                     onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
                   />
                 </CInputGroup>
@@ -546,7 +570,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="text"
                     placeholder="Enter License Number"
-                    value={newDriver.licenseNumber}
+                    // value={newDriver.licenseNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
                   />
                 </CInputGroup>
@@ -564,7 +588,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="text"
                     placeholder="Enter Aadhar Number"
-                    value={newDriver.aadharNumber}
+                    // value={newDriver.aadharNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
                   />
                 </CInputGroup>
@@ -580,7 +604,7 @@ const DriversExp = ({ setSelectedDriverId }) => {
                   <CFormInput
                     type="password"
                     placeholder="Enter Password"
-                    value={newDriver.password}
+                    // value={newDriver.password}
                     onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
                   />
                 </CInputGroup>
