@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CAvatar,
   CButton,
@@ -49,7 +49,8 @@ import avatar3 from 'src/assets/images/avatars/3.jpg'
 import avatar4 from 'src/assets/images/avatars/4.jpg'
 import avatar5 from 'src/assets/images/avatars/5.jpg'
 import { MdOutlineCurrencyRupee } from 'react-icons/md'
-
+import axios from 'axios'
+import Cookies from 'js-cookie'
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
   const activeDrivers = 12
@@ -173,6 +174,33 @@ const Dashboard = () => {
       status: 'Inactive',
     },
   ]
+
+  const queryParams = new URLSearchParams(window.location.search)
+  const token = queryParams.get('token')
+
+  const sendTokenToServerFromURL = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/validate`,
+        { token }, // Token sent in POST body
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      console.log('Server response:', response.data)
+
+      // setting cookie in the browser
+      Cookies.set('crdnsToken', token, { expires: 7 })
+    } catch (error) {
+      console.log('Error:', error.response?.data || error.message)
+    }
+  }
+
+  useEffect(() => {
+    sendTokenToServerFromURL()
+  }, [])
 
   // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
