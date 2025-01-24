@@ -25,12 +25,9 @@
     "classnames": "^2.5.1",
     "core-js": "^3.37.1",
     "date-fns": "^4.1.0",
-<<<<<<< HEAD
-    "dotenv": "^16.4.7",
-=======
+    "js-cookie": "^3.0.5",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
->>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05
     "leaflet": "^1.9.4",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.469.0",
