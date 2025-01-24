@@ -23,6 +23,8 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const LeaveRequests = () => {
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' }) // Store sorting state
+  const [filter, setFilter] = useState('')
   const recordsPerPage = 10
 
   // State for leave data
@@ -133,15 +135,28 @@ const LeaveRequests = () => {
       status: 'Pending...',
     },
   ])
-  const [filter, setFilter] = useState('')
   const totalPages = Math.ceil(leaveData.length / recordsPerPage)
 
-  // Update records based on the current page and filter
-  const currentRecords = leaveData
-    .filter((row) => row.name.toLowerCase().includes(filter.toLowerCase()))
-    .slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage)
+  // Function to get the sorting icon
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕'
+  }
 
-  // Handle Approve
+  // Sorting logic
+  const sortData = (data) => {
+    if (!sortConfig.key) return data
+    return [...data].sort((a, b) => {
+      const valueA = a[sortConfig.key].toLowerCase()
+      const valueB = b[sortConfig.key].toLowerCase()
+      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1
+      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1
+      return 0
+    })
+  }
+
   const handleApprove = (index) => {
     const updatedData = [...leaveData]
     const actualIndex = (currentPage - 1) * recordsPerPage + index
@@ -159,13 +174,28 @@ const LeaveRequests = () => {
     toast.error('Leave Denied')
   }
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value)
-    setCurrentPage(1) // Reset to the first page on search
+  // Handle sorting
+  const handleSort = (key) => {
+    let direction = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
   }
+
+  // Filter, sort, and paginate data
+  const filteredData = leaveData.filter((row) =>
+    row.name.toLowerCase().includes(filter.toLowerCase()),
+  )
+  const sortedData = sortData(filteredData)
+  const currentRecords = sortedData.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage,
+  )
 
   return (
     <div>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
@@ -173,14 +203,10 @@ const LeaveRequests = () => {
               <strong>Leave Request</strong>
               <CFormInput
                 type="text"
-                placeholder="Search vehicles..."
+                placeholder="Search..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="w-25"
-                style={{
-                  boxShadow: filter ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
-                  borderColor: filter ? '#007bff' : undefined,
-                }}
               />
             </CCardHeader>
             {leaveData.length === 0 ? (
@@ -189,15 +215,25 @@ const LeaveRequests = () => {
               <>
                 <CTable align="middle" className="mb-0 border" hover responsive>
                   <CTableHead>
-                    <CTableRow scope="col">
-                      <CTableHeaderCell className="text-center">Sn.no</CTableHeaderCell>
-
-                      <CTableHeaderCell className="text-center">Name</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Contact</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Date</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Description</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Status</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
+                      {['name', 'contact', 'date', 'description', 'status'].map((col) => (
+                        <CTableHeaderCell
+                          key={col}
+                          className="text-center"
+                          onClick={() => handleSort(col)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {col.charAt(0).toUpperCase() + col.slice(1)} {getSortIcon(col)}
+                        </CTableHeaderCell>
+                      ))}
+                      <CTableHeaderCell
+                        className="text-center"
+                        onClick={() => handleSort('status')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        Action {getSortIcon('status')}
+                      </CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
@@ -240,17 +276,16 @@ const LeaveRequests = () => {
                   </CTableBody>
                 </CTable>
 
-                {/* CoreUI Pagination */}
                 <CPagination align="center" className="mt-4">
                   <CPaginationItem
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
                   >
                     Previous
                   </CPaginationItem>
                   {Array.from({ length: totalPages }, (_, i) => (
                     <CPaginationItem
-                      key={i + 1}
+                      key={i}
                       active={i + 1 === currentPage}
                       onClick={() => setCurrentPage(i + 1)}
                     >
@@ -259,7 +294,7 @@ const LeaveRequests = () => {
                   ))}
                   <CPaginationItem
                     disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
                   >
                     Next
                   </CPaginationItem>
@@ -269,8 +304,6 @@ const LeaveRequests = () => {
           </CCard>
         </CCol>
       </CRow>
-
-      <ToastContainer />
     </div>
   )
 }

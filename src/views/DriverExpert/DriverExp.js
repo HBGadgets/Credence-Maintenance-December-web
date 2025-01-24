@@ -25,6 +25,8 @@ import {
   CTabPanel,
   CTabContent,
   CTabs,
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
@@ -483,98 +485,117 @@ const DriversExp = ({ setSelectedDriverId }) => {
           <CForm>
             {/* Flexbox container for a landscape layout */}
             <div
-              className=" flex-wrap gap-10"
+              className=" flex-wrap gap-5"
               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
             >
               {/* Name field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <IoPerson className="me-2 mb-auto mt-1" /> {/* Person Icon */}
-                <div className="w-100">
-                  <CFormLabel>Name</CFormLabel>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="text"
+                    placeholder="Enter Driver Name"
                     value={newDriver.name}
                     onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
 
               {/* Contact Number field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <IoCall className="me-2 mb-auto mt-1" /> {/* Call Icon */}
-                <div className="w-100">
-                  <CFormLabel>Contact Number</CFormLabel>
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="text"
+                    placeholder="Enter Contact Number"
                     value={newDriver.contactNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
 
               {/* Email field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <MdEmail className="me-2 mb-auto mt-1" />
-                {/* Email Icon */}
-                <div className="w-100">
-                  <CFormLabel>Email</CFormLabel>
+              <CCol md={15}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="email"
+                    placeholder="Enter Email Id"
                     value={newDriver.email}
                     onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
 
               {/* License Number field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <IoDocumentText className="me-2 mb-auto mt-1" /> {/* Document Icon */}
-                <div className="w-100">
-                  <CFormLabel>License Number</CFormLabel>
+              <CCol md={15}>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="text"
+                    placeholder="Enter License Number"
                     value={newDriver.licenseNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginTop: '25px' }}>
               {/* Aadhar Number field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <IoDocumentText className="me-2 mb-auto mt-1" /> {/* Document Icon */}
-                <div className="w-100">
-                  <CFormLabel>Aadhar Number</CFormLabel>
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="text"
+                    placeholder="Enter Aadhar Number"
                     value={newDriver.aadharNumber}
                     onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
 
               {/* Password field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <RiLockPasswordFill className="me-2 mb-auto mt-1" /> {/* Password Icon */}
-                <div className="w-100">
-                  <CFormLabel>Password</CFormLabel>
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput
                     type="password"
+                    placeholder="Enter Password"
                     value={newDriver.password}
                     onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
                   />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
 
               {/* Profile Picture field */}
-              <div className="mb-2 d-flex align-items-center flex-grow-1">
-                <AiFillPicture className="me-4  mb-auto mt-1 " /> {/* Image Icon */}
-                <div className="w-100">
-                  <CFormLabel>Profile Picture</CFormLabel>
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+
                   <CFormInput type="file" onChange={handleProfileImageChange} />
-                </div>
-              </div>
+                </CInputGroup>
+              </CCol>
             </div>
             {/* Submit Button */}
             <div className="d-flex justify-content-end">
