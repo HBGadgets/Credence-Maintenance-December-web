@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   CCard,
   CCardBody,
@@ -21,9 +21,11 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
+
 const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
 const ExpenseSheet = React.lazy(() => import('./ExpenseSheet'))
 const Budget = React.lazy(() => import('./Budget'))
+
 import { serviceRecords, trip } from '../../data'
 
 const BudgetAllocation = () => {
@@ -41,7 +43,7 @@ const BudgetAllocation = () => {
   // Memoized calculations for budget
   const { totalSpent, remainingBudget, spentPercentage } = useMemo(() => {
     const totalSpent = Math.min(
-      trip.serviceRecords.reduce((sum, record) => sum + record.cost, 0),
+      trip.serviceRecords.reduce((sum, record) => sum + (record.cost || 0), 0),
       trip.allocatedBudget,
     )
     const remainingBudget = Math.max(trip.allocatedBudget - totalSpent, 0)
@@ -50,6 +52,11 @@ const BudgetAllocation = () => {
     return { totalSpent, remainingBudget, spentPercentage }
   }, [trip])
 
+<<<<<<< HEAD:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx
+  // Memoized data
+  const data = useMemo(() => {
+    return [
+=======
   // State management
   const [data, setData] = useState([
     {
@@ -98,6 +105,7 @@ const BudgetAllocation = () => {
 
   useEffect(() => {
     setData([
+>>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js
       {
         driver: trip.driverId,
         startDate: trip.startDate,
@@ -107,8 +115,46 @@ const BudgetAllocation = () => {
         remainingBudget,
         percentageSpent: spentPercentage.toFixed(1),
       },
+<<<<<<< HEAD:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx
+    ]
+  }, [trip, totalSpent, remainingBudget, spentPercentage])
+
+  const [filter, setFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [modalState, setModalState] = useState({ open: false, selectedRecord: null })
+  const itemsPerPage = 10
+
+  // Filtered data
+  const filteredData = useMemo(() => {
+    return data.filter((row) => row.driver.toLowerCase().includes(filter.toLowerCase().trim()))
+  }, [data, filter])
+
+  // Paginated data
+  const currentData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
+
+  // Handlers
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value)
+    setCurrentPage(1) // Reset to first page when filter changes
+  }
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= Math.ceil(filteredData.length / itemsPerPage)) {
+      setCurrentPage(page)
+    }
+  }
+
+  const handleOpenModal = (record) => setModalState({ open: true, selectedRecord: record })
+  const handleCloseModal = () => setModalState({ open: false, selectedRecord: null })
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+=======
     ])
   }, [trip, totalSpent, remainingBudget, spentPercentage]) // Dependency array
+>>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05:src/views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js
 
   return (
     <>

@@ -1,11 +1,11 @@
-/* eslint-disable prettier/prettier */
+/* eslint-disable react/prop-types */
 import React, { memo, useMemo } from 'react'
-import PropTypes from 'prop-types' // Use PropTypes for type validation
+import PropTypes from 'prop-types'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CProgress } from '@coreui/react'
 import { format } from 'date-fns'
 
 const ServiceMap = React.lazy(() => import('./ServiceMap'))
-const BudgetCard = React.lazy(() => import('../../../../components/BudgetCard')) // Fixed typo in 'BudgetCard'
+const BudgetCard = React.lazy(() => import('../../../../components/BudgetCard'))
 
 const Budget = ({ trip }) => {
   const {
@@ -17,12 +17,13 @@ const Budget = ({ trip }) => {
     endDate,
   } = trip
 
-  // Use useMemo to optimize recalculations
-  const totalSpent = useMemo(() => {
-    return serviceRecords.reduce((sum, record) => sum + (record.cost || 0), 0)
-  }, [serviceRecords])
+  const totalSpent = useMemo(
+    () => serviceRecords.reduce((sum, record) => sum + (record.cost || 0), 0),
+    [serviceRecords],
+  )
 
   const remainingBudget = useMemo(() => allocatedBudget - totalSpent, [allocatedBudget, totalSpent])
+
   const spentPercentage = useMemo(
     () => (allocatedBudget ? ((totalSpent / allocatedBudget) * 100).toFixed(1) : 0),
     [allocatedBudget, totalSpent],
@@ -95,19 +96,4 @@ const Budget = ({ trip }) => {
   )
 }
 
-Budget.propTypes = {
-  trip: PropTypes.shape({
-    allocatedBudget: PropTypes.number.isRequired,
-    serviceRecords: PropTypes.arrayOf(
-      PropTypes.shape({
-        cost: PropTypes.number,
-      }),
-    ).isRequired,
-    startLocation: PropTypes.string,
-    endLocation: PropTypes.string,
-    startDate: PropTypes.string,
-    endDate: PropTypes.string,
-  }).isRequired,
-}
-
-export default memo(Budget) // Use React.memo to prevent unnecessary re-renders
+export default memo(Budget)

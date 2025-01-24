@@ -49,6 +49,7 @@ import { RiLockPasswordFill } from 'react-icons/ri'
 import { AiFillPicture } from 'react-icons/ai'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import DocumentLocker from './components/documents/DocumentLocker'
 
 const DriversExp = ({ setSelectedDriverId }) => {
   const columns = ['Name', 'Contact', 'Email', 'Profile']
@@ -64,6 +65,12 @@ const DriversExp = ({ setSelectedDriverId }) => {
     aadharNumber: '',
     password: '',
     profileImage: null, // State to store the selected image
+    documents: {
+      aadharCard: null,
+      drivingLicense: null,
+      tpPass: null,
+    },
+
   })
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
@@ -99,6 +106,19 @@ const DriversExp = ({ setSelectedDriverId }) => {
       setNewDriver({ ...newDriver, profileImage: file })
     }
   }
+
+  const handleDocumentUpload = (e, docType) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewDriver((prev) => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [docType]: URL.createObjectURL(file), // Create a temporary URL for preview
+        },
+      }));
+    }
+  };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -138,6 +158,13 @@ const DriversExp = ({ setSelectedDriverId }) => {
     acc[salary.driverId].push(salary)
     return acc
   }, {})
+
+  // Populate grouped documents (example logic)
+  const groupedDocuments = drivers.reduce((acc, driver) => {
+    acc[driver.id] = driver.documents;
+    return acc;
+  }, {});
+
 
   const handleViewClick = (driver) => {
     setSelectedDriver(driver)
@@ -344,6 +371,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CTab aria-controls="salary-slips" itemKey={4}>
                   Salary Slips
                 </CTab>
+                <CTab aria-controls="document-locker" itemKey={5}>
+                  Document Locker
+                </CTab>
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
@@ -361,6 +391,9 @@ const DriversExp = ({ setSelectedDriverId }) => {
                 <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
                   {/* Replace with actual salary slips */}
                   <SalarySlipTable salaries={groupedSalaries[selectedDriver.id] || []} />
+                </CTabPanel>
+                <CTabPanel className="p-3" aria-labelledby="document-locker" itemKey={5}>
+                  <DocumentLocker documents={groupedDocuments[selectedDriver.id] || {}} />
                 </CTabPanel>
               </CTabContent>
             </CTabs>

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 
 import React, { createContext, useContext, useState } from 'react'

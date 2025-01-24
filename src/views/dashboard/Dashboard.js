@@ -19,12 +19,25 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { IoPeople } from 'react-icons/io5'
-
+import CIcon from '@coreui/icons-react'
+import {
+  cilCog,
+  cilDollar,
+  cilGridSlash,
+  cilListRich,
+  cilMap,
+  cilPaintBucket,
+  cilPeople,
+  cilShieldAlt,
+  cilSpeedometer,
+  cilTruck,
+  cilUser,
+  cilWarning,
+} from '@coreui/icons'
 import { IoPersonSharp } from 'react-icons/io5'
 import { FaTruckMoving } from 'react-icons/fa6'
 import { IoSettingsSharp } from 'react-icons/io5'
-import { MdOutlineCurrencyRupee } from 'react-icons/md'
+import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { IoAlertCircle } from 'react-icons/io5'
 import { FaMapLocationDot } from 'react-icons/fa6'
@@ -35,6 +48,7 @@ import avatar2 from 'src/assets/images/avatars/2.jpg'
 import avatar3 from 'src/assets/images/avatars/3.jpg'
 import avatar4 from 'src/assets/images/avatars/4.jpg'
 import avatar5 from 'src/assets/images/avatars/5.jpg'
+import { MdOutlineCurrencyRupee } from 'react-icons/md'
 
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
@@ -201,7 +215,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Drivers')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoPersonSharp style={{ fontSize: '21px', color: 'gray' }} />
+                <IoPersonSharp style={{ fontSize: '21px' }} />
                 <span className="font-weight-bold">Drivers</span>
               </CCardHeader>
               <CCardBody>
@@ -216,7 +230,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Vehicles')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
+                <FaTruckMoving style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Vehicles</span>
               </CCardHeader>
               <CCardBody>
@@ -234,7 +248,7 @@ const Dashboard = () => {
               onClick={() => openModal('Maintenance')}
             >
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoSettingsSharp style={{ fontSize: '22px', color: 'gray' }} />
+                <IoSettingsSharp style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Maintenance Status</span>
               </CCardHeader>
               <CCardBody>
@@ -249,7 +263,7 @@ const Dashboard = () => {
           <CCol xs="12" sm="6" lg="3">
             <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal('Expenses')}>
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <MdOutlineCurrencyRupee style={{ fontSize: '22px', color: 'gray' }} />
+                <RiMoneyRupeeCircleFill style={{ fontSize: '22px' }} />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
@@ -268,7 +282,7 @@ const Dashboard = () => {
               onClick={() => openModal('Live on Work')}
             >
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <TbTruckDelivery style={{ fontSize: '23px', color: 'gray' }} />
+                <TbTruckDelivery style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Live on Work</span>
               </CCardHeader>
               <CCardBody>
@@ -285,7 +299,7 @@ const Dashboard = () => {
               onClick={() => openModal('Insurance Alert')}
             >
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoAlertCircle style={{ fontSize: '23px', color: 'gray' }} />
+                <IoAlertCircle style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Insurance Alert</span>
               </CCardHeader>
               <CCardBody>
@@ -302,7 +316,7 @@ const Dashboard = () => {
               onClick={() => openModal('Vehicle Location')}
             >
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaMapLocationDot style={{ fontSize: '23px', color: 'gray' }} />
+                <FaMapLocationDot style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Vehicle Location</span>
               </CCardHeader>
               <CCardBody>
@@ -319,7 +333,7 @@ const Dashboard = () => {
               onClick={() => openModal('Roadside Assistance')}
             >
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaHandshakeSimple style={{ fontSize: '23px', color: 'gray' }} />
+                <FaHandshakeSimple style={{ fontSize: '23px' }} />
                 <span className="font-weight-bold">Roadside Assitance</span>
               </CCardHeader>
               <CCardBody>
@@ -352,11 +366,11 @@ const Dashboard = () => {
           <CCard className="mb-4">
             <CCardHeader>Recent Trips</CCardHeader>
             <CCardBody>
-              <CTable align="middle" className="mb-0 border" hover responsive striped>
+              <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell className="text-center">
-                      <IoPeople style={{ fontSize: '20px', color: 'gray' }} />
+                      <CIcon icon={cilPeople} />
                     </CTableHeaderCell>
                     <CTableHeaderCell>Driver</CTableHeaderCell>
                     <CTableHeaderCell>Vehicle</CTableHeaderCell>

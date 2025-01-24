@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable prettier/prettier */
 import React from 'react'
 import { MapContainer, TileLayer, Marker, Tooltip, Polyline } from 'react-leaflet'
@@ -51,10 +52,6 @@ const ServiceMap = ({ serviceRecords }) => {
       </MapContainer>
     </div>
   )
-}
-
-ServiceMap.propTypes = {
-  serviceRecords: ServiceRecord,
 }
 
 export default ServiceMap
