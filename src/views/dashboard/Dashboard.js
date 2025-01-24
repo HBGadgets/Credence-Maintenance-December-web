@@ -1,20 +1,11 @@
-<<<<<<< HEAD
-import React, { useEffect } from 'react'
-=======
-import React, { useState } from 'react'
->>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05
+import React from 'react'
 import {
   CAvatar,
-  CButton,
   CCard,
   CCardBody,
   CCardGroup,
   CCardHeader,
   CCol,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
   CRow,
   CTable,
   CTableBody,
@@ -23,27 +14,28 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { IoPeople } from 'react-icons/io5'
-
-import { IoPersonSharp } from 'react-icons/io5'
-import { FaTruckMoving } from 'react-icons/fa6'
-import { IoSettingsSharp } from 'react-icons/io5'
-import { MdOutlineCurrencyRupee } from 'react-icons/md'
-import { TbTruckDelivery } from 'react-icons/tb'
-import { IoAlertCircle } from 'react-icons/io5'
-import { FaMapLocationDot } from 'react-icons/fa6'
-import { FaHandshakeSimple } from 'react-icons/fa6'
+import CIcon from '@coreui/icons-react'
+import {
+  cilCog,
+  cilDollar,
+  cilGridSlash,
+  cilListRich,
+  cilMap,
+  cilPaintBucket,
+  cilPeople,
+  cilShieldAlt,
+  cilSpeedometer,
+  cilTruck,
+  cilUser,
+  cilWarning,
+} from '@coreui/icons'
 
 import avatar1 from 'src/assets/images/avatars/1.jpg'
 import avatar2 from 'src/assets/images/avatars/2.jpg'
 import avatar3 from 'src/assets/images/avatars/3.jpg'
 import avatar4 from 'src/assets/images/avatars/4.jpg'
 import avatar5 from 'src/assets/images/avatars/5.jpg'
-<<<<<<< HEAD
 import { MdOutlineCurrencyRupee } from 'react-icons/md'
-import axios from 'axios'
-=======
->>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05
 
 const Dashboard = () => {
   // Data processing (these should be calculated dynamically based on actual data)
@@ -65,6 +57,7 @@ const Dashboard = () => {
 
   // Calculate the count of expiring insurances
   const expiringInsuranceCount = expiringInsurances.length
+
   const tableData = [
     {
       driver: {
@@ -168,70 +161,15 @@ const Dashboard = () => {
     },
   ]
 
-<<<<<<< HEAD
-  const queryParams = new URLSearchParams(window.location.search)
-  const token = queryParams.get('token')
-
-  const sendTokenToServerFromURL = async () => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.SERVER}/auth/validate`,
-        { token },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
-    } catch (error) {
-      console.log('Error Message: ', error.message)
-    }
-  }
-
-  useEffect(() => {
-    sendTokenToServerFromURL()
-  }, [])
-=======
-  // For cart new dialog box open and close.
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState("");
-
-  const openModal = (cardName) => {
-    setModalContent(cardName);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setModalContent("");
-  };
-
->>>>>>> 1ced8cbd81962e46ae28c138bd38747f199a4a05
-
   return (
     <>
-      <style>
-        {`
-          .hover-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-          }
-          .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-          }
-          .hover-table tr:hover {
-            background-color: #f1f1f1;
-          }
-        `}
-      </style>
-
       <CCardGroup className="mb-4">
         <CRow className="g-3">
           {/* Active/Inactive Drivers Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Drivers")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoPersonSharp style={{ fontSize: '21px', color: 'gray' }} />
+                <CIcon icon={cilUser} size="lg" />
                 <span className="font-weight-bold">Drivers</span>
               </CCardHeader>
               <CCardBody>
@@ -244,9 +182,9 @@ const Dashboard = () => {
 
           {/* Active/Inactive Vehicles Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicles")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
+                <CIcon icon={cilTruck} size="lg" />
                 <span className="font-weight-bold">Vehicles</span>
               </CCardHeader>
               <CCardBody>
@@ -259,9 +197,9 @@ const Dashboard = () => {
 
           {/* Vehicle Maintenance Status Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Maintenance")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoSettingsSharp style={{ fontSize: '22px', color: 'gray' }} />
+                <CIcon icon={cilCog} size="lg" />
                 <span className="font-weight-bold">Maintenance Status</span>
               </CCardHeader>
               <CCardBody>
@@ -274,23 +212,25 @@ const Dashboard = () => {
 
           {/* Total Expenses Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Expenses")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <MdOutlineCurrencyRupee style={{ fontSize: '22px', color: 'gray' }} />
+                <MdOutlineCurrencyRupee />
                 <span className="font-weight-bold">Expenses</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Total: ₹{totalExpenses.toLocaleString()}</h5>
-                <p className="text-muted">Total expenses for the fleet, including driver and vehicle costs</p>
+                <p className="text-muted">
+                  Total expenses for the fleet, including driver and vehicle costs
+                </p>
               </CCardBody>
             </CCard>
           </CCol>
 
           {/* Live on Work Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Live on Work")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <TbTruckDelivery style={{ fontSize: '23px', color: 'gray' }} />
+                <CIcon icon={cilListRich} size="lg" />
                 <span className="font-weight-bold">Live on Work</span>
               </CCardHeader>
               <CCardBody>
@@ -302,9 +242,9 @@ const Dashboard = () => {
 
           {/* Insurance Alert Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Insurance Alert")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <IoAlertCircle style={{ fontSize: '23px', color: 'gray' }} />
+                <CIcon icon={cilShieldAlt} size="lg" />
                 <span className="font-weight-bold">Insurance Alert</span>
               </CCardHeader>
               <CCardBody>
@@ -316,58 +256,44 @@ const Dashboard = () => {
 
           {/* Vehicle Location Card */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Vehicle Location")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaMapLocationDot style={{ fontSize: '23px', color: 'gray' }} />
+                <CIcon icon={cilMap} size="lg" />
                 <span className="font-weight-bold">Vehicle Location</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Current Location: {currentLocation} </h5>
-                <p className="text-muted">Real-time location of all live vehicles</p>
+                <p className="text-muted">Real-time location of all the live vehicles</p>
               </CCardBody>
             </CCard>
           </CCol>
 
-          {/* Roadside Assistance Card */}
+          {/* Roadside Assitance  Card (New Feature) */}
           <CCol xs="12" sm="6" lg="3">
-            <CCard className="shadow-sm border-0 hover-card" onClick={() => openModal("Roadside Assistance")}>
+            <CCard className="shadow-sm border-0">
               <CCardHeader className="d-flex align-items-center justify-content-between">
-                <FaHandshakeSimple style={{ fontSize: '23px', color: 'gray' }} />
+                <CIcon icon={cilWarning} size="lg" />
                 <span className="font-weight-bold">Roadside Assitance</span>
               </CCardHeader>
               <CCardBody>
                 <h5 className="mb-2 text-primary">Used Service: {roadSide}</h5>
-                <p className="text-muted">Vehicles using Roadside Assistance</p>
+                <p className="text-muted">Total vehicles use Roadside Assitance</p>
               </CCardBody>
             </CCard>
           </CCol>
         </CRow>
       </CCardGroup>
 
-      {/* Modals for each card */}
-      <CModal visible={modalVisible} onClose={closeModal} size="lg" className='pt-5'>
-        <CModalHeader>
-          <h5>{modalContent} Details</h5>
-        </CModalHeader>
-        <CModalBody>
-          <p>{`Content for ${modalContent} will go here`}</p>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={closeModal}>Close</CButton>
-        </CModalFooter>
-      </CModal>
-
-      {/* Recent Trips Table */}
       <CRow>
         <CCol xs>
           <CCard className="mb-4">
             <CCardHeader>Recent Trips</CCardHeader>
             <CCardBody>
-              <CTable align="middle" className="mb-0 border" hover responsive striped>
+              <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell className="text-center">
-                      <IoPeople style={{ fontSize: '20px', color: 'gray' }} />
+                      <CIcon icon={cilPeople} />
                     </CTableHeaderCell>
                     <CTableHeaderCell>Driver</CTableHeaderCell>
                     <CTableHeaderCell>Vehicle</CTableHeaderCell>
