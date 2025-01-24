@@ -205,6 +205,7 @@ const Dashboard = () => {
   // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
   const [modalContent, setModalContent] = useState('')
+  const [showAllLogs, setShowAllLogs] = useState(false)
 
   const openModal = (cardName) => {
     setModalContent(cardName)
@@ -216,6 +217,9 @@ const Dashboard = () => {
     setModalContent('')
   }
 
+  const handleClickView = () => {
+    setShowAllLogs(true)
+  }
   return (
     <>
       <style>
@@ -441,6 +445,11 @@ const Dashboard = () => {
                   ))}
                 </CTableBody>
               </CTable>
+              <div className="d-flex justify-content-end mt-3">
+                <button type="button" className="btn btn-secondary" onClick={handleClickView}>
+                  View More
+                </button>
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
