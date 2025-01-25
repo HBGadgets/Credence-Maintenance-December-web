@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   CModal,
   CModalBody,
@@ -11,38 +11,52 @@ import {
   CButton,
   CInputGroup,
   CInputGroupText,
-} from '@coreui/react';
-import { cilUser } from '@coreui/icons';
-import CIcon from '@coreui/icons-react';
+} from '@coreui/react'
+import { cilUser } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+
+import { AiTwotoneTool } from 'react-icons/ai'
+import { FaTruckMoving } from 'react-icons/fa6'
+import { BiSolidCategory } from 'react-icons/bi'
+import { IoPersonSharp } from 'react-icons/io5'
+import { BsCartFill } from 'react-icons/bs'
+import { FaPercentage } from 'react-icons/fa'
+import { FaCalendarAlt } from 'react-icons/fa'
+import { RiBillFill } from 'react-icons/ri'
 
 const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) => {
-  const [partName, setPartName] = useState('');
-  const [vehicle, setVehicle] = useState('');
-  const [category, setCategory] = useState('');
-  const [vendor, setVendor] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [costPerUnit, setCostPerUnit] = useState('');
-  const [purchaseDate, setPurchaseDate] = useState('');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [document, setDocument] = useState('');
-
+  const [partName, setPartName] = useState('')
+  const [vehicle, setVehicle] = useState('')
+  const [category, setCategory] = useState('')
+  const [vendor, setVendor] = useState('')
+  const [quantity, setQuantity] = useState('')
+  const [costPerUnit, setCostPerUnit] = useState('')
+  const [purchaseDate, setPurchaseDate] = useState('')
+  const [invoiceNumber, setInvoiceNumber] = useState('')
+  const [document, setDocument] = useState('')
 
   return (
-    <CModal visible={addModalOpen} onClose={handleAddModalClose} size="lg" centered alignment='center'>
+    <CModal
+      visible={addModalOpen}
+      onClose={handleAddModalClose}
+      size="lg"
+      centered
+      alignment="center"
+    >
       <CModalHeader closeButton>
         <CModalTitle>ADD EXPENSE OF NEW PARTS</CModalTitle>
       </CModalHeader>
       <CModalBody>
-        <form >
+        <form>
           <CRow className="mb-3">
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="partName">Part Name</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <AiTwotoneTool style={{ fontSize: '22px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="partName"
+                  placeholder="Enter Part Name"
                   value={partName}
                   onChange={(e) => setPartName(e.target.value)}
                   required
@@ -50,14 +64,14 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
               </CInputGroup>
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="vehicle">Select Vehicle</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="vehicle"
                   value={vehicle}
+                  placeholder="Select Vechile"
                   onChange={(e) => setVehicle(e.target.value)}
                   required
                 />
@@ -67,13 +81,13 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
 
           <CRow className="mb-3">
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="category">Category</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <BiSolidCategory style={{ fontSize: '22px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="category"
+                  placeholder="Select Category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   required
@@ -81,14 +95,14 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
               </CInputGroup>
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="vendor">Vendor</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <IoPersonSharp style={{ fontSize: '21px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="vendor"
                   value={vendor}
+                  placeholder="Enter Vendor Name"
                   onChange={(e) => setVendor(e.target.value)}
                   required
                 />
@@ -98,14 +112,14 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
 
           <CRow className="mb-3">
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="quantity">Quantity</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <BsCartFill style={{ fontSize: '21px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="quantity"
                   type="number"
+                  placeholder="Quantity"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   required
@@ -113,14 +127,14 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
               </CInputGroup>
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="costPerUnit">Cost Per Unit</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <FaPercentage style={{ fontSize: '21px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="costPerUnit"
                   type="number"
+                  placeholder="Cost Per Unit"
                   value={costPerUnit}
                   onChange={(e) => setCostPerUnit(e.target.value)}
                   required
@@ -131,10 +145,9 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
 
           <CRow className="mb-3">
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="purchaseDate">Purchase Date</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <FaCalendarAlt style={{ fontSize: '21px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="purchaseDate"
@@ -146,13 +159,13 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
               </CInputGroup>
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel htmlFor="invoiceNumber">Invoice/Bill Number</CFormLabel>
-              <CInputGroup>
+              <CInputGroup className="mt-4">
                 <CInputGroupText>
-                  <CIcon icon={cilUser} />
+                  <RiBillFill style={{ fontSize: '21px', color: 'gray' }} />
                 </CInputGroupText>
                 <CFormInput
                   id="invoiceNumber"
+                  placeholder="Enter Invoice/Bill No"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
                   required
@@ -163,11 +176,7 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
 
           <CRow className="mb-3">
             <CCol xs={12}>
-              <CFormLabel htmlFor="document">Select Document</CFormLabel>
               <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilUser} />
-                </CInputGroupText>
                 <CFormInput
                   id="document"
                   type="file"
@@ -190,7 +199,7 @@ const PurchaseForm = ({ addModalOpen, setAddModalOpen, handleAddModalClose }) =>
         </form>
       </CModalBody>
     </CModal>
-  );
-};
+  )
+}
 
-export default PurchaseForm;
+export default PurchaseForm

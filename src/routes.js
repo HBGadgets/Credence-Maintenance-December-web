@@ -64,7 +64,7 @@ const ExpenseSheet = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
 )
 const BudgetAllocation = React.lazy(
-  () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.js'),
+  () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx'),
 )
 
 // Help and Support

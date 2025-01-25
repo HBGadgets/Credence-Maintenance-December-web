@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from 'react'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   CCard,
   CCardBody,
@@ -20,9 +19,53 @@ import {
   CButton,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
+
 function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
   const [viewDoc, setViewDoc] = useState(false)
-  const [filteredLogs, setFilterdLogs] = useState(logs)
+  const [filteredLogs, setFilteredLogs] = useState(logs)
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+
+  // Sorting function
+  const handleSort = (key) => {
+    if (key === 'Invoice/Receipt') return // Skip sorting for non-sortable column
+
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    const sorted = [...filteredLogs].sort((a, b) => {
+      let valueA = a[key]
+      let valueB = b[key]
+
+      // Parse dates for comparison
+      if (key === 'serviceDate') {
+        valueA = new Date(valueA)
+        valueB = new Date(valueB)
+      }
+
+      // Ensure numbers are compared correctly
+      if (key === 'mileage' || key === 'cost') {
+        valueA = parseFloat(valueA)
+        valueB = parseFloat(valueB)
+      }
+
+      // Handle sorting logic
+      if (valueA < valueB) return direction === 'asc' ? -1 : 1
+      if (valueA > valueB) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    setFilteredLogs(sorted)
+  }
+
+  // Get the sort icon
+  const getSortIcon = (key) => {
+    if (key === 'Invoice/Receipt') return null // No sort icon for Invoice/Receipt column
+
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕' // Default sort icon when no sorting is applied
+  }
 
   const handleDateFilter = (startDate, endDate) => {
     if (!logs) return
@@ -30,15 +73,11 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
       const serviceDate = new Date(log.serviceDate)
       return serviceDate >= new Date(startDate) && serviceDate <= new Date(endDate)
     })
-    setFilterdLogs(filtered)
-  }
-
-  const handleViewDoc = () => {
-    setViewDoc(true)
+    setFilteredLogs(filtered)
   }
 
   const handleClearFilter = () => {
-    setFilterdLogs(logs)
+    setFilteredLogs(logs)
   }
 
   return (
@@ -73,8 +112,15 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
                       <CTableHead>
                         <CTableRow>
                           {columns.map((column, index) => (
-                            <CTableHeaderCell key={index} className="text-center">
-                              {column}
+                            <CTableHeaderCell
+                              key={index}
+                              className="text-center"
+                              onClick={() => handleSort(column)}
+                              style={{
+                                cursor: column === 'Invoice/Receipt' ? 'default' : 'pointer',
+                              }}
+                            >
+                              {column} {getSortIcon(column)}
                             </CTableHeaderCell>
                           ))}
                         </CTableRow>
@@ -94,10 +140,9 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
                             </CTableDataCell>
                             <CTableDataCell className="text-center">{row.cost}</CTableDataCell>
                             <CTableDataCell className="text-center">
-                              <button className="btn btn-primary" onClick={handleViewDoc}>
+                              <button className="btn btn-primary" onClick={() => setViewDoc(true)}>
                                 View
                               </button>
-                              {/* {row.invoiceUrl} */}
                             </CTableDataCell>
                             <CTableDataCell className="text-center">{row.notes}</CTableDataCell>
                           </CTableRow>
@@ -129,4 +174,5 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
     </>
   )
 }
+
 export default VehicleMaintenanceLogModal
