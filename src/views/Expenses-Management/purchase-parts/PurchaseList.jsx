@@ -29,7 +29,7 @@ const columns = [
   { label: 'Purchase Date', key: 'purchaseDate', sortable: true },
   { label: 'Invoice/Bill Number', key: 'invoiceNumber', sortable: true },
   { label: 'Document', key: 'document', sortable: true },
-  { label: 'Actions', key: 'actions', sortable: false },
+  { label: 'Actions', key: 'actions', sortable: true },
 ]
 
 const PurchaseList = ({ purchases, searchTerm, onView, onEdit, onDelete, onPrint }) => {
