@@ -28,6 +28,7 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
+import BranchList from "./BranchList"
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
@@ -317,7 +318,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
             </div>
             <hr />
             {/* Tabs */}
-            <CTabs activeItemKey={1}>
+            {/* <CTabs activeItemKey={1}>
               <CTabList variant="underline">
                 <CTab aria-controls="attendance" itemKey={1}>
                   Branches
@@ -334,23 +335,16 @@ const compainesExp = ({ setselectedCompanyId }) => {
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
-                  {/* Replace with actual attendance details */}
-                  {/* <AttendanceSection compainesId={selectedCompany.id} /> */}
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
-                  {/* Replace with actual expenses table */}
-                  {/* <ExpensesTable expenses={groupedExpenses[selectedCompany.id] || []} /> */}
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
-                  {/* Replace with actual trips table */}
-                  {/* <TripsTable trips={groupedTrips[selectedCompany.id] || []} /> */}
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
-                  {/* Replace with actual salary slips */}
-                  {/* <SalarySlipTable salaries={groupedSalaries[selectedCompany.id] || []} /> */}
                 </CTabPanel>
               </CTabContent>
-            </CTabs>
+            </CTabs> */}
+            <BranchList />
           </CModalBody>
         </CModal>
       )}

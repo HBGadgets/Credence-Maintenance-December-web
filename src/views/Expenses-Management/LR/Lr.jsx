@@ -10,6 +10,9 @@ import fileData from './data'
 // import axios from 'axios';
 import { Typography,Button, Box, TextField, InputAdornment } from '@mui/material';
 import { Search } from '@mui/icons-material';
+import { CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
+import { cilSearch } from '@coreui/icons';
+import { CIcon } from '@coreui/icons-react';
 
 
 const LR = () => {
@@ -89,35 +92,19 @@ const LR = () => {
                 <Typography variant="h4" component="h1" gutterBottom>
                      
                 </Typography>
-                <div style={{display:'flex'}}>
-        
-        <TextField
-      id="search"
-      placeholder="Search here"
-      value={searchTerm}
-      onChange={handleSearch}
-      variant="outlined"
-      size="small"
-      sx={{
-        width: "300px",
-        
-        marginRight: "1rem",
-        "& .MuiOutlinedInput-root": {
-          borderRadius: "6px",
-          boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-          background: "white",
-          
-        },
-      }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Search />
-          </InputAdornment>
-        ),
-      }}
-    />
-        <Button variant="contained"   onClick={handleCreateLR} style={{height: "40px", color:'white', background:'black'}}>
+                <div style={{display:'flex', gap:'0.5rem'}}>
+                  <CInputGroup className=" ">
+                    <CInputGroupText>
+                      <CIcon icon={cilSearch} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      placeholder="Search here..."
+                      value={searchTerm}
+                      onChange={handleSearch }
+                    />
+                </CInputGroup>
+        <Button variant="contained"   onClick={handleCreateLR} style={{ color:'white', background:'orange', width:'10rem'}}>
                     Create LR
         </Button>
       </div>
