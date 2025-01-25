@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react'
 import ExpenseForm from './VehicleExpenseForm'
 import ExpenseList from './VehicleExpenseTable'
 import { Modal, Button, Box, Typography, TextField, InputAdornment } from '@mui/material'
+import React, { useState,useEffect } from 'react';
+import ExpenseForm from './VehicleExpenseForm';
+import ExpenseList from './VehicleExpenseTable';
+import { Modal, Button, Box, Typography, TextField, InputAdornment} from '@mui/material';
+import { CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
+import { cilSearch } from '@coreui/icons';
+import { CIcon } from '@coreui/icons-react';
 // import axios from 'axios';
 import { FaSearch } from 'react-icons/fa'
 import { Search } from '@mui/icons-material'
@@ -118,6 +125,25 @@ const VehicleExpenses = () => {
               ),
             }}
           />
+    return (
+        <div>
+            <header style={{display:'flex',justifyContent:'space-between'}}>
+                <Typography variant="h4" component="h1" gutterBottom style={{fontFamily:'cursive'}}>
+                    {/* Vehicle Expenses */}
+                </Typography>
+                <div style={{display:'flex', gap:'0.5rem'}}>
+
+                <CInputGroup className=" ">
+                  <CInputGroupText>
+                    <CIcon icon={cilSearch} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="text"
+                    placeholder="Search here..."
+                    value={searchTerm}
+                    onChange={handleSearch }
+                  />
+                </CInputGroup>
 
           <Button
             variant="contained"
@@ -128,6 +154,13 @@ const VehicleExpenses = () => {
           </Button>
         </div>
       </header>
+        <Button variant="contained"  onClick={handleOpenModal} style={{ color:'white', background:'orange', width:'12rem'}}>
+                    Add Expense
+        </Button>
+      </div>
+                
+                
+            </header>
 
       <div>
         <ExpenseList

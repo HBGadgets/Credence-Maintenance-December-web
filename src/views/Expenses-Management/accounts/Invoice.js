@@ -8,6 +8,9 @@ import fileData from "./data"
 import DistanceInvoice from "./DistanceInvoive"
 import { CModal, CModalHeader, CModalBody, CModalFooter,CTabContent, CTabPane, CNav, CNavItem, CNavLink, CRow, CCol, CButton } from '@coreui/react';
 // import '@coreui/coreui/dist/css/coreui.min.css';
+import { CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
+import { cilSearch } from '@coreui/icons';
+import { CIcon } from '@coreui/icons-react';
 
 import NewInvoiceForm from './NewInvoiceForm';
 import { Search } from '@mui/icons-material';
@@ -100,54 +103,23 @@ function Invoices() {
     <div>
       <header style={{display:'flex', justifyContent:'space-between'}}>
         <h1> </h1>
-      <div style={{display:'flex'}}>
-        {/* <input
-          type="text"
-          id="search"
-          placeholder="Search by invoice number, client name, or email"
-          value={searchTerm}
-          onChange={handleSearch}
-          style={{
-            width: "300px",
-            padding: "10px",
-            fontSize: "16px",
-            border: "none",
-            borderRadius: "6px",
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-            marginRight: "10px",
-            height: "40px",
-            outline: "none",
-          }}
-        /> */}
-     <TextField
-      id="search"
-      placeholder="Search here"
-      value={searchTerm}
-      onChange={handleSearch}
-      variant="outlined"
-      size="small"
-      sx={{
-        width: "300px",
+      <div style={{display:'flex', gap:'0.5rem'}}>
+          <CInputGroup className=" ">
+            <CInputGroupText>
+              <CIcon icon={cilSearch} />
+            </CInputGroupText>
+            <CFormInput
+              type="text"
+              placeholder="Search here..."
+              value={searchTerm}
+              onChange={handleSearch }
+            />
+        </CInputGroup>
         
-        marginRight: "1rem",
-        "& .MuiOutlinedInput-root": {
-          borderRadius: "6px",
-          boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-          background: "white",
-          
-        },
-      }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Search />
-          </InputAdornment>
-        ),
-      }}
-    />
-              <Button variant="contained" onClick={handleCreateNewInvoice} style={{height: "40px", background:'black', color:'white'}}>
-                    Add Invoice
-              </Button>
+     
+        <Button variant="contained" onClick={handleCreateNewInvoice} style={{ background:'black', color:'orange', width:'11rem'}}>
+              Add Invoice
+        </Button>
 
       </div>
       </header>

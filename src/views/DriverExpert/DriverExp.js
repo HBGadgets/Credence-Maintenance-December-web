@@ -65,14 +65,13 @@ const DriversExp = () => {
     licenseNumber: '',
     aadharNumber: '',
     password: '',
-    profileImage: null, // State to store the selected image
-    documents: {
-      aadharCard: null,
-      drivingLicense: null,
-      tpPass: null,
-    },
-
   })
+
+  // States for file inputs
+  const [profileImage, setProfileImage] = useState(null);
+  const [licenseImage, setLicenseImage] = useState(null);
+  const [aadharImage, setAadharImage] = useState(null);
+
 
   const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
   const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
@@ -94,34 +93,6 @@ const DriversExp = () => {
     setFilter(e.target.value)
     debouncedFilterChange(e.target.value)
   }
-
-  // Fetch API data
-  useEffect(() => {
-    axios
-      .get(`${import.meta.env.SERVER}/api/drivers`) // Replace with your API URL
-      .then((response) => {
-        console.log("response", response.data);
-
-        setDrivers(response.data); // Set drivers data from API
-      })
-      .catch((error) => {
-        console.error("Error fetching drivers:", error);
-      });
-  }, []);
-
-  // Filtered Data
-  const filteredDrivers = Array.isArray(drivers)
-    ? drivers.filter((driver) =>
-      driver.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : [];
-
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredDrivers.slice(indexOfFirstItem, indexOfLastItem)
 
   // Handle file input change
   const handleProfileImageChange = (e) => {
@@ -183,11 +154,11 @@ const DriversExp = () => {
     return acc
   }, {})
 
-  // Populate grouped documents (example logic)
-  // const groupedDocuments = drivers.reduce((acc, driver) => {
-  //   acc[driver.id] = driver.documents;
-  //   return acc;
-  // }, {});
+  // Populate grouped documents(example logic)
+  const groupedDocuments = drivers.reduce((acc, driver) => {
+    acc[driver.id] = driver.documents;
+    return acc;
+  }, {});
 
 
   const handleViewClick = (driver) => {
@@ -195,17 +166,128 @@ const DriversExp = () => {
     setOpen(true)
   }
 
-  const handleAddDriver = () => {
-    // Add new driver logic here (e.g., send to API or update state)
-    setDrivers([...drivers, newDriver])
-    setAddModalOpen(false)
-    alert('New driver added!')
+
+  // Fetch API data#########################################################
+  const refreshDrivers = () => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/api/drivers`) // Replace with your API URL
+      .then((response) => {
+        console.log("response", response.data);
+
+        setDrivers(response.data); // Set drivers data from API
+      })
+      .catch((error) => {
+        console.error("Error fetching drivers:", error);
+      });
+  };
+  // Initial fetch of drivers
+  useEffect(() => {
+    refreshDrivers();
+  }, []);
+
+
+  // Filtered Data
+  const filteredDrivers = Array.isArray(drivers)
+    ? drivers.filter((driver) =>
+      driver.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : [];
+
+  console.log(filteredDrivers, "uasdashduahsdiashdasd");
+
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredDrivers.slice(indexOfFirstItem, indexOfLastItem)
+
+
+  //  ############## POST API ############################
+
+  const handleChange = (e) => {
+    setNewDriver({
+      ...newDriver,
+      [e.target.name]: e.target.value,
+    })
   }
 
-  const handleDeleteDriver = (driverId) => {
-    // Delete the driver by filtering it out from the state
-    setDrivers(drivers.filter((driver) => driver.id !== driverId))
-  }
+  // Handle adding a driver
+  const handleAddDriver = async () => {
+    const formData = new FormData();
+
+    // Append text fields
+    formData.append("name", newDriver.name);
+    formData.append("contactNumber", newDriver.contactNumber);
+    formData.append("email", newDriver.email);
+    formData.append("password", newDriver.password);
+    formData.append("licenseNumber", newDriver.licenseNumber);
+    formData.append("aadharNumber", newDriver.aadharNumber);
+
+    // Append files if they exist
+    if (profileImage) formData.append("profileImage", profileImage);
+    if (licenseImage) formData.append("licenseImage", licenseImage);
+    if (aadharImage) formData.append("aadharImage", aadharImage);
+
+    // Debug: Log FormData
+    console.log("Form Data:", Array.from(formData.entries()));
+
+    try {
+      // API call
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/drivers`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Success feedback
+      toast.success("Driver added successfully!");
+      setAddModalOpen(false); // Close modal
+
+      // Reset form and images
+      setNewDriver({
+        name: "",
+        contactNumber: "",
+        email: "",
+        password: "",
+        licenseNumber: "",
+        aadharNumber: "",
+      });
+      setProfileImage(null);
+      setLicenseImage(null);
+      setAadharImage(null);
+
+      // Call refreshDrivers only if it exists\
+      refreshDrivers();
+
+    } catch (error) {
+      console.error("Error adding driver:", error);
+      toast.error("Failed to add driver. Please try again.");
+    }
+  };
+
+
+  // #################### Delete API ############################
+
+  // Delete Driver
+
+  const handleDeleteDriver = async (driverId) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/drivers/${driverId}`);
+      setDrivers(drivers.filter((driver) => driver._id !== driverId));
+      toast.success("Driver deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+      toast.error("Failed to delete driver. Please try again.");
+    }
+  };
+
+
+  // #################### Edit API ################################
 
   const handleEditDriver = (driver) => {
     setDriverToEdit(driver)
@@ -213,10 +295,39 @@ const DriversExp = () => {
   }
 
   const handleSaveEdit = () => {
-    setDrivers(drivers.map((driver) => (driver.id === driverToEdit.id ? driverToEdit : driver)))
-    setEditModalOpen(false)
-    alert('Driver updated successfully!')
-  }
+    const formData = new FormData();
+    formData.append("name", driverToEdit.name);
+    formData.append("contactNumber", driverToEdit.contactNumber);
+    formData.append("email", driverToEdit.email);
+    formData.append("licenseNumber", driverToEdit.licenseNumber);
+    formData.append("aadharNumber", driverToEdit.aadharNumber);
+    formData.append("password", driverToEdit.password);
+
+    // Append image files if present
+    if (profileImage) formData.append("profileImage", profileImage);
+    if (licenseImage) formData.append("licenseImage", licenseImage);
+    if (aadharImage) formData.append("aadharImage", aadharImage);
+
+    axios
+      .put(`${import.meta.env.VITE_API_URL}/api/drivers/${driverToEdit._id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((response) => {
+        const updatedDrivers = drivers.map((driver) =>
+          driver._id === driverToEdit._id ? { ...driverToEdit, ...response.data } : driver
+        );
+        setDrivers(updatedDrivers);
+        toast.success("Driver updated successfully!");
+        setEditModalOpen(false);
+      })
+      .catch((error) => {
+        console.error("Error updating driver:", error);
+        toast.error("Failed to update driver. Please try again.");
+      });
+  };
+
 
   return (
     <>
@@ -266,7 +377,7 @@ const DriversExp = () => {
                   </CTableHead>
                   <CTableBody>
                     {currentItems.map((driver, index) => (
-                      <CTableRow key={driver.id}>
+                      <CTableRow key={driver._id}>
                         <CTableDataCell className="text-center">
                           {(currentPage - 1) * itemsPerPage + index + 1}
                         </CTableDataCell>{' '}
@@ -299,7 +410,7 @@ const DriversExp = () => {
                             color="danger"
                             size="sm"
                             className="ms-2"
-                            onClick={() => handleDeleteDriver(driver.id)}
+                            onClick={() => handleDeleteDriver(driver._id)}
                           >
                             <Trash2 size={16} /> {/* Delete Icon */}
                           </CButton>
@@ -441,6 +552,7 @@ const DriversExp = () => {
                   onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
                 />
               </div>
+
               <div className="mb-2">
                 <CFormLabel>Contact Number</CFormLabel>
                 <CFormInput
@@ -451,6 +563,7 @@ const DriversExp = () => {
                   }
                 />
               </div>
+
               <div className="mb-2">
                 <CFormLabel>Email</CFormLabel>
                 <CFormInput
@@ -459,6 +572,7 @@ const DriversExp = () => {
                   onChange={(e) => setDriverToEdit({ ...driverToEdit, email: e.target.value })}
                 />
               </div>
+
               <div className="mb-2">
                 <CFormLabel>License Number</CFormLabel>
                 <CFormInput
@@ -469,6 +583,7 @@ const DriversExp = () => {
                   }
                 />
               </div>
+
               <div className="mb-2">
                 <CFormLabel>Aadhar Number</CFormLabel>
                 <CFormInput
@@ -479,6 +594,7 @@ const DriversExp = () => {
                   }
                 />
               </div>
+
               <div className="mb-2">
                 <CFormLabel>Password</CFormLabel>
                 <CFormInput
@@ -487,6 +603,30 @@ const DriversExp = () => {
                   onChange={(e) => setDriverToEdit({ ...driverToEdit, password: e.target.value })}
                 />
               </div>
+
+              {/* File Inputs for Images */}
+              <div className="mb-2">
+                <CFormLabel>Profile Image</CFormLabel>
+                <CFormInput
+                  type="file"
+                  onChange={(e) => handleFileChange(e, setProfileImage)}
+                />
+              </div>
+              <div className="mb-2">
+                <CFormLabel>License Image</CFormLabel>
+                <CFormInput
+                  type="file"
+                  onChange={(e) => handleFileChange(e, setLicenseImage)}
+                />
+              </div>
+              <div className="mb-2">
+                <CFormLabel>Aadhar Image</CFormLabel>
+                <CFormInput
+                  type="file"
+                  onChange={(e) => handleFileChange(e, setAadharImage)}
+                />
+              </div>
+
               <CButton color="primary" onClick={handleSaveEdit}>
                 Save Changes
               </CButton>
@@ -495,35 +635,29 @@ const DriversExp = () => {
         </CModal>
       )}
 
+
       {/* Add Driver Modal */}
-      <CModal
-        alignment="center"
-        visible={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        size="xl"
-      >
+
+      <CModal alignment="center" visible={addModalOpen} onClose={() => setAddModalOpen(false)} size="xl">
         <CModalHeader>
           <CModalTitle>Add Driver</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
-            {/* Flexbox container for a landscape layout */}
-            <div
-              className=" flex-wrap gap-5"
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
-            >
+            {/* Grid layout for input fields */}
+            <div className="flex-wrap gap-5" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
               {/* Name field */}
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                    <IoPerson style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="text"
+                    name="name"
                     placeholder="Enter Driver Name"
-                    // value={newDriver.name}
-                    onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
+                    value={newDriver.name}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
@@ -532,14 +666,14 @@ const DriversExp = () => {
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                    <IoCall style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="text"
+                    name="contactNumber"
                     placeholder="Enter Contact Number"
-                    // value={newDriver.contactNumber}
-                    onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
+                    value={newDriver.contactNumber}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
@@ -548,14 +682,14 @@ const DriversExp = () => {
               <CCol md={15}>
                 <CInputGroup>
                   <CInputGroupText className="border-end">
-                    <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
+                    <MdEmail style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="email"
+                    name="email"
                     placeholder="Enter Email Id"
-                    // value={newDriver.email}
-                    onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
+                    value={newDriver.email}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
@@ -564,32 +698,32 @@ const DriversExp = () => {
               <CCol md={15}>
                 <CInputGroup>
                   <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="text"
+                    name="licenseNumber"
                     placeholder="Enter License Number"
-                    // value={newDriver.licenseNumber}
-                    onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
+                    value={newDriver.licenseNumber}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginTop: '25px' }}>
-              {/* Aadhar Number field */}
+            {/* File Inputs */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginTop: "25px" }}>
               <CCol md={10}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="text"
+                    name="aadharNumber"
                     placeholder="Enter Aadhar Number"
-                    // value={newDriver.aadharNumber}
-                    onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
+                    value={newDriver.aadharNumber}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
@@ -598,32 +732,61 @@ const DriversExp = () => {
               <CCol md={10}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
+                    <RiLockPasswordFill style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
-
                   <CFormInput
                     type="password"
+                    name="password"
                     placeholder="Enter Password"
-                    // value={newDriver.password}
-                    onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
+                    value={newDriver.password}
+                    onChange={handleChange}
                   />
                 </CInputGroup>
               </CCol>
 
-              {/* Profile Picture field */}
+              {/* Profile Image */}
               <CCol md={10}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                    <AiFillPicture style={{ fontSize: "22px", color: "gray" }} />
                   </CInputGroupText>
+                  <CFormInput
+                    type="file"
+                    onChange={(e) => setProfileImage(e.target.files[0])}
+                  />
+                </CInputGroup>
+              </CCol>
 
-                  <CFormInput type="file" onChange={handleProfileImageChange} />
+              {/* License Image */}
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="file"
+                    onChange={(e) => setLicenseImage(e.target.files[0])}
+                  />
+                </CInputGroup>
+              </CCol>
+
+              {/* Aadhar Image */}
+              <CCol md={10}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="file"
+                    onChange={(e) => setAadharImage(e.target.files[0])}
+                  />
                 </CInputGroup>
               </CCol>
             </div>
+
             {/* Submit Button */}
             <div className="d-flex justify-content-end">
-              <CButton color="primary" className="mt-3 " onClick={() => handleAddDriver(newDriver)}>
+              <CButton color="primary" className="mt-3" onClick={handleAddDriver}>
                 Submit
               </CButton>
             </div>
