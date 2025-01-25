@@ -40,6 +40,7 @@ const VehicleDriverBills = React.lazy(
   () => import('./views/Supervisor/billing/VehicleDriverBills.js'),
 )
 const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
+const BranchDetails = React.lazy(() => import('./views/Supervisor/company-details/BranchDetails.js'))
 
 // Expenses Management
 const PurchaseParts = React.lazy(
@@ -164,6 +165,7 @@ const routes = [
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
+  { path: '/branch-details/:id', name: 'Branch Details', element: BranchDetails },
 
   /**EXPENSES MANAGEMENT */
 

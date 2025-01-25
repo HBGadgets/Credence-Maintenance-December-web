@@ -6,7 +6,9 @@ import ViewPurchaseModal from './ViewPurchaseModal';
 import EditPurchaseForm from './EditPurchaseForm';
 import purchasesData from './data';
 import { Search } from '@mui/icons-material';
-
+import { CFormInput, CInputGroup, CInputGroupText } from '@coreui/react';
+import { cilSearch } from '@coreui/icons';
+import { CIcon } from '@coreui/icons-react';
 const Purchase = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [purchases, setPurchases] = useState(purchasesData);
@@ -107,71 +109,25 @@ const Purchase = () => {
 
     return (
         <div>
-
-            {/* <Typography variant="h4" gutterBottom>
-                Purchase Expenses
-            </Typography>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <TextField
-                    label="Search"
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                />
-                <Button variant="contained" color="primary" onClick={handleOpenAddModal}>
-                    Add New Purchased Item
-                </Button>
-            </div> */}
             <header style={{display:'flex', justifyContent:'space-between'}}>
                     <h1> </h1>
-                  <div style={{display:'flex'}}>
-                    {/* <input
+                  <div style={{display:'flex', gap:'0.5rem'}}>
+                
+
+                  <CInputGroup className=" ">
+                    <CInputGroupText>
+                      <CIcon icon={cilSearch} />
+                    </CInputGroupText>
+                    <CFormInput
                       type="text"
-                      id="search"
-                      placeholder="Search here"
+                      placeholder="Search here..."
                       value={searchTerm}
-                      onChange={handleSearch}
-                      style={{
-                        width: "300px",
-                        padding: "10px",
-                        fontSize: "16px",
-                        border: "none",
-                        borderRadius: "6px",
-                        boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-                        marginRight: "10px",
-                        height: "40px",
-                        outline: "none",
-                      }}
-                    /> */}
-                     <TextField
-      id="search"
-      placeholder="Search here"
-      value={searchTerm}
-      onChange={handleSearch}
-      variant="outlined"
-      size="small"
-      sx={{
-        width: "300px",
-        
-        marginRight: "1rem",
-        "& .MuiOutlinedInput-root": {
-          borderRadius: "6px",
-          boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-          background: "white",
-          
-        },
-      }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Search />
-          </InputAdornment>
-        ),
-      }}
-    />
-                          <Button variant="contained"  onClick={handleOpenAddModal} style={{height: "40px", background:'black', color:'white'}}>
-                          Add New 
-                            </Button>
+                      onChange={handleSearch }
+                    />
+                  </CInputGroup>
+                  <Button variant="contained"  onClick={handleOpenAddModal} style={{ background:'orange', color:'white', width:'8.1rem'}}>
+                    Add New 
+                  </Button>
             
                   </div>
                   </header>
