@@ -22,6 +22,9 @@ const Tooltips = React.lazy(() => import('./views/base/tooltips/Tooltips'))
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const VehicleProfile = React.lazy(()=> import('./components/VehicleProfile.jsx'))
+import VehicleMaintenanceLogModal from './components/modals/VehicleMaintenanceLogModal.jsx'
+import VehicleTripModal from './components/modals/VehicleTripModal.jsx'
+
 
 // Drivers
 const DriversLogbook = React.lazy(() => import('./views/Driver/logbook/DriversLogBook.js'))
@@ -40,6 +43,7 @@ const VehicleDriverBills = React.lazy(
   () => import('./views/Supervisor/billing/VehicleDriverBills.js'),
 )
 const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
+const SelectedCompDetails = React.lazy(() => import('./views/Supervisor/company-details/SelectedCompDetails.js'))
 const BranchDetails = React.lazy(() => import('./views/Supervisor/company-details/BranchDetails.js'))
 
 // Expenses Management
@@ -150,6 +154,9 @@ const routes = [
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
   {path: 'VehicleProfile/:id' , name: 'VehicleProfile', element: VehicleProfile},
+  {path: 'VehicleProfile/:id/maintenancelog', name: 'Maintenanace Log', element: VehicleMaintenanceLogModal},
+  {path: 'VehicleProfile/:id/tripinfo', name: 'Trip Info', element: VehicleTripModal},
+  {path: 'VehicleProfile/:id/tyredetails',name: 'Detailed Page', element: DetailedPage},
 
   /**DRIVER */
 
@@ -165,7 +172,8 @@ const routes = [
   { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
-  { path: '/branch-details/:id', name: 'Branch Details', element: BranchDetails },
+  { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },
+  { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
 
   /**EXPENSES MANAGEMENT */
 
@@ -177,7 +185,6 @@ const routes = [
   { path: '/LR', name: 'LR', element: LR },
   /*Tyre Management*/
   { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
-  {path:'/vehicle-details',name: 'Detailed Page', element: DetailedPage},
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

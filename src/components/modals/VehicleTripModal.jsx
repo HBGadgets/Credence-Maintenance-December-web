@@ -21,11 +21,26 @@ import {
   CFormInput,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
+import { useParams } from 'react-router-dom'
+import { vehicles } from '../../../src/views/vehicle/data/data'
 
-function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
-  const [filteredLogs, setFilteredLogs] = useState(trip)
+function VehicleTripModal({  }) {
+  const { id } = useParams()
+  const vehicle = vehicles.find((v) => v.id === id)
+  const [filteredLogs, setFilteredLogs] = useState(vehicle.trips)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+
+  const columns = [
+    'Driver',
+    'Route',
+    'Distance in Miles',
+    'Start Date',
+    'End Date',
+    'Duration in Hours',
+    'Total Cost',
+    'Status',
+  ]
 
   // Handle sorting
   const handleSort = (key) => {
@@ -92,9 +107,7 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
   }
 
   return (
-    <CModal alignment="center" scrollable visible={open} onClose={() => setOpen(false)} fullscreen>
-      <CModalHeader closeButton />
-      <CModalBody className="d-flex flex-column gap-3">
+    <>
         <div className="d-flex gap-3 align-items-end">
           <DateRangeFilter onFilter={handleDateFilter} />
           <CInputGroup className="w-50">
@@ -168,13 +181,7 @@ function VehicleTripModal({ trip = [], setOpen, open, columns = [] }) {
             </CCard>
           </CCol>
         </CRow>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </CButton>
-        </CModalFooter>
-      </CModalBody>
-    </CModal>
+    </>
   )
 }
 

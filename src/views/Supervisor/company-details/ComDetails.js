@@ -28,7 +28,6 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
-import BranchList from './BranchList'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
@@ -57,8 +56,11 @@ import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import IconDropdown from '../../../components/IconDropdown'
+import { useNavigate } from 'react-router-dom'
 
 const compainesExp = ({ setselectedCompanyId }) => {
+  const Navigate = useNavigate()
   const columns = [
     { label: 'SN', key: 'sn', sortable: false },
     { label: 'Company Name', key: 'name', sortable: true },
@@ -131,7 +133,8 @@ const compainesExp = ({ setselectedCompanyId }) => {
   const handleViewClick = (compaines) => {
     setselectedCompany(compaines)
     setOpen(true)
-  }
+    Navigate(`${compaines.id}`)
+  } 
 
   const handleAddcompaines = () => {
     // Add new compaines logic here (e.g., send to API or update state)
@@ -362,53 +365,6 @@ const compainesExp = ({ setselectedCompanyId }) => {
           </CCard>
         </CCol>
       </CRow>
-
-      {/* View Profile Modal */}
-      {selectedCompany && (
-        <CModal
-          alignment="center"
-          scrollable
-          visible={open}
-          onClose={() => setOpen(false)}
-          fullscreen
-        >
-          <CModalHeader>
-            <CModalTitle className="d-flex align-items-center">
-              <h5>{selectedCompany.name}</h5>
-            </CModalTitle>
-          </CModalHeader>
-          <CModalBody className="shadow-md rounded-lg p-6 mb-6">
-            <div className="d-flex gap-3">
-              <CImage
-                src={selectedCompany.profileImage || '/default-avatar.png'} // Default image fallback
-                alt={selectedCompany.name}
-                className="img-thumbnail rounded-circle me-3"
-                width="120" // Set the desired width
-                height="120" // Set the desired height
-              />
-              <div>
-                <div className="py-2">
-                  <h2>{selectedCompany.name}</h2>
-                </div>
-                <div>
-                  <h6>GST Number: {selectedCompany.gstNumber}</h6>
-                </div>
-                <div>
-                  <h6>Contact: {selectedCompany.contactNumber}</h6>
-                </div>
-                <div>
-                  <h6>Address: {selectedCompany.address}</h6>
-                </div>
-              </div>
-            </div>
-            <hr />
-            <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
-              <IconDropdown items={dropdownItems} />
-            </div>
-            <BranchList />
-          </CModalBody>
-        </CModal>
-      )}
 
       {/* Edit compaines Modal */}
       {editModalOpen && compainesToEdit && (

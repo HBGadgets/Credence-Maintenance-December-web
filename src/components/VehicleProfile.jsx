@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
-import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CRow, CCol, CCard, CCardBody, CCardTitle, CModal, CModalBody, CModalFooter, CModalHeader, CButton } from '@coreui/react'
 import { CTab, CTabContent, CTabList, CTabPanel, CTabs } from '@coreui/react'
 // import VehicleDocuments from './VehicleDocuments'
 const VehicleDocuments = React.lazy(() => import('./VehicleDocuments'))
@@ -11,8 +11,11 @@ const VehicleTripInfo = React.lazy(() => import('./tabs/VehicleTripInfo'))
 import {useParams} from 'react-router-dom'
 import { vehicles } from '../views/vehicle/data/data'
 import DetailedPage from '../views/Tyre-Management/DetailedPage'
+import { useNavigate } from 'react-router-dom'
+import "./VehicleProfile.css"
 
 function VehicleProfile({ open, setOpen, vehicle }) {
+  const navigate = useNavigate()
 
     const { id } = useParams();
     //
@@ -21,6 +24,16 @@ function VehicleProfile({ open, setOpen, vehicle }) {
   const handleClose = () => {
     setOpen(false)
   }
+  const openMaintainancePage = () => {
+    navigate(`maintenancelog`)
+  }
+  const openTripInfoPage = () => {
+    navigate(`tripinfo`)
+  }
+  const openTyrePage = () => {
+    navigate(`tyredetails`)
+  }
+  
   return (
     <>
       
@@ -67,16 +80,45 @@ function VehicleProfile({ open, setOpen, vehicle }) {
               </div>
             </div>
             <hr />
-            {/**Tabs */}
-            <CTabs activeItemKey={2}>
+
+
+
+            <CRow>
+      <CCol xs={12} className="mb-2">
+        <CButton 
+          onClick={openMaintainancePage} 
+          className="w-100 custom-btn maintenance-btn"
+        >
+          Maintenance Log
+        </CButton>
+      </CCol>
+      <CCol xs={12} className="mb-2">
+        <CButton 
+          onClick={openTripInfoPage} 
+          className="w-100 custom-btn trip-btn"
+        >
+          Trip
+        </CButton>
+      </CCol>
+      <CCol xs={12} className="mb-4">
+        <CButton 
+          onClick={openTyrePage} 
+          className="w-100 custom-btn tyre-btn"
+        >
+          Tyre Management
+        </CButton>
+      </CCol>
+    </CRow>
+
+            {/* <CTabs activeItemKey={2}>
               <CTabList variant="underline">
-                <CTab aria-controls="maintenance-log" itemKey={1}>
+                <CTab aria-controls="maintenance-log" itemKey={1}  >
                   Maintenance Log
                 </CTab>
-                <CTab aria-controls="vehicle-trip" itemKey={2}>
+                <CTab aria-controls="vehicle-trip" itemKey={2}  >
                   Trip
                 </CTab>
-                <CTab aria-controls="vehicle-tyre" itemKey={3}>
+                <CTab aria-controls="vehicle-tyre" itemKey={3} >
                   Tyre Management
                 </CTab>
               </CTabList>
@@ -91,7 +133,7 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                   <DetailedPage  vehicle={vehicle}/>
                 </CTabPanel>
               </CTabContent>
-            </CTabs>
+            </CTabs> */}
           </div>
           
     </>

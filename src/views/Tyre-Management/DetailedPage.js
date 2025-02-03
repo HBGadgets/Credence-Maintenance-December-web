@@ -20,8 +20,12 @@ import {
   CTableHeaderCell,
 } from '@coreui/react'
 import "./CSSdetailedPage.css"
+import { useParams } from 'react-router-dom'
+import { vehicles } from '../vehicle/data/data'
 
-function DetailedPage({vehicle}) {
+function DetailedPage({}) {
+  const {id} = useParams()
+  const vehicle = vehicles.find((v) => v.id === id)
   const [leftWheels, setLeftWheels] = useState([]) // Additional wheel pairs for the left side
   const [rightWheels, setRightWheels] = useState([]) // Additional wheel pairs for the right side
   const [tyreInventory, setTyreInventory] = useState([
