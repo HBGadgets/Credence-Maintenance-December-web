@@ -10,7 +10,7 @@ const VehicleTripInfo = React.lazy(() => import('./tabs/VehicleTripInfo'))
 // import VehicelTripInfo from './tabs/VehicleTripInfo'
 import {useParams} from 'react-router-dom'
 import { vehicles } from '../views/vehicle/data/data'
-import VehicleTyreTable from './tabs/VehicleTyreTable'
+import DetailedPage from '../views/Tyre-Management/DetailedPage'
 
 function VehicleProfile({ open, setOpen, vehicle }) {
 
@@ -88,7 +88,7 @@ function VehicleProfile({ open, setOpen, vehicle }) {
                   <VehicleTripInfo trips={vehicle.trips} />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="vehicle-tyre" itemKey={3}>
-                  <VehicleTyreTable  vehicle={vehicle}/>
+                  <DetailedPage  vehicle={vehicle}/>
                 </CTabPanel>
               </CTabContent>
             </CTabs>

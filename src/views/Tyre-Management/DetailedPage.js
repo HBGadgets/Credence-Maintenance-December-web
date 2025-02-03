@@ -21,7 +21,7 @@ import {
 } from '@coreui/react'
 import "./CSSdetailedPage.css"
 
-function DetailedPage() {
+function DetailedPage({vehicle}) {
   const [leftWheels, setLeftWheels] = useState([]) // Additional wheel pairs for the left side
   const [rightWheels, setRightWheels] = useState([]) // Additional wheel pairs for the right side
   const [tyreInventory, setTyreInventory] = useState([
@@ -161,8 +161,9 @@ function DetailedPage() {
   ]
 
   const location = useLocation()
-  const queryParams = new URLSearchParams(location.search)
-  const category = queryParams.get('category') // Extract the category from query params
+  // const queryParams = new URLSearchParams(location.search)
+  // const category = queryParams.get('category') // Extract the category from query params
+  const category = vehicle.category
   const addLeftWheels = () => {
     setLeftWheels([...leftWheels, {}])
     console.log("leftwheels",leftWheels);

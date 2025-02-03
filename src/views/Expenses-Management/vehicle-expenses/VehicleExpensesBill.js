@@ -1,7 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import ExpenseForm from './VehicleExpenseForm'
-import ExpenseList from './VehicleExpenseTable'
-import { Modal, Button, Box, Typography, TextField, InputAdornment } from '@mui/material'
+
 import React, { useState, useEffect } from 'react'
 import ExpenseForm from './VehicleExpenseForm'
 import ExpenseList from './VehicleExpenseTable'
@@ -125,7 +122,7 @@ const VehicleExpenses = () => {
             ),
           }}
         />
-        return (
+       
         <div>
           <header style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="h4" component="h1" gutterBottom style={{ fontFamily: 'cursive' }}>
@@ -145,21 +142,15 @@ const VehicleExpenses = () => {
               </CInputGroup>
 
               <Button
-                variant="contained"
-                onClick={handleOpenModal}
-                style={{ height: '40px', color: 'white', background: 'black' }}
-              >
-                Add Expense
-              </Button>
-            </div>
-          </header>
-          <Button
             variant="contained"
             onClick={handleOpenModal}
             style={{ color: 'white', background: 'orange', width: '12rem' }}
           >
             Add Expense
           </Button>
+            </div>
+          </header>
+          
         </div>
       </header>
 
