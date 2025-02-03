@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import axios from "axios";
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import {
   CCard,
   CCardBody,
@@ -28,20 +28,18 @@ import {
   CTabs,
   CInputGroup,
   CInputGroupText,
+  CModalFooter,
 } from '@coreui/react'
 import { Edit, Eye, Trash2 } from 'lucide-react'
-// import { drivers as initialDrivers } from '../DriverExpert/data/drivers' // Import drivers data
-// import { drivers } from '../DriverExpert/data/drivers' // Ensure this import is correct
-import { trips } from '../DriverExpert/data/trips' // Ensure this import is correct
-import { expenses } from '../DriverExpert/data/expenses' // Import expenses
-import { salaries } from '../DriverExpert/data/salaries' // Import salaries
-import TripsTable from '../DriverExpert/components/trips/TripsTable' // Ensure this import is correct
-import ExpensesTable from '../DriverExpert/components/expenses/ExpensesTable' // Ensure this import is correct
-import SalarySlipTable from '../DriverExpert/components/salary/SalarySlipTable' // Import the SalarySlipTable component
-import AttendanceSection from '../DriverExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
+import { trips } from '../DriverExpert/data/trips'
+import { expenses } from '../DriverExpert/data/expenses'
+import { salaries } from '../DriverExpert/data/salaries'
+import TripsTable from '../DriverExpert/components/trips/TripsTable'
+import ExpensesTable from '../DriverExpert/components/expenses/ExpensesTable'
+import SalarySlipTable from '../DriverExpert/components/salary/SalarySlipTable'
+import AttendanceSection from '../DriverExpert/components/attendance/AttendanceSection'
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
-import { useEffect } from 'react'
 import { IoPerson } from 'react-icons/io5'
 import { IoCall } from 'react-icons/io5'
 import { MdEmail } from 'react-icons/md'
@@ -51,10 +49,22 @@ import { AiFillPicture } from 'react-icons/ai'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import DocumentLocker from './components/documents/DocumentLocker'
+import Cookie from 'js-cookie'
+import IconDropdown from '../../components/IconDropdown'
+
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const DriversExp = () => {
   const columns = ['Name', 'Contact', 'Email', 'Profile']
-  const [drivers, setDrivers] = useState([]) // Use state for the driver list
+  const [drivers, setDrivers] = useState([])
   const [selectedDriver, setSelectedDriver] = useState(null)
   const [open, setOpen] = useState(false)
   const [addModalOpen, setAddModalOpen] = useState(false)
@@ -66,135 +76,227 @@ const DriversExp = () => {
     aadharNumber: '',
     password: '',
   })
-
-  // States for file inputs
-  const [profileImage, setProfileImage] = useState(null);
-  const [licenseImage, setLicenseImage] = useState(null);
-  const [aadharImage, setAadharImage] = useState(null);
-
-
-  const [editModalOpen, setEditModalOpen] = useState(false) // State for edit modal
-  const [driverToEdit, setDriverToEdit] = useState(null) // State for the driver being edited
-  // const [newDriver, setNewDriver] = useState()
-  const [data, setData] = useState(drivers) // Assuming drivers are available
+  const [profileImage, setProfileImage] = useState(null)
+  const [licenseImage, setLicenseImage] = useState(null)
+  const [aadharImage, setAadharImage] = useState(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [driverToEdit, setDriverToEdit] = useState(null)
+  const [data, setData] = useState(drivers)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10 // Number of items per page
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [driverToDelete, setDriverToDelete] = useState(null)
+  const [loading, setLoading] = useState(false)
 
-  const debouncedFilterChange = debounce((value) => {
-    const filteredData = drivers.filter((row) =>
-      row.name.toLowerCase().includes(value.toLowerCase()),
-    )
-    setData(filteredData)
-    setCurrentPage(1) // Reset to the first page on filter change
-  }, 300)
+  const itemsPerPage = 10
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value)
-    debouncedFilterChange(e.target.value)
+  // Fetch drivers from the API
+  const refreshDrivers = () => {
+    // const token = Cookie.get('crdnsToken')
+    const token =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVydmlzb3IxIiwiaWQiOiI2Nzk3N2I2YmEzM2NjNGE5MzBhODhkZDYiLCJ1c2VycyI6dHJ1ZSwic3VwZXJhZG1pbiI6ZmFsc2UsInVzZXIiOnsiX2lkIjoiNjc5NzdiNmJhMzNjYzRhOTMwYTg4ZGQ2IiwiZW1haWwiOiIiLCJwYXNzd29yZCI6ImEzOGJmZmU0Y2QwZjM5MmM2ZDMzMGI0MmQ1NmVmYjAwOmYxMzAyODRjOThiNzcyNTk1MmMwYTFiZThhNGUyMGMyIiwidXNlcm5hbWUiOiJzdXBlcnZpc29yMSIsIm1vYmlsZSI6IjgwMDc1MzcwNDQiLCJncm91cHNBc3NpZ25lZCI6WyI2Nzk3Nzk5YWEzM2NjNGE5MzBhNzlmNDEiXSwiY3JlYXRlZEJ5IjoiNjc5Nzc5Y2NhMzNjYzRhOTMwYTdiOTNkIiwic3RhdHVzIjoiZmFsc2UiLCJub3RpZmljYXRpb24iOnRydWUsImRldmljZXMiOnRydWUsImRyaXZlciI6dHJ1ZSwiZ3JvdXBzIjp0cnVlLCJjYXRlZ29yeSI6ZmFsc2UsIm1vZGVsIjpmYWxzZSwidXNlcnMiOnRydWUsInJlcG9ydCI6ZmFsc2UsInN0b3AiOnRydWUsInRyYXZlbCI6dHJ1ZSwiZ2VvZmVuY2UiOnRydWUsImdlb2ZlbmNlUmVwb3J0Ijp0cnVlLCJtYWludGVuYW5jZSI6dHJ1ZSwicHJlZmVyZW5jZXMiOmZhbHNlLCJkaXN0YW5jZSI6dHJ1ZSwiaGlzdG9yeSI6dHJ1ZSwic2Vuc29yIjp0cnVlLCJpZGxlIjp0cnVlLCJhbGVydHMiOnRydWUsInZlaGljbGUiOnRydWUsImRldmljZWxpbWl0IjpmYWxzZSwiZW50cmllc0NvdW50IjowLCJfX3YiOjB9LCJpYXQiOjE3Mzc5ODEyOTR9.29lMWplx4W5l2Ca-bMFh5K21tU1e9RaMveAt617rHZY'
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/api/drivers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setDrivers(response.data)
+      })
+      .catch((error) => {
+        console.error('Error fetching drivers:', error)
+      })
   }
 
-  // Handle file input change
-  const handleProfileImageChange = (e) => {
+  useEffect(() => {
+    refreshDrivers()
+  }, [])
+
+  // Handle file input changes
+  const handleFileChange = (e, setFileFunction) => {
     const file = e.target.files[0]
     if (file) {
-      setNewDriver({ ...newDriver, profileImage: file })
+      setFileFunction(file)
     }
   }
 
-  const handleDocumentUpload = (e, docType) => {
-    const file = e.target.files[0];
-    if (file) {
-      setNewDriver((prev) => ({
-        ...prev,
-        documents: {
-          ...prev.documents,
-          [docType]: URL.createObjectURL(file), // Create a temporary URL for preview
+  const handleDelete = () => {
+    if (driverToDelete) {
+      handleDeleteDriver(driverToDelete) // Call the delete function
+    }
+    setShowDeleteModal(false) // Close the modal
+  }
+
+  const handleDeleteConfirmation = (driverId) => {
+    setDriverToDelete(driverId) // Set the driver ID to delete
+    setShowDeleteModal(true) // Show the confirmation modal
+  }
+
+  // Handle adding a new driver
+  const handleAddDriver = async () => {
+    if (loading) return
+
+    setLoading(true)
+
+    const formData = new FormData()
+    formData.append('name', newDriver.name)
+    formData.append('contactNumber', newDriver.contactNumber)
+    formData.append('email', newDriver.email)
+    formData.append('password', newDriver.password)
+    formData.append('licenseNumber', newDriver.licenseNumber)
+    formData.append('aadharNumber', newDriver.aadharNumber)
+
+    if (profileImage) formData.append('profileImage', profileImage)
+    if (licenseImage) formData.append('licenseImage', licenseImage)
+    if (aadharImage) formData.append('aadharImage', aadharImage)
+
+    try {
+      // const token = Cookie.get('crdnsToken')
+      const token =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVydmlzb3IxIiwiaWQiOiI2Nzk3N2I2YmEzM2NjNGE5MzBhODhkZDYiLCJ1c2VycyI6dHJ1ZSwic3VwZXJhZG1pbiI6ZmFsc2UsInVzZXIiOnsiX2lkIjoiNjc5NzdiNmJhMzNjYzRhOTMwYTg4ZGQ2IiwiZW1haWwiOiIiLCJwYXNzd29yZCI6ImEzOGJmZmU0Y2QwZjM5MmM2ZDMzMGI0MmQ1NmVmYjAwOmYxMzAyODRjOThiNzcyNTk1MmMwYTFiZThhNGUyMGMyIiwidXNlcm5hbWUiOiJzdXBlcnZpc29yMSIsIm1vYmlsZSI6IjgwMDc1MzcwNDQiLCJncm91cHNBc3NpZ25lZCI6WyI2Nzk3Nzk5YWEzM2NjNGE5MzBhNzlmNDEiXSwiY3JlYXRlZEJ5IjoiNjc5Nzc5Y2NhMzNjYzRhOTMwYTdiOTNkIiwic3RhdHVzIjoiZmFsc2UiLCJub3RpZmljYXRpb24iOnRydWUsImRldmljZXMiOnRydWUsImRyaXZlciI6dHJ1ZSwiZ3JvdXBzIjp0cnVlLCJjYXRlZ29yeSI6ZmFsc2UsIm1vZGVsIjpmYWxzZSwidXNlcnMiOnRydWUsInJlcG9ydCI6ZmFsc2UsInN0b3AiOnRydWUsInRyYXZlbCI6dHJ1ZSwiZ2VvZmVuY2UiOnRydWUsImdlb2ZlbmNlUmVwb3J0Ijp0cnVlLCJtYWludGVuYW5jZSI6dHJ1ZSwicHJlZmVyZW5jZXMiOmZhbHNlLCJkaXN0YW5jZSI6dHJ1ZSwiaGlzdG9yeSI6dHJ1ZSwic2Vuc29yIjp0cnVlLCJpZGxlIjp0cnVlLCJhbGVydHMiOnRydWUsInZlaGljbGUiOnRydWUsImRldmljZWxpbWl0IjpmYWxzZSwiZW50cmllc0NvdW50IjowLCJfX3YiOjB9LCJpYXQiOjE3Mzc5ODEyOTR9.29lMWplx4W5l2Ca-bMFh5K21tU1e9RaMveAt617rHZY'
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/drivers`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
         },
-      }));
-    }
-  };
+      })
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+      toast.success('Driver added successfully!', {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+
+      setAddModalOpen(false)
+      setNewDriver({
+        name: '',
+        contactNumber: '',
+        email: '',
+        password: '',
+        licenseNumber: '',
+        aadharNumber: '',
+      })
+      setProfileImage(null)
+      setLicenseImage(null)
+      setAadharImage(null)
+
+      refreshDrivers()
+    } catch (error) {
+      console.error('Error adding driver:', error)
+      toast.error('Failed to add driver. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+  // Handle editing a driver
+  const handleEditDriver = (driver) => {
+    setDriverToEdit(driver)
+    setEditModalOpen(true)
+  }
+
+  // Handle saving edits
+  const handleSaveEdit = async () => {
+    const formData = new FormData()
+    formData.append('name', driverToEdit.name)
+    formData.append('contactNumber', driverToEdit.contactNumber)
+    formData.append('email', driverToEdit.email)
+    formData.append('licenseNumber', driverToEdit.licenseNumber)
+    formData.append('aadharNumber', driverToEdit.aadharNumber)
+    formData.append('password', driverToEdit.password)
+
+    if (profileImage) formData.append('profileImage', profileImage)
+    if (licenseImage) formData.append('licenseImage', licenseImage)
+    if (aadharImage) formData.append('aadharImage', aadharImage)
+
+    try {
+      const token =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVydmlzb3IxIiwiaWQiOiI2Nzk3N2I2YmEzM2NjNGE5MzBhODhkZDYiLCJ1c2VycyI6dHJ1ZSwic3VwZXJhZG1pbiI6ZmFsc2UsInVzZXIiOnsiX2lkIjoiNjc5NzdiNmJhMzNjYzRhOTMwYTg4ZGQ2IiwiZW1haWwiOiIiLCJwYXNzd29yZCI6ImEzOGJmZmU0Y2QwZjM5MmM2ZDMzMGI0MmQ1NmVmYjAwOmYxMzAyODRjOThiNzcyNTk1MmMwYTFiZThhNGUyMGMyIiwidXNlcm5hbWUiOiJzdXBlcnZpc29yMSIsIm1vYmlsZSI6IjgwMDc1MzcwNDQiLCJncm91cHNBc3NpZ25lZCI6WyI2Nzk3Nzk5YWEzM2NjNGE5MzBhNzlmNDEiXSwiY3JlYXRlZEJ5IjoiNjc5Nzc5Y2NhMzNjYzRhOTMwYTdiOTNkIiwic3RhdHVzIjoiZmFsc2UiLCJub3RpZmljYXRpb24iOnRydWUsImRldmljZXMiOnRydWUsImRyaXZlciI6dHJ1ZSwiZ3JvdXBzIjp0cnVlLCJjYXRlZ29yeSI6ZmFsc2UsIm1vZGVsIjpmYWxzZSwidXNlcnMiOnRydWUsInJlcG9ydCI6ZmFsc2UsInN0b3AiOnRydWUsInRyYXZlbCI6dHJ1ZSwiZ2VvZmVuY2UiOnRydWUsImdlb2ZlbmNlUmVwb3J0Ijp0cnVlLCJtYWludGVuYW5jZSI6dHJ1ZSwicHJlZmVyZW5jZXMiOmZhbHNlLCJkaXN0YW5jZSI6dHJ1ZSwiaGlzdG9yeSI6dHJ1ZSwic2Vuc29yIjp0cnVlLCJpZGxlIjp0cnVlLCJhbGVydHMiOnRydWUsInZlaGljbGUiOnRydWUsImRldmljZWxpbWl0IjpmYWxzZSwiZW50cmllc0NvdW50IjowLCJfX3YiOjB9LCJpYXQiOjE3Mzc5ODEyOTR9.29lMWplx4W5l2Ca-bMFh5K21tU1e9RaMveAt617rHZY'
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/drivers/${driverToEdit._id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      const updatedDrivers = drivers.map((driver) =>
+        driver._id === driverToEdit._id ? { ...driverToEdit, ...response.data } : driver,
+      )
+      setDrivers(updatedDrivers)
+
+      toast.success('Driver updated successfully!', {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+
+      setEditModalOpen(false)
+      setProfileImage(null)
+      setLicenseImage(null)
+      setAadharImage(null)
+    } catch (error) {
+      console.error('Error updating driver:', error)
+      toast.error('Failed to update driver. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
     }
   }
 
-  // Group trips by driverId
-  const groupedTrips = trips.reduce((acc, trip) => {
-    if (!acc[trip.driverId]) {
-      acc[trip.driverId] = []
+  // Handle deleting a driver
+  const handleDeleteDriver = async (driverId) => {
+    try {
+      const token =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVydmlzb3IxIiwiaWQiOiI2Nzk3N2I2YmEzM2NjNGE5MzBhODhkZDYiLCJ1c2VycyI6dHJ1ZSwic3VwZXJhZG1pbiI6ZmFsc2UsInVzZXIiOnsiX2lkIjoiNjc5NzdiNmJhMzNjYzRhOTMwYTg4ZGQ2IiwiZW1haWwiOiIiLCJwYXNzd29yZCI6ImEzOGJmZmU0Y2QwZjM5MmM2ZDMzMGI0MmQ1NmVmYjAwOmYxMzAyODRjOThiNzcyNTk1MmMwYTFiZThhNGUyMGMyIiwidXNlcm5hbWUiOiJzdXBlcnZpc29yMSIsIm1vYmlsZSI6IjgwMDc1MzcwNDQiLCJncm91cHNBc3NpZ25lZCI6WyI2Nzk3Nzk5YWEzM2NjNGE5MzBhNzlmNDEiXSwiY3JlYXRlZEJ5IjoiNjc5Nzc5Y2NhMzNjYzRhOTMwYTdiOTNkIiwic3RhdHVzIjoiZmFsc2UiLCJub3RpZmljYXRpb24iOnRydWUsImRldmljZXMiOnRydWUsImRyaXZlciI6dHJ1ZSwiZ3JvdXBzIjp0cnVlLCJjYXRlZ29yeSI6ZmFsc2UsIm1vZGVsIjpmYWxzZSwidXNlcnMiOnRydWUsInJlcG9ydCI6ZmFsc2UsInN0b3AiOnRydWUsInRyYXZlbCI6dHJ1ZSwiZ2VvZmVuY2UiOnRydWUsImdlb2ZlbmNlUmVwb3J0Ijp0cnVlLCJtYWludGVuYW5jZSI6dHJ1ZSwicHJlZmVyZW5jZXMiOmZhbHNlLCJkaXN0YW5jZSI6dHJ1ZSwiaGlzdG9yeSI6dHJ1ZSwic2Vuc29yIjp0cnVlLCJpZGxlIjp0cnVlLCJhbGVydHMiOnRydWUsInZlaGljbGUiOnRydWUsImRldmljZWxpbWl0IjpmYWxzZSwiZW50cmllc0NvdW50IjowLCJfX3YiOjB9LCJpYXQiOjE3Mzc5ODEyOTR9.29lMWplx4W5l2Ca-bMFh5K21tU1e9RaMveAt617rHZY'
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/drivers/${driverId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setDrivers(drivers.filter((driver) => driver._id !== driverId))
+      toast.success('Driver deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting driver:', error)
+      toast.error('Failed to delete driver. Please try again.')
     }
-    acc[trip.driverId].push(trip)
-    return acc
-  }, {})
+  }
 
-  // Group expenses by driverId
-  const groupedExpenses = expenses.reduce((acc, expense) => {
-    if (!acc[expense.driverId]) {
-      acc[expense.driverId] = []
-    }
-    acc[expense.driverId].push(expense)
-    return acc
-  }, {})
-
-  // Group salaries by driverId (assuming you have a similar salaries data)
-  const groupedSalaries = salaries.reduce((acc, salary) => {
-    if (!acc[salary.driverId]) {
-      acc[salary.driverId] = []
-    }
-    acc[salary.driverId].push(salary)
-    return acc
-  }, {})
-
-  // Populate grouped documents(example logic)
-  const groupedDocuments = drivers.reduce((acc, driver) => {
-    acc[driver.id] = driver.documents;
-    return acc;
-  }, {});
-
-
+  // Handle view click
   const handleViewClick = (driver) => {
     setSelectedDriver(driver)
     setOpen(true)
   }
 
-
-  // Fetch API data#########################################################
-  const refreshDrivers = () => {
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/api/drivers`) // Replace with your API URL
-      .then((response) => {
-        console.log("response", response.data);
-
-        setDrivers(response.data); // Set drivers data from API
-      })
-      .catch((error) => {
-        console.error("Error fetching drivers:", error);
-      });
-  };
-  // Initial fetch of drivers
-  useEffect(() => {
-    refreshDrivers();
-  }, []);
-
-
-  // Filtered Data
+  // Filtered drivers based on search query
   const filteredDrivers = Array.isArray(drivers)
-    ? drivers.filter((driver) =>
-      driver.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : [];
-
-  console.log(filteredDrivers, "uasdashduahsdiashdasd");
-
+    ? drivers.filter((driver) => driver.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : []
 
   // Pagination logic
   const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
@@ -202,136 +304,118 @@ const DriversExp = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredDrivers.slice(indexOfFirstItem, indexOfLastItem)
 
+  const exportToExcel = async () => {
+    try {
+      if (!Array.isArray(filteredDrivers) || filteredDrivers.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
 
-  //  ############## POST API ############################
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Drivers List')
 
-  const handleChange = (e) => {
-    setNewDriver({
-      ...newDriver,
-      [e.target.name]: e.target.value,
-    })
+      // Add headers
+      worksheet.addRow(['SN', 'Name', 'Contact', 'Email', 'License Number', 'Aadhar Number'])
+
+      // Add data rows
+      filteredDrivers.forEach((driver, index) => {
+        worksheet.addRow([
+          index + 1,
+          driver.name,
+          driver.contactNumber,
+          driver.email,
+          driver.licenseNumber,
+          driver.aadharNumber,
+        ])
+      })
+
+      // Generate and save file
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const filename = `Drivers_List_${new Date().toISOString().split('T')[0]}.xlsx`
+      saveAs(blob, filename)
+      toast.success('Excel file downloaded successfully')
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel file')
+    }
   }
 
-  // Handle adding a driver
-  const handleAddDriver = async () => {
-    const formData = new FormData();
-
-    // Append text fields
-    formData.append("name", newDriver.name);
-    formData.append("contactNumber", newDriver.contactNumber);
-    formData.append("email", newDriver.email);
-    formData.append("password", newDriver.password);
-    formData.append("licenseNumber", newDriver.licenseNumber);
-    formData.append("aadharNumber", newDriver.aadharNumber);
-
-    // Append files if they exist
-    if (profileImage) formData.append("profileImage", profileImage);
-    if (licenseImage) formData.append("licenseImage", licenseImage);
-    if (aadharImage) formData.append("aadharImage", aadharImage);
-
-    // Debug: Log FormData
-    console.log("Form Data:", Array.from(formData.entries()));
-
+  const exportToPDF = () => {
     try {
-      // API call
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/drivers`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      if (!Array.isArray(filteredDrivers) || filteredDrivers.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
 
-      // Success feedback
-      toast.success("Driver added successfully!");
-      setAddModalOpen(false); // Close modal
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
 
-      // Reset form and images
-      setNewDriver({
-        name: "",
-        contactNumber: "",
-        email: "",
-        password: "",
-        licenseNumber: "",
-        aadharNumber: "",
-      });
-      setProfileImage(null);
-      setLicenseImage(null);
-      setAadharImage(null);
+      // Add headers
+      const headers = ['SN', 'Name', 'Contact', 'Email', 'License Number', 'Aadhar Number']
 
-      // Call refreshDrivers only if it exists\
-      refreshDrivers();
+      // Add data rows
+      const data = filteredDrivers.map((driver, index) => [
+        index + 1,
+        driver.name,
+        driver.contactNumber,
+        driver.email,
+        driver.licenseNumber,
+        driver.aadharNumber,
+      ])
 
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Drivers_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
     } catch (error) {
-      console.error("Error adding driver:", error);
-      toast.error("Failed to add driver. Please try again.");
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
     }
-  };
-
-
-  // #################### Delete API ############################
-
-  // Delete Driver
-
-  const handleDeleteDriver = async (driverId) => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/drivers/${driverId}`);
-      setDrivers(drivers.filter((driver) => driver._id !== driverId));
-      toast.success("Driver deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting driver:", error);
-      toast.error("Failed to delete driver. Please try again.");
-    }
-  };
-
-
-  // #################### Edit API ################################
-
-  const handleEditDriver = (driver) => {
-    setDriverToEdit(driver)
-    setEditModalOpen(true)
   }
-
-  const handleSaveEdit = () => {
-    const formData = new FormData();
-    formData.append("name", driverToEdit.name);
-    formData.append("contactNumber", driverToEdit.contactNumber);
-    formData.append("email", driverToEdit.email);
-    formData.append("licenseNumber", driverToEdit.licenseNumber);
-    formData.append("aadharNumber", driverToEdit.aadharNumber);
-    formData.append("password", driverToEdit.password);
-
-    // Append image files if present
-    if (profileImage) formData.append("profileImage", profileImage);
-    if (licenseImage) formData.append("licenseImage", licenseImage);
-    if (aadharImage) formData.append("aadharImage", aadharImage);
-
-    axios
-      .put(`${import.meta.env.VITE_API_URL}/api/drivers/${driverToEdit._id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        const updatedDrivers = drivers.map((driver) =>
-          driver._id === driverToEdit._id ? { ...driverToEdit, ...response.data } : driver
-        );
-        setDrivers(updatedDrivers);
-        toast.success("Driver updated successfully!");
-        setEditModalOpen(false);
-      })
-      .catch((error) => {
-        console.error("Error updating driver:", error);
-        toast.error("Failed to update driver. Please try again.");
-      });
-  };
-
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
 
   return (
     <>
-      {/* Filter */}
       <CRow>
         <div>
           <CButton color="primary" className="float-end mb-2" onClick={() => setAddModalOpen(true)}>
@@ -341,10 +425,10 @@ const DriversExp = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
-              <strong>Vehicles</strong>
+              <strong>Drivers</strong>
               <CFormInput
                 type="text"
-                placeholder="Search vehicles..."
+                placeholder="Search Drivers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-25"
@@ -380,8 +464,7 @@ const DriversExp = () => {
                       <CTableRow key={driver._id}>
                         <CTableDataCell className="text-center">
                           {(currentPage - 1) * itemsPerPage + index + 1}
-                        </CTableDataCell>{' '}
-                        {/* Serial Number */}
+                        </CTableDataCell>
                         <CTableDataCell className="text-center">{driver.name}</CTableDataCell>
                         <CTableDataCell className="text-center">
                           {driver.contactNumber}
@@ -404,26 +487,49 @@ const DriversExp = () => {
                             size="sm"
                             onClick={() => handleEditDriver(driver)}
                           >
-                            <Edit size={16} /> {/* Edit Icon */}
+                            <Edit size={16} />
                           </CButton>
                           <CButton
                             color="danger"
                             size="sm"
                             className="ms-2"
-                            onClick={() => handleDeleteDriver(driver._id)}
+                            onClick={() => handleDeleteConfirmation(driver._id)}
                           >
-                            <Trash2 size={16} /> {/* Delete Icon */}
+                            <Trash2 size={16} />
                           </CButton>
+                          <CModal
+                            visible={showDeleteModal}
+                            onClose={() => setShowDeleteModal(false)}
+                          >
+                            <CModalHeader>
+                              <CModalTitle>Confirm Delete</CModalTitle>
+                            </CModalHeader>
+                            <CModalBody>Are you sure you want to delete this driver?</CModalBody>
+                            <CModalFooter>
+                              <CButton color="secondary" onClick={() => setShowDeleteModal(false)}>
+                                No
+                              </CButton>
+                              <CButton color="danger" onClick={handleDelete}>
+                                Yes, Delete
+                              </CButton>
+                            </CModalFooter>
+                          </CModal>
                         </CTableDataCell>
                       </CTableRow>
                     ))}
                   </CTableBody>
+                  <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+                    <IconDropdown items={dropdownItems} />
+                  </div>
                 </CTable>
               )}
 
-              {/* Pagination Buttons */}
               <div className="d-flex justify-content-center align-items-center mt-3">
-                <CButton color="primary" disabled={currentPage === 1} onClick={handlePreviousPage}>
+                <CButton
+                  color="primary"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                >
                   Previous
                 </CButton>
                 {Array.from({ length: totalPages }, (_, index) => (
@@ -431,7 +537,7 @@ const DriversExp = () => {
                     key={index}
                     color={currentPage === index + 1 ? 'primary' : 'secondary'}
                     className="mx-1"
-                    onClick={() => handlePageChange(index + 1)}
+                    onClick={() => setCurrentPage(index + 1)}
                   >
                     {index + 1}
                   </CButton>
@@ -439,7 +545,7 @@ const DriversExp = () => {
                 <CButton
                   color="primary"
                   disabled={currentPage === totalPages}
-                  onClick={handleNextPage}
+                  onClick={() => setCurrentPage(currentPage + 1)}
                 >
                   Next
                 </CButton>
@@ -466,11 +572,11 @@ const DriversExp = () => {
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
               <CImage
-                src={selectedDriver.profileImage || '/default-avatar.png'} // Default image fallback
+                src={selectedDriver.profileImage || '/default-avatar.png'}
                 alt={selectedDriver.name}
                 className="img-thumbnail rounded-circle me-3"
-                width="120" // Set the desired width
-                height="120" // Set the desired height
+                width="170"
+                height="170"
               />
               <div>
                 <div className="py-2">
@@ -491,7 +597,6 @@ const DriversExp = () => {
               </div>
             </div>
             <hr />
-            {/* Tabs */}
             <CTabs activeItemKey={1}>
               <CTabList variant="underline">
                 <CTab aria-controls="attendance" itemKey={1}>
@@ -512,23 +617,23 @@ const DriversExp = () => {
               </CTabList>
               <CTabContent>
                 <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
-                  {/* Replace with actual attendance details */}
                   <AttendanceSection driverId={selectedDriver.id} />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
-                  {/* Replace with actual expenses table */}
-                  <ExpensesTable expenses={groupedExpenses[selectedDriver.id] || []} />
+                  <ExpensesTable
+                    expenses={expenses.filter((expense) => expense.driverId === selectedDriver.id)}
+                  />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
-                  {/* Replace with actual trips table */}
-                  <TripsTable trips={groupedTrips[selectedDriver.id] || []} />
+                  <TripsTable trips={trips.filter((trip) => trip.driverId === selectedDriver.id)} />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
-                  {/* Replace with actual salary slips */}
-                  <SalarySlipTable salaries={groupedSalaries[selectedDriver.id] || []} />
+                  <SalarySlipTable
+                    salaries={salaries.filter((salary) => salary.driverId === selectedDriver.id)}
+                  />
                 </CTabPanel>
                 <CTabPanel className="p-3" aria-labelledby="document-locker" itemKey={5}>
-                  <DocumentLocker documents={groupedDocuments[selectedDriver.id] || {}} />
+                  <DocumentLocker documents={selectedDriver} />
                 </CTabPanel>
               </CTabContent>
             </CTabs>
@@ -536,264 +641,354 @@ const DriversExp = () => {
         </CModal>
       )}
 
-      {/* Edit Driver Modal */}
-      {editModalOpen && driverToEdit && (
-        <CModal alignment="center" visible={editModalOpen} onClose={() => setEditModalOpen(false)}>
-          <CModalHeader>
-            <CModalTitle>Edit Driver</CModalTitle>
-          </CModalHeader>
-          <CModalBody>
-            <CForm>
-              <div className="mb-2">
-                <CFormLabel>Name</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={driverToEdit.name}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-2">
-                <CFormLabel>Contact Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={driverToEdit.contactNumber}
-                  onChange={(e) =>
-                    setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="mb-2">
-                <CFormLabel>Email</CFormLabel>
-                <CFormInput
-                  type="email"
-                  value={driverToEdit.email}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, email: e.target.value })}
-                />
-              </div>
-
-              <div className="mb-2">
-                <CFormLabel>License Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={driverToEdit.licenseNumber}
-                  onChange={(e) =>
-                    setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="mb-2">
-                <CFormLabel>Aadhar Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={driverToEdit.aadharNumber}
-                  onChange={(e) =>
-                    setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="mb-2">
-                <CFormLabel>Password</CFormLabel>
-                <CFormInput
-                  type="password"
-                  value={driverToEdit.password}
-                  onChange={(e) => setDriverToEdit({ ...driverToEdit, password: e.target.value })}
-                />
-              </div>
-
-              {/* File Inputs for Images */}
-              <div className="mb-2">
-                <CFormLabel>Profile Image</CFormLabel>
-                <CFormInput
-                  type="file"
-                  onChange={(e) => handleFileChange(e, setProfileImage)}
-                />
-              </div>
-              <div className="mb-2">
-                <CFormLabel>License Image</CFormLabel>
-                <CFormInput
-                  type="file"
-                  onChange={(e) => handleFileChange(e, setLicenseImage)}
-                />
-              </div>
-              <div className="mb-2">
-                <CFormLabel>Aadhar Image</CFormLabel>
-                <CFormInput
-                  type="file"
-                  onChange={(e) => handleFileChange(e, setAadharImage)}
-                />
-              </div>
-
-              <CButton color="primary" onClick={handleSaveEdit}>
-                Save Changes
-              </CButton>
-            </CForm>
-          </CModalBody>
-        </CModal>
-      )}
-
-
       {/* Add Driver Modal */}
-
-      <CModal alignment="center" visible={addModalOpen} onClose={() => setAddModalOpen(false)} size="xl">
+      <CModal
+        alignment="center"
+        visible={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        size="xl"
+      >
         <CModalHeader>
           <CModalTitle>Add Driver</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
-            {/* Grid layout for input fields */}
-            <div className="flex-wrap gap-5" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-              {/* Name field */}
+            <div
+              className="flex-wrap gap-5"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+            >
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoPerson style={{ fontSize: "22px", color: "gray" }} />
+                    <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="name"
                     placeholder="Enter Driver Name"
                     value={newDriver.name}
-                    onChange={handleChange}
+                    onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
 
-              {/* Contact Number field */}
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoCall style={{ fontSize: "22px", color: "gray" }} />
+                    <IoCall style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="contactNumber"
                     placeholder="Enter Contact Number"
                     value={newDriver.contactNumber}
-                    onChange={handleChange}
+                    onChange={(e) => setNewDriver({ ...newDriver, contactNumber: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
+            </div>
 
-              {/* Email field */}
+            <div
+              className="flex-wrap gap-5"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+            >
               <CCol md={15}>
-                <CInputGroup>
+                <CInputGroup className="mt-5">
                   <CInputGroupText className="border-end">
-                    <MdEmail style={{ fontSize: "22px", color: "gray" }} />
+                    <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="email"
                     name="email"
                     placeholder="Enter Email Id"
                     value={newDriver.email}
-                    onChange={handleChange}
+                    onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
 
-              {/* License Number field */}
               <CCol md={15}>
-                <CInputGroup>
+                <CInputGroup className="mt-5">
                   <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="licenseNumber"
                     placeholder="Enter License Number"
                     value={newDriver.licenseNumber}
-                    onChange={handleChange}
+                    onChange={(e) => setNewDriver({ ...newDriver, licenseNumber: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
             </div>
 
-            {/* File Inputs */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginTop: "25px" }}>
-              <CCol md={10}>
-                <CInputGroup className="mt-4">
+            <div
+              className="flex-wrap gap-5"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+            >
+              <CCol md={15}>
+                <CInputGroup className="mt-5">
                   <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="text"
                     name="aadharNumber"
                     placeholder="Enter Aadhar Number"
                     value={newDriver.aadharNumber}
-                    onChange={handleChange}
+                    onChange={(e) => setNewDriver({ ...newDriver, aadharNumber: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
 
-              {/* Password field */}
-              <CCol md={10}>
-                <CInputGroup className="mt-4">
+              <CCol md={15}>
+                <CInputGroup className="mt-5">
                   <CInputGroupText className="border-end">
-                    <RiLockPasswordFill style={{ fontSize: "22px", color: "gray" }} />
+                    <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
                     type="password"
                     name="password"
                     placeholder="Enter Password"
                     value={newDriver.password}
-                    onChange={handleChange}
-                  />
-                </CInputGroup>
-              </CCol>
-
-              {/* Profile Image */}
-              <CCol md={10}>
-                <CInputGroup className="mt-4">
-                  <CInputGroupText className="border-end">
-                    <AiFillPicture style={{ fontSize: "22px", color: "gray" }} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="file"
-                    onChange={(e) => setProfileImage(e.target.files[0])}
-                  />
-                </CInputGroup>
-              </CCol>
-
-              {/* License Image */}
-              <CCol md={10}>
-                <CInputGroup className="mt-4">
-                  <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="file"
-                    onChange={(e) => setLicenseImage(e.target.files[0])}
-                  />
-                </CInputGroup>
-              </CCol>
-
-              {/* Aadhar Image */}
-              <CCol md={10}>
-                <CInputGroup className="mt-4">
-                  <CInputGroupText className="border-end">
-                    <IoDocumentText style={{ fontSize: "22px", color: "gray" }} />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="file"
-                    onChange={(e) => setAadharImage(e.target.files[0])}
+                    onChange={(e) => setNewDriver({ ...newDriver, password: e.target.value })}
                   />
                 </CInputGroup>
               </CCol>
             </div>
 
-            {/* Submit Button */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                marginTop: '30px',
+                gap: '20px',
+                width: '100%',
+              }}
+            >
+              <CCol md={20}>
+                <h6>Upload Profile Image </h6>
+                <CInputGroup className="mt-0">
+                  <CInputGroupText className="border-end">
+                    <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput type="file" onChange={(e) => setProfileImage(e.target.files[0])} />
+                </CInputGroup>
+              </CCol>
+
+              <CCol md={20}>
+                <h6>Upload License </h6>
+                <CInputGroup className="mt-0">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput type="file" onChange={(e) => setLicenseImage(e.target.files[0])} />
+                </CInputGroup>
+              </CCol>
+
+              <CCol md={20}>
+                <h6>Upload Aadhar</h6>
+                <CInputGroup className="mt-0">
+                  <CInputGroupText className="border-end">
+                    <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput type="file" onChange={(e) => setAadharImage(e.target.files[0])} />
+                </CInputGroup>
+              </CCol>
+            </div>
+
             <div className="d-flex justify-content-end">
-              <CButton color="primary" className="mt-3" onClick={handleAddDriver}>
-                Submit
+              <CButton
+                color="primary"
+                className="mt-3"
+                onClick={handleAddDriver}
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit'}
               </CButton>
             </div>
           </CForm>
         </CModalBody>
-        <ToastContainer />
       </CModal>
+
+      {/* Edit Driver Modal */}
+      {editModalOpen && driverToEdit && (
+        <CModal
+          alignment="center"
+          visible={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          size="xl"
+        >
+          <CModalHeader>
+            <CModalTitle>Edit Driver</CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <CForm>
+              <div
+                className="flex-wrap gap-5"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      required
+                      value={driverToEdit.name}
+                      onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={driverToEdit.contactNumber}
+                      onChange={(e) =>
+                        setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+              </div>
+
+              <div
+                className="flex-wrap gap-5"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-5">
+                    <CInputGroupText className="border-end">
+                      <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="email"
+                      value={driverToEdit.email}
+                      onChange={(e) => setDriverToEdit({ ...driverToEdit, email: e.target.value })}
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-5">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={driverToEdit.licenseNumber}
+                      onChange={(e) =>
+                        setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+              </div>
+
+              <div
+                className="flex-wrap gap-5"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-5">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={driverToEdit.aadharNumber}
+                      onChange={(e) =>
+                        setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-5">
+                    <CInputGroupText className="border-end">
+                      <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      value={driverToEdit.password}
+                      onChange={(e) =>
+                        setDriverToEdit({ ...driverToEdit, password: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr',
+                  marginTop: '30px',
+                  gap: '20px',
+                  width: '100%',
+                }}
+              >
+                <CCol md={20}>
+                  <h6>Upload Profile Image </h6>
+                  <CInputGroup className="mt-0">
+                    <CInputGroupText className="border-end">
+                      <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="file"
+                      onChange={(e) => handleFileChange(e, setProfileImage)}
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={20}>
+                  <h6>Upload License </h6>
+                  <CInputGroup className="mt-0">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="file"
+                      onChange={(e) => handleFileChange(e, setLicenseImage)}
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={20}>
+                  <h6>Upload Aadhar</h6>
+                  <CInputGroup className="mt-0">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput type="file" onChange={(e) => handleFileChange(e, setAadharImage)} />
+                  </CInputGroup>
+                </CCol>
+              </div>
+
+              <div className="d-flex justify-content-end">
+                <CButton
+                  color="primary"
+                  className="mt-3"
+                  onClick={handleSaveEdit}
+                  disabled={loading}
+                >
+                  {loading ? 'Editing...' : 'Edit'}
+                </CButton>
+              </div>
+            </CForm>
+          </CModalBody>
+        </CModal>
+      )}
+
+      <ToastContainer />
     </>
   )
 }
