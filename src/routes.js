@@ -56,7 +56,7 @@ const DriverExpenses = React.lazy(
 const VehicleExpensesBill = React.lazy(
   () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.js'),
 )
-const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/bills.js'))
+const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/Bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 // const TyreDetails =React.lazy(()=> import('./views/Expenses-Management/driver-expenses/TyreDetails.js'))
