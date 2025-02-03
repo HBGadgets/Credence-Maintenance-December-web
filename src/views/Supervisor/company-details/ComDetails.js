@@ -28,7 +28,7 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
-import BranchList from "./BranchList"
+import BranchList from './BranchList'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
@@ -47,15 +47,25 @@ import { MdEmail } from 'react-icons/md'
 import { IoDocumentText } from 'react-icons/io5'
 import { FaAddressCard } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const compainesExp = ({ setselectedCompanyId }) => {
   const columns = [
-    { label: 'SN', key: 'sn', sortable: true },
+    { label: 'SN', key: 'sn', sortable: false },
     { label: 'Company Name', key: 'name', sortable: true },
     { label: 'Contact', key: 'contact', sortable: true },
     { label: 'Address', key: 'address', sortable: true },
     { label: 'View Profile', key: 'profile', sortable: true },
-    { label: 'Action', key: 'action', sortable: false },
+    { label: 'Action', key: 'action', sortable: true },
   ]
   // const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
   const [compaines, setcompaines] = useState(initialcompaines) // Use state for the compaines list
@@ -118,41 +128,6 @@ const compainesExp = ({ setselectedCompanyId }) => {
     return '↕'
   }
 
-  // Handle file input change
-  // const handleProfileImageChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     setNewcompaines({ ...newcompaines, profileImage: file });
-  //   }
-  // };
-
-  // Group trips by compainesId
-  // const groupedTrips = trips.reduce((acc, trip) => {
-  //   if (!acc[trip.compainesId]) {
-  //     acc[trip.compainesId] = []
-  //   }
-  //   acc[trip.compainesId].push(trip)
-  //   return acc
-  // }, {})
-
-  // Group expenses by compainesId
-  // const groupedExpenses = expenses.reduce((acc, expense) => {
-  //   if (!acc[expense.compainesId]) {
-  //     acc[expense.compainesId] = []
-  //   }
-  //   acc[expense.compainesId].push(expense)
-  //   return acc
-  // }, {})
-
-  // Group salaries by compainesId (assuming you have a similar salaries data)
-  // const groupedSalaries = salaries.reduce((acc, salary) => {
-  //   if (!acc[salary.compainesId]) {
-  //     acc[salary.compainesId] = []
-  //   }
-  //   acc[salary.compainesId].push(salary)
-  //   return acc
-  // }, {})
-
   const handleViewClick = (compaines) => {
     setselectedCompany(compaines)
     setOpen(true)
@@ -184,6 +159,116 @@ const compainesExp = ({ setselectedCompanyId }) => {
     setEditModalOpen(false)
     alert('compaines updated successfully!')
   }
+  const exportToExcel = async () => {
+    try {
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Companies List')
+
+      // Add headers
+      worksheet.addRow(columns.map((col) => col.label))
+
+      // Add data rows
+      data.forEach((company, index) => {
+        worksheet.addRow([
+          index + 1,
+          company.name,
+          company.contactNumber,
+          company.address,
+          company.gstNumber,
+        ])
+      })
+
+      // Generate and save file
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const filename = `Companies_List_${new Date().toISOString().split('T')[0]}.xlsx`
+      saveAs(blob, filename)
+      toast.success('Excel file downloaded successfully')
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel file')
+    }
+  }
+
+  // Export to PDF
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = columns.map((col) => col.label)
+
+      // Add data rows
+      const pdfData = data.map((company, index) => [
+        index + 1,
+        company.name,
+        company.contactNumber,
+        company.address,
+        company.gstNumber,
+      ])
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: pdfData,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Companies_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
 
   return (
     <>
@@ -317,33 +402,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
               </div>
             </div>
             <hr />
-            {/* Tabs */}
-            {/* <CTabs activeItemKey={1}>
-              <CTabList variant="underline">
-                <CTab aria-controls="attendance" itemKey={1}>
-                  Branches
-                </CTab>
-                <CTab aria-controls="expenses" itemKey={2}>
-                  Vehicles
-                </CTab>
-                <CTab aria-controls="trip-details" itemKey={3}>
-                  Drivers
-                </CTab>
-                <CTab aria-controls="salary-slips" itemKey={4}>
-                  Total Bugets
-                </CTab>
-              </CTabList>
-              <CTabContent>
-                <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
-                </CTabPanel>
-              </CTabContent>
-            </CTabs> */}
+            <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+              <IconDropdown items={dropdownItems} />
+            </div>
             <BranchList />
           </CModalBody>
         </CModal>
