@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useState } from 'react'
+import React, { useState,} from 'react'
 import {
   CCard,
   CCardBody,
@@ -19,11 +19,26 @@ import {
   CButton,
 } from '@coreui/react'
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
+import {vehicles} from '../../../src/views/vehicle/data/data'
+import { useParams } from 'react-router-dom'
 
-function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
+
+function VehicleMaintenanceLogModal({ }) {
+  const {id} = useParams()
+  const vehicle = vehicles.find((v) => v.id === id)
   const [viewDoc, setViewDoc] = useState(false)
-  const [filteredLogs, setFilteredLogs] = useState(logs)
+  const [filteredLogs, setFilteredLogs] = useState(vehicle.maintenanceLogs)
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+
+  const columns = [
+    'Service Date',
+    'Mileage',
+    'Work Performed',
+    'Performed By',
+    'Cost',
+    'Invoice/Receipt',
+    'Notes',
+  ]
 
   // Sorting function
   const handleSort = (key) => {
@@ -82,7 +97,7 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
 
   return (
     <>
-      <CModal
+      {/* <CModal
         alignment="center"
         scrollable
         visible={show}
@@ -91,7 +106,7 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
         className="bg-light"
       >
         <CModalHeader closeButton />
-        <CModalBody className="d-flex flex-column gap-3">
+        <CModalBody className="d-flex flex-column gap-3"> */}
           <div className="d-flex gap-3 align-items-end">
             <DateRangeFilter onFilter={handleDateFilter} />
             <button onClick={handleClearFilter} className="btn btn-secondary btn-sm">
@@ -154,7 +169,7 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
               </CCard>
             </CCol>
           </CRow>
-        </CModalBody>
+        {/* </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setShow(false)}>
             Close
@@ -170,7 +185,7 @@ function VehicleMaintenanceLogModal({ show, setShow, logs, columns }) {
       >
         <CModalHeader closeButton />
         <CModalBody className="d-flex flex-column gap-3">receipt</CModalBody>
-      </CModal>
+      </CModal> */}
     </>
   )
 }
