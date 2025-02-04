@@ -1,31 +1,59 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { FileText } from 'lucide-react'
-import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
+import { CModal, CModalBody, CModalHeader, CModalTitle, CImage } from '@coreui/react'
 
-const DocumentLocker = ({ documents }) => {
+const DocumentLocker = ({ initialDocuments = [], documents }) => {
+  const [documentsList, setDocumentsList] = useState(initialDocuments)
   const [selectedDoc, setSelectedDoc] = useState(null)
+  const [file, setFile] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState(null)
-  const [drivers, setDrivers] = useState([]) // Use state for the driver list
+  const [drivers, setDrivers] = useState([])
 
-  const handleViewClick = (driver) => {
-    setSelectedDriver(driver)
-    setOpen(true)
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0])
+  }
+
+  const handleUpload = async () => {
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          setUploadProgress(progress)
+        },
+      })
+
+      const newDocument = response.data
+      setDocumentsList((prevDocuments) => [...prevDocuments, newDocument])
+      setShowUploadModal(false)
+      setFile(null)
+      setUploadProgress(0)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+    }
   }
 
   const refreshDrivers = () => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/api/drivers`) // Replace with your API URL
+      .get(`${import.meta.env.VITE_API_URL}/api/drivers`)
       .then((response) => {
-        console.log('response', response.data)
-
-        setDrivers(response.data) // Set drivers data from API
+        setDrivers(response.data)
       })
       .catch((error) => {
         console.error('Error fetching drivers:', error)
       })
   }
-  // Initial fetch of drivers
+
   useEffect(() => {
     refreshDrivers()
   }, [])
@@ -80,9 +108,6 @@ const DocumentLocker = ({ documents }) => {
                     height: '60px',
                   }}
                 >
-                  {console.log(drivers[0])}
-                  {/* <img src={drivers.aadharImage} className="img-fluid" /> */}
-
                   <FileText className="text-primary fs-4" />
                 </div>
                 <h5 className="card-title fw-semibold">{doc.title}</h5>
@@ -91,6 +116,36 @@ const DocumentLocker = ({ documents }) => {
             </div>
           </div>
         ))}
+        <div className="col" style={{ cursor: 'pointer' }}>
+          <div
+            className="card h-100 border-0 shadow-sm hover-shadow transition-transform"
+            style={{
+              transform: 'scale(1)',
+              transition: 'transform 0.3s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            onClick={() => setShowUploadModal(true)}
+          >
+            <div className="card-body text-center">
+              <div
+                className="d-flex align-items-center justify-content-center bg-light rounded-circle mb-3 mx-auto"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                }}
+              >
+                <FileText className="text-primary fs-4" />
+              </div>
+              <h5 className="card-title fw-semibold">Add Document</h5>
+              <p className="card-text text-muted small">Click to upload a new document</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modal for Document Preview */}
@@ -109,12 +164,52 @@ const DocumentLocker = ({ documents }) => {
           )}
           {selectedDriver && (
             <CImage
-              src={selectedDriver.profileImage || '/default-avatar.png'} // Default image fallback
+              src={selectedDriver.profileImage || '/default-avatar.png'}
               alt={selectedDriver.name}
               className="img-thumbnail rounded-circle me-3"
-              width="120" //Set the desired width
-              height="120" //Set the desired height
+              width="120"
+              height="120"
             />
+          )}
+        </CModalBody>
+      </CModal>
+
+      {/* Modal for File Upload */}
+      <CModal
+        visible={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        alignment="center"
+      >
+        <CModalHeader closeButton>
+          <CModalTitle>Upload New Document</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <input type="file" onChange={handleFileChange} />
+          {file && (
+            <div className="mt-3">
+              <p>Selected File: {file.name}</p>
+              <button
+                className="btn btn-primary"
+                onClick={handleUpload}
+                disabled={uploadProgress > 0 && uploadProgress < 100}
+              >
+                Upload
+              </button>
+              {uploadProgress > 0 && (
+                <div className="progress mt-2">
+                  <div
+                    className="progress-bar"
+                    role="progressbar"
+                    style={{ width: `${uploadProgress}%` }}
+                    aria-valuenow={uploadProgress}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                  >
+                    {uploadProgress}%
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </CModalBody>
       </CModal>

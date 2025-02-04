@@ -15,10 +15,19 @@ import {
   CButton,
 } from '@coreui/react'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
-import { FaPrint } from 'react-icons/fa'
 import { IconButton } from '@mui/material'
 import { MdOutlinePreview } from 'react-icons/md'
-// import Pagination from '../views/base/paginations/Pagination' // Assuming you have a Pagination component
+import IconDropdown from '../IconDropdown'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFilteredExpenses }) => {
   const columns = [
@@ -107,6 +116,124 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
     }
   }
 
+  // Export to PDF function
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(filteredExpenses) || filteredExpenses.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = columns.map((column) => column.label)
+
+      // Add data rows
+      const data = filteredExpenses.map((expense) =>
+        columns.map((column) => {
+          if (column.key === 'date') {
+            return new Date(expense[column.key]).toLocaleDateString()
+          }
+          return expense[column.key]?.toString() || ''
+        }),
+      )
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Expenses_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Export to Excel function
+  const exportToExcel = () => {
+    try {
+      if (!Array.isArray(filteredExpenses) || filteredExpenses.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Expenses')
+
+      // Add headers
+      worksheet.addRow(columns.map((column) => column.label))
+
+      // Add data rows
+      filteredExpenses.forEach((expense) => {
+        worksheet.addRow(
+          columns.map((column) => {
+            if (column.key === 'date') {
+              return new Date(expense[column.key]).toLocaleDateString()
+            }
+            return expense[column.key]?.toString() || ''
+          }),
+        )
+      })
+
+      // Save Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const filename = `Expenses_List_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([buffer]), filename)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel')
+    }
+  }
+
+  // Handle logout function
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log('Logout clicked')
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <CRow style={{ marginTop: '1rem' }}>
@@ -114,17 +241,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Vehicle Expenses</strong>
-              <CFormInput
-                type="text"
-                placeholder="Search expenses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-25"
-                style={{
-                  boxShadow: searchQuery ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
-                  borderColor: searchQuery ? '#007bff' : undefined,
-                }}
-              />
+              <div className="d-flex align-items-center gap-3"></div>
             </CCardHeader>
             <CCardBody>
               {filteredExpenses.length === 0 ? (
@@ -214,6 +331,9 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
                 </>
               )}
             </CCardBody>
+            <div className="ms-auto">
+              <IconDropdown items={dropdownItems} />
+            </div>
           </CCard>
         </CCol>
       </CRow>

@@ -14,6 +14,15 @@ import {
 import { ChevronRight } from 'lucide-react'
 import SalaryDetail from './SalaryCard'
 import DateRangeFilter from '../../common/DateRangeFilter'
+import IconDropdown from '../../IconDropdown'
+import { FaRegFilePdf, FaPrint, FaArrowUp } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const SalarySlipTable = ({ salaries }) => {
   const [startDate, setStartDate] = useState('')
@@ -71,13 +80,114 @@ const SalarySlipTable = ({ salaries }) => {
     </div>
   )
 
+  // Export to PDF function
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(filteredSalaries) || filteredSalaries.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = ['Month', 'Basic Pay', 'Overtime', 'Incentives', 'Deductions', 'Net Pay']
+
+      // Add data rows
+      const data = filteredSalaries.map((salary) => [
+        new Date(salary.month).toLocaleDateString(),
+        salary.basicPay,
+        salary.overtime,
+        salary.incentives,
+        salary.deductions,
+        salary.netPay,
+      ])
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Salary_Slip_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Export to Excel function
+  const exportToExcel = () => {
+    try {
+      if (!Array.isArray(filteredSalaries) || filteredSalaries.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Salaries')
+
+      // Add headers
+      worksheet.addRow(['Month', 'Basic Pay', 'Overtime', 'Incentives', 'Deductions', 'Net Pay'])
+
+      // Add data rows
+      filteredSalaries.forEach((salary) => {
+        worksheet.addRow([
+          new Date(salary.month).toLocaleDateString(),
+          salary.basicPay,
+          salary.overtime,
+          salary.incentives,
+          salary.deductions,
+          salary.netPay,
+        ])
+      })
+
+      // Save Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const filename = `Salary_Slip_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([buffer]), filename)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel')
+    }
+  }
+
+  // Handle logout function
+  const handleLogout = () => {
+    console.log('Logout clicked')
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    { icon: FaRegFilePdf, label: 'Download PDF', onClick: exportToPDF },
+    { icon: PiMicrosoftExcelLogo, label: 'Download Excel', onClick: exportToExcel },
+    { icon: FaPrint, label: 'Print Page', onClick: () => window.print() },
+    { icon: HiOutlineLogout, label: 'Logout', onClick: handleLogout },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <div>
       <SalaryContent data={filteredSalaries.slice(0, 2)} />
       <div className="d-flex justify-content-end">
-        <button type="button" className="btn btn-secondary m-1" onClick={handleOpen}>
+        <CButton color="secondary" className="m-1" onClick={handleOpen}>
           View More
-        </button>
+        </CButton>
       </div>
 
       <CModal
@@ -90,7 +200,6 @@ const SalarySlipTable = ({ salaries }) => {
         <CModalHeader>
           <CModalTitle>All Salary Slips</CModalTitle>
         </CModalHeader>
-
         <CModalBody className="d-flex flex-column gap-3">
           <DateRangeFilter
             startDate={startDate}
@@ -99,32 +208,7 @@ const SalarySlipTable = ({ salaries }) => {
             onEndDateChange={setEndDate}
           />
           <SalaryContent data={currentSalaries} />
-          {/* Pagination for modal table */}
-          {totalPages > 1 && filteredSalaries.length > itemsPerPage && (
-            <CPagination align="center" className="mt-4">
-              <CPaginationItem
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              >
-                Previous
-              </CPaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <CPaginationItem
-                  key={i + 1}
-                  active={i + 1 === currentPage}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </CPaginationItem>
-              ))}
-              <CPaginationItem
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              >
-                Next
-              </CPaginationItem>
-            </CPagination>
-          )}
+          <IconDropdown items={dropdownItems} />
         </CModalBody>
       </CModal>
     </div>

@@ -17,6 +17,16 @@ import { IconButton } from '@mui/material'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
 import { FaPrint } from 'react-icons/fa'
 import { MdOutlinePreview } from 'react-icons/md'
+import IconDropdown from '../IconDropdown'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 // Define the column structure
 const columns = [
@@ -96,6 +106,112 @@ const PurchaseList = ({ purchases, searchTerm, onView, onEdit, onDelete, onPrint
     </CButtonGroup>
   )
 
+  // Export to PDF function
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(filteredPurchases) || filteredPurchases.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = columns.map((column) => column.label)
+
+      // Add data rows
+      const data = filteredPurchases.map((purchase) =>
+        columns.map((column) => purchase[column.key]?.toString() || ''),
+      )
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Purchase_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Export to Excel function
+  const exportToExcel = () => {
+    try {
+      if (!Array.isArray(filteredPurchases) || filteredPurchases.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Purchases')
+
+      // Add headers
+      worksheet.addRow(columns.map((column) => column.label))
+
+      // Add data rows
+      filteredPurchases.forEach((purchase) => {
+        worksheet.addRow(columns.map((column) => purchase[column.key]?.toString() || ''))
+      })
+
+      // Save Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const filename = `Purchase_List_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([buffer]), filename)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel')
+    }
+  }
+
+  // Handle logout function
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log('Logout clicked')
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <CRow style={{ marginTop: '1rem' }}>
       <CCol xs={12}>
@@ -155,6 +271,9 @@ const PurchaseList = ({ purchases, searchTerm, onView, onEdit, onDelete, onPrint
               </CTable>
             )}
           </CCardBody>
+          <div className="ms-auto">
+            <IconDropdown items={dropdownItems} />
+          </div>
         </CCard>
       </CCol>
     </CRow>

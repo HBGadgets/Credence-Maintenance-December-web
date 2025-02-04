@@ -24,6 +24,18 @@ import {
 } from '@coreui/react'
 import { debounce } from 'lodash'
 import { Plus } from 'lucide-react'
+import IconDropdown from '../../IconDropdown'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+
 const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
 const VehicleLog = React.lazy(() => import('../../vehicle-logs/VehicleLog'))
 const DriverProfile = React.lazy(() => import('../../driver-profile/DriverProfile'))
@@ -122,6 +134,77 @@ const TotalExpenses = () => {
   const handleCloseDriverModal = () => setOpenDriverModal(false)
   const handleCloseVehicleModal = () => setOpenVehicleModal(false)
 
+  const exportToExcel = () => {
+    try {
+      if (!Array.isArray(invoices) || invoices.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Invoices')
+
+      // Add headers
+      worksheet.addRow(columns.map((column) => column.label))
+
+      // Add data rows
+      invoices.forEach((invoice) => {
+        worksheet.addRow(
+          columns.map((column) => {
+            if (column.key === 'date' || column.key === 'paymentDueDate') {
+              return new Date(invoice[column.key]).toLocaleDateString()
+            }
+            return invoice[column.key]?.toString() || ''
+          }),
+        )
+      })
+
+      // Save Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const filename = `Invoices_List_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([buffer]), filename)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel')
+    }
+  }
+
+  // Handle logout function
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log('Logout clicked')
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       {/* Table */}
@@ -219,6 +302,9 @@ const TotalExpenses = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+      <div className="ms-right">
+        <IconDropdown items={dropdownItems} />
+      </div>
 
       {/* Pagination */}
       <div className="d-flex justify-content-center">

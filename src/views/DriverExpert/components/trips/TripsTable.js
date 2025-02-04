@@ -22,6 +22,18 @@ import DateRangeFilter from '../../common/DateRangeFilter'
 import { Button } from '@mui/material'
 import signature from '../../Signature/signature.svg'
 
+import IconDropdown from '../../IconDropdown'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+
 const TripsTable = ({ trips }) => {
   const [open, setOpen] = useState(false)
   const [startDate, setStartDate] = useState('')
@@ -77,6 +89,124 @@ const TripsTable = ({ trips }) => {
   const totalPages = Math.ceil(filteredTrips.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentTrips = filteredTrips.slice(startIndex, startIndex + itemsPerPage)
+
+  // Export to PDF function
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(filteredTrips) || filteredTrips.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = ['Date', 'Vehicle', 'Trip Start', 'Trip End', 'Log KM', 'GPS KM']
+
+      // Add data rows
+      const data = filteredTrips.map((trip, index) => [
+        trip.date,
+        trip.vehicleName,
+        new Date(trip.tripStart).toLocaleString(),
+        new Date(trip.tripEnd).toLocaleString(),
+        `${trip.logKm} km`,
+        `${trip.gpsKm} km`,
+      ])
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Trips_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Export to Excel function
+  const exportToExcel = () => {
+    try {
+      if (!Array.isArray(filteredTrips) || filteredTrips.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Trips')
+
+      // Add headers
+      worksheet.addRow(['Date', 'Vehicle', 'Trip Start', 'Trip End', 'Log KM', 'GPS KM'])
+
+      // Add data rows
+      filteredTrips.forEach((trip) => {
+        worksheet.addRow([
+          trip.date,
+          trip.vehicleName,
+          new Date(trip.tripStart).toLocaleString(),
+          new Date(trip.tripEnd).toLocaleString(),
+          `${trip.logKm} km`,
+          `${trip.gpsKm} km`,
+        ])
+      })
+
+      // Save Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const filename = `Trips_List_${new Date().toISOString().split('T')[0]}.xlsx`
+        saveAs(new Blob([buffer]), filename)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel')
+    }
+  }
+
+  // Handle logout function
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log('Logout clicked')
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
 
   // Table component for displaying trips
   const TripsContent = ({ data }) => {
@@ -225,6 +355,9 @@ const TripsTable = ({ trips }) => {
               </CPagination>
             )}
           </CModalBody>
+          <div className="ms-auto">
+            <IconDropdown items={dropdownItems} />
+          </div>
         </CModal>
 
         {/* Signature Modal */}
