@@ -35,7 +35,7 @@ const fetchLeaveData = async () => {
   const token=Cookies.get('crdnsToken')
     try {
       
-      const response = await axios.get('https://credence-maintenance-backend.onrender.com/api/leave',
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/leave`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -43,7 +43,7 @@ const fetchLeaveData = async () => {
             }
         }
       ); // Adjust endpoint as needed
-      console.log("response",response.data);
+      console.log("response of leave ",response.data);
       
       setLeaveData(response.data);
       } catch (error) {

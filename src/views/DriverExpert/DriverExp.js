@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import { FaUserCircle } from 'react-icons/fa';
 import {
   CCard,
   CCardBody,
@@ -571,13 +572,27 @@ const DriversExp = () => {
           </CModalHeader>
           <CModalBody className="shadow-md rounded-lg p-6 mb-6">
             <div className="d-flex gap-3">
-              <CImage
-                src={selectedDriver.profileImage || '/default-avatar.png'}
+              {/* <CImage
+                src={selectedDriver?.profileImage?.base64Data || '/defaultDriverProfileImage.png'}
                 alt={selectedDriver.name}
                 className="img-thumbnail rounded-circle me-3"
                 width="170"
                 height="170"
-              />
+              /> */}
+              {selectedDriver?.profileImage?.base64Data ? (
+                <CImage
+                  src={selectedDriver.profileImage.base64Data}
+                  alt={selectedDriver.name}
+                  className="img-thumbnail rounded-circle me-3"
+                  width="170"
+                  height="170"
+                />
+              ) : (
+                <FaUserCircle 
+                  className="me-3 text-secondary" 
+                  size={170}  // Controls the icon size
+                />
+              )}
               <div>
                 <div className="py-2">
                   <h2>{selectedDriver.name}</h2>
