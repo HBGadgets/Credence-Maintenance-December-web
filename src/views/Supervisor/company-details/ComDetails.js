@@ -57,7 +57,7 @@ import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
-import IconDropdown from '../../../components/IconDropdown'
+import IconDropdown from '../../components/IconDropdown'
 import { useNavigate } from 'react-router-dom'
 
 const compainesExp = ({ setselectedCompanyId }) => {
@@ -135,7 +135,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
     setselectedCompany(compaines)
     setOpen(true)
     Navigate(`${compaines.id}`)
-  } 
+  }
 
   const handleAddcompaines = () => {
     // Add new compaines logic here (e.g., send to API or update state)
