@@ -71,7 +71,7 @@ const DocumentLocker = ({ initialDocuments = [], documents }) => {
     },
     {
       title: 'TP Pass',
-      image: documents.tpPass,
+      image: documents.tpImage,
       description: 'Transport permit pass',
     },
   ]
@@ -156,7 +156,10 @@ const DocumentLocker = ({ initialDocuments = [], documents }) => {
         <CModalBody className="d-flex align-items-center justify-content-center">
           {selectedDoc && (
             <img
-              src={selectedDoc}
+              // src={selectedDoc}
+              // src={`data:image/jpg/jpeg/png;base64,${selectedDoc}`} 
+              src={selectedDoc.base64Data}
+
               alt="Document"
               className="img-fluid rounded shadow"
               style={{ maxHeight: '80vh', maxWidth: '100%' }}
@@ -164,7 +167,7 @@ const DocumentLocker = ({ initialDocuments = [], documents }) => {
           )}
           {selectedDriver && (
             <CImage
-              src={selectedDriver.profileImage || '/default-avatar.png'}
+              src={selectedDriver?.profileImage || '/default-avatar.png'}
               alt={selectedDriver.name}
               className="img-thumbnail rounded-circle me-3"
               width="120"
