@@ -40,7 +40,7 @@ import { compaines } from '../company-details/data/compaines' // Ensure this imp
 // import AttendanceSection from '../compainesExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
-import IconDropdown from '../IconDropdown'
+// import IconDropdown from '../IconDropdown'
 import { IoPerson } from 'react-icons/io5'
 import { IoCall } from 'react-icons/io5'
 import { MdEmail } from 'react-icons/md'
@@ -57,7 +57,7 @@ import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
-import IconDropdown from '../../components/IconDropdown'
+import IconDropdown from '../IconDropdown'
 import { useNavigate } from 'react-router-dom'
 
 const compainesExp = ({ setselectedCompanyId }) => {
