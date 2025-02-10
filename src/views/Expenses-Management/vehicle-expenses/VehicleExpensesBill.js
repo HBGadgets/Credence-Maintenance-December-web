@@ -97,31 +97,7 @@ const VehicleExpenses = () => {
           }}
         /> */}
         </div>
-        <TextField
-          id="search"
-          placeholder="Search here"
-          value={searchTerm}
-          onChange={handleSearch}
-          variant="outlined"
-          size="small"
-          sx={{
-            width: '300px',
-
-            marginRight: '1rem',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '6px',
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-              background: 'white',
-            },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
+        
        
         <div>
           <header style={{ display: 'flex', justifyContent: 'space-between' }}>
