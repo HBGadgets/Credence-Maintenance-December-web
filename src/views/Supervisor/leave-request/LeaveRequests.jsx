@@ -209,7 +209,7 @@ const fetchLeaveData = async () => {
     console.log("deny ki id",id);
     
     const token=Cookies.get('crdnsToken')
-    axios.put(`https://credence-maintenance-backend.onrender.com/api/leave/${id}/status`,
+    axios.put(`${import.meta.env.VITE_API_URL }/api/leave/${id}/status`,
       {
         status: 'Rejected'
       },
@@ -233,7 +233,7 @@ const fetchLeaveData = async () => {
     console.log("approve ki id",id);
     
     const token=Cookies.get('crdnsToken')
-    axios.put(`https://credence-maintenance-backend.onrender.com/api/leave/${id}/status`,
+    axios.put(`${import.meta.env.VITE_API_URL}/api/leave/${id}/status`,
       {
         status: 'Approved'
       },

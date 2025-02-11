@@ -43,7 +43,6 @@ import { compaines } from '../company-details/data/compaines' // Ensure this imp
 // import AttendanceSection from '../compainesExpert/components/attendance/AttendanceSection' // Import AttendanceSection component
 import { debounce } from 'lodash'
 import { Select } from '@mui/material'
-// import IconDropdown from '../IconDropdown'
 import { IoPerson } from 'react-icons/io5'
 import { IoCall } from 'react-icons/io5'
 import { MdEmail } from 'react-icons/md'

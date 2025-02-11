@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './TyreInventoryCSS.css'
 import {
   CCol,
@@ -31,8 +31,10 @@ import { IoTrashBin } from 'react-icons/io5'
 
 import { cilSearch } from '@coreui/icons'
 import { FaUserEdit } from 'react-icons/fa'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
-import { tyreMange } from '../Tyre-Management/Data'
+// import { tyreMange } from '../Tyre-Management/Data'
 
 // **********icons**********
 import { PiListNumbersFill } from 'react-icons/pi'
@@ -49,6 +51,7 @@ import { GiCarWheel } from 'react-icons/gi'
 import { IoFileTrayFull } from 'react-icons/io5'
 
 const TyreInventory = () => {
+  const navigate = useNavigate()
   const columns = [
     { label: 'Serial Number', key: 'serialNumber' },
     { label: 'Vendor', key: 'vendor' },
@@ -59,9 +62,11 @@ const TyreInventory = () => {
     { label: 'Brand', key: 'brand' },
     { label: 'Pressure', key: 'pressure' },
     { label: 'Tread Depth', key: 'treadDepth' },
+    { label: 'Tread Pattern', key: 'treadPattern' },
+    { label: 'Construction Type', key: 'constructionType' },
     { label: 'Vehicle', key: 'assignedToVehicle' },
     { label: 'Position', key: 'wheelPosition' },
-    { label: 'Document', key: 'document' },
+    { label: 'Document', key: 'documents' },
     { label: 'Action', key: 'action' },
   ]
 
@@ -69,16 +74,22 @@ const TyreInventory = () => {
   const [newTyre, setNewTyre] = useState({
     serialNumber: '',
     vendor: '',
+    brand: '',
+    treadPattern: '',
+    constructionType: '',
+    size: '',
+    treadDepth: '',
+    pressure: '',
     purchaseDate: '',
     status: '',
     distance: '',
-    document: '',
+    documents: [],
   })
-
+  const [selectedFiles, setSelectedFiles] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [editIndex, setEditIndex] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [tyres, setTyres] = useState(tyreMange)
+  const [tyres, setTyres] = useState([])
 
   // Filtered Data
   const filteredInventory = tyres.filter(
@@ -94,40 +105,135 @@ const TyreInventory = () => {
     setNewTyre({ ...newTyre, [name]: value })
   }
 
+  const handleFileChange = (event) => {
+    const files = event.target.files
+    setSelectedFiles(files)
+  }
+
+  const fetchTyres = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tyre`)
+      const data = await response.json()
+      setTyres(data)
+    } catch (error) {
+      console.error('Error fetching tyres:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTyres()
+  }, [])
+
   const handleAddTyre = () => {
     setIsEditing(false)
     setNewTyre({
       serialNumber: '',
       vendor: '',
+      brand: '',
+      treadPattern: '',
+      constructionType: '',
+      size: '',
+      treadDepth: '',
+      pressure: '',
       purchaseDate: '',
       status: '',
       distance: '',
-      document: '',
+      documents: [],
     })
     setModalVisible(true)
   }
 
   const handleEditTyre = (index) => {
     setIsEditing(true)
-    setEditIndex(index)
     setNewTyre({ ...tyres[index] })
+    setEditIndex(tyres[index]._id)
     setModalVisible(true)
   }
 
-  const handleDeleteTyre = (index) => {
-    const updatedTyres = tyres.filter((_, i) => i !== index)
-    setTyres(updatedTyres)
+  const handleDeleteTyre = async (tyreId) => {
+    try {
+      const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/tyre/${tyreId}`)
+      console.log('Tyre deleted:', response.data)
+      const updatedTyres = tyres.filter((tyre) => tyre._id !== tyreId)
+      setTyres(updatedTyres)
+    } catch (error) {
+      console.error('Error deleting tyre:', error)
+    }
   }
 
-  const handleSaveTyre = () => {
-    if (isEditing) {
-      const updatedTyres = [...tyres]
-      updatedTyres[editIndex] = newTyre
-      setTyres(updatedTyres)
-    } else {
-      setTyres([...tyres, newTyre])
+  // const handleSaveTyre = () => {
+  //   if (isEditing) {
+  //     const updatedTyres = [...tyres]
+  //     updatedTyres[editIndex] = newTyre
+  //     setTyres(updatedTyres)
+  //   } else {
+  //     setTyres([...tyres, newTyre])
+  //   }
+  //   setModalVisible(false)
+  // }
+  const handleSaveTyre = async () => {
+    console.log('newTyre', newTyre)
+
+    const formData = new FormData()
+    Object.keys(newTyre).forEach((key) => {
+      if (newTyre[key]) {
+        // Ensure only defined values are appended
+        formData.append(key, newTyre[key])
+      }
+    })
+
+    // Append selected files
+    for (let i = 0; i < selectedFiles.length; i++) {
+      formData.append('documents', selectedFiles[i])
     }
-    setModalVisible(false)
+
+    console.log('formData', formData)
+
+    try {
+      let response
+      if (isEditing) {
+        response = await axios.put(
+          `${import.meta.env.VITE_API_URL}/api/tyre/${editIndex}`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        )
+      } else {
+        response = await axios.post(`${import.meta.env.VITE_API_URL}/api/tyre`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      }
+
+      if (response.status === 200 || response.status === 201) {
+        alert('Tyre saved successfully!')
+
+        try {
+          setModalVisible(false)
+          await fetchTyres() // Refresh tyre list
+
+          setNewTyre({
+            serialNumber: '',
+            vendor: '',
+            brand: '',
+            treadPattern: '',
+            constructionType: '',
+            size: '',
+            treadDepth: '',
+            pressure: '',
+            purchaseDate: '',
+            status: '',
+            distance: '',
+            documents: [],
+          })
+          setIsEditing(false)
+          setEditIndex(null)
+        } catch (postSuccessError) {
+          console.error('Error after saving tyre:', postSuccessError)
+        }
+      }
+    } catch (error) {
+      console.error('Error saving tyre:', error)
+      alert('Failed to save tyre. Please try again.')
+    }
   }
 
   return (
@@ -184,11 +290,12 @@ const TyreInventory = () => {
                           <CTableDataCell key={col.key}>
                             {col.key === 'purchaseDate' ? (
                               new Date(tyre[col.key]).toLocaleDateString()
-                            ) : col.key === 'document' ? ( // Render View button only in Document column
+                            ) : col.key === 'documents' ? ( // Render View button only in Document column
                               <CButton
                                 color="info"
                                 size="sm"
-                                onClick={() => console.log('Viewing document:', tyre.document)}
+                                // onClick={() => console.log('Viewing document:', tyre.documents)}
+                                onClick={() => navigate(`${tyre._id}`)}
                               >
                                 <FaEye size={18} /> View
                               </CButton>
@@ -210,7 +317,7 @@ const TyreInventory = () => {
                             <CButton
                               color="danger"
                               size="sm"
-                              onClick={() => handleDeleteTyre(index)}
+                              onClick={() => handleDeleteTyre(tyre._id)}
                             >
                               <IoTrashBin style={{ fontSize: '18px' }} />
                             </CButton>
@@ -307,47 +414,58 @@ const TyreInventory = () => {
               }}
             >
               <CCol md={15}>
+                {' '}
+                {/* Fixed grid issue */}
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
                     <FaHandshake style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
-                  <CFormInput
-                    type="text"
-                    name="pattern"
-                    value={newTyre.pattern}
+                  <CFormSelect
+                    name="treadPattern"
+                    value={newTyre.treadPattern}
                     onChange={handleInputChange}
-                    placeholder="Enter Tyre Pattern"
-                  />
+                  >
+                    <option value="">Select Tyre Pattern</option>
+                    <option value="rib">Rib</option>
+                    <option value="lug">Lug</option>
+                    <option value="block">Block</option>
+                    <option value="mixed">Mixed</option>
+                    <option value="directional">Directional</option>
+                    <option value="asymmetric">Asymmetric</option>
+                  </CFormSelect>
                 </CInputGroup>
               </CCol>
 
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <IoMdResize style={{ fontSize: '22px', color: 'gray' }} />
+                    <FaHandshake style={{ fontSize: '22px', color: 'gray' }} />{' '}
+                    {/* Gear icon for construction type */}
                   </CInputGroupText>
-                  <CFormInput
-                    type="text"
-                    name="size"
-                    value={newTyre.size}
+                  <CFormSelect
+                    name="constructionType"
+                    value={newTyre.constructionType}
                     onChange={handleInputChange}
-                    placeholder="Enter Tyre Size"
-                  />
+                  >
+                    <option value="">Select Tyre Construction Type</option>
+                    <option value="radial">Radial</option>
+                    <option value="bias">Bias-Ply (Cross-Ply)</option>
+                    <option value="axial">Axial</option>
+                  </CFormSelect>
                 </CInputGroup>
               </CCol>
 
-              <CCol md={15}>
-                <CInputGroup className="mt-4">
+              <CCol md={15} style={{ marginTop: '25px' }}>
+                <CInputGroup>
                   <CInputGroupText className="border-end">
-                    <TbArrowAutofitWidth style={{ fontSize: '22px', color: 'gray' }} />
+                    <GrStatusDisabledSmall style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
-                  <CFormInput
-                    type="text"
-                    name="treadDepth"
-                    value={newTyre.treadDepth}
-                    onChange={handleInputChange}
-                    placeholder="Enter Tread Depth"
-                  />
+                  <CFormSelect name="status" value={newTyre.status} onChange={handleInputChange}>
+                    <option value="">Select Status</option>
+                    <option value="New">New</option>
+                    <option value="In Use">In Use</option>
+                    <option value="Needs Replacement">Needs Replacement</option>
+                  </CFormSelect>
                 </CInputGroup>
               </CCol>
             </div>
@@ -375,6 +493,21 @@ const TyreInventory = () => {
                 </CInputGroup>
               </CCol>
 
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <IoMdResize style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="text"
+                    name="size"
+                    value={newTyre.size}
+                    onChange={handleInputChange}
+                    placeholder="Enter Tyre Size"
+                  />
+                </CInputGroup>
+              </CCol>
+
               <CCol md={15} style={{ marginTop: '25px' }}>
                 <CInputGroup>
                   <CInputGroupText className="border-end">
@@ -388,20 +521,6 @@ const TyreInventory = () => {
                   />
                 </CInputGroup>
               </CCol>
-
-              <CCol md={15} style={{ marginTop: '25px' }}>
-                <CInputGroup>
-                  <CInputGroupText className="border-end">
-                    <GrStatusDisabledSmall style={{ fontSize: '22px', color: 'gray' }} />
-                  </CInputGroupText>
-                  <CFormSelect name="status" value={newTyre.status} onChange={handleInputChange}>
-                    <option value="">Select Status</option>
-                    <option value="New">New</option>
-                    <option value="In Use">In Use</option>
-                    <option value="Needs Replacement">Needs Replacement</option>
-                  </CFormSelect>
-                </CInputGroup>
-              </CCol>
             </div>
 
             {/* Assigned Vehicle, Wheel Position, and Document Link */}
@@ -413,7 +532,7 @@ const TyreInventory = () => {
                 marginTop: '25px',
               }}
             >
-              <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
+              {/* <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
                 <CInputGroup>
                   <CInputGroupText className="border-end">
                     <FaTruckMoving style={{ fontSize: '22px', color: 'gray' }} />
@@ -426,9 +545,9 @@ const TyreInventory = () => {
                     placeholder="Enter Vehicle ID"
                   />
                 </CInputGroup>
-              </CCol>
+              </CCol> */}
 
-              <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
+              {/* <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
                 <CInputGroup>
                   <CInputGroupText className="border-end">
                     <GiCarWheel style={{ fontSize: '22px', color: 'gray' }} />
@@ -441,6 +560,20 @@ const TyreInventory = () => {
                     placeholder="Enter Wheel Position (e.g., Front-Left)"
                   />
                 </CInputGroup>
+              </CCol> */}
+              <CCol md={15}>
+                <CInputGroup className="mt-4">
+                  <CInputGroupText className="border-end">
+                    <TbArrowAutofitWidth style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="text"
+                    name="treadDepth"
+                    value={newTyre.treadDepth}
+                    onChange={handleInputChange}
+                    placeholder="Enter Tread Depth"
+                  />
+                </CInputGroup>
               </CCol>
 
               <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
@@ -449,11 +582,11 @@ const TyreInventory = () => {
                     <IoFileTrayFull style={{ fontSize: '22px', color: 'gray' }} />
                   </CInputGroupText>
                   <CFormInput
-                    type="text"
-                    name="document"
-                    value={newTyre.document}
-                    onChange={handleInputChange}
-                    placeholder="Enter Document Link"
+                    type="file"
+                    name="documents"
+                    accept="image/*,application/pdf" // Allows images & PDFs
+                    onChange={handleFileChange}
+                    multiple
                   />
                 </CInputGroup>
               </CCol>

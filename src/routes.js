@@ -60,9 +60,12 @@ const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 // const TyreDetails =React.lazy(()=> import('./views/Expenses-Management/driver-expenses/TyreDetails.js'))
+
 // Tyre Management
 const TyreInventory  = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
 const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
+const TyreShowDoc = React.lazy(() => import('./views/Tyre-Management/TyreShowDoc.js'))
+
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
@@ -106,6 +109,8 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
 // DriverExperts
 const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
+const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.js'))
+const AttendanceDetails = React.lazy(() => import('./views/DriverExpert/components/attendance/AttendanceDetails.js'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -183,8 +188,10 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'LR', element: LR },
+
   /*Tyre Management*/
   { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
+  { path: 'Inventory/:id', name: 'Tyre Show Doc', element: TyreShowDoc },
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
@@ -195,6 +202,8 @@ const routes = [
 
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
+  { path: '/DriverExp/:id', name: 'Driver Profile', element: DriverProfile },
+  { path: '/DriverExp/:id/attendance', name: 'Driver Attendance', element: AttendanceDetails },
 ]
 
 export default routes
