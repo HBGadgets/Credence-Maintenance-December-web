@@ -14,7 +14,11 @@ import {
   CFormInput,
   CButton,
 } from '@coreui/react'
-import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
+
+import { FaUserEdit } from 'react-icons/fa'
+import { FaEye } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+
 import { IconButton } from '@mui/material'
 import { MdOutlinePreview } from 'react-icons/md'
 import IconDropdown from '../IconDropdown'
@@ -237,7 +241,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
   return (
     <>
       <CRow style={{ marginTop: '1rem' }}>
-        <CCol xs={12}>
+        <CCol xs={15}>
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Vehicle Expenses</strong>
@@ -282,38 +286,38 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
                                 : expense[column.key]}
                             </CTableDataCell>
                           ))}
-                          <CTableDataCell
-                            className="text-center"
-                            style={{ display: 'flex', justifyContent: 'center' }}
-                          >
-                            <IconButton
-                              aria-label="view"
+                          <CTableDataCell style={{ display: 'flex', justifyContent: 'center' }}>
+                            <CButton
+                              color="warning"
+                              size="sm"
                               onClick={() => console.log('View:', expense)}
-                              style={{ margin: '0 5px', color: 'lightBlue' }}
                             >
-                              <MdOutlinePreview />
-                            </IconButton>
-                            <IconButton
-                              aria-label="edit"
+                              <FaEye size={18} />
+                            </CButton>
+                            <CButton
+                              className="ms-2"
+                              color="info"
+                              size="sm"
                               onClick={() => console.log('Edit:', expense)}
-                              style={{ margin: '0 5px', color: 'orange' }}
                             >
-                              <AiFillEdit style={{ fontSize: '20px' }} />
-                            </IconButton>
-                            <IconButton
-                              aria-label="delete"
+                              <FaUserEdit style={{ fontSize: '20px' }} />
+                            </CButton>
+                            <CButton
+                              color="danger"
+                              size="sm"
+                              className="ms-2"
                               onClick={() => handleDelete(expense._id)}
-                              style={{ margin: '0 5px', color: 'red' }}
                             >
-                              <AiFillDelete style={{ fontSize: '20px' }} />
-                            </IconButton>
-                            <IconButton
-                              aria-label="print"
+                              <IoTrashBin style={{ fontSize: '20px' }} />
+                            </CButton>
+                            <CButton
+                              color="success"
+                              size="sm"
+                              className="ms-2"
                               onClick={() => console.log('Print:', expense)}
-                              style={{ margin: '0 5px', color: 'green' }}
                             >
                               <FaPrint style={{ fontSize: '20px' }} />
-                            </IconButton>
+                            </CButton>
                           </CTableDataCell>
                         </CTableRow>
                       ))}

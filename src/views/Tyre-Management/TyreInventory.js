@@ -25,7 +25,12 @@ import {
   CInputGroupText,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
+import { FaEye } from 'react-icons/fa'
+
+import { IoTrashBin } from 'react-icons/io5'
+
 import { cilSearch } from '@coreui/icons'
+import { FaUserEdit } from 'react-icons/fa'
 
 import { tyreMange } from '../Tyre-Management/Data'
 
@@ -185,7 +190,7 @@ const TyreInventory = () => {
                                 size="sm"
                                 onClick={() => console.log('Viewing document:', tyre.document)}
                               >
-                                View
+                                <FaEye size={18} /> View
                               </CButton>
                             ) : (
                               tyre[col.key]
@@ -200,14 +205,14 @@ const TyreInventory = () => {
                               size="sm"
                               onClick={() => handleEditTyre(index)}
                             >
-                              Edit
+                              <FaUserEdit style={{ fontSize: '18px' }} />
                             </CButton>
                             <CButton
                               color="danger"
                               size="sm"
                               onClick={() => handleDeleteTyre(index)}
                             >
-                              Delete
+                              <IoTrashBin style={{ fontSize: '18px' }} />
                             </CButton>
                           </div>
                         </CTableDataCell>

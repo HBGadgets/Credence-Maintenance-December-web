@@ -16,6 +16,11 @@ import {
 } from '@coreui/react'
 import { FaTruckMoving } from 'react-icons/fa'
 
+import { FaUserEdit } from 'react-icons/fa'
+// import { IoTrashBin } from 'react-icons/io5'
+import { FaEye } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+
 import { RiEdit2Fill } from 'react-icons/ri'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
 import { FaPrint } from 'react-icons/fa'
@@ -344,13 +349,13 @@ function LrTable({ filteredLrs }) {
                             color="primary"
                             size="sm"
                             onClick={() => setShowReceipt({ show: true, data: data })}
-                            className="text-center ms-2"
+                            className="text-center me-2"
                           >
-                            <Eye size={16} />
+                            <FaEye size={20} />
                           </CButton>
 
                           <CButton color="warning" size="sm" onClick={() => handleEdit(data)}>
-                            <Edit size={16} />
+                            <FaUserEdit size={20} />
                           </CButton>
                           <CButton
                             color="danger"
@@ -358,15 +363,16 @@ function LrTable({ filteredLrs }) {
                             className="ms-2"
                             onClick={() => handleDelete(data.id)}
                           >
-                            <Trash2 size={16} />
+                            <IoTrashBin size={20} />
                           </CButton>
-                          <IconButton
-                            aria-label="print"
+                          <CButton
+                            color="success"
+                            size="sm"
+                            className="ms-2"
                             onClick={() => handlePrint(data)}
-                            style={{ margin: '0 5px', color: 'green' }}
                           >
-                            <FaPrint style={{ fontSize: '20px' }} />
-                          </IconButton>
+                            <FaPrint size={20} />
+                          </CButton>
                         </CTableDataCell>
                       </CTableRow>
                     ))}
