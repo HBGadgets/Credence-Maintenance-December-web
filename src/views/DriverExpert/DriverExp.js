@@ -62,8 +62,10 @@ import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import { useNavigate } from 'react-router-dom'
 
 const DriversExp = () => {
+  const navigate = useNavigate()
   const columns = ['Name', 'Contact', 'Email', 'Profile']
   const [drivers, setDrivers] = useState([])
   const [selectedDriver, setSelectedDriver] = useState(null)
@@ -475,7 +477,7 @@ const DriversExp = () => {
                           <CButton
                             color="primary"
                             size="sm"
-                            onClick={() => handleViewClick(driver)}
+                            onClick={()=>{navigate(`${driver._id}`)}}
                             className="text-center"
                           >
                             <Eye className="me-2" size={16} />

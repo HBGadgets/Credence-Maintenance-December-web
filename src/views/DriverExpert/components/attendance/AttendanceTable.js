@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   CTable,
   CTableHead,
@@ -22,11 +22,14 @@ import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 
 const AttendanceTable = ({ attendanceData }) => {
+  useEffect(()=>{
+    console.log(attendanceData);  
+  },[])
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'present':
+      case 'Present':
         return 'bg-success text-white'
-      case 'absent':
+      case 'Absent':
         return 'bg-danger text-white'
       case 'leave-pending':
         return 'bg-warning text-dark'
@@ -39,10 +42,10 @@ const AttendanceTable = ({ attendanceData }) => {
 
   const formatStatus = (status) => {
     switch (status) {
-      case 'present':
+      case 'Present':
         return 'Present'
-      case 'absent':
-        return 'Absent'
+      case 'Absent':
+        return 'absent'
       case 'leave-pending':
         return 'Leave Pending'
       case 'leave-approved':
@@ -173,8 +176,13 @@ const AttendanceTable = ({ attendanceData }) => {
         <CTableBody>
           {attendanceData.map((record) => (
             <CTableRow key={record.id}>
-              <CTableDataCell>{record.date}</CTableDataCell>
-              <CTableDataCell>{record.description}</CTableDataCell>
+            <CTableDataCell>
+              {new Date(record.date).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </CTableDataCell>              <CTableDataCell>{record?.description? record.description : "NA"}</CTableDataCell>
               <CTableDataCell>
                 <span className={`badge ${getStatusStyle(record.status)}`}>
                   {formatStatus(record.status)}

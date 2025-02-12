@@ -25,8 +25,9 @@ import { useParams } from 'react-router-dom'
 
 function VehicleMaintenanceLogModal({ }) {
   const {id} = useParams()
-  const vehicle = vehicles.find((v) => v.id === id)
+  const vehicle = vehicles.find((v) => v.id === "V001")
   const [viewDoc, setViewDoc] = useState(false)
+  const [logs, setLogs] = useState(vehicle.maintenanceLogs)
   const [filteredLogs, setFilteredLogs] = useState(vehicle.maintenanceLogs)
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
@@ -92,7 +93,7 @@ function VehicleMaintenanceLogModal({ }) {
   }
 
   const handleClearFilter = () => {
-    setFilteredLogs(logs)
+    setFilteredLogs(vehicle.maintenanceLogs)
   }
 
   return (

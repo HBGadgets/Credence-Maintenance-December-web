@@ -3,8 +3,8 @@ import { CCard, CCardBody, CRow, CCol } from '@coreui/react';
 
 const AttendanceStats = ({ attendanceData }) => {
     const stats = {
-        present: attendanceData.filter((a) => a.status === 'present').length,
-        absent: attendanceData.filter((a) => a.status === 'absent').length,
+        present: attendanceData.filter((a) => a.status === 'Present').length,
+        absent: attendanceData.filter((a) => a.status === 'Absent').length,
         leavePending: attendanceData.filter((a) => a.status === 'leave-pending').length,
         leaveApproved: attendanceData.filter((a) => a.status === 'leave-approved').length,
     };
