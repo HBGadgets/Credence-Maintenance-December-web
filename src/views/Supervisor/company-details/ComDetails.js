@@ -28,7 +28,10 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
-import { Edit, Eye, Trash2 } from 'lucide-react'
+import { FaUserEdit } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+import { FaEye } from 'react-icons/fa'
+
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
 // import { trips } from '../compainesExpert/data/trips' // Ensure this import is correct
@@ -335,7 +338,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             onClick={() => handleViewClick(compaines)}
                             className="text-center"
                           >
-                            <Eye className="me-2" size={16} />
+                            <FaEye className="me-2" size={18} />
                             View Profile
                           </CButton>
                         </CTableDataCell>
@@ -345,7 +348,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             size="sm"
                             onClick={() => handleEditcompaines(compaines)}
                           >
-                            <Edit size={16} /> {/* Edit Icon */}
+                            <FaUserEdit size={20} /> {/* Edit Icon */}
                           </CButton>
                           <CButton
                             color="danger"
@@ -353,7 +356,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             className="ms-2"
                             onClick={() => handleDeletecompaines(compaines.id)}
                           >
-                            <Trash2 size={16} /> {/* Delete Icon */}
+                            <IoTrashBin size={20} /> {/* Delete Icon */}
                           </CButton>
                         </CTableDataCell>
                       </CTableRow>
@@ -368,63 +371,113 @@ const compainesExp = ({ setselectedCompanyId }) => {
 
       {/* Edit compaines Modal */}
       {editModalOpen && compainesToEdit && (
-        <CModal alignment="center" visible={editModalOpen} onClose={() => setEditModalOpen(false)}>
+        <CModal
+          alignment="center"
+          visible={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          size="xl"
+        >
           <CModalHeader>
             <CModalTitle>Edit compaines</CModalTitle>
           </CModalHeader>
           <CModalBody>
             <CForm>
-              <div className="mb-2">
-                <CFormLabel>Name</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.name}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, name: e.target.value })}
-                />
+              <div
+                className="flex-wrap gap-5"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.name}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, name: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.contactNumber}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
               </div>
-              <div className="mb-2">
-                <CFormLabel>Contact Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.contactNumber}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })
-                  }
-                />
+
+              <div
+                className="flex-wrap gap-5"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem',
+                  marginTop: '1rem',
+                }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <FaAddressCard style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.address}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, address: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.gstNumber}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText className="border-end">
+                      <RiLockPasswordFill style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      value={compainesToEdit.password}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, password: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
               </div>
-              <div className="mb-2">
-                <CFormLabel>Address</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.address}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, address: e.target.value })
-                  }
-                />
+
+              <div className="d-flex justify-content-end">
+                <CButton color="primary" onClick={handleSaveEdit}>
+                  Save Changes
+                </CButton>
               </div>
-              <div className="mb-2">
-                <CFormLabel>GST Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.gstNumber}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })
-                  }
-                />
-              </div>
-              <div className="mb-2">
-                <CFormLabel>Password</CFormLabel>
-                <CFormInput
-                  type="password"
-                  value={compainesToEdit.password}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, password: e.target.value })
-                  }
-                />
-              </div>
-              <CButton color="primary" onClick={handleSaveEdit}>
-                Save Changes
-              </CButton>
             </CForm>
           </CModalBody>
         </CModal>

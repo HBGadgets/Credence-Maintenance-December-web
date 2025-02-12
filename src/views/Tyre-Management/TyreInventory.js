@@ -25,7 +25,12 @@ import {
   CInputGroupText,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
+import { FaEye } from 'react-icons/fa'
+
+import { IoTrashBin } from 'react-icons/io5'
+
 import { cilSearch } from '@coreui/icons'
+import { FaUserEdit } from 'react-icons/fa'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
@@ -80,7 +85,7 @@ const TyreInventory = () => {
     distance: '',
     documents: [],
   })
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [editIndex, setEditIndex] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -99,41 +104,41 @@ const TyreInventory = () => {
     const { name, value } = e.target
     setNewTyre({ ...newTyre, [name]: value })
   }
-  
-const handleFileChange = (event) => {
-  const files = event.target.files;
-  setSelectedFiles(files);
-};
 
-const fetchTyres = async () => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tyre`);
-    const data = await response.json();
-    setTyres(data);
-  } catch (error) {
-    console.error("Error fetching tyres:", error);
+  const handleFileChange = (event) => {
+    const files = event.target.files
+    setSelectedFiles(files)
   }
-};
 
-useEffect(() => {
-  fetchTyres();
-}, []);
+  const fetchTyres = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tyre`)
+      const data = await response.json()
+      setTyres(data)
+    } catch (error) {
+      console.error('Error fetching tyres:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTyres()
+  }, [])
 
   const handleAddTyre = () => {
     setIsEditing(false)
     setNewTyre({
       serialNumber: '',
-    vendor: '',
-    brand: '',
-    treadPattern: '',
-    constructionType: '',
-    size: '',
-    treadDepth: '',
-    pressure: '',
-    purchaseDate: '',
-    status: '',
-    distance: '',
-    documents: [],
+      vendor: '',
+      brand: '',
+      treadPattern: '',
+      constructionType: '',
+      size: '',
+      treadDepth: '',
+      pressure: '',
+      purchaseDate: '',
+      status: '',
+      distance: '',
+      documents: [],
     })
     setModalVisible(true)
   }
@@ -145,13 +150,13 @@ useEffect(() => {
     setModalVisible(true)
   }
 
-  const handleDeleteTyre = async(tyreId) => {
+  const handleDeleteTyre = async (tyreId) => {
     try {
       const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/tyre/${tyreId}`)
       console.log('Tyre deleted:', response.data)
       const updatedTyres = tyres.filter((tyre) => tyre._id !== tyreId)
       setTyres(updatedTyres)
-      } catch (error) {
+    } catch (error) {
       console.error('Error deleting tyre:', error)
     }
   }
@@ -167,45 +172,44 @@ useEffect(() => {
   //   setModalVisible(false)
   // }
   const handleSaveTyre = async () => {
-    console.log("newTyre", newTyre);
-  
-    const formData = new FormData();
+    console.log('newTyre', newTyre)
+
+    const formData = new FormData()
     Object.keys(newTyre).forEach((key) => {
-      if (newTyre[key]) { // Ensure only defined values are appended
-        formData.append(key, newTyre[key]);
+      if (newTyre[key]) {
+        // Ensure only defined values are appended
+        formData.append(key, newTyre[key])
       }
-    });
-  
+    })
+
     // Append selected files
     for (let i = 0; i < selectedFiles.length; i++) {
-      formData.append("documents", selectedFiles[i]);
+      formData.append('documents', selectedFiles[i])
     }
-  
-    console.log("formData", formData);
-  
+
+    console.log('formData', formData)
+
     try {
-      let response;
+      let response
       if (isEditing) {
         response = await axios.put(
           `${import.meta.env.VITE_API_URL}/api/tyre/${editIndex}`,
           formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        )
       } else {
-        response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/tyre`,
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        response = await axios.post(`${import.meta.env.VITE_API_URL}/api/tyre`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
       }
-  
+
       if (response.status === 200 || response.status === 201) {
-        alert("Tyre saved successfully!");
-        
+        alert('Tyre saved successfully!')
+
         try {
-          setModalVisible(false);
-          await fetchTyres(); // Refresh tyre list
-          
+          setModalVisible(false)
+          await fetchTyres() // Refresh tyre list
+
           setNewTyre({
             serialNumber: '',
             vendor: '',
@@ -219,20 +223,18 @@ useEffect(() => {
             status: '',
             distance: '',
             documents: [],
-          });
-          setIsEditing(false);
-          setEditIndex(null);
+          })
+          setIsEditing(false)
+          setEditIndex(null)
         } catch (postSuccessError) {
-          console.error("Error after saving tyre:", postSuccessError);
+          console.error('Error after saving tyre:', postSuccessError)
         }
       }
     } catch (error) {
-      console.error("Error saving tyre:", error);
-      alert("Failed to save tyre. Please try again.");
+      console.error('Error saving tyre:', error)
+      alert('Failed to save tyre. Please try again.')
     }
-  };
-  
-  
+  }
 
   return (
     <>
@@ -295,7 +297,7 @@ useEffect(() => {
                                 // onClick={() => console.log('Viewing document:', tyre.documents)}
                                 onClick={() => navigate(`${tyre._id}`)}
                               >
-                                View
+                                <FaEye size={18} /> View
                               </CButton>
                             ) : (
                               tyre[col.key]
@@ -310,14 +312,14 @@ useEffect(() => {
                               size="sm"
                               onClick={() => handleEditTyre(index)}
                             >
-                              Edit
+                              <FaUserEdit style={{ fontSize: '18px' }} />
                             </CButton>
                             <CButton
                               color="danger"
                               size="sm"
                               onClick={() => handleDeleteTyre(tyre._id)}
                             >
-                              Delete
+                              <IoTrashBin style={{ fontSize: '18px' }} />
                             </CButton>
                           </div>
                         </CTableDataCell>
@@ -411,9 +413,9 @@ useEffect(() => {
                 marginTop: '25px',
               }}
             >
-              
-              
-              <CCol md={15}> {/* Fixed grid issue */}
+              <CCol md={15}>
+                {' '}
+                {/* Fixed grid issue */}
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
                     <FaHandshake style={{ fontSize: '22px', color: 'gray' }} />
@@ -437,7 +439,8 @@ useEffect(() => {
               <CCol md={15}>
                 <CInputGroup className="mt-4">
                   <CInputGroupText className="border-end">
-                    <FaHandshake style={{ fontSize: '22px', color: 'gray' }} /> {/* Gear icon for construction type */}
+                    <FaHandshake style={{ fontSize: '22px', color: 'gray' }} />{' '}
+                    {/* Gear icon for construction type */}
                   </CInputGroupText>
                   <CFormSelect
                     name="constructionType"
@@ -465,10 +468,6 @@ useEffect(() => {
                   </CFormSelect>
                 </CInputGroup>
               </CCol>
-
-              
-
-              
             </div>
             {/* Pressure, Purchase Date, and Status */}
             <div
@@ -522,8 +521,6 @@ useEffect(() => {
                   />
                 </CInputGroup>
               </CCol>
-
-              
             </div>
 
             {/* Assigned Vehicle, Wheel Position, and Document Link */}
@@ -580,19 +577,19 @@ useEffect(() => {
               </CCol>
 
               <CCol md={15} style={{ marginTop: '25px', marginBottom: '25px' }}>
-            <CInputGroup>
-              <CInputGroupText className="border-end">
-                <IoFileTrayFull style={{ fontSize: '22px', color: 'gray' }} />
-              </CInputGroupText>
-              <CFormInput
-                type="file"
-                name="documents"
-                accept="image/*,application/pdf" // Allows images & PDFs
-                onChange={handleFileChange}
-                multiple
-              />
-            </CInputGroup>
-          </CCol>
+                <CInputGroup>
+                  <CInputGroupText className="border-end">
+                    <IoFileTrayFull style={{ fontSize: '22px', color: 'gray' }} />
+                  </CInputGroupText>
+                  <CFormInput
+                    type="file"
+                    name="documents"
+                    accept="image/*,application/pdf" // Allows images & PDFs
+                    onChange={handleFileChange}
+                    multiple
+                  />
+                </CInputGroup>
+              </CCol>
             </div>
           </CForm>
         </CModalBody>

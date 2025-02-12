@@ -15,10 +15,6 @@ import {
   CTableRow,
   CButton,
   CFormInput,
-  CDropdown,
-  CDropdownToggle,
-  CDropdownMenu,
-  CDropdownItem,
 } from '@coreui/react'
 import IconDropdown from './IconDropdown'
 import { FaRegFilePdf } from 'react-icons/fa'
@@ -113,12 +109,11 @@ const VehicleList = () => {
     setSortConfig({ key, direction })
 
     const sorted = [...filteredVehicles].sort((a, b) => {
-      if (['sn', 'id', 'model', 'licenseNumber', 'make', 'year'].includes(key)) {
+      if (key === 'sn') {
         const aIndex = vehicles.indexOf(a)
         const bIndex = vehicles.indexOf(b)
         return direction === 'asc' ? aIndex - bIndex : bIndex - aIndex
       }
-
       if (a[key] < b[key]) return direction === 'asc' ? -1 : 1
       if (a[key] > b[key]) return direction === 'asc' ? 1 : -1
       return 0
@@ -150,21 +145,71 @@ const VehicleList = () => {
   }
 
   // Export to Excel
+  // Export to Excel with header and footer
   const exportToExcel = async () => {
     try {
       if (!Array.isArray(filteredVehicles) || filteredVehicles.length === 0) {
         throw new Error('No data available for Excel export')
       }
 
+      // Define some colors and formatting values
+      const primaryColor = 'FF0A2D63' // Company blue (ARGB)
+      const secondaryColor = 'FF6C757D' // Gray for headers
+      const textColor = 'FFFFFFFF' // White text
+      const borderStyle = 'thin'
+      const companyName = 'Credence Tracker'
+      const currentYear = new Date().getFullYear()
+      const footerText = `© ${currentYear} ${companyName}`
+
+      // Create workbook and worksheet
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Vehicle List')
 
-      // Add headers
-      worksheet.addRow(columns.map((col) => col.label))
+      // --- HEADER SECTION ---
+      // Add title row
+      const titleRow = worksheet.addRow([companyName])
+      titleRow.font = { bold: true, size: 16, color: { argb: textColor } }
+      titleRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: primaryColor },
+      }
+      titleRow.alignment = { horizontal: 'center' }
+      // Merge cells across all 6 columns (adjust if you have a different number)
+      worksheet.mergeCells(`A${titleRow.number}:F${titleRow.number}`)
 
-      // Add data rows
+      // Add a spacer row after title
+      worksheet.addRow([])
+
+      // Add header row with column titles
+      const headerRow = worksheet.addRow([
+        'SN',
+        'Vehicle ID',
+        'Make',
+        'Year',
+        'Model',
+        'License Number',
+      ])
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: textColor } }
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: secondaryColor },
+        }
+        cell.alignment = { horizontal: 'center' }
+        cell.border = {
+          top: { style: borderStyle },
+          left: { style: borderStyle },
+          bottom: { style: borderStyle },
+          right: { style: borderStyle },
+        }
+      })
+
+      // --- DATA SECTION ---
+      // Add data rows from filteredVehicles
       filteredVehicles.forEach((vehicle, index) => {
-        worksheet.addRow([
+        const row = worksheet.addRow([
           index + 1,
           vehicle.id,
           vehicle.make,
@@ -172,9 +217,30 @@ const VehicleList = () => {
           vehicle.model,
           vehicle.licenseNumber,
         ])
+        row.eachCell((cell) => {
+          cell.font = { size: 11 }
+          cell.border = {
+            top: { style: borderStyle },
+            left: { style: borderStyle },
+            bottom: { style: borderStyle },
+            right: { style: borderStyle },
+          }
+        })
       })
 
-      // Generate and save file
+      // --- FOOTER SECTION ---
+      // Add a spacer row before the footer
+      worksheet.addRow([])
+      // Add the footer row
+      const footerRow = worksheet.addRow([footerText])
+      footerRow.font = { italic: true, size: 11 }
+      // Align the footer text to the right
+      footerRow.getCell(1).alignment = { horizontal: 'right' }
+      // Merge footer cells so the footer spans across all columns (A to F here)
+      worksheet.mergeCells(`A${footerRow.number}:F${footerRow.number}`)
+
+      // --- FINALIZE ---
+      // Generate file buffer and trigger download
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -191,41 +257,177 @@ const VehicleList = () => {
   // Export to PDF
   const exportToPDF = () => {
     try {
-      if (!Array.isArray(filteredVehicles) || filteredVehicles.length === 0) {
+      // Validate that there is data to export.
+      if (!Array.isArray(currentItems) || currentItems.length === 0) {
         throw new Error('No data available for PDF export')
       }
 
+      // PDF configuration (colors, fonts, margins, etc.)
+      const CONFIG = {
+        colors: {
+          primary: [10, 45, 99],
+          secondary: [70, 70, 70],
+          accent: [0, 112, 201],
+          border: [220, 220, 220],
+          background: [249, 250, 251],
+        },
+        company: {
+          name: 'Credence Tracker',
+          logo: { x: 15, y: 15, size: 8 },
+        },
+        layout: {
+          margin: 15,
+          pagePadding: 15,
+          lineHeight: 6,
+        },
+        fonts: {
+          primary: 'helvetica',
+          secondary: 'courier',
+        },
+      }
+
+      // Create a new jsPDF instance (landscape A4)
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
       })
 
-      // Add headers
-      const headers = columns.map((col) => col.label)
+      // Helper function to add a header (logo, company name, header line)
+      const addHeader = () => {
+        // Company logo (a simple rectangle here) and name
+        doc.setFillColor(...CONFIG.colors.primary)
+        doc.rect(
+          CONFIG.company.logo.x,
+          CONFIG.company.logo.y,
+          CONFIG.company.logo.size,
+          CONFIG.company.logo.size,
+          'F',
+        )
+        doc.setFont(CONFIG.fonts.primary, 'bold')
+        doc.setFontSize(16)
+        doc.text(CONFIG.company.name, 28, 21)
 
-      // Add data rows
-      const data = filteredVehicles.map((vehicle, index) => [
-        index + 1,
-        vehicle.id,
-        vehicle.make,
-        vehicle.year,
-        vehicle.model,
-        vehicle.licenseNumber,
+        // Header line
+        doc.setDrawColor(...CONFIG.colors.primary)
+        doc.setLineWidth(0.5)
+        doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
+      }
+
+      // Helper function to add a footer with page numbers and copyright text
+      const addFooter = () => {
+        const pageCount = doc.getNumberOfPages()
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i)
+
+          // Draw footer line
+          doc.setDrawColor(...CONFIG.colors.border)
+          doc.setLineWidth(0.5)
+          doc.line(
+            CONFIG.layout.margin,
+            doc.internal.pageSize.height - 15,
+            doc.internal.pageSize.width - CONFIG.layout.margin,
+            doc.internal.pageSize.height - 15,
+          )
+
+          // Copyright text
+          doc.setFontSize(9)
+          doc.setTextColor(...CONFIG.colors.secondary)
+          doc.text(
+            `© ${CONFIG.company.name}`,
+            CONFIG.layout.margin,
+            doc.internal.pageSize.height - 10,
+          )
+
+          // Page number
+          const pageNumber = `Page ${i} of ${pageCount}`
+          const pageNumberWidth = doc.getTextWidth(pageNumber)
+          doc.text(
+            pageNumber,
+            doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
+            doc.internal.pageSize.height - 10,
+          )
+        }
+      }
+
+      // Add header to the document
+      addHeader()
+
+      // Title of the report
+      doc.setFontSize(24)
+      doc.setFont(CONFIG.fonts.primary, 'bold')
+      doc.text('Drivers Report', CONFIG.layout.margin, 35)
+
+      // Add current date on the top right
+      const currentDate = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+      const dateText = `Generated: ${currentDate}`
+      doc.setFontSize(10)
+      doc.setTextColor(...CONFIG.colors.secondary)
+      doc.text(
+        dateText,
+        doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText),
+        21,
+      )
+
+      // (Optional) If you have metadata to include, you can add that here as well.
+
+      // --- Prepare the table data ---
+      // Define your PDF table columns to match your UI table.
+      // In your UI you have SN, then driver.name, driver.contactNumber, driver.email.
+      const tableColumns = ['SN', 'Driver Name', 'Contact Number', 'Email']
+
+      // If your UI uses pagination, you might need to decide if you want to export just the current page or all drivers.
+      // Here, we use currentItems (which could be the current page). To export all, ensure that currentItems
+      // holds the complete dataset.
+      const tableRows = currentItems.map((driver, index) => [
+        // Calculate SN; if you are paginating, adjust this calculation accordingly.
+        (currentPage - 1) * itemsPerPage + index + 1,
+        driver.name || '--',
+        driver.contactNumber || '--',
+        driver.email || '--',
       ])
 
-      // Generate table
+      // Generate the table using jsPDF-AutoTable.
       doc.autoTable({
-        head: [headers],
-        body: data,
-        startY: 20,
+        startY: 45, // starting Y position below the header
+        head: [tableColumns],
+        body: tableRows,
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          halign: 'center',
+          lineColor: CONFIG.colors.border,
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: CONFIG.colors.primary,
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: CONFIG.colors.background,
+        },
+        margin: { left: CONFIG.layout.margin, right: CONFIG.layout.margin },
+        // Optional: add header text on subsequent pages
+        didDrawPage: (data) => {
+          if (doc.getCurrentPageInfo().pageNumber > 1) {
+            doc.setFontSize(15)
+            doc.setFont(CONFIG.fonts.primary, 'bold')
+            doc.text('Drivers Report', CONFIG.layout.margin, 10)
+          }
+        },
       })
 
-      // Save PDF
-      const filename = `Vehicle_List_${new Date().toISOString().split('T')[0]}.pdf`
+      // Add footer (page numbers, copyright, etc.)
+      addFooter()
+
+      // Save the PDF using a filename with the current date.
+      const filename = `Drivers_Report_${new Date().toISOString().split('T')[0]}.pdf`
       doc.save(filename)
       toast.success('PDF downloaded successfully')
     } catch (error) {
@@ -234,7 +436,13 @@ const VehicleList = () => {
     }
   }
 
-  // Dropdown items for export
+  // Dummy logout function; replace with your actual logout logic
+  const handleLogout = () => {
+    toast.info('Logged out')
+    // Add your logout logic here
+  }
+
+  // Dropdown items for export and other actions
   const dropdownItems = [
     {
       icon: FaRegFilePdf,
@@ -348,6 +556,7 @@ const VehicleList = () => {
           />
         </div>
       )}
+
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
       </div>

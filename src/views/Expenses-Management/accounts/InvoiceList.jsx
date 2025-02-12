@@ -14,7 +14,8 @@ import {
   CCardBody,
   CFormSelect,
 } from '@coreui/react'
-import { Edit, Eye, Trash2 } from 'lucide-react'
+import { FaUserEdit } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
 import { FormControl, Select, MenuItem, TableContainer } from '@mui/material'
 import IconDropdown from '../IconDropdown'
 import { FaRegFilePdf } from 'react-icons/fa'
@@ -289,7 +290,7 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                                     size="sm"
                                     onClick={() => handleEdit(invoice)}
                                   >
-                                    <Edit size={16} />
+                                    <FaUserEdit size={20} />
                                   </CButton>
                                   <CButton
                                     color="danger"
@@ -297,7 +298,7 @@ const InvoiceList = ({ invoices, setCurrentInvoice, setEditModalOpen, setFiltere
                                     className="ms-2"
                                     onClick={() => handleDelete(invoice._id)}
                                   >
-                                    <Trash2 size={16} />
+                                    <IoTrashBin size={20} />
                                   </CButton>
                                   <CButton
                                     color="info"

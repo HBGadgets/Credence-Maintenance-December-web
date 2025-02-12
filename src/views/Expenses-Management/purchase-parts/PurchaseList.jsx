@@ -12,11 +12,15 @@ import {
   CTableBody,
   CTableDataCell,
   CButtonGroup,
+  CButton,
 } from '@coreui/react'
+
+import { FaEye } from 'react-icons/fa'
+import { FaUserEdit } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+
 import { IconButton } from '@mui/material'
-import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
 import { FaPrint } from 'react-icons/fa'
-import { MdOutlinePreview } from 'react-icons/md'
 import IconDropdown from '../IconDropdown'
 import { FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
@@ -74,36 +78,23 @@ const PurchaseList = ({ purchases, searchTerm, onView, onEdit, onDelete, onPrint
 
   // Reusable action buttons
   const ActionButtons = ({ purchase }) => (
-    <CButtonGroup>
-      <IconButton
-        aria-label="view"
-        onClick={() => onView(purchase)}
-        style={{ margin: '0 5px', color: '#1976d2' }}
-      >
-        <MdOutlinePreview />
-      </IconButton>
-      <IconButton
-        aria-label="edit"
-        onClick={() => onEdit(purchase)}
-        style={{ margin: '0 5px', color: 'orange' }}
-      >
-        <AiFillEdit style={{ fontSize: '20px' }} />
-      </IconButton>
-      <IconButton
-        aria-label="delete"
-        onClick={() => onDelete(purchase)}
-        style={{ margin: '0 5px', color: 'red' }}
-      >
-        <AiFillDelete style={{ fontSize: '20px' }} />
-      </IconButton>
-      <IconButton
-        aria-label="print"
-        onClick={() => onPrint(purchase)}
-        style={{ margin: '0 5px', color: 'green' }}
-      >
-        <FaPrint style={{ fontSize: '20px' }} />
-      </IconButton>
-    </CButtonGroup>
+    <div style={{ display: 'flex' }}>
+      <CButton onClick={() => onView(purchase)} color="warning" size="sm">
+        <FaEye size={18} />
+      </CButton>
+
+      <CButton className="ms-2" color="info" size="sm" onClick={() => onEdit(purchase)}>
+        <FaUserEdit style={{ fontSize: '18px' }} />
+      </CButton>
+
+      <CButton color="danger" size="sm" className="ms-2" onClick={() => onDelete(purchase)}>
+        <IoTrashBin style={{ fontSize: '18px' }} />
+      </CButton>
+
+      <CButton color="success" size="sm" className="ms-2" onClick={() => onPrint(purchase)}>
+        <FaPrint style={{ fontSize: '18px' }} />
+      </CButton>
+    </div>
   )
 
   // Export to PDF function
