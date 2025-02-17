@@ -161,16 +161,6 @@ const TyreInventory = () => {
     }
   }
 
-  // const handleSaveTyre = () => {
-  //   if (isEditing) {
-  //     const updatedTyres = [...tyres]
-  //     updatedTyres[editIndex] = newTyre
-  //     setTyres(updatedTyres)
-  //   } else {
-  //     setTyres([...tyres, newTyre])
-  //   }
-  //   setModalVisible(false)
-  // }
   const handleSaveTyre = async () => {
     console.log('newTyre', newTyre)
 

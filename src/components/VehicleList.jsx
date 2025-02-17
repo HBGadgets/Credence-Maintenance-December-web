@@ -23,10 +23,11 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import { FaPrint } from 'react-icons/fa'
 import { FaArrowUp } from 'react-icons/fa'
 import { toast } from 'react-toastify'
-import ExcelJS from 'exceljs'
-import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import { auto } from '@popperjs/core'
 
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
 const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
@@ -223,17 +224,17 @@ const VehicleList = () => {
   // Export to PDF
   const exportToPDF = () => {
     try {
-      // Validate that there is data to export.
-      if (!Array.isArray(currentItems) || currentItems.length === 0) {
-        throw new Error('No data available for PDF export')
+      // Validate data before proceeding
+      if (!Array.isArray(currentData) || currentData.length === 0) {
+        console.error('No data available for PDF export')
+        return
       }
 
-      // PDF configuration (colors, fonts, margins, etc.)
+      // Configuration object for styling and layout
       const CONFIG = {
         colors: {
           primary: [10, 45, 99],
           secondary: [70, 70, 70],
-          accent: [0, 112, 201],
           border: [220, 220, 220],
           background: [249, 250, 251],
         },
@@ -242,13 +243,11 @@ const VehicleList = () => {
           logo: { x: 15, y: 15, size: 8 },
         },
         layout: {
-          margin: 15,
-          pagePadding: 15,
+          margin: 16,
           lineHeight: 6,
         },
         fonts: {
           primary: 'helvetica',
-          secondary: 'courier',
         },
       }
 
@@ -259,113 +258,56 @@ const VehicleList = () => {
         format: 'a4',
       })
 
-      // Helper function to add a header (logo, company name, header line)
-      const addHeader = () => {
-        // Company logo (a simple rectangle here) and name
-        doc.setFillColor(...CONFIG.colors.primary)
-        doc.rect(
-          CONFIG.company.logo.x,
-          CONFIG.company.logo.y,
-          CONFIG.company.logo.size,
-          CONFIG.company.logo.size,
-          'F',
-        )
-        doc.setFont(CONFIG.fonts.primary, 'bold')
-        doc.setFontSize(16)
-        doc.text(CONFIG.company.name, 28, 21)
-
-        // Header line
-        doc.setDrawColor(...CONFIG.colors.primary)
-        doc.setLineWidth(0.5)
-        doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
-      }
-
-      // Helper function to add a footer with page numbers and copyright text
-      const addFooter = () => {
-        const pageCount = doc.getNumberOfPages()
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i)
-
-          // Draw footer line
-          doc.setDrawColor(...CONFIG.colors.border)
-          doc.setLineWidth(0.5)
-          doc.line(
-            CONFIG.layout.margin,
-            doc.internal.pageSize.height - 15,
-            doc.internal.pageSize.width - CONFIG.layout.margin,
-            doc.internal.pageSize.height - 15,
-          )
-
-          // Copyright text
-          doc.setFontSize(9)
-          doc.setTextColor(...CONFIG.colors.secondary)
-          doc.text(
-            `© ${CONFIG.company.name}`,
-            CONFIG.layout.margin,
-            doc.internal.pageSize.height - 10,
-          )
-
-          // Page number
-          const pageNumber = `Page ${i} of ${pageCount}`
-          const pageNumberWidth = doc.getTextWidth(pageNumber)
-          doc.text(
-            pageNumber,
-            doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
-            doc.internal.pageSize.height - 10,
-          )
-        }
-      }
-
-      // Add header to the document
-      addHeader()
-
-      // Title of the report
-      doc.setFontSize(24)
+      // --- Header Section ---
+      // Company logo (a simple filled rectangle as placeholder)
+      doc.setFillColor(...CONFIG.colors.primary)
+      doc.rect(
+        CONFIG.company.logo.x,
+        CONFIG.company.logo.y,
+        CONFIG.company.logo.size,
+        CONFIG.company.logo.size,
+        'F',
+      )
+      // Company name
       doc.setFont(CONFIG.fonts.primary, 'bold')
-      doc.text('Drivers Report', CONFIG.layout.margin, 35)
+      doc.setFontSize(16)
+      doc.text(CONFIG.company.name, 28, 21)
+      // Header line
+      doc.setDrawColor(...CONFIG.colors.primary)
+      doc.setLineWidth(0.5)
+      doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
 
-      // Add current date on the top right
-      const currentDate = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
+      // --- Title & Date ---
+      doc.setFontSize(24)
+      doc.text('Vehicles Report', CONFIG.layout.margin, 35)
+      const currentDate = new Date().toLocaleDateString('en-GB')
       const dateText = `Generated: ${currentDate}`
       doc.setFontSize(10)
-      doc.setTextColor(...CONFIG.colors.secondary)
       doc.text(
         dateText,
         doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText),
         21,
       )
 
-      // (Optional) If you have metadata to include, you can add that here as well.
-
-      // --- Prepare the table data ---
-      // Define your PDF table columns to match your UI table.
-      // In your UI you have SN, then driver.name, driver.contactNumber, driver.email.
-      const tableColumns = ['SN', 'Driver Name', 'Contact Number', 'Email']
-
-      // If your UI uses pagination, you might need to decide if you want to export just the current page or all drivers.
-      // Here, we use currentItems (which could be the current page). To export all, ensure that currentItems
-      // holds the complete dataset.
-      const tableRows = currentItems.map((driver, index) => [
-        // Calculate SN; if you are paginating, adjust this calculation accordingly.
+      // --- Table Data Preparation ---
+      const tableColumns = ['SN', 'ID', 'Make', 'Year', 'Model', 'License Number']
+      const tableRows = currentData.map((row, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
-        driver.name || '--',
-        driver.contactNumber || '--',
-        driver.email || '--',
+        row.id,
+        row.make,
+        row.year,
+        row.model,
+        row.licenseNumber,
       ])
 
-      // Generate the table using jsPDF-AutoTable.
+      // --- Create Table using autoTable ---
       doc.autoTable({
-        startY: 45, // starting Y position below the header
+        startY: 45,
         head: [tableColumns],
         body: tableRows,
         theme: 'grid',
         styles: {
-          fontSize: 8,
-          cellPadding: 2,
+          fontSize: 10,
           halign: 'center',
           lineColor: CONFIG.colors.border,
           lineWidth: 0.1,
@@ -379,22 +321,75 @@ const VehicleList = () => {
           fillColor: CONFIG.colors.background,
         },
         margin: { left: CONFIG.layout.margin, right: CONFIG.layout.margin },
-        // Optional: add header text on subsequent pages
         didDrawPage: (data) => {
+          // Add header text on subsequent pages
           if (doc.getCurrentPageInfo().pageNumber > 1) {
             doc.setFontSize(15)
             doc.setFont(CONFIG.fonts.primary, 'bold')
-            doc.text('Drivers Report', CONFIG.layout.margin, 10)
+            doc.text('Vehicles Report', CONFIG.layout.margin, 10)
           }
         },
       })
 
-      // Add footer (page numbers, copyright, etc.)
-      addFooter()
+      const addMetadata = () => {
+        const metadata = [
+          { label: 'User:', value: decodedToken.username || 'N/A' },
+          { label: 'Group:', value: selectedGroupName || 'N/A' },
+          {
+            label: 'Date Range:',
+            value:
+              selectedFromDate && selectedToDate
+                ? `${selectedFromDate} To ${selectedToDate}`
+                : `${getDateRangeFromPeriod(selectedPeriod)}`,
+          },
+          { label: 'Vehicle:', value: selectedDeviceName || 'N/A' },
+        ]
 
-      // Save the PDF using a filename with the current date.
-      const filename = `Drivers_Report_${new Date().toISOString().split('T')[0]}.pdf`
-      doc.save(filename)
+        doc.setFontSize(10)
+        doc.setFont(CONFIG.fonts.primary, 'bold')
+
+        let yPosition = 45
+        const xPosition = 15
+        const lineHeight = 6
+
+        metadata.forEach((item) => {
+          doc.text(`${item.label} ${item.value.toString()}`, xPosition, yPosition)
+          yPosition += lineHeight
+        })
+      }
+
+      // --- Footer Section ---
+      const pageCount = doc.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        // Footer line
+        doc.setDrawColor(...CONFIG.colors.border)
+        doc.setLineWidth(0.5)
+        doc.line(
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+          doc.internal.pageSize.width - CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+        )
+        // Copyright text
+        doc.setFontSize(9)
+        doc.text(
+          `© ${CONFIG.company.name}`,
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 10,
+        )
+        // Page number
+        const pageNumber = `Page ${i} of ${pageCount}`
+        const pageNumberWidth = doc.getTextWidth(pageNumber)
+        doc.text(
+          pageNumber,
+          doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
+          doc.internal.pageSize.height - 10,
+        )
+      }
+
+      // --- Save the PDF ---
+      doc.save(`Vehicles_Report_${new Date().toISOString().split('T')[0]}.pdf`)
       toast.success('PDF downloaded successfully')
     } catch (error) {
       console.error('PDF Export Error:', error)

@@ -15,18 +15,11 @@ import {
   CButton,
 } from '@coreui/react'
 
-import { FaUserEdit } from 'react-icons/fa'
-import { FaEye } from 'react-icons/fa'
+import { FaUserEdit, FaEye, FaRegFilePdf, FaPrint, FaArrowUp } from 'react-icons/fa'
 import { IoTrashBin } from 'react-icons/io5'
-
-import { IconButton } from '@mui/material'
-import { MdOutlinePreview } from 'react-icons/md'
-import IconDropdown from '../IconDropdown'
-import { FaRegFilePdf } from 'react-icons/fa'
-import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
-import { FaPrint } from 'react-icons/fa'
-import { FaArrowUp } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../IconDropdown'
 import { toast } from 'react-toastify'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
@@ -42,10 +35,10 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
     { label: 'Date', key: 'date', sortable: true },
   ]
 
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }) // Sorting configuration
-  const [currentPage, setCurrentPage] = useState(1) // Pagination state
-  const [searchQuery, setSearchQuery] = useState('') // Search state
-  const itemsPerPage = 10 // Items per page
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const itemsPerPage = 10
 
   // Filter expenses based on search query
   useEffect(() => {
@@ -60,12 +53,12 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
       )
     })
     setFilteredExpenses(filtered)
-    setCurrentPage(1) // Reset to the first page when search query changes
-  }, [searchQuery, expenses])
+    setCurrentPage(1)
+  }, [searchQuery, expenses, setFilteredExpenses])
 
   // Sorting logic
   const handleSort = (key) => {
-    if (!columns.find((column) => column.key === key && column.sortable)) return // Prevent sorting on non-sortable columns
+    if (!columns.find((column) => column.key === key && column.sortable)) return
 
     const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     setSortConfig({ key, direction })
@@ -75,11 +68,9 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
       if (a[key] > b[key]) return direction === 'asc' ? 1 : -1
       return 0
     })
-
     setFilteredExpenses(sorted)
   }
 
-  // Get sort icon
   const getSortIcon = (key) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === 'asc' ? '▲' : '▼'
@@ -120,11 +111,31 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
     }
   }
 
-  // Export to PDF function
+  // Export to PDF function (updated)
   const exportToPDF = () => {
     try {
       if (!Array.isArray(filteredExpenses) || filteredExpenses.length === 0) {
         throw new Error('No data available for PDF export')
+      }
+
+      const CONFIG = {
+        colors: {
+          primary: [10, 45, 99],
+          secondary: [70, 70, 70],
+          border: [220, 220, 220],
+          background: [249, 250, 251],
+        },
+        company: {
+          name: 'Credence Maintenance',
+          logo: { x: 15, y: 15, size: 8 },
+        },
+        layout: {
+          margin: 15,
+          lineHeight: 6,
+        },
+        fonts: {
+          primary: 'helvetica',
+        },
       }
 
       const doc = new jsPDF({
@@ -133,31 +144,103 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
         format: 'a4',
       })
 
-      // Add headers
-      const headers = columns.map((column) => column.label)
+      // Header Section
+      doc.setFillColor(...CONFIG.colors.primary)
+      doc.rect(
+        CONFIG.company.logo.x,
+        CONFIG.company.logo.y,
+        CONFIG.company.logo.size,
+        CONFIG.company.logo.size,
+        'F',
+      )
+      doc.setFont(CONFIG.fonts.primary, 'bold')
+      doc.setFontSize(16)
+      doc.text(CONFIG.company.name, 28, 21)
+      doc.setDrawColor(...CONFIG.colors.primary)
+      doc.setLineWidth(0.5)
+      doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
 
-      // Add data rows
-      const data = filteredExpenses.map((expense) =>
-        columns.map((column) => {
-          if (column.key === 'date') {
-            return new Date(expense[column.key]).toLocaleDateString()
-          }
-          return expense[column.key]?.toString() || ''
-        }),
+      // Title & Generation Date
+      doc.setFontSize(24)
+      doc.text('Vechile Expenses', CONFIG.layout.margin, 35)
+      const currentDate = new Date().toLocaleDateString('en-GB')
+      const dateText = `Generated: ${currentDate}`
+      doc.setFontSize(10)
+      doc.text(
+        dateText,
+        doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText),
+        21,
       )
 
-      // Generate table
+      // Table Data Preparation
+      const headers = ['SN', 'Vehicle', 'Category', 'Amount', 'Vendor', 'Date']
+      const data = filteredExpenses.map((expense, index) => [
+        index + 1,
+        expense.vehicleName || '--',
+        expense.category || '--',
+        expense.amount !== undefined ? expense.amount.toString() : '--',
+        expense.vendor || '--',
+        expense.date ? new Date(expense.date).toLocaleDateString() : '--',
+      ])
+
       doc.autoTable({
+        startY: 45,
         head: [headers],
         body: data,
-        startY: 20,
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+        styles: {
+          fontSize: 10,
+          halign: 'center',
+          cellPadding: 2,
+          lineColor: CONFIG.colors.border,
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: CONFIG.colors.primary,
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: CONFIG.colors.background,
+        },
+        margin: { left: CONFIG.layout.margin, right: CONFIG.layout.margin },
+        didDrawPage: (dataArg) => {
+          if (doc.getCurrentPageInfo().pageNumber > 1) {
+            doc.setFontSize(15)
+            doc.setFont(CONFIG.fonts.primary, 'bold')
+            doc.text('Vehicle Expense', CONFIG.layout.margin, 10)
+          }
+        },
       })
 
-      // Save PDF
-      const filename = `Expenses_List_${new Date().toISOString().split('T')[0]}.pdf`
+      // Footer Section
+      const pageCount = doc.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.setDrawColor(...CONFIG.colors.border)
+        doc.setLineWidth(0.5)
+        doc.line(
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+          doc.internal.pageSize.width - CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+        )
+        doc.setFontSize(9)
+        doc.text(
+          `© ${CONFIG.company.name}`,
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 10,
+        )
+        const pageNumber = `Page ${i} of ${pageCount}`
+        const pageNumberWidth = doc.getTextWidth(pageNumber)
+        doc.text(
+          pageNumber,
+          doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
+          doc.internal.pageSize.height - 10,
+        )
+      }
+
+      const filename = `Expense_Report_${new Date().toISOString().split('T')[0]}.pdf`
       doc.save(filename)
       toast.success('PDF downloaded successfully')
     } catch (error) {
@@ -176,7 +259,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Expenses')
 
-      // Add headers
+      // Add headers (using the same columns as the table)
       worksheet.addRow(columns.map((column) => column.label))
 
       // Add data rows
@@ -191,7 +274,6 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
         )
       })
 
-      // Save Excel file
       workbook.xlsx.writeBuffer().then((buffer) => {
         const filename = `Expenses_List_${new Date().toISOString().split('T')[0]}.xlsx`
         saveAs(new Blob([buffer]), filename)
@@ -205,7 +287,6 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
 
   // Handle logout function
   const handleLogout = () => {
-    // Implement logout logic here
     console.log('Logout clicked')
   }
 
@@ -214,12 +295,12 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
     {
       icon: FaRegFilePdf,
       label: 'Download PDF',
-      onClick: () => exportToPDF(),
+      onClick: exportToPDF,
     },
     {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
-      onClick: () => exportToExcel(),
+      onClick: exportToExcel,
     },
     {
       icon: FaPrint,
@@ -229,7 +310,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
     {
       icon: HiOutlineLogout,
       label: 'Logout',
-      onClick: () => handleLogout(),
+      onClick: handleLogout,
     },
     {
       icon: FaArrowUp,
@@ -245,7 +326,15 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Vehicle Expenses</strong>
-              <div className="d-flex align-items-center gap-3"></div>
+              <div className="d-flex align-items-center gap-3">
+                <CFormInput
+                  type="text"
+                  placeholder="Search expenses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-25"
+                />
+              </div>
             </CCardHeader>
             <CCardBody>
               {filteredExpenses.length === 0 ? (
@@ -255,9 +344,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
                   <CTable striped hover responsive bordered>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell className="text-center" scope="col">
-                          SN
-                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
                         {columns.map((column) => (
                           <CTableHeaderCell
                             key={column.key}
@@ -268,9 +355,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
                             {column.label} {column.sortable && getSortIcon(column.key)}
                           </CTableHeaderCell>
                         ))}
-                        <CTableHeaderCell className="text-center" scope="col">
-                          Actions
-                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
@@ -325,20 +410,16 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
                   </CTable>
                   {totalPages > 1 && (
                     <div className="d-flex justify-content-center">
-                      <Pagination
-                        totalPages={totalPages}
-                        currentPage={currentPage}
-                        handlePageChange={handlePageChange}
-                      />
+                      {/* Your Pagination component here */}
                     </div>
                   )}
                 </>
               )}
             </CCardBody>
-            <div className="ms-auto">
-              <IconDropdown items={dropdownItems} />
-            </div>
           </CCard>
+          <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+            <IconDropdown items={dropdownItems} />
+          </div>
         </CCol>
       </CRow>
     </>
