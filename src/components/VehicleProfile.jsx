@@ -4,9 +4,7 @@ import { CRow, CCol, CCard, CCardBody, CCardTitle, CModal, CModalBody, CModalFoo
 import { CTab, CTabContent, CTabList, CTabPanel, CTabs } from '@coreui/react'
 // import VehicleDocuments from './VehicleDocuments'
 const VehicleDocuments = React.lazy(() => import('./VehicleDocuments'))
-const VehicleMaintenanceLog = React.lazy(() => import('./tabs/VehicleMaintenanceLog'))
 // import VehicleMaintenanceLog from './tabs/VehicleMaintenanceLog'
-const VehicleTripInfo = React.lazy(() => import('./tabs/VehicleTripInfo'))
 // import VehicelTripInfo from './tabs/VehicleTripInfo'
 import {useParams} from 'react-router-dom'
 import { vehicles } from '../views/vehicle/data/data'
@@ -14,16 +12,13 @@ import DetailedPage from '../views/Tyre-Management/DetailedPage'
 import { useNavigate } from 'react-router-dom'
 import "./VehicleProfile.css"
 
-function VehicleProfile({ open, setOpen, vehicle }) {
+function VehicleProfile({  }) {
   const navigate = useNavigate()
 
     const { id } = useParams();
     //
-     vehicle = vehicles.find((v) => v.id === id);
+    const vehicle = vehicles.find((v) => v.id === "V001");
   
-  const handleClose = () => {
-    setOpen(false)
-  }
   const openMaintainancePage = () => {
     navigate(`maintenancelog`)
   }

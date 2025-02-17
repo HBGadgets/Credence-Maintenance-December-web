@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { vehicles } from '../views/vehicle/data/data'
+// import { vehicles } from '../views/vehicle/data/data'
 import { useNavigate } from 'react-router-dom'
 import {
   CCard,
@@ -28,46 +28,79 @@ import 'jspdf-autotable'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { auto } from '@popperjs/core'
+import axios from 'axios'
 
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
 const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
 
 const VehicleList = () => {
-  const columns = [
-    { label: 'SN', key: 'sn', sortable: false },
-    { label: 'Vehicle ID', key: 'id', sortable: true },
-    { label: 'Make', key: 'make', sortable: true },
-    { label: 'Year', key: 'year', sortable: true },
-    { label: 'Model', key: 'model', sortable: true },
-    { label: 'License Number', key: 'licenseNumber', sortable: true },
-    { label: 'Action', key: 'action', sortable: false },
-  ]
+  const Navigate = useNavigate()
 
+  // const columns = [
+  //   { label: 'SN', key: 'sn', sortable: false },
+  //   { label: 'Vehicle ID', key: 'id', sortable: true },
+  //   { label: 'Make', key: 'make', sortable: true },
+  //   { label: 'Year', key: 'year', sortable: true },
+  //   { label: 'Model', key: 'model', sortable: true },
+  //   { label: 'License Number', key: 'licenseNumber', sortable: true },
+  //   { label: 'Action', key: 'action', sortable: true },
+  // ]
+
+  const columns = [
+    { label: 'SN', key: 'sn', sortable: true },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Model', key: 'model', sortable: true },
+    { label: 'Category', key: 'category', sortable: true },
+    { label: 'Device ID', key: 'deviceId', sortable: true },
+    { label: 'Action', key: 'action', sortable: true },
+  ]
+  const [vehicles, setVehicles] = useState([])
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [open, setOpen] = useState(false)
   const [filteredLogs, setFilteredLogs] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredVehicles, setFilteredVehicles] = useState(vehicles)
+  const [filteredVehicles, setFilteredVehicles] = useState([])
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const itemsPerPage = 10
 
-  const navigate = useNavigate()
+  const fetchVehicles = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/credence`)
+      console.log('devices from credence', response.data)
+      setVehicles(response.data.devices)
+      setFilteredVehicles(response.data.devices)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   useEffect(() => {
+    fetchVehicles()
+  }, [])
+
+  useEffect(() => {
+    if (!Array.isArray(vehicles)) {
+      console.error('Vehicles is not an array:', vehicles)
+      setFilteredVehicles([])
+      return
+    }
+
     const filtered = vehicles.filter((vehicle) => {
       const search = searchQuery.toLowerCase().trim()
+
       return (
-        vehicle.id.toLowerCase().includes(search) ||
-        vehicle.make.toLowerCase().includes(search) ||
-        vehicle.model.toLowerCase().includes(search) ||
-        vehicle.year.toString().includes(search) ||
-        vehicle.licenseNumber.toLowerCase().includes(search)
+        (vehicle.name && vehicle.name.toLowerCase().includes(search)) ||
+        (vehicle.model && vehicle.model.toLowerCase().includes(search)) ||
+        (vehicle.category && vehicle.category.toLowerCase().includes(search)) ||
+        (vehicle.deviceId && vehicle.deviceId.toString().includes(search))
       )
     })
+
+    console.log('Filtered Vehicles:', filtered)
     setFilteredVehicles(filtered)
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, vehicles])
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -100,7 +133,7 @@ const VehicleList = () => {
     setSelectedVehicle(vehicle)
     setFilteredLogs(vehicle.maintenanceLogs)
     setOpen(true)
-    navigate(`/VehicleProfile/${vehicle.id}`)
+    Navigate(`/VehicleProfile/${vehicle._id}`)
   }
 
   const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage)
@@ -478,11 +511,11 @@ const VehicleList = () => {
                         <CTableDataCell className="text-center">
                           {(currentPage - 1) * itemsPerPage + rowIndex + 1}
                         </CTableDataCell>
-                        <CTableDataCell className="text-center">{row.id}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.make}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.year}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.name}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.model}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.category}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.deviceId}</CTableDataCell>
+                        {/* <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell> */}
                         <CTableDataCell className="text-center">
                           <CButton onClick={() => handleViewClick(row)} color="primary">
                             View
@@ -498,14 +531,14 @@ const VehicleList = () => {
         </CCol>
       </CRow>
 
-      {selectedVehicle && (
+      {/* {selectedVehicle && (
         <VehicleProfile
           open={open}
           setOpen={setOpen}
           onClose={() => setOpen(false)}
           vehicle={selectedVehicle}
         />
-      )}
+      )} */}
 
       {/* Pagination */}
       {totalPages > 1 && (

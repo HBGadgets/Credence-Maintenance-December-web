@@ -3,7 +3,7 @@ import axios from 'axios'
 import { FileText } from 'lucide-react'
 import { CModal, CModalBody, CModalHeader, CModalTitle, CImage } from '@coreui/react'
 
-const DocumentLocker = ({ initialDocuments = [], documents }) => {
+const DocumentLocker = ({ initialDocuments = [], documents={} }) => {
   const [documentsList, setDocumentsList] = useState(initialDocuments)
   const [selectedDoc, setSelectedDoc] = useState(null)
   const [file, setFile] = useState(null)
@@ -61,17 +61,17 @@ const DocumentLocker = ({ initialDocuments = [], documents }) => {
   const documentCards = [
     {
       title: 'Aadhar Card',
-      image: documents.aadharImage,
+      image: documents?.aadharImage,
       description: 'Government issued identification card',
     },
     {
       title: 'Driving License',
-      image: documents.licenseImage,
+      image: documents?.licenseImage,
       description: 'Commercial driving license',
     },
     {
       title: 'TP Pass',
-      image: documents.tpImage,
+      image: documents?.tpImage,
       description: 'Transport permit pass',
     },
   ]

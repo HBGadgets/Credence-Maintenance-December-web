@@ -22,10 +22,10 @@ import {
 import "./CSSdetailedPage.css"
 import { useParams } from 'react-router-dom'
 import { vehicles } from '../vehicle/data/data'
+import axios from 'axios'
 
 function DetailedPage({}) {
   const {id} = useParams()
-  const vehicle = vehicles.find((v) => v.id === id)
   const [leftWheels, setLeftWheels] = useState([]) // Additional wheel pairs for the left side
   const [rightWheels, setRightWheels] = useState([]) // Additional wheel pairs for the right side
   const [tyreInventory, setTyreInventory] = useState([
@@ -121,6 +121,22 @@ function DetailedPage({}) {
   const [selectedWheelId, setSelectedWheelId] = useState(null) // The ID of the wheel being assigned
   const [selectedTyreId, setSelectedTyreId] = useState('') // The selected tyre ID
   const [isModalVisible, setIsModalVisible] = useState(false) // Modal visibility
+  const [category, setCategory] = useState('bus')
+
+
+  const fetchVehicle= async()=>{
+    try {
+      const response= await axios.get(`${import.meta.env.VITE_API_URL}/api/credence/${id}`)
+      console.log("response in fetchVehicle in detailedpage", response.data.device.category);
+      setCategory(response.data.device.category?.toLowerCase() || "")
+    } catch (error) {
+      console.error(error);
+    }}
+
+    useEffect(()=>{
+      fetchVehicle()
+    })
+    
 
    // Function to initialize wheels based on the greatest position number in assigned tyres
    const initializeWheels = () => {
@@ -167,7 +183,10 @@ function DetailedPage({}) {
   const location = useLocation()
   // const queryParams = new URLSearchParams(location.search)
   // const category = queryParams.get('category') // Extract the category from query params
-  const category = vehicle.category
+  // let category = vehicle.category 
+  // // category =  "bike";
+
+
   const addLeftWheels = () => {
     setLeftWheels([...leftWheels, {}])
     console.log("leftwheels",leftWheels);
@@ -529,7 +548,7 @@ function DetailedPage({}) {
                 </div>
               </div>
             </div>
-          ) : (
+          ) :["car", "taxi"].includes(category) ?  (
             <div style={{ margin: '20px' }}>
               {/* Right Wheels Section */}
               <div
@@ -662,6 +681,62 @@ function DetailedPage({}) {
                   </div>
                 </div>
               </div>
+            </div>
+          ):(
+            <div>
+              <div style={{ margin: '20px', display:'flex' }}>
+              {/* Right Wheels Section */}
+             
+               
+                  <div className="oneWheel" style={{ alignSelf: 'end' }}>
+                    <div
+                      className="wheel-container"
+                    >
+                      <div
+                        id="front"
+                        onClick={() => handleWheelClick('front')}
+                        className='wheelRounded'
+                      >
+                        {isTyreAssigned('front') ? (
+                          <img
+                            src={tyreImagePath}
+                            alt="Tyre"
+                            className='imgCircle'
+                          />
+                        ) : (
+                          ''
+                        )}
+                      </div>
+                      <div className="label-container" style={{ paddingLeft: '2px' }}>
+                        {generateLabel('front')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="oneWheel" style={{ alignSelf: 'end' }}>
+                    <div
+                      className="wheel-container"
+                    >
+                      <div
+                        id="back"
+                        onClick={() => handleWheelClick('back')}
+                        className='wheelRounded'
+                      >
+                        {isTyreAssigned('back') ? (
+                          <img
+                            src={tyreImagePath}
+                            alt="Tyre"
+                            className='imgCircle'
+                          />
+                        ) : (
+                          ''
+                        )}
+                      </div>
+                      <div className="label-container" style={{ paddingLeft: '2px' }}>
+                        {generateLabel('back')}
+                      </div>
+                    </div>
+                  </div>
+            </div>
             </div>
           )}
           <div className="vertical-text"> REAR </div>

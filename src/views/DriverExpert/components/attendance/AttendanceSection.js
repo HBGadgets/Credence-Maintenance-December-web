@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { attendance } from '../../data/attendance'
 import DateRangeFilter from '../attendance/DateRangeFilter'
 import AttendanceStats from '../attendance/AttendanceStats'
@@ -17,22 +17,49 @@ import {
   CRow,
   CCardHeader,
 } from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const AttendanceSection = ({ driverId }) => {
+  const Navigate = useNavigate()
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [open, setOpen] = useState(false)
+  const [attendanceData, setAttendanceData] = useState([])
+  const [filteredAttendance, setFilteredAttendence] = useState([])
 
   const handleOpen = () => {
     setOpen(true)
   }
-  const filteredAttendance = attendance
-    .filter((a) => a.driverId === driverId)
-    .filter((a) => {
-      if (!startDate || !endDate) return true
-      const date = new Date(a.date)
-      return date >= new Date(startDate) && date <= new Date(endDate)
-    })
+
+  const fetchDriverAttendance = async () => {
+    try {
+      const response = await axios(
+        `${import.meta.env.VITE_API_URL}/api/attendance/${driverId}`
+      )
+      setAttendanceData(response.data.attendance)
+      setFilteredAttendence(response.data.attendance)
+      } catch (error) {
+      console.error('Error fetching driver attendance:', error)
+    }
+  }
+  useEffect(()=>{
+    fetchDriverAttendance()
+    console.log("attendanceData",attendanceData);
+  },[driverId])
+
+  useEffect(() => {
+    if (!startDate || !endDate) {
+      setFilteredAttendence(attendanceData);
+    } else {
+      setFilteredAttendence(
+        attendanceData.filter((a) => {
+          const date = new Date(a.date);
+          return date >= new Date(startDate) && date <= new Date(endDate);
+        })
+      );
+    }
+  }, [startDate, endDate, attendanceData]);
 
   return (
     <div>
@@ -60,34 +87,14 @@ const AttendanceSection = ({ driverId }) => {
           /> */}
 
           <div className="d-flex justify-content-end">
-            <button type="button" className="btn btn-secondary m-1" onClick={handleOpen}>
+            <button type="button" className="btn btn-secondary m-1" onClick={()=>{Navigate(`attendance`)}}>
               View More
             </button>
           </div>
         </CCardBody>
       </CCard>
 
-      <CModal
-        alignment="center"
-        scrollable
-        visible={open}
-        onClose={() => setOpen(false)}
-        fullscreen
-      >
-        <CModalHeader>
-          <CModalTitle>Full Attendance History</CModalTitle>
-        </CModalHeader>
-
-        <CModalBody className="d-flex flex-column gap-3">
-          <DateRangeFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-          />
-          <AttendanceTable attendanceData={filteredAttendance} />
-        </CModalBody>
-      </CModal>
+      
     </div>
   )
 }

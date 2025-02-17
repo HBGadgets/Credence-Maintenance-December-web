@@ -26,7 +26,8 @@ import { vehicles } from '../../../src/views/vehicle/data/data'
 
 function VehicleTripModal({  }) {
   const { id } = useParams()
-  const vehicle = vehicles.find((v) => v.id === id)
+  const vehicle = vehicles.find((v) => v.id === "V001")
+  const [trip, setTrips] = useState(vehicle.trips)
   const [filteredLogs, setFilteredLogs] = useState(vehicle.trips)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
@@ -92,7 +93,7 @@ function VehicleTripModal({  }) {
 
   // Handle clearing filter
   const handleClearFilter = () => {
-    setFilteredLogs(trip)
+    setFilteredLogs(vehicle.trips)
     setSearchQuery('')
   }
 
