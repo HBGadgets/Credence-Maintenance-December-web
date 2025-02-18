@@ -59,7 +59,7 @@ const VehicleExpensesBill = React.lazy(
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/Bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
-// const TyreDetails =React.lazy(()=> import('./views/Expenses-Management/driver-expenses/TyreDetails.js'))
+const ShowDriverExpenseDoc = React.lazy(() => import('./views/Expenses-Management/driver-expenses/showDoc.js'))
 
 // Tyre Management
 const TyreInventory  = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
@@ -188,6 +188,7 @@ const routes = [
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'LR', element: LR },
+  { path: '/DriverExpenseBill/:id/documents', name: 'Show Driver Expense Documents', element: ShowDriverExpenseDoc },
 
   /*Tyre Management*/
   { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
@@ -204,6 +205,7 @@ const routes = [
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
   { path: '/DriverExp/:id', name: 'Driver Profile', element: DriverProfile },
   { path: '/DriverExp/:id/attendance', name: 'Driver Attendance', element: AttendanceDetails },
+  
 ]
 
 export default routes

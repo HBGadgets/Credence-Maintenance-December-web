@@ -25,99 +25,11 @@ import { vehicles } from '../vehicle/data/data'
 import axios from 'axios'
 
 function DetailedPage({}) {
-  const {id} = useParams()
+  const {id} = useParams() // this is deviceId
   const [leftWheels, setLeftWheels] = useState([]) // Additional wheel pairs for the left side
   const [rightWheels, setRightWheels] = useState([]) // Additional wheel pairs for the right side
-  const [tyreInventory, setTyreInventory] = useState([
-    {
-      id: 1,
-      SrNo: 'Tyre A',
-      brand: 'MRF',
-      status: 'New',
-      pressure: '32 psi',
-      installationDate: '2024-01-01',
-      purchaseDate: '2024-01-01',
-      treadDepth: '8mm',
-      pattern: 'Radial',
-      size: '277/12/12',
-    },
-    {
-      id: 2,
-      SrNo: 'Tyre B',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    {
-      id: 3,
-      SrNo: 'Tyre C',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    {
-      id: 4,
-      SrNo: 'Tyre D',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    {
-      id: 5,
-      SrNo: 'Tyre E',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    {
-      id: 6,
-      SrNo: 'Tyre F',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    {
-      id: 7,
-      SrNo: 'Tyre G',
-      brand: 'MRF',
-      status: 'In Use',
-      pressure: '30 psi',
-      installationDate: '2023-12-15',
-      purchaseDate: '2023-12-10',
-      treadDepth: '6mm',
-      pattern: 'Bias Ply',
-      size: '277/12/12',
-    },
-    // Add more tyres as necessary
-  ]) // Tyre Inventory
-  const [assignedTyres, setAssignedTyres] = useState([
-    {position: 'right-outer-3', tyreId: '1'},{position: 'left-inner-4', tyreId: '3'},{position: "right-outer-5", tyreId: '6'}
-  ]) // List of assigned tyres with positions
+  const [tyreInventory, setTyreInventory] = useState([]) // Tyre Inventory
+  const [assignedTyres, setAssignedTyres] = useState([]) // List of assigned tyres with positions
   const [selectedWheelId, setSelectedWheelId] = useState(null) // The ID of the wheel being assigned
   const [selectedTyreId, setSelectedTyreId] = useState('') // The selected tyre ID
   const [isModalVisible, setIsModalVisible] = useState(false) // Modal visibility
@@ -129,22 +41,44 @@ function DetailedPage({}) {
       const response= await axios.get(`${import.meta.env.VITE_API_URL}/api/credence/${id}`)
       console.log("response in fetchVehicle in detailedpage", response.data.device.category);
       setCategory(response.data.device.category?.toLowerCase() || "")
+      // setCategory("truck")
     } catch (error) {
       console.error(error);
     }}
 
+    const fetchTyres = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/tyre`)
+        console.log("tyre inventory mdhe he set hot ahe", response.data);
+        setTyreInventory(response.data)
+      } catch (error) {
+        console.error('Error fetching tyres:', error)
+      }
+    }
+
+    const fetchAssignedTyre = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/extendedVehicle/`, {
+          params: { deviceId: id }
+        });        
+        console.log("fetchAssignedTyre response", response.data);
+        setAssignedTyres(response.data.data || []);
+        } catch (error) {
+          console.error('Error fetching assigned tyres:', error)
+        }
+      }
+
     useEffect(()=>{
       fetchVehicle()
-    })
-    
+      fetchTyres()
+      fetchAssignedTyre()
+    },[id])
 
-   // Function to initialize wheels based on the greatest position number in assigned tyres
-   const initializeWheels = () => {
+  const initializeWheels = () => {
     let greatestNumber = 0;
-
-    
-    assignedTyres.forEach((tyre) => {
-      const match = tyre.position.match(/(\d+)/); 
+    assignedTyres.forEach((assignment) => {
+      // Use wheelPosition directly from the API response
+      const match = assignment.wheelPosition.match(/(\d+)/);
       if (match) {
         const number = parseInt(match[0], 10);
         if (number > greatestNumber) {
@@ -152,23 +86,21 @@ function DetailedPage({}) {
         }
       }
     });
-
-    // Calculate the number of empty slots needed
-    const emptySlots = greatestNumber - 2; // 2 less than the greatest number
-
-    // Update state with the calculated empty slots
+  
+    const emptySlots = greatestNumber - 2;
     if (emptySlots > 0) {
-      setLeftWheels(Array(emptySlots).fill({})); // Add empty objects for left wheels
-      setRightWheels(Array(emptySlots).fill({})); // Add empty objects for right wheels
+      setLeftWheels(Array(emptySlots).fill({}));
+      setRightWheels(Array(emptySlots).fill({}));
     }
   };
+  
 
   useEffect(() => {
     initializeWheels(); 
   }, []); 
 
   const columns = [
-    { label: 'Tyre ID', key: 'id' },
+    { label: 'Tyre ID', key: '_id' },
     { label: 'Serial No.', key: 'SrNo' },
     { label: 'Brand', key: 'brand' },
     { label: 'Status', key: 'status' },
@@ -176,16 +108,10 @@ function DetailedPage({}) {
     { label: 'Installation Date', key: 'installationDate' },
     { label: 'Purchase Date', key: 'purchaseDate' },
     { label: 'Tread Depth', key: 'treadDepth' },
-    { label: 'Pattern', key: 'pattern' },
+    { label: 'Tread Pattern', key: 'treadPattern' },
+    { label: 'Tread Construction', key: 'treadConstruction' },
     { label: 'Size', key: 'size' },
   ]
-
-  const location = useLocation()
-  // const queryParams = new URLSearchParams(location.search)
-  // const category = queryParams.get('category') // Extract the category from query params
-  // let category = vehicle.category 
-  // // category =  "bike";
-
 
   const addLeftWheels = () => {
     setLeftWheels([...leftWheels, {}])
@@ -206,39 +132,94 @@ function DetailedPage({}) {
     setRightWheels(rightWheels.slice(0, -1))
   }
 
-  // Open Modal for Assign Tyre
   const handleWheelClick = (id) => {
     setSelectedWheelId(id)
     setIsModalVisible(true)
   }
-
-  // Assign Tyre to Wheel
-  const handleAssignTyre = () => {
-    if (!selectedTyreId) return alert('Please select a tyre.')
-    if (assignedTyres.some((tyre) => tyre.position === selectedWheelId)) {
-      return alert('A tyre is already assigned to this position.')
-    }
-    setAssignedTyres([...assignedTyres, { position: selectedWheelId, tyreId: selectedTyreId }])
-    console.log('assignedTyres', assignedTyres)
-
-    setTyreInventory(tyreInventory.filter((t) => t.id !== selectedTyreId)) // Remove tyre from inventory
-    setIsModalVisible(false)
-    setSelectedTyreId('')
-  }
+  
   // assign zal asel tr image yeil
   const tyreImagePath = '/tyre1.png'
+  // const isTyreAssigned = (position) => {
+  //   return assignedTyres.some((tyre) => tyre.position === position)
+  // }
   const isTyreAssigned = (position) => {
-    return assignedTyres.some((tyre) => tyre.position === position)
-  }
+    return Array.isArray(assignedTyres) ? assignedTyres.some((assignment) => assignment.wheelPosition === position) : false;
+  };
 
-  // Detach Tyre from Wheel
-  const handleDetachTyre = (position) => {
-    const tyreToDetach = assignedTyres.find((tyre) => tyre.position === position)
-    if (tyreToDetach) {
-      // Remove tyre from assigned list and add it back to inventory
-      setAssignedTyres(assignedTyres.filter((tyre) => tyre.position !== position))
+  const handleAssignTyre = async () => {
+    if (!selectedTyreId || !selectedWheelId) {
+      alert('Please select a tyre and a wheel position.');
+      return;
     }
-  }
+    // Check if a tyre is already assigned to the selected wheel position
+    if (assignedTyres?.some((assignment) => assignment.wheelPosition === selectedWheelId)) {
+      alert('A tyre is already assigned to this position.');
+      return;
+    }
+
+    try {
+      // Prepare the payload to match the backend requirement
+      const payload = {
+        deviceId: id,                 // e.g., "679b2787ce1903ac227a453a"
+        tyreId: selectedTyreId,         // e.g., "67a746e2535607f7d7cba379"
+        wheelPosition: selectedWheelId, // e.g., "right-inner-2"
+      };
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/extendedVehicle/assign-tyre`, payload);
+      console.log("Tyre assigned successfully", response.data);
+
+      // Assume the backend returns the new assignment in response.data.data
+      // For example, { wheelPosition: "right-inner-2", tyre: { _id: "67a746e2535607f7d7cba379", serialNumber: "TYR12345", ... } }
+      const newAssignment = response.data.data;
+      
+      // Update your local state with the new assignment (using the same structure as returned by the API)
+      setAssignedTyres([...assignedTyres, newAssignment]);
+
+      // Optionally, remove the assigned tyre from your inventory so it can't be reassigned
+      // setTyreInventory(tyreInventory.filter((tyre) => tyre._id !== selectedTyreId));
+
+      // Reset selections and close the modal
+      setSelectedTyreId('');
+      setIsModalVisible(false);
+    } catch (error) {
+      console.error("Error:", error);
+      // Check if there's a response from the server with a custom error message.
+      if (error.response && error.response.data && error.response.data.error) {
+        alert(`Error: ${error.response.data.error}`);
+      } else {
+        alert(`Error: ${error.message}`);
+      }
+    }
+  };
+
+  // Function to detach a tyre using the backend API
+  const handleDetachTyre = async (wheelPosition) => {
+    // Find the assignment for the given wheel position
+    const assignment = assignedTyres.find((a) => a.wheelPosition === wheelPosition);
+    if (!assignment) {
+      alert("No tyre assigned at this position.");
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/extendedVehicle/detach-tyre`, {
+        // For axios.delete, include the request body inside the "data" key of the config object.
+        data: {
+          deviceId: id,
+          tyreId: assignment.tyre._id,
+        },
+      });
+      console.log("Tyre detached successfully", response.data);
+
+      // Remove the assignment from local state
+      setAssignedTyres(assignedTyres.filter((a) => a.wheelPosition !== wheelPosition));
+
+      // Optionally, you can add the detached tyre back to your tyreInventory if needed.
+       
+    } catch (error) {
+      console.error("Error detaching tyre:", error);
+      alert("Failed to detach tyre. Please try again.");
+    }
+  };
   const generateLabel = (id) => {
     // Split the id into parts using "-"
     const parts = id.split('-')
@@ -791,8 +772,8 @@ function DetailedPage({}) {
           <CFormSelect value={selectedTyreId} onChange={(e) => setSelectedTyreId(e.target.value)}>
             <option value="">Select Tyre</option>
             {tyreInventory.map((tyre) => (
-              <option key={tyre.id} value={tyre.id}>
-                {tyre.brand}-{tyre.SrNo}-{tyre.size}
+              <option key={tyre._id} value={tyre._id}>
+                {tyre.brand}-{tyre.SerialNumber}-{tyre.size}
               </option>
             ))}
           </CFormSelect>
@@ -814,7 +795,7 @@ function DetailedPage({}) {
               <strong>Assigned Tyres</strong>
             </CCardHeader>
             <CCardBody>
-              {assignedTyres.length === 0 ? (
+              {assignedTyres?.length === 0 ? (
                 <p className="text-center">No Tyres available.</p>
               ) : (
                 <CTable striped hover responsive bordered>
@@ -837,7 +818,7 @@ function DetailedPage({}) {
                       </CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
-                  <CTableBody>
+                  {/* <CTableBody>
                     {assignedTyres.map((assigned, index) => {
                       const tyreDetails = tyreInventory.find(
                         (tyre) => tyre.id == assigned.tyreId,
@@ -867,7 +848,42 @@ function DetailedPage({}) {
                         </CTableRow>
                       )
                     })}
+                  </CTableBody> */}
+                  <CTableBody>
+                    {assignedTyres?.map((assigned, index) => {
+                      // Use the tyre details from the API response directly.
+                      // If for some reason 'assigned.tyre' is missing, fall back to default values.
+                      const tyreDetails = assigned.tyre || {
+                        serialNumber: 'Unknown',
+                        brand: 'Unknown',
+                        pressure: '-',
+                        status: '-',
+                      };
+                      
+                      return (
+                        <CTableRow key={index} className="text-center">
+                          <CTableDataCell scope="row">{index + 1}</CTableDataCell>
+                          <CTableDataCell>{assigned.wheelPosition}</CTableDataCell>
+                          {columns.map((column, idx) => (
+                            <CTableDataCell key={idx}>
+                              {tyreDetails[column.key]}
+                            </CTableDataCell>
+                          ))}
+                          <CTableDataCell>
+                            <CButton
+                              color="danger"
+                              size="sm"
+                              className="custom-button"
+                              onClick={() => handleDetachTyre(assigned.wheelPosition)}
+                            >
+                              Detach
+                            </CButton>
+                          </CTableDataCell>
+                        </CTableRow>
+                      );
+                    })}
                   </CTableBody>
+
                 </CTable>
               )}
             </CCardBody>

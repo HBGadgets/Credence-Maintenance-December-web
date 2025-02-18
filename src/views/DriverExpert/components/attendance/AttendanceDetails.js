@@ -36,7 +36,7 @@ function AttendanceDetails() {
         const date = new Date(a.date)
         return date >= new Date(startDate) && date <= new Date(endDate)
       })
-    
+
   return (
     <>
 

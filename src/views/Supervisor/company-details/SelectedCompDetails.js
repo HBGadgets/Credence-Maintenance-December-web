@@ -96,7 +96,7 @@ function SelectedCompDetails() {
   })
 
   // Modal State
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(false)
 
   const handleInputChange = (e) => {
     setNewBranch({ ...newBranch, [e.target.name]: e.target.value })

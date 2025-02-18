@@ -1,7 +1,12 @@
 import React from 'react';
-import { CForm, CFormLabel, CFormInput } from '@coreui/react';
+import { CForm, CFormLabel, CFormInput, CButton } from '@coreui/react';
 
 const DateRangeFilter = ({ startDate, endDate, onStartDateChange, onEndDateChange }) => {
+
+    const clearDateFilter = () => {
+        onStartDateChange('');
+        onEndDateChange('');
+    };
     return (
         <CForm>
             <div className="d-flex gap-3">
@@ -23,6 +28,9 @@ const DateRangeFilter = ({ startDate, endDate, onStartDateChange, onEndDateChang
                         onChange={(e) => onEndDateChange(e.target.value)}
                     />
                 </div>
+                <CButton color="secondary" className="mt-auto mb-3" onClick={clearDateFilter}>
+                    Clear
+                </CButton>
             </div>
         </CForm>
     );
