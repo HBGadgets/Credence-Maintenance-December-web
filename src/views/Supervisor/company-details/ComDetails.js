@@ -366,6 +366,9 @@ const compainesExp = ({ setselectedCompanyId }) => {
               )}
             </CCardBody>
           </CCard>
+          <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+            <IconDropdown items={dropdownItems} />
+          </div>
         </CCol>
       </CRow>
 

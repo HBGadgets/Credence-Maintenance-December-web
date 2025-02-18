@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle } from 'react-icons/fa'
 import {
   CCard,
   CCardBody,
@@ -347,40 +347,150 @@ const DriversExp = () => {
 
   const exportToPDF = () => {
     try {
+      // Validate data before proceeding
       if (!Array.isArray(filteredDrivers) || filteredDrivers.length === 0) {
         throw new Error('No data available for PDF export')
       }
 
+      // Configuration for styling and layout
+      const CONFIG = {
+        colors: {
+          primary: [10, 45, 99],
+          secondary: [70, 70, 70],
+          border: [220, 220, 220],
+          background: [249, 250, 251],
+        },
+        company: {
+          name: 'Credence Tracker',
+          logo: { x: 15, y: 15, size: 8 },
+        },
+        layout: {
+          margin: 15,
+          lineHeight: 6,
+        },
+        fonts: {
+          primary: 'helvetica',
+        },
+      }
+
+      // Create a new jsPDF instance (landscape A4)
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
       })
 
-      // Add headers
-      const headers = ['SN', 'Name', 'Contact', 'Email', 'License Number', 'Aadhar Number']
+      // --- Header Section ---
+      // Draw company logo (represented as a filled rectangle)
+      doc.setFillColor(...CONFIG.colors.primary)
+      doc.rect(
+        CONFIG.company.logo.x,
+        CONFIG.company.logo.y,
+        CONFIG.company.logo.size,
+        CONFIG.company.logo.size,
+        'F',
+      )
 
-      // Add data rows
+      // Company name
+      doc.setFont(CONFIG.fonts.primary, 'bold')
+      doc.setFontSize(16)
+      doc.text(CONFIG.company.name, 28, 21)
+
+      // Draw header line
+      doc.setDrawColor(...CONFIG.colors.primary)
+      doc.setLineWidth(0.5)
+      doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
+
+      // --- Title & Generation Date ---
+      doc.setFontSize(24)
+      doc.text('Drivers Report', CONFIG.layout.margin, 35)
+
+      const currentDate = new Date().toLocaleDateString('en-GB')
+      const dateText = `Generated: ${currentDate}`
+      doc.setFontSize(10)
+      doc.text(
+        dateText,
+        doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText),
+        21,
+      )
+
+      // --- Table Data Preparation ---
+      const headers = ['SN', 'Name', 'Contact', 'Email', 'License Number', 'Aadhar Number']
       const data = filteredDrivers.map((driver, index) => [
         index + 1,
-        driver.name,
-        driver.contactNumber,
-        driver.email,
-        driver.licenseNumber,
-        driver.aadharNumber,
+        driver.name || '--',
+        driver.contactNumber || '--',
+        driver.email || '--',
+        driver.licenseNumber || '--',
+        driver.aadharNumber || '--',
       ])
 
-      // Generate table
+      // --- Generate Table using autoTable ---
       doc.autoTable({
+        startY: 45,
         head: [headers],
         body: data,
-        startY: 20,
         theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+        styles: {
+          fontSize: 10,
+          halign: 'center',
+          cellPadding: 2,
+          lineColor: CONFIG.colors.border,
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: CONFIG.colors.primary,
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: CONFIG.colors.background,
+        },
+        margin: { left: CONFIG.layout.margin, right: CONFIG.layout.margin },
+        didDrawPage: (dataArg) => {
+          // On subsequent pages, add a small header text
+          if (doc.getCurrentPageInfo().pageNumber > 1) {
+            doc.setFontSize(15)
+            doc.setFont(CONFIG.fonts.primary, 'bold')
+            doc.text('Drivers Report', CONFIG.layout.margin, 10)
+          }
+        },
       })
 
-      // Save PDF
+      // --- Footer Section ---
+      const pageCount = doc.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+
+        // Draw footer line
+        doc.setDrawColor(...CONFIG.colors.border)
+        doc.setLineWidth(0.5)
+        doc.line(
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+          doc.internal.pageSize.width - CONFIG.layout.margin,
+          doc.internal.pageSize.height - 15,
+        )
+
+        // Copyright text
+        doc.setFontSize(9)
+        doc.text(
+          `© ${CONFIG.company.name}`,
+          CONFIG.layout.margin,
+          doc.internal.pageSize.height - 10,
+        )
+
+        // Page number
+        const pageNumber = `Page ${i} of ${pageCount}`
+        const pageNumberWidth = doc.getTextWidth(pageNumber)
+        doc.text(
+          pageNumber,
+          doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
+          doc.internal.pageSize.height - 10,
+        )
+      }
+
+      // --- Save the PDF ---
       const filename = `Drivers_List_${new Date().toISOString().split('T')[0]}.pdf`
       doc.save(filename)
       toast.success('PDF downloaded successfully')
@@ -389,6 +499,7 @@ const DriversExp = () => {
       toast.error(error.message || 'Failed to export PDF')
     }
   }
+
   const dropdownItems = [
     {
       icon: FaRegFilePdf,
@@ -590,9 +701,9 @@ const DriversExp = () => {
                   height="170"
                 />
               ) : (
-                <FaUserCircle 
-                  className="me-3 text-secondary" 
-                  size={170}  // Controls the icon size
+                <FaUserCircle
+                  className="me-3 text-secondary"
+                  size={170} // Controls the icon size
                 />
               )}
               <div>
