@@ -7,11 +7,13 @@ body {
   background-color: rgb(10, 45, 99);
   color: white;
 }
-.header{
+
+.header {
   background-color: rgb(10, 45, 99);
   color: white;
 
 }
+
 .wrapper {
   width: 100%;
   @include ltr-rtl("padding-left", var(--cui-sidebar-occupy-start, 0));
@@ -20,7 +22,7 @@ body {
   @include transition(padding .15s);
 }
 
-.header > .container-fluid,
+.header>.container-fluid,
 .sidebar-header {
   min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
 }
@@ -41,10 +43,13 @@ body {
     min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
   }
 }
+
 .sidebar .nav-link {
-  color: white !important; /* This applies to all currentColor references in child SVGs */
+  color: white !important;
+  /* This applies to all currentColor references in child SVGs */
 }
-.nav-title{
+
+.nav-title {
   color: white !important;
 }
 
@@ -66,7 +71,7 @@ body {
   }
 }
 
-.header > .container-fluid + .container-fluid {
+.header>.container-fluid+.container-fluid {
   min-height: 3rem;
 }
 

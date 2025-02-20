@@ -28,6 +28,7 @@ import {
 import { AppBreadcrumb } from './index'
 import { User, Headset, LogOut } from 'lucide-react'
 import '../index.css'
+import './header.css'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -50,13 +51,13 @@ const AppHeader = () => {
   }
 
   return (
-    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
+    <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
         <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
           style={{ marginInlineStart: '-14px' }}
         >
-          <CIcon icon={cilMenu} size="lg" style={{color:'white'}}/>
+          <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
         </CHeaderToggler>
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
@@ -70,25 +71,23 @@ const AppHeader = () => {
         <CHeaderNav>
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
-              <CIcon icon={cilBell} size="lg" style={{color:'white'}}/>
+              <CIcon icon={cilBell} size="lg" style={{ color: 'white' }} />
             </CDropdownToggle>
             <CDropdownMenu>
               <CDropdownItem>Notification 1</CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
-          <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          <div className="vr mx-3 bg-white"></div>
 
           {/* THEME */}
-          <CDropdown variant="nav-item" placement="bottom-end">
+          {/* <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="lg" style={{color:'white'}} />
+                <CIcon icon={cilMoon} size="lg" style={{ color: 'white' }} />
               ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="lg" style={{color:'white'}} />
+                <CIcon icon={cilContrast} size="lg" style={{ color: 'white' }} />
               ) : (
-                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" style={{color:'white'}} />
+                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" style={{ color: 'white' }} />
               )}
             </CDropdownToggle>
             <CDropdownMenu>
@@ -120,11 +119,11 @@ const AppHeader = () => {
                 <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
               </CDropdownItem>
             </CDropdownMenu>
-          </CDropdown>
+          </CDropdown> */}
 
-          <li className="nav-item py-1">
+          {/* <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          </li> */}
           {/* USER PROFILE */}
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>

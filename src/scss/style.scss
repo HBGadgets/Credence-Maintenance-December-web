@@ -13,3 +13,23 @@
 
 // If you want to add custom CSS you can put it here
 @import "custom";
+
+
+/* Custom scrollbar for all scrollbars in the project */
+::-webkit-scrollbar {
+    width: 2px;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: white;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #232728;
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #232728;
+}
