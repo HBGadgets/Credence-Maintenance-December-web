@@ -54,10 +54,10 @@ const AppHeader = () => {
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
         <CHeaderToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-          style={{ marginInlineStart: '-14px' }}
+        // onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
+        // style={{ marginInlineStart: '-14px' }}
         >
-          <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
+          {/* <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} /> */}
         </CHeaderToggler>
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
