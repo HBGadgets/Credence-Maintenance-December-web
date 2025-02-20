@@ -1,0 +1,46 @@
+/* Custom styles */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.date-button {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  transition: all 0.2s;
+}
+
+.date-button:hover:not(.selected):not(.in-range) {
+  background-color: #f8f9fa;
+}
+
+.date-button.selected {
+  background-color: #6f42c1 !important;
+  color: white !important;
+}
+
+.date-button.in-range {
+  background-color: #e9ecef;
+}
+
+.date-button.other-month {
+  color: #adb5bd;
+}
+
+.preset-button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+.preset-button:hover {
+  background-color: #f8f9fa;
+  color: #6f42c1;
+}

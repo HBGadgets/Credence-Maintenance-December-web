@@ -62,6 +62,60 @@ function VehicleMaintenanceLogModal({ }) {
       setCurrentPage(1);  // Reset to first page when changing items per page
     };
 
+  // Sorting function
+  const handleSort = (key) => {
+    if (key === 'Invoice/Receipt') return // Skip sorting for non-sortable column
+
+    const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ key, direction })
+
+    const sorted = [...filteredLogs].sort((a, b) => {
+      let valueA = a[key]
+      let valueB = b[key]
+
+      // Parse dates for comparison
+      if (key === 'serviceDate') {
+        valueA = new Date(valueA)
+        valueB = new Date(valueB)
+      }
+
+      // Ensure numbers are compared correctly
+      if (key === 'mileage' || key === 'cost') {
+        valueA = parseFloat(valueA)
+        valueB = parseFloat(valueB)
+      }
+
+      // Handle sorting logic
+      if (valueA < valueB) return direction === 'asc' ? -1 : 1
+      if (valueA > valueB) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    setFilteredLogs(sorted)
+  }
+
+  // Get the sort icon
+  const getSortIcon = (key) => {
+    if (key === 'Invoice/Receipt') return null // No sort icon for Invoice/Receipt column
+
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '▲' : '▼'
+    }
+    return '↕' // Default sort icon when no sorting is applied
+  }
+
+  const handleDateFilter = (startDate, endDate) => {
+    if (!logs) return
+    const filtered = logs.filter((log) => {
+      const serviceDate = new Date(log.serviceDate)
+      return serviceDate >= new Date(startDate) && serviceDate <= new Date(endDate)
+    })
+    setFilteredLogs(filtered)
+  }
+
+  const handleClearFilter = () => {
+    setFilteredLogs(vehicle.maintenanceLogs)
+  }
   const handleDateRangeChange = (startDate, endDate) => {
     console.log('Date range changed:', { startDate, endDate })
     setStartDate(startDate)
@@ -70,9 +124,21 @@ function VehicleMaintenanceLogModal({ }) {
 
   return (
     <>
-     
+      {/* <CModal
+        alignment="center"
+        scrollable
+        visible={show}
+        onClose={() => setShow(false)}
+        fullscreen
+        className="bg-light"
+      >
+        <CModalHeader closeButton />
+        <CModalBody className="d-flex flex-column gap-3"> */}
           <div className="d-flex gap-3 align-items-end">
-            
+            <DateRangeFilter onFilter={handleDateFilter} />
+            <button onClick={handleClearFilter} className="btn btn-secondary btn-sm">
+              Clear Filter
+            </button>
           </div>
           <DateRangeFilterCredence 
             onDateRangeChange={handleDateRangeChange}
@@ -95,11 +161,12 @@ function VehicleMaintenanceLogModal({ }) {
                             <CTableHeaderCell
                               key={index}
                               className="text-center"
+                              onClick={() => handleSort(column)}
                               style={{
                                 cursor: column === 'Invoice/Receipt' ? 'default' : 'pointer',
                               }}
                             >
-                              {column} 
+                              {column} {getSortIcon(column)}
                             </CTableHeaderCell>
                           ))}
                         </CTableRow>
