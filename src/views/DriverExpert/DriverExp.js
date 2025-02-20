@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { FaUserCircle } from 'react-icons/fa'
+const Pagination = React.lazy(() => import('../../views/base/paginations/Pagination'))
+
 import {
   CCard,
   CCardBody,
@@ -90,8 +92,6 @@ const DriversExp = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [driverToDelete, setDriverToDelete] = useState(null)
   const [loading, setLoading] = useState(false)
-
-  const itemsPerPage = 10
 
   // Fetch drivers from the API
   const refreshDrivers = () => {
@@ -302,10 +302,18 @@ const DriversExp = () => {
     : []
 
   // Pagination logic
+  const [itemsPerPage, setItemsPerPage] = useState(10); 
   const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = filteredDrivers.slice(indexOfFirstItem, indexOfLastItem)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const currentItems  = filteredDrivers.slice(startIndex, startIndex + itemsPerPage)
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+  }
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);  // Reset to first page when changing items per page
+  };
+
 
   const exportToExcel = async () => {
     try {
@@ -638,7 +646,7 @@ const DriversExp = () => {
                 </CTable>
               )}
 
-              <div className="d-flex justify-content-center align-items-center mt-3">
+              {/* <div className="d-flex justify-content-center align-items-center mt-3">
                 <CButton
                   color="primary"
                   disabled={currentPage === 1}
@@ -663,7 +671,15 @@ const DriversExp = () => {
                 >
                   Next
                 </CButton>
-              </div>
+              </div> */}
+              <div className="d-flex justify-content-center">
+                <Pagination
+                  totalPages={totalPages}
+                  currentPage={currentPage}
+                  handlePageChange={handlePageChange}
+                  handleItemsPerPageChange={handleItemsPerPageChange}
+                />
+              </div>      
             </CCardBody>
           </CCard>
         </CCol>

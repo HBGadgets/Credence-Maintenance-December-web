@@ -56,7 +56,7 @@ const AppHeader = () => {
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
           style={{ marginInlineStart: '-14px' }}
         >
-          <CIcon icon={cilMenu} size="lg" />
+          <CIcon icon={cilMenu} size="lg" style={{color:'white'}}/>
         </CHeaderToggler>
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
@@ -70,7 +70,7 @@ const AppHeader = () => {
         <CHeaderNav>
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
-              <CIcon icon={cilBell} size="lg" />
+              <CIcon icon={cilBell} size="lg" style={{color:'white'}}/>
             </CDropdownToggle>
             <CDropdownMenu>
               <CDropdownItem>Notification 1</CDropdownItem>
@@ -84,11 +84,11 @@ const AppHeader = () => {
           <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="lg" />
+                <CIcon icon={cilMoon} size="lg" style={{color:'white'}} />
               ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="lg" />
+                <CIcon icon={cilContrast} size="lg" style={{color:'white'}} />
               ) : (
-                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" />
+                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" style={{color:'white'}} />
               )}
             </CDropdownToggle>
             <CDropdownMenu>

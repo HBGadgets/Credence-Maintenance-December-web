@@ -11,6 +11,7 @@ import { vehicles } from '../views/vehicle/data/data'
 import DetailedPage from '../views/Tyre-Management/DetailedPage'
 import { useNavigate } from 'react-router-dom'
 import "./VehicleProfile.css"
+import VehicleDoc from '../views/vehicle/VehicleDocuments'
 
 function VehicleProfile({  }) {
   const navigate = useNavigate()
@@ -47,6 +48,7 @@ function VehicleProfile({  }) {
             <hr />
             {/**Documents */}
             <VehicleDocuments document={vehicle.documents} />
+            <VehicleDoc />
             <hr />
             {/**Maintenance Schedule Remainder */}
             <div className="d-flex flex-column gap-3">
@@ -75,60 +77,80 @@ function VehicleProfile({  }) {
               </div>
             </div>
             <hr />
+            {/* <CRow className="text-center">
+  <CCol xs={12} className="mb-3">
+    <CButton 
+      onClick={openMaintainancePage} 
+      className=""
+    >
+      Maintenance Log
+    </CButton>
+  </CCol>
+  <CCol xs={12} className="mb-3">
+    <CButton 
+      onClick={openTripInfoPage} 
+      className=""
+    >
+       Trip
+    </CButton>
+  </CCol>
+  <CCol xs={12} className="mb-3">
+    <CButton 
+      onClick={openTyrePage} 
+      className=""
+    >
+       Tyre Management
+    </CButton>
+  </CCol>
+</CRow> */}
 
-
-
-            <CRow>
-      <CCol xs={12} className="mb-2">
+<CRow className="justify-content-between">
+  <CCol >
+    <CCard className="custom-card">
+      <CCardBody className="text-center">
+        <h5 className="fw-bold mb-3">Maintenance Log</h5>
         <CButton 
           onClick={openMaintainancePage} 
-          className="w-100 custom-btn maintenance-btn"
+          className="custom-btn"
         >
-          Maintenance Log
+          View Details
         </CButton>
-      </CCol>
-      <CCol xs={12} className="mb-2">
+      </CCardBody>
+    </CCard>
+  </CCol>
+
+  <CCol >
+    <CCard className="custom-card">
+      <CCardBody className="text-center">
+        <h5 className="fw-bold mb-3">Trip</h5>
         <CButton 
           onClick={openTripInfoPage} 
-          className="w-100 custom-btn trip-btn"
+          className="custom-btn"
         >
-          Trip
+          View Details
         </CButton>
-      </CCol>
-      <CCol xs={12} className="mb-4">
+      </CCardBody>
+    </CCard>
+  </CCol>
+
+  <CCol >
+    <CCard className="custom-card">
+      <CCardBody className="text-center">
+        <h5 className="fw-bold mb-3">Tyre Management</h5>
         <CButton 
           onClick={openTyrePage} 
-          className="w-100 custom-btn tyre-btn"
+          className="custom-btn"
         >
-          Tyre Management
+          View Details
         </CButton>
-      </CCol>
-    </CRow>
+      </CCardBody>
+    </CCard>
+  </CCol>
+</CRow>
 
-            {/* <CTabs activeItemKey={2}>
-              <CTabList variant="underline">
-                <CTab aria-controls="maintenance-log" itemKey={1}  >
-                  Maintenance Log
-                </CTab>
-                <CTab aria-controls="vehicle-trip" itemKey={2}  >
-                  Trip
-                </CTab>
-                <CTab aria-controls="vehicle-tyre" itemKey={3} >
-                  Tyre Management
-                </CTab>
-              </CTabList>
-              <CTabContent>
-                <CTabPanel className="p-3" aria-labelledby="maintenance-log" itemKey={1}>
-                  <VehicleMaintenanceLog logs={vehicle.maintenanceLogs} />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="vehicle-trip" itemKey={2}>
-                  <VehicleTripInfo trips={vehicle.trips} />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="vehicle-tyre" itemKey={3}>
-                  <DetailedPage  vehicle={vehicle}/>
-                </CTabPanel>
-              </CTabContent>
-            </CTabs> */}
+
+
+
           </div>
           
     </>

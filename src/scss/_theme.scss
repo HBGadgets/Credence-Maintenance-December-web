@@ -1,7 +1,17 @@
 body {
-  background-color: var(--cui-tertiary-bg);
+  // background-color: var(--cui-tertiary-bg);
+  background-color: white;
 }
 
+.sidebar {
+  background-color: rgb(10, 45, 99);
+  color: white;
+}
+.header{
+  background-color: rgb(10, 45, 99);
+  color: white;
+
+}
 .wrapper {
   width: 100%;
   @include ltr-rtl("padding-left", var(--cui-sidebar-occupy-start, 0));
@@ -31,6 +41,19 @@ body {
     min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
   }
 }
+.sidebar .nav-link {
+  color: white !important; /* This applies to all currentColor references in child SVGs */
+}
+.nav-title{
+  color: white !important;
+}
+
+.sidebar .nav-link svg {
+  // width: 4rem !important;
+  // height: 4rem !important;
+  color: white !important;
+}
+
 
 .sidebar-toggler {
   @include ltr-rtl("margin-left", auto);

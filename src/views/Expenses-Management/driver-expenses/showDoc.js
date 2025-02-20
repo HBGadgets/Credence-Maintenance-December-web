@@ -40,7 +40,6 @@ useEffect(() => {
     });
 }, [id]);
 
-
   const openModal = (doc) => {
     setSelectedDocument(doc);
     setModalVisible(true);

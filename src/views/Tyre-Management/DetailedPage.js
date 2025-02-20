@@ -100,7 +100,7 @@ function DetailedPage({}) {
   }, []); 
 
   const columns = [
-    { label: 'Tyre ID', key: '_id' },
+    // { label: 'Tyre ID', key: '_id' },
     { label: 'Serial No.', key: 'SrNo' },
     { label: 'Brand', key: 'brand' },
     { label: 'Status', key: 'status' },
@@ -250,7 +250,7 @@ function DetailedPage({}) {
           }}
         >
           <div className="vertical-text"> FRONT </div>
-          {category === ('truck' || 'bus') ? (
+          {['truck', 'bus'].includes(category) ? (
             <div style={{ margin: '20px' }}>
               {/* Right Wheels Section */}
               <div
@@ -723,7 +723,7 @@ function DetailedPage({}) {
           <div className="vertical-text"> REAR </div>
         </div>
 
-        {category === ('truck' || 'bus') ? (
+        {['truck', 'bus'].includes(category) ?(
           <div
             className='button-container'
           >
@@ -866,6 +866,7 @@ function DetailedPage({}) {
                           <CTableDataCell>{assigned.wheelPosition}</CTableDataCell>
                           {columns.map((column, idx) => (
                             <CTableDataCell key={idx}>
+                              
                               {tyreDetails[column.key]}
                             </CTableDataCell>
                           ))}
