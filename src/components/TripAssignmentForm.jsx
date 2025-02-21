@@ -269,9 +269,7 @@ function TripAssignmentForm() {
               addModalOpen="true"
               setAddModalOpen={setAddModalOpen}
             />
-          ) : (
-            'false'
-          )}
+          ) : (<></>)}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setOpen(false)}>
