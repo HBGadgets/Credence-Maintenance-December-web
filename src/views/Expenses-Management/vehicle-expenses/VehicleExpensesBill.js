@@ -10,6 +10,7 @@ import { CIcon } from '@coreui/icons-react'
 import { FaSearch } from 'react-icons/fa'
 import { Search } from '@mui/icons-material'
 import fileData from './data'
+import axios from 'axios'
 
 const VehicleExpenses = () => {
   const [expenses, setExpenses] = useState([])
@@ -32,44 +33,41 @@ const VehicleExpenses = () => {
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        // const response = await axios.get('http://localhost:5000/expenses');
-        // console.log("fetch data to show in vehicle expenses table",response.data);
-        // //   // Fetch all expenses (no vehicleId needed)
-        // //onExpensesUpdate(response.data);
-        // setExpenses(response.data)
-        // setFilteredExpenses(response.data)
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/expenses`);
+        console.log("fetch data to show in vehicle expenses table", response.data);
+        setExpenses(response.data.expenses)
+        setFilteredExpenses(response.data.expenses)
 
         // here we will use dummy data
-        setExpenses(fileData)
-        setFilteredExpenses(fileData)
+        // setExpenses(fileData)
+        // setFilteredExpenses(fileData)
       } catch (error) {
         alert('Error fetching expenses: ' + error.message)
       }
     }
 
-    fetchExpenses() // Call fetch function to get all expenses
+    fetchExpenses()
+    console.log("fetched expense", expenses);
+    // Call fetch function to get all expenses
   }, [])
+
+
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase()
     setSearchTerm(term)
-    //   const filteredLrs = allLrs.filter((lr) => lr.name.toLowerCase().includes(term
-    //     ));
     if (!term) {
       setFilteredExpenses(expenses)
     } else {
-      const filtered = expenses.filter((vehicle) => {
-        return (
-          (vehicle.vehicleName && vehicle.vehicleName.toLowerCase().includes(term)) ||
-          (vehicle.category && vehicle.category.toLowerCase().includes(term)) ||
-          (vehicle.amount && vehicle.amount.toString().includes(term)) ||
-          (vehicle.vendor && vehicle.vendor.toString().includes(term))
-        )
+      const filtered = (expenses || []).filter((vehicle) => {
+        return (vehicle?.vendor?.toString()?.toLowerCase()?.includes(term));
       })
       console.log('this are filtered records', filtered)
 
       setFilteredExpenses(filtered)
     }
   }
+
+
 
   return (
     <div>
@@ -97,8 +95,8 @@ const VehicleExpenses = () => {
           }}
         /> */}
         </div>
-        
-       
+
+
         <div>
           <header style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="h4" component="h1" gutterBottom style={{ fontFamily: 'cursive' }}>
@@ -118,15 +116,15 @@ const VehicleExpenses = () => {
               </CInputGroup>
 
               <Button
-            variant="contained"
-            onClick={handleOpenModal}
-            style={{ color: 'white', background: 'orange', width: '12rem' }}
-          >
-            Add Expense
-          </Button>
+                variant="contained"
+                onClick={handleOpenModal}
+                style={{ color: 'white', background: 'orange', width: '12rem' }}
+              >
+                Add Expense
+              </Button>
             </div>
           </header>
-          
+
         </div>
       </header>
 
