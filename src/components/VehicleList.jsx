@@ -47,10 +47,12 @@ const VehicleList = () => {
     { label: 'Model', key: 'model', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
     { label: 'Action', key: 'action', sortable: true },
+    { label: 'View', key: 'view', sortable: true },
+
   ]
 
 
-  
+
   const [vehicles, setVehicles] = useState([])
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [open, setOpen] = useState(false)
@@ -60,7 +62,7 @@ const VehicleList = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([])
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   // const itemsPerPage = 10
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchVehicles = async () => {
     try {
@@ -463,84 +465,84 @@ const VehicleList = () => {
   ]
 
   const [nameFilter, setNameFilter] = useState(null);
-const [modelFilter, setModelFilter] = useState(null);
-const [categoryFilter, setCategoryFilter] = useState(null);
-const [filteredOptions, setFilteredOptions] = useState({ names: [], models: [], categories: [] });
+  const [modelFilter, setModelFilter] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [filteredOptions, setFilteredOptions] = useState({ names: [], models: [], categories: [] });
 
-useEffect(() => {
-  if (!Array.isArray(vehicles)) return;
+  useEffect(() => {
+    if (!Array.isArray(vehicles)) return;
 
-  const uniqueNames = [...new Set(vehicles.map((v) => v.name))].map((name) => ({ label: name, value: name }));
-  const uniqueModels = [...new Set(vehicles.map((v) => v.model))].map((model) => ({ label: model, value: model }));
-  const uniqueCategories = [...new Set(vehicles.map((v) => v.category))].map((category) => ({ label: category, value: category }));
+    const uniqueNames = [...new Set(vehicles.map((v) => v.name))].map((name) => ({ label: name, value: name }));
+    const uniqueModels = [...new Set(vehicles.map((v) => v.model))].map((model) => ({ label: model, value: model }));
+    const uniqueCategories = [...new Set(vehicles.map((v) => v.category))].map((category) => ({ label: category, value: category }));
 
-  setFilteredOptions({
-    names: uniqueNames,
-    models: uniqueModels,
-    categories: uniqueCategories,
-  });
-}, [vehicles]);
-useEffect(() => {
-  let filtered = vehicles;
+    setFilteredOptions({
+      names: uniqueNames,
+      models: uniqueModels,
+      categories: uniqueCategories,
+    });
+  }, [vehicles]);
+  useEffect(() => {
+    let filtered = vehicles;
 
-  if (nameFilter) {
-    filtered = filtered.filter((v) => v.name === nameFilter.value);
-  }
-  if (modelFilter) {
-    filtered = filtered.filter((v) => v.model === modelFilter.value);
-  }
-  if (categoryFilter) {
-    filtered = filtered.filter((v) => v.category === categoryFilter.value);
-  }
+    if (nameFilter) {
+      filtered = filtered.filter((v) => v.name === nameFilter.value);
+    }
+    if (modelFilter) {
+      filtered = filtered.filter((v) => v.model === modelFilter.value);
+    }
+    if (categoryFilter) {
+      filtered = filtered.filter((v) => v.category === categoryFilter.value);
+    }
 
-  setFilteredVehicles(filtered);
-}, [nameFilter, modelFilter, categoryFilter, vehicles]);
+    setFilteredVehicles(filtered);
+  }, [nameFilter, modelFilter, categoryFilter, vehicles]);
 
-const handleItemsPerPageChange = (newItemsPerPage) => {
-  setItemsPerPage(newItemsPerPage);
-  setCurrentPage(1);  // Reset to first page when changing items per page
-};
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);  // Reset to first page when changing items per page
+  };
 
   return (
     <>
-    <div className='d-flex justify-content-between mb-3'>
+      <div className='d-flex justify-content-between mb-3'>
 
-      <CRow className="">
-        {/* Name Filter */}
-        <CCol style={{width: '15rem', paddingRight:'0rem'}}>
-          <Select
-            options={filteredOptions.names}
-            value={nameFilter}
-            onChange={setNameFilter}
-            isClearable
-            placeholder="Filter by Name..."
-          />
-        </CCol>
+        <CRow className="">
+          {/* Name Filter */}
+          <CCol style={{ width: '15rem', paddingRight: '0rem' }}>
+            <Select
+              options={filteredOptions.names}
+              value={nameFilter}
+              onChange={setNameFilter}
+              isClearable
+              placeholder="Filter by Name..."
+            />
+          </CCol>
 
-        {/* Model Filter */}
-        <CCol style={{width: '15rem', paddingRight:'0rem'}}>
-          <Select
-            options={filteredOptions.models}
-            value={modelFilter}
-            onChange={setModelFilter}
-            isClearable
-            placeholder="Filter by Model..."
-          />
-        </CCol>
+          {/* Model Filter */}
+          <CCol style={{ width: '15rem', paddingRight: '0rem' }}>
+            <Select
+              options={filteredOptions.models}
+              value={modelFilter}
+              onChange={setModelFilter}
+              isClearable
+              placeholder="Filter by Model..."
+            />
+          </CCol>
 
-        {/* Category Filter */}
-        <CCol style={{width: '15rem'}}>
-          <Select
-            options={filteredOptions.categories}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-            isClearable
-            placeholder="Filter by Category..."
-          />
-        </CCol>
-      </CRow>
+          {/* Category Filter */}
+          <CCol style={{ width: '15rem' }}>
+            <Select
+              options={filteredOptions.categories}
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              isClearable
+              placeholder="Filter by Category..."
+            />
+          </CCol>
+        </CRow>
 
-      <CInputGroup className="w-25 ">
+        <CInputGroup className="w-25 ">
           <CInputGroupText>
             <CIcon icon={cilSearch} />
           </CInputGroupText>
@@ -550,72 +552,72 @@ const handleItemsPerPageChange = (newItemsPerPage) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-      </CInputGroup>
-    </div>
-    
-    <CRow>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader className="d-flex justify-content-between align-items-center">
-            <strong>Vehicles</strong>
-            
-          </CCardHeader>
-          <CCardBody>
-            {filteredVehicles.length === 0 ? (
-              <p className="text-center">No vehicles found.</p>
-            ) : (
-              <CTable striped hover responsive bordered>
-                <CTableHead>
-                  <CTableRow>
-                    {columns.map((column, index) => (
-                      <CTableHeaderCell
-                        key={index}
-                        className="text-center"
-                        onClick={() => column.sortable && handleSort(column.key)}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
-                      >
-                        {column.label} {column.sortable && getSortIcon(column.key)}
-                      </CTableHeaderCell>
-                    ))}
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {currentData.map((row, rowIndex) => (
-                    <CTableRow key={rowIndex}>
-                      <CTableDataCell className="text-center">
-                        {(currentPage - 1) * itemsPerPage + rowIndex + 1}
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">{row.name}</CTableDataCell>
-                      <CTableDataCell className="text-center">{row.model}</CTableDataCell>
-                      <CTableDataCell className="text-center">{row.category}</CTableDataCell>
-                      <CTableDataCell className="text-center">{row.deviceId}</CTableDataCell>
-                      {/* <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell> */}
-                      <CTableDataCell className="text-center">
-                        <CButton onClick={() => handleViewClick(row)} style={{backgroundColor: `rgb(10, 45, 99)`,color: "white"}}>
-                          View
-                        </CButton>
-                      </CTableDataCell>
+        </CInputGroup>
+      </div>
+
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="mb-4">
+            <CCardHeader className="d-flex justify-content-between align-items-center">
+              <strong>Vehicles</strong>
+
+            </CCardHeader>
+            <CCardBody>
+              {filteredVehicles.length === 0 ? (
+                <p className="text-center">No vehicles found.</p>
+              ) : (
+                <CTable striped hover responsive bordered>
+                  <CTableHead>
+                    <CTableRow>
+                      {columns.map((column, index) => (
+                        <CTableHeaderCell
+                          key={index}
+                          className="text-center"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                          style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        >
+                          {column.label} {column.sortable && getSortIcon(column.key)}
+                        </CTableHeaderCell>
+                      ))}
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            )}
-          </CCardBody>
-        </CCard>
-      </CCol>
-    </CRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {currentData.map((row, rowIndex) => (
+                      <CTableRow key={rowIndex}>
+                        <CTableDataCell className="text-center">
+                          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">{row.name}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.model}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.category}</CTableDataCell>
+                        <CTableDataCell className="text-center">{row.deviceId}</CTableDataCell>
+                        {/* <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell> */}
+                        <CTableDataCell className="text-center">
+                          <CButton onClick={() => handleViewClick(row)} style={{ backgroundColor: `rgb(10, 45, 99)`, color: "white" }}>
+                            View
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
 
       {/* Pagination */}
       {/* {totalPages > 1 && ( */}
-        <div className="d-flex justify-content-center">
-          <Pagination
-            totalPages={totalPages}
-            currentPage={currentPage}
-            handlePageChange={handlePageChange}
-            handleItemsPerPageChange={handleItemsPerPageChange}
-          />
-        </div>
-       {/* )} */}
+      <div className="d-flex justify-content-center">
+        <Pagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          handlePageChange={handlePageChange}
+          handleItemsPerPageChange={handleItemsPerPageChange}
+        />
+      </div>
+      {/* )} */}
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
