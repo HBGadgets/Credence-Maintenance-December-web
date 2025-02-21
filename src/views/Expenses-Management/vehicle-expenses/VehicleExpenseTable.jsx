@@ -29,9 +29,20 @@ import 'jspdf-autotable'
 const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFilteredExpenses }) => {
   const columns = [
     { label: 'Vehicle', key: 'vehicleName', sortable: true },
-    { label: 'Category', key: 'category', sortable: true },
+    { label: 'Expense', key: 'expenseType', sortable: true },
+    { label: 'Pay Type', key: 'payType', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Vendor', key: 'vendor', sortable: true },
+    { label: 'Description', key: 'description', sortable: true },
+    {
+      label: 'Documents',
+      key: 'document',
+      sortable: true,
+      _cellProps: { scope: 'row' },
+      _style: { width: '200px' },
+      _render: (item) => (item.document?.filename ? item.document.filename : 'No Document')
+    },
+
     { label: 'Date', key: 'date', sortable: true },
   ]
 
@@ -41,20 +52,20 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
   const itemsPerPage = 10
 
   // Filter expenses based on search query
-  useEffect(() => {
-    const filtered = expenses.filter((expense) => {
-      const search = searchQuery.toLowerCase().trim()
-      return (
-        expense.vehicleName.toLowerCase().includes(search) ||
-        expense.category.toLowerCase().includes(search) ||
-        expense.amount.toString().includes(search) ||
-        expense.vendor.toLowerCase().includes(search) ||
-        new Date(expense.date).toLocaleDateString().includes(search)
-      )
-    })
-    setFilteredExpenses(filtered)
-    setCurrentPage(1)
-  }, [searchQuery, expenses, setFilteredExpenses])
+  // useEffect(() => {
+  //   const filtered = expenses.filter((expense) => {
+  //     const search = searchQuery.toLowerCase().trim()
+  //     return (
+  //       expense.vehicleName.toLowerCase().includes(search) ||
+  //       expense.category.toLowerCase().includes(search) ||
+  //       expense.amount.toString().includes(search) ||
+  //       expense.vendor.toLowerCase().includes(search) ||
+  //       new Date(expense.date).toLocaleDateString().includes(search)
+  //     )
+  //   })
+  //   setFilteredExpenses(filtered)
+  //   setCurrentPage(1)
+  // }, [searchQuery, expenses, setFilteredExpenses])
 
   // Sorting logic
   const handleSort = (key) => {
@@ -81,7 +92,7 @@ const ExpenseList = ({ expenses, onExpensesUpdate, filteredExpenses, setFiltered
   // Pagination logic
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentData = filteredExpenses.slice(startIndex, startIndex + itemsPerPage)
+  const currentData = filteredExpenses?.slice(startIndex, startIndex + itemsPerPage)
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
