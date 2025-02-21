@@ -168,64 +168,125 @@ const VehicleDocuments = () => {
       </CButton>
 
         </CCardHeader>
-        <CCardBody>
+        <CCardBody style={{marginTop:'-0.5rem'}}>
                 {/* Display Uploaded Documents */}
-      <CRow className="justify-content-center mt-4">
-        {loading ? (
-          <CCol md={6} className="text-center">
-            <p className="fw-bold text-primary">Loading documents...</p>
-          </CCol>
-        ) : documents.length > 0 ? (
-          documents.map((doc, index) => (
-            <CCol md={4} key={index} className="mb-3">
-              <CCard className="shadow-sm h-100">
-                <CCardHeader>{doc.category}</CCardHeader>
-                <CCardBody className="text-center">
-                  {doc.file.contentType.startsWith("image/") ? (
-                    <img
-                      src={`data:${doc.file.contentType};base64,${doc.file.data}`}
-                      alt={doc.file.filename}
-                      width="100%"
-                      height="200"
-                      style={{ objectFit: "cover", borderRadius: "8px" }}
-                    />
-                  ) : doc.file.contentType === "application/pdf" ? (
-                    <object
-                      data={`data:${doc.file.contentType};base64,${doc.file.data}`}
-                      type="application/pdf"
-                      width="100%"
-                      height="200"
-                    >
-                      <p className="text-danger">PDF Preview not available.</p>
-                    </object>
-                  ) : (
-                    <p className="text-muted">Unsupported file type</p>
-                  )}
-                   {/* Action Buttons */}
-                   <div className="d-flex justify-content-center gap-1 mt-3">
-                        <CButton color="info" size="sm" onClick={()=>handleViewClick(doc)} >
-                          <CIcon icon={cilZoom} />
-                        </CButton>
-                        <CButton color="success" size="sm" onClick={() => handleDownload(doc)}>
-                          <CIcon icon={cilCloudDownload} />
-                        </CButton>
-                        <CButton color="warning" size="sm" onClick={() => handleEditClick(doc)}>
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton color="danger" size="sm" onClick={() => deleteDocument(doc._id)}>
-                          <CIcon icon={cilTrash} />
-                        </CButton>
-                    </div>
-                </CCardBody>
-              </CCard>
-            </CCol>
-          ))
-        ) : (
-          <CCol md={6} className="text-center">
-            <p className="fw-bold text-danger">No documents uploaded.</p>
-          </CCol>
-        )}
-      </CRow>
+                <CRow className="justify-content-center">
+  {loading ? (
+    <CCol md={6} className="text-center">
+      <p className="fw-bold text-primary">Loading documents...</p>
+    </CCol>
+  ) : documents.length > 0 ? (
+    <div className="row g-3 gap-3 mt-0">
+      {documents.map((doc, index) => (
+        <div
+          key={index}
+          className="col-auto text-center"
+          style={{ width: "7rem", marginTop:'0rem' }}
+        >
+          {/* Document category with truncation */}
+          <h6
+            className="text-truncate"
+            title={doc.category}
+            style={{ marginBottom: "0.5rem", }}
+          >
+            {doc.category}
+          </h6>
+
+          {/* Preview Container with Shadow */}
+          <div
+            style={{
+              width: "7rem",
+              height: "7rem",
+              borderRadius: "1rem",
+              // boxShadow: "2px 4px 6px rgba(0, 0, 0, 0.3)",
+              border: "1px solid grey",
+              overflow: "hidden",
+              margin: "0 auto",
+              marginBottom: "0.5rem",
+              padding:'0.5rem'
+            }}
+          >
+            {doc.file.contentType.startsWith("image/") ? (
+              <img
+                src={`data:${doc.file.contentType};base64,${doc.file.data}`}
+                alt={doc.file.filename}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            ) : doc.file.contentType === "application/pdf" ? (
+              <object
+                data={`data:${doc.file.contentType};base64,${doc.file.data}`}
+                type="application/pdf"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <p className="text-danger">PDF preview not available.</p>
+              </object>
+            ) : (
+              <p className="text-muted">Unsupported file type</p>
+            )}
+          </div>
+
+          {/* Action Icons Container */}
+          <div
+            style={{
+              width: "7rem",
+              borderRadius: "0.5rem",
+              padding: "0.25rem",
+              display: "flex",
+              justifyContent: "space-around",
+              alignItems: "center",
+              margin: "0 auto",
+              border: "1px solid rgba(10, 10, 10, 0.21)",
+              boxShadow: "2px 2px 2px rgba(10, 10, 10, 0.2)",
+            }}
+          >
+            <CIcon
+              icon={cilZoom}
+              size="sm"
+              className="text-info"
+              style={{ cursor: "pointer" }}
+              onClick={() => handleViewClick(doc)}
+            />
+            <CIcon
+              icon={cilCloudDownload}
+              size="sm"
+              className="text-success"
+              style={{ cursor: "pointer" }}
+              onClick={() => handleDownload(doc)}
+            />
+            <CIcon
+              icon={cilPencil}
+              size="sm"
+              className="text-warning"
+              style={{ cursor: "pointer" }}
+              onClick={() => handleEditClick(doc)}
+            />
+            <CIcon
+              icon={cilTrash}
+              size="sm"
+              className="text-danger"
+              style={{ cursor: "pointer" }}
+              onClick={() => deleteDocument(doc._id)}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <CCol md={6} className="text-center">
+      <p className="fw-bold text-danger">No documents uploaded.</p>
+    </CCol>
+  )}
+</CRow>
+
+
+
         </CCardBody>
       </CCard>
 
