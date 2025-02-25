@@ -32,7 +32,6 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
         consignorAddress: '',
         consigneeName: '',
         consigneeAddress: '',
-        customer: '',
         from: '',
         to: '',
         driverName: '',
@@ -52,6 +51,8 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
         customerRateOn: '',
         customerFreight: '',
         transporterFreight: '',
+        containerNumber: '',
+        sealNumber: '',
     });
 
     const handleChange = (e) => {
@@ -135,6 +136,34 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
                                 />
                             </CInputGroup>
                         </CCol>
+                        <CCol md={6}>
+                            <CInputGroup className="mt-4">
+                                <CInputGroupText>
+                                    <IoPersonSharp style={{ fontSize: '20px', color: 'gray', color: 'gray' }} />
+                                </CInputGroupText>
+                                <CFormInput
+                                    id="containerNumber"
+                                    name="containerNumber"
+                                    value={formData.containerNumber}
+                                    onChange={handleChange}
+                                    placeholder="Enter Container Number"
+                                />
+                            </CInputGroup>
+                        </CCol>
+                        <CCol md={6}>
+                            <CInputGroup className="mt-4">
+                                <CInputGroupText>
+                                    <IoPersonSharp style={{ fontSize: '20px', color: 'gray', color: 'gray' }} />
+                                </CInputGroupText>
+                                <CFormInput
+                                    id="sealNumber"
+                                    name="sealNumber"
+                                    value={formData.sealNumber}
+                                    onChange={handleChange}
+                                    placeholder="Enter Seal Number"
+                                />
+                            </CInputGroup>
+                        </CCol>
                     </CRow>
                     <hr />
 
@@ -205,7 +234,7 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
                     </CRow>
                     <hr />
 
-                    <h5>Customer Details</h5>
+                    <h5>Driver Details</h5>
                     <CRow className="mb-3">
                         <CCol md={6}>
                             <CInputGroup className="mt-4">
@@ -213,10 +242,10 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
                                     <IoPersonSharp style={{ fontSize: '20px', color: 'gray' }} />
                                 </CInputGroupText>
                                 <CFormInput
-                                    id="customerName"
-                                    name="customerName"
-                                    placeholder="Enter Customer Name"
-                                    value={formData.customerName}
+                                    id="driverName"
+                                    name="driverName"
+                                    placeholder="Enter Driver Name"
+                                    value={formData.driverName}
                                     onChange={handleChange}
                                 />
                             </CInputGroup>
@@ -227,10 +256,10 @@ const TruckForm = ({ visible, onClose, onSubmit }) => {
                                     <AiFillHome style={{ fontSize: '20px', color: 'gray' }} />
                                 </CInputGroupText>
                                 <CFormInput
-                                    id="customerAddress"
-                                    name="customerAddress"
-                                    placeholder="Enter Customer Address"
-                                    value={formData.customerAddress}
+                                    id="driverContact"
+                                    name="driverContact"
+                                    placeholder="Enter Driver Contact"
+                                    value={formData.driverContact}
                                     onChange={handleChange}
                                 />
                             </CInputGroup>

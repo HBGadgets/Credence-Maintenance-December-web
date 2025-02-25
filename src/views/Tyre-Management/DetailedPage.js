@@ -24,8 +24,8 @@ import { useParams } from 'react-router-dom'
 import { vehicles } from '../vehicle/data/data'
 import axios from 'axios'
 
-function DetailedPage({}) {
-  const {id} = useParams() // this is deviceId
+function DetailedPage({ }) {
+  const { id } = useParams() // this is deviceId
   const [leftWheels, setLeftWheels] = useState([]) // Additional wheel pairs for the left side
   const [rightWheels, setRightWheels] = useState([]) // Additional wheel pairs for the right side
   const [tyreInventory, setTyreInventory] = useState([]) // Tyre Inventory
@@ -36,43 +36,44 @@ function DetailedPage({}) {
   const [category, setCategory] = useState('bus')
 
 
-  const fetchVehicle= async()=>{
+  const fetchVehicle = async () => {
     try {
-      const response= await axios.get(`${import.meta.env.VITE_API_URL}/api/credence/${id}`)
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/credence/${id}`)
       console.log("response in fetchVehicle in detailedpage", response.data.device.category);
       setCategory(response.data.device.category?.toLowerCase() || "")
       // setCategory("truck")
     } catch (error) {
       console.error(error);
-    }}
-
-    const fetchTyres = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/tyre`)
-        console.log("tyre inventory mdhe he set hot ahe", response.data);
-        setTyreInventory(response.data)
-      } catch (error) {
-        console.error('Error fetching tyres:', error)
-      }
     }
+  }
 
-    const fetchAssignedTyre = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/extendedVehicle/`, {
-          params: { deviceId: id }
-        });        
-        console.log("fetchAssignedTyre response", response.data);
-        setAssignedTyres(response.data.data || []);
-        } catch (error) {
-          console.error('Error fetching assigned tyres:', error)
-        }
-      }
+  const fetchTyres = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/tyre`)
+      console.log("tyre inventory mdhe he set hot ahe", response.data);
+      setTyreInventory(response.data)
+    } catch (error) {
+      console.error('Error fetching tyres:', error)
+    }
+  }
 
-    useEffect(()=>{
-      fetchVehicle()
-      fetchTyres()
-      fetchAssignedTyre()
-    },[id])
+  const fetchAssignedTyre = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/extendedVehicle/`, {
+        params: { deviceId: id }
+      });
+      console.log("fetchAssignedTyre response", response.data);
+      setAssignedTyres(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching assigned tyres:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchVehicle()
+    fetchTyres()
+    fetchAssignedTyre()
+  }, [id])
 
   const initializeWheels = () => {
     let greatestNumber = 0;
@@ -86,18 +87,18 @@ function DetailedPage({}) {
         }
       }
     });
-  
+
     const emptySlots = greatestNumber - 2;
     if (emptySlots > 0) {
       setLeftWheels(Array(emptySlots).fill({}));
       setRightWheels(Array(emptySlots).fill({}));
     }
   };
-  
+
 
   useEffect(() => {
-    initializeWheels(); 
-  }, []); 
+    initializeWheels();
+  }, []);
 
   const columns = [
     // { label: 'Tyre ID', key: '_id' },
@@ -115,14 +116,14 @@ function DetailedPage({}) {
 
   const addLeftWheels = () => {
     setLeftWheels([...leftWheels, {}])
-    console.log("leftwheels",leftWheels);
-    
+    console.log("leftwheels", leftWheels);
+
   }
 
   const addRightWheels = () => {
     setRightWheels([...rightWheels, {}])
-    console.log("rightWheels",rightWheels);
-    
+    console.log("rightWheels", rightWheels);
+
   }
   const removeLastLeftWheel = () => {
     setLeftWheels(leftWheels.slice(0, -1))
@@ -136,7 +137,7 @@ function DetailedPage({}) {
     setSelectedWheelId(id)
     setIsModalVisible(true)
   }
-  
+
   // assign zal asel tr image yeil
   const tyreImagePath = '/tyre1.png'
   // const isTyreAssigned = (position) => {
@@ -170,7 +171,7 @@ function DetailedPage({}) {
       // Assume the backend returns the new assignment in response.data.data
       // For example, { wheelPosition: "right-inner-2", tyre: { _id: "67a746e2535607f7d7cba379", serialNumber: "TYR12345", ... } }
       const newAssignment = response.data.data;
-      
+
       // Update your local state with the new assignment (using the same structure as returned by the API)
       setAssignedTyres([...assignedTyres, newAssignment]);
 
@@ -214,7 +215,7 @@ function DetailedPage({}) {
       setAssignedTyres(assignedTyres.filter((a) => a.wheelPosition !== wheelPosition));
 
       // Optionally, you can add the detached tyre back to your tyreInventory if needed.
-       
+
     } catch (error) {
       console.error("Error detaching tyre:", error);
       alert("Failed to detach tyre. Please try again.");
@@ -287,7 +288,7 @@ function DetailedPage({}) {
                     </div>
                   </div>
                   <div className="twowheeltogether">
-                  <div className='wheel-container'>
+                    <div className='wheel-container'>
                       <div
                         id="right-outer-2"
                         onClick={() => handleWheelClick('right-outer-2')}
@@ -343,7 +344,7 @@ function DetailedPage({}) {
                             <img
                               src={tyreImagePath}
                               alt="Tyre"
-                              className='imgCircle'                            />
+                              className='imgCircle' />
                           ) : (
                             ''
                           )}
@@ -529,7 +530,7 @@ function DetailedPage({}) {
                 </div>
               </div>
             </div>
-          ) :["car", "taxi"].includes(category) ?  (
+          ) : ["car", "taxi"].includes(category) ? (
             <div style={{ margin: '20px' }}>
               {/* Right Wheels Section */}
               <div
@@ -663,67 +664,67 @@ function DetailedPage({}) {
                 </div>
               </div>
             </div>
-          ):(
+          ) : (
             <div>
-              <div style={{ margin: '20px', display:'flex' }}>
-              {/* Right Wheels Section */}
-             
-               
-                  <div className="oneWheel" style={{ alignSelf: 'end' }}>
+              <div style={{ margin: '20px', display: 'flex' }}>
+                {/* Right Wheels Section */}
+
+
+                <div className="oneWheel" style={{ alignSelf: 'end' }}>
+                  <div
+                    className="wheel-container"
+                  >
                     <div
-                      className="wheel-container"
+                      id="front"
+                      onClick={() => handleWheelClick('front')}
+                      className='wheelRounded'
                     >
-                      <div
-                        id="front"
-                        onClick={() => handleWheelClick('front')}
-                        className='wheelRounded'
-                      >
-                        {isTyreAssigned('front') ? (
-                          <img
-                            src={tyreImagePath}
-                            alt="Tyre"
-                            className='imgCircle'
-                          />
-                        ) : (
-                          ''
-                        )}
-                      </div>
-                      <div className="label-container" style={{ paddingLeft: '2px' }}>
-                        {generateLabel('front')}
-                      </div>
+                      {isTyreAssigned('front') ? (
+                        <img
+                          src={tyreImagePath}
+                          alt="Tyre"
+                          className='imgCircle'
+                        />
+                      ) : (
+                        ''
+                      )}
+                    </div>
+                    <div className="label-container" style={{ paddingLeft: '2px' }}>
+                      {generateLabel('front')}
                     </div>
                   </div>
-                  <div className="oneWheel" style={{ alignSelf: 'end' }}>
+                </div>
+                <div className="oneWheel" style={{ alignSelf: 'end' }}>
+                  <div
+                    className="wheel-container"
+                  >
                     <div
-                      className="wheel-container"
+                      id="back"
+                      onClick={() => handleWheelClick('back')}
+                      className='wheelRounded'
                     >
-                      <div
-                        id="back"
-                        onClick={() => handleWheelClick('back')}
-                        className='wheelRounded'
-                      >
-                        {isTyreAssigned('back') ? (
-                          <img
-                            src={tyreImagePath}
-                            alt="Tyre"
-                            className='imgCircle'
-                          />
-                        ) : (
-                          ''
-                        )}
-                      </div>
-                      <div className="label-container" style={{ paddingLeft: '2px' }}>
-                        {generateLabel('back')}
-                      </div>
+                      {isTyreAssigned('back') ? (
+                        <img
+                          src={tyreImagePath}
+                          alt="Tyre"
+                          className='imgCircle'
+                        />
+                      ) : (
+                        ''
+                      )}
+                    </div>
+                    <div className="label-container" style={{ paddingLeft: '2px' }}>
+                      {generateLabel('back')}
                     </div>
                   </div>
-            </div>
+                </div>
+              </div>
             </div>
           )}
           <div className="vertical-text"> REAR </div>
         </div>
 
-        {['truck', 'bus'].includes(category) ?(
+        {['truck', 'bus'].includes(category) ? (
           <div
             className='button-container'
           >
@@ -736,7 +737,7 @@ function DetailedPage({}) {
             <CButton
               color="danger"
               className='custom-button'
-              style={{marginBottom: '2rem',}}
+              style={{ marginBottom: '2rem', }}
               onClick={removeLastRightWheel}
             >
               REMOVE
@@ -859,14 +860,14 @@ function DetailedPage({}) {
                         pressure: '-',
                         status: '-',
                       };
-                      
+
                       return (
                         <CTableRow key={index} className="text-center">
                           <CTableDataCell scope="row">{index + 1}</CTableDataCell>
                           <CTableDataCell>{assigned.wheelPosition}</CTableDataCell>
                           {columns.map((column, idx) => (
                             <CTableDataCell key={idx}>
-                              
+
                               {tyreDetails[column.key]}
                             </CTableDataCell>
                           ))}
