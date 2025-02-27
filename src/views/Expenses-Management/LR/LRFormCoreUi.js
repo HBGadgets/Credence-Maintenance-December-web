@@ -72,7 +72,6 @@ const LRForm = ({ handleAddModalClose, addModalOpen }) => {
 
   return (
     <div>
-      asdasd
       <CModal visible={addModalOpen} onClose={handleAddModalClose} size="lg" className="dark-modal">
         <CModalHeader closeButton>Lorry Receipt (LR) Form</CModalHeader>
         <CModalBody>

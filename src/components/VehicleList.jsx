@@ -46,9 +46,7 @@ const VehicleList = () => {
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Model', key: 'model', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
-    { label: 'Action', key: 'action', sortable: true },
     { label: 'View', key: 'view', sortable: true },
-
   ]
 
 
@@ -590,8 +588,6 @@ const VehicleList = () => {
                         <CTableDataCell className="text-center">{row.name}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.model}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.category}</CTableDataCell>
-                        <CTableDataCell className="text-center">{row.deviceId}</CTableDataCell>
-                        {/* <CTableDataCell className="text-center">{row.licenseNumber}</CTableDataCell> */}
                         <CTableDataCell className="text-center">
                           <CButton onClick={() => handleViewClick(row)} style={{ backgroundColor: `rgb(10, 45, 99)`, color: "white" }}>
                             View

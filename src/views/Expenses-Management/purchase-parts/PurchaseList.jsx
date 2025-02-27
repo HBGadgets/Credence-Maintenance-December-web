@@ -35,7 +35,7 @@ const columns = [
   { label: 'Cost Per Unit', key: 'costPerUnit', sortable: true },
   { label: 'Purchase Date', key: 'purchaseDate', sortable: true },
   { label: 'Invoice/Bill Number', key: 'invoiceNumber', sortable: true },
-  { label: 'Document', key: 'document', sortable: true },
+  { label: 'Document', key: 'document', sortable: false },
   { label: 'Actions', key: 'actions', sortable: false },
 ]
 
@@ -376,6 +376,31 @@ const PurchaseList = ({
                               style={{ paddingLeft: '15px', paddingRight: '15px' }}
                             >
                               <ActionButtons purchase={purchase} />
+                            </CTableDataCell>
+                          )
+                        }
+                        if (column.key === 'document') {
+                          return (
+                            <CTableDataCell
+                              key={column.key}
+                              className="text-center text-nowrap"
+                              style={{ paddingLeft: '15px', paddingRight: '15px' }}
+                            >
+                              {purchase.document ? (
+                                <img
+                                  src={purchase.document}
+                                  alt="Document"
+                                  style={{
+                                    width: '50px',
+                                    height: '50px',
+                                    objectFit: 'cover',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => window.open(purchase.document, '_blank')}
+                                />
+                              ) : (
+                                'No Document'
+                              )}
                             </CTableDataCell>
                           )
                         }
