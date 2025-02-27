@@ -168,11 +168,7 @@ const _nav = [
         name: 'Company details',
         to: '/ComDetails',
       },
-      {
-        component: CNavItem,
-        name: 'Tyre Inventory',
-        to: '/Inventory',
-      },
+
       // {
       //   component: CNavItem,
       //   name: 'Bill of all Vehicles & Drivers',
@@ -211,6 +207,11 @@ const _nav = [
         component: CNavItem,
         name: 'Invoice',
         to: '/Invoice',
+      },
+      {
+        component: CNavItem,
+        name: 'Tyre Inventory',
+        to: '/Inventory',
       },
       {
         component: CNavItem,
