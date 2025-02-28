@@ -46,95 +46,7 @@ const _nav = [
       />
     ),
   },
-  //
-  // {
-  //   component: CNavGroup,
-  //   name: 'Drivers',
-  //   to: '/Drivers',
-  //   icon: (
-  // <UserRound
-  //   className="nav-icon"
-  //   style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-  // />
-  //   ),
-  //   items: [
-  //     {
-  //       component: CNavItem,
-  //       name: 'Log Book',
-  //       to: '/DriversLogBook',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Expense',
-  //       to: '/DriverExpense',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Trips',
-  //       to: '/Trips',
-  //     },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Carousel',
-  //     //   to: '/base/carousels',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Collapse',
-  //     //   to: '/base/collapses',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'List group',
-  //     //   to: '/base/list-groups',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Navs & Tabs',
-  //     //   to: '/base/navs',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Pagination',
-  //     //   to: '/base/paginations',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Placeholders',
-  //     //   to: '/base/placeholders',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Popovers',
-  //     //   to: '/base/popovers',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Progress',
-  //     //   to: '/base/progress',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Spinners',
-  //     //   to: '/base/spinners',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Tables',
-  //     //   to: '/base/tables',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Tabs',
-  //     //   to: '/base/tabs',
-  //     // },
-  //     // {
-  //     //   component: CNavItem,
-  //     //   name: 'Tooltips',
-  //     //   to: '/base/tooltips',
-  //     // },
-  //   ],
-  // },
+
 
   // SUPERVISOR
   {
@@ -163,12 +75,6 @@ const _nav = [
         name: 'Company details',
         to: '/ComDetails',
       },
-
-      // {
-      //   component: CNavItem,
-      //   name: 'Bill of all Vehicles & Drivers',
-      //   to: '/VehicleDriverBills',
-      // },
     ],
   },
 
@@ -213,31 +119,6 @@ const _nav = [
         name: 'LR',
         to: '/LR',
       },
-      // {
-      //   component: CNavItem,
-      //   name: 'Bill Expenses',
-      //   to: '/Bills',
-      // },
-      // {
-      //   component: CNavItem,
-      //   name: 'Input Group',
-      //   to: '/forms/input-group',
-      // },
-      // {
-      //   component: CNavItem,
-      //   name: 'Floating Labels',
-      //   to: '/forms/floating-labels',
-      // },
-      // {
-      //   component: CNavItem,
-      //   name: 'Layout',
-      //   to: '/forms/layout',
-      // },
-      // {
-      //   component: CNavItem,
-      //   name: 'Validation',
-      //   to: '/forms/validation',
-      // },
     ],
   },
 
@@ -253,12 +134,7 @@ const _nav = [
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
     ),
-    items: [
-      // {
-      //   component: CNavItem,
-      //   name: 'Breakdown Assistance',
-      //   to: '/BreakdownAssis',
-      // },
+    items: [,
       {
         component: CNavItem,
         name: 'Total Expenses',
@@ -271,51 +147,6 @@ const _nav = [
       },
     ],
   },
-
-  // {
-  //   component: CNavGroup,
-  //   name: 'Expense Sheet',
-  //   icon: (
-  //     <ReceiptText
-  //       className="nav-icon"
-  //       style={{
-  //         color: '#ec7426',
-  //         marginRight: '10px',
-  //         fill: 'none',
-  //         pointerEvents: 'none',
-  //       }}
-  //     />
-  //   ),
-  //   items: [],
-  // },
-
-  // {
-  //   component: CNavGroup,
-  //   name: 'Notifications',
-  //   icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
-  //   items: [
-  //     {
-  //       component: CNavItem,
-  //       name: 'Alerts',
-  //       to: '/notifications/alerts',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Badges',
-  //       to: '/notifications/badges',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Modal',
-  //       to: '/notifications/modals',
-  //     },
-  //     {
-  //       component: CNavItem,
-  //       name: 'Toasts',
-  //       to: '/notifications/toasts',
-  //     },
-  //   ],
-  // },
 ]
 
 export default _nav

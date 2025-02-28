@@ -22,7 +22,7 @@ import {
   CModalTitle,
 } from '@coreui/react'
 
-const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
+const Pagination = React.lazy(() => import('../../../paginations/Pagination'))
 const ExpenseSheet = React.lazy(() => import('./ExpenseSheet'))
 const Budget = React.lazy(() => import('./Budget'))
 

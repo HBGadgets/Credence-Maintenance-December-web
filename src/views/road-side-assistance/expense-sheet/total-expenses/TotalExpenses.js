@@ -36,7 +36,7 @@ import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 
-const Pagination = React.lazy(() => import('../../../base/paginations/Pagination'))
+const Pagination = React.lazy(() => importTotalExpenses('../../paginations/Pagination'))
 const VehicleLog = React.lazy(() => import('../../vehicle-logs/VehicleLog'))
 const DriverProfile = React.lazy(() => import('../../driver-profile/DriverProfile'))
 

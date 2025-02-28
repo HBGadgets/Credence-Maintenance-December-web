@@ -36,7 +36,7 @@ import { auto } from '@popperjs/core'
 import axios from 'axios'
 
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
-const Pagination = React.lazy(() => import('../views/base/paginations/Pagination'))
+const Pagination = React.lazy(() => import('../views/paginations/Pagination'))
 
 const VehicleList = () => {
   const Navigate = useNavigate()

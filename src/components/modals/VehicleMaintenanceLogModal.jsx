@@ -21,7 +21,7 @@ import {
 const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
 import {vehicles} from '../../views/vehicle/data/data'
 import { useParams } from 'react-router-dom'
-import Pagination from "../../views/base/paginations/Pagination"
+import Pagination from "../../views/paginations/Pagination"
 import DateRangeFilterCredence from "../DateRangeFilterCredence"
 
 

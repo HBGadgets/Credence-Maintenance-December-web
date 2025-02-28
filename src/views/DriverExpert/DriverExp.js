@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { FaUserCircle } from 'react-icons/fa'
-const Pagination = React.lazy(() => import('../../views/base/paginations/Pagination'))
+const Pagination = React.lazy(() => import('../../views/paginations/Pagination'))
 
 import {
   CCard,
@@ -302,10 +302,10 @@ const DriversExp = () => {
     : []
 
   // Pagination logic
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(filteredDrivers.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentItems  = filteredDrivers.slice(startIndex, startIndex + itemsPerPage)
+  const currentItems = filteredDrivers.slice(startIndex, startIndex + itemsPerPage)
   const handlePageChange = (page) => {
     setCurrentPage(page)
   }
@@ -596,7 +596,7 @@ const DriversExp = () => {
                           <CButton
                             color="primary"
                             size="sm"
-                            onClick={()=>{navigate(`${driver._id}`)}}
+                            onClick={() => { navigate(`${driver._id}`) }}
                             className="text-center"
                           >
                             <Eye className="me-2" size={16} />
@@ -679,7 +679,7 @@ const DriversExp = () => {
                   handlePageChange={handlePageChange}
                   handleItemsPerPageChange={handleItemsPerPageChange}
                 />
-              </div>      
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
