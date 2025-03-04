@@ -21,7 +21,7 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
-import IconDropdown from './IconDropdown'
+import IconDropdown from '../../components/IconDropdown'
 import { FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
@@ -36,7 +36,7 @@ import { auto } from '@popperjs/core'
 import axios from 'axios'
 
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
-const Pagination = React.lazy(() => import('../views/paginations/Pagination'))
+const Pagination = React.lazy(() => import('../paginations/Pagination'))
 
 const VehicleList = () => {
   const Navigate = useNavigate()

@@ -5,16 +5,16 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
-const VehicleProfile = React.lazy(() => import('./components/VehicleProfile.jsx'))
-import VehicleMaintenanceLogModal from './components/modals/VehicleMaintenanceLogModal.jsx'
-import VehicleTripModal from './components/modals/VehicleTripModal.jsx'
+const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.jsx'))
+import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
+import VehicleTripModal from './views/vehicle/modals/VehicleTripModal.jsx'
 
 
 // Supervisor
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
-const VehicleExpenses = React.lazy(() => import('./views/Supervisor/vehicle-expenses/VehicleExpenses.js'))
+const DriverSalary = React.lazy(() => import('./views/Supervisor/driver-salary/DriverSalary.js'))
 const LeaveRequests = React.lazy(() => import('./views/Supervisor/leave-request/LeaveRequests.jsx'))
-const VehicleDriverBills = React.lazy(() => import('./views/Supervisor/billing/VehicleDriverBills.js'))
+const CurrentAttendence = React.lazy(() => import('./views/Supervisor/attendence/CurrentAttendence.js'))
 const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
 const SelectedCompDetails = React.lazy(() => import('./views/Supervisor/company-details/SelectedCompDetails.js'))
 const BranchDetails = React.lazy(() => import('./views/Supervisor/company-details/BranchDetails.js'))
@@ -61,8 +61,8 @@ const routes = [
   /**SUPERVISOR */
 
   { path: '/Trip', name: 'Trip', element: Trip },
-  { path: '/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
-  { path: '/VehicleDriverBills', name: 'Vehicle Driver Bills', element: VehicleDriverBills },
+  { path: '/Salary', name: 'Drivers Salary', element: DriverSalary },
+  { path: '/Attendence', name: 'Driver Attendence Mark', element: CurrentAttendence },
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
   { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },

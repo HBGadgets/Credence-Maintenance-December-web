@@ -20,9 +20,9 @@ import {
   CInputGroup,
   CFormInput,
 } from '@coreui/react'
-const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
+const DateRangeFilter = React.lazy(() => import('../../../components/DateRangeFilter'))
 import { useParams } from 'react-router-dom'
-import { vehicles } from '../../../src/views/vehicle/data/data'
+import { vehicles } from '../data/data'
 
 function VehicleTripModal({  }) {
   const { id } = useParams()

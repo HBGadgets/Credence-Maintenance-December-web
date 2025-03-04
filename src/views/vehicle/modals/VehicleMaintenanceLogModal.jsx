@@ -18,11 +18,11 @@ import {
   CModalHeader,
   CButton,
 } from '@coreui/react'
-const DateRangeFilter = React.lazy(() => import('../DateRangeFilter'))
-import {vehicles} from '../../views/vehicle/data/data'
+const DateRangeFilter = React.lazy(() => import('../../../components/DateRangeFilter'))
+import {vehicles} from '../data/data'
 import { useParams } from 'react-router-dom'
-import Pagination from "../../views/paginations/Pagination"
-import DateRangeFilterCredence from "../DateRangeFilterCredence"
+import Pagination from "../../paginations/Pagination"
+import DateRangeFilterCredence from "../../../components/DateRangeFilterCredence"
 
 
 function VehicleMaintenanceLogModal({ }) {

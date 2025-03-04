@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { CRow, CCol, CCard, CCardBody, CButton } from '@coreui/react'
 import { useParams, useNavigate } from 'react-router-dom'
-import VehicleDoc from '../views/vehicle/VehicleDocuments'
+import VehicleDoc from './VehicleDocuments'
 import "./VehicleProfile.css"
 
 function VehicleProfile() {

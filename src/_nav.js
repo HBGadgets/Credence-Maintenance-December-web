@@ -62,8 +62,18 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Company details',
+        to: '/ComDetails',
+      },
+      {
+        component: CNavItem,
         name: 'Trip',
         to: '/Trip',
+      },
+      {
+        component: CNavItem,
+        name: 'Driver Attendence Mark',
+        to: '/Attendence'
       },
       {
         component: CNavItem,
@@ -72,9 +82,10 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Company details',
-        to: '/ComDetails',
+        name: 'Drivers Salary',
+        to: '/Salary',
       },
+
     ],
   },
 

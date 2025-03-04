@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
 // import VehicleList from '../../components/VehicleList'
-const VehicleList = React.lazy(() => import('../../components/VehicleList'))
+const VehicleList = React.lazy(() => import('./VehicleList'))
 function Vehicle() {
   return (
     <>

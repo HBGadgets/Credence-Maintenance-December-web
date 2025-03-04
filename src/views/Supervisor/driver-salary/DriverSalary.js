@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
 import React from 'react'
 
-const VehicleExpense = () => {
+const DriverSalary = () => {
   return (
     <>
-      <h1>Vehicle Expense</h1>
+      <h1>Drivers Salary</h1>
     </>
   )
 }
 
-export default VehicleExpense
+export default DriverSalary
