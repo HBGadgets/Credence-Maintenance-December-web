@@ -541,7 +541,7 @@ const DriversExp = () => {
   return (
     <>
       <CRow>
-        <div
+        {/* <div
           style={{
             position: 'absolute',
             top: '40%',
@@ -551,7 +551,7 @@ const DriversExp = () => {
         >
           <Loader />
 
-        </div>
+        </div> */}
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -571,7 +571,17 @@ const DriversExp = () => {
 
             <CCardBody>
               {currentItems.length === 0 ? (
-                <p className="text-center">No drivers available.</p>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '40%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <Loader />
+
+                </div>
               ) : (
                 <CTable striped hover responsive bordered>
                   <CTableHead>
