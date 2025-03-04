@@ -65,6 +65,8 @@ import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import { useNavigate } from 'react-router-dom'
+import Loader from '../../components/Loader/Loader'
+
 
 const DriversExp = () => {
   const navigate = useNavigate()
@@ -539,10 +541,16 @@ const DriversExp = () => {
   return (
     <>
       <CRow>
-        <div>
-          <CButton color="primary" className="float-end mb-2" onClick={() => setAddModalOpen(true)}>
-            Add Driver
-          </CButton>
+        <div
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <Loader />
+
         </div>
         <CCol xs={12}>
           <CCard className="mb-4">
@@ -683,107 +691,109 @@ const DriversExp = () => {
             </CCardBody>
           </CCard>
         </CCol>
-      </CRow>
+      </CRow >
 
       {/* View Profile Modal */}
-      {selectedDriver && (
-        <CModal
-          alignment="center"
-          scrollable
-          visible={open}
-          onClose={() => setOpen(false)}
-          fullscreen
-        >
-          <CModalHeader>
-            <CModalTitle className="d-flex align-items-center">
-              <h5>Driver Profile</h5>
-            </CModalTitle>
-          </CModalHeader>
-          <CModalBody className="shadow-md rounded-lg p-6 mb-6">
-            <div className="d-flex gap-3">
-              {/* <CImage
+      {
+        selectedDriver && (
+          <CModal
+            alignment="center"
+            scrollable
+            visible={open}
+            onClose={() => setOpen(false)}
+            fullscreen
+          >
+            <CModalHeader>
+              <CModalTitle className="d-flex align-items-center">
+                <h5>Driver Profile</h5>
+              </CModalTitle>
+            </CModalHeader>
+            <CModalBody className="shadow-md rounded-lg p-6 mb-6">
+              <div className="d-flex gap-3">
+                {/* <CImage
                 src={selectedDriver?.profileImage?.base64Data || '/defaultDriverProfileImage.png'}
                 alt={selectedDriver.name}
                 className="img-thumbnail rounded-circle me-3"
                 width="170"
                 height="170"
               /> */}
-              {selectedDriver?.profileImage?.base64Data ? (
-                <CImage
-                  src={selectedDriver.profileImage.base64Data}
-                  alt={selectedDriver.name}
-                  className="img-thumbnail rounded-circle me-3"
-                  width="170"
-                  height="170"
-                />
-              ) : (
-                <FaUserCircle
-                  className="me-3 text-secondary"
-                  size={170} // Controls the icon size
-                />
-              )}
-              <div>
-                <div className="py-2">
-                  <h2>{selectedDriver.name}</h2>
-                </div>
+                {selectedDriver?.profileImage?.base64Data ? (
+                  <CImage
+                    src={selectedDriver.profileImage.base64Data}
+                    alt={selectedDriver.name}
+                    className="img-thumbnail rounded-circle me-3"
+                    width="170"
+                    height="170"
+                  />
+                ) : (
+                  <FaUserCircle
+                    className="me-3 text-secondary"
+                    size={170} // Controls the icon size
+                  />
+                )}
                 <div>
-                  <h6>License: {selectedDriver.licenseNumber}</h6>
-                </div>
-                <div>
-                  <h6>Aadhar: {selectedDriver.aadharNumber}</h6>
-                </div>
-                <div>
-                  <h6>Contact: {selectedDriver.contactNumber}</h6>
-                </div>
-                <div>
-                  <h6>Email: {selectedDriver.email}</h6>
+                  <div className="py-2">
+                    <h2>{selectedDriver.name}</h2>
+                  </div>
+                  <div>
+                    <h6>License: {selectedDriver.licenseNumber}</h6>
+                  </div>
+                  <div>
+                    <h6>Aadhar: {selectedDriver.aadharNumber}</h6>
+                  </div>
+                  <div>
+                    <h6>Contact: {selectedDriver.contactNumber}</h6>
+                  </div>
+                  <div>
+                    <h6>Email: {selectedDriver.email}</h6>
+                  </div>
                 </div>
               </div>
-            </div>
-            <hr />
-            <CTabs activeItemKey={1}>
-              <CTabList variant="underline">
-                <CTab aria-controls="attendance" itemKey={1}>
-                  Attendances
-                </CTab>
-                <CTab aria-controls="expenses" itemKey={2}>
-                  Expenses
-                </CTab>
-                <CTab aria-controls="trip-details" itemKey={3}>
-                  Logbook Details
-                </CTab>
-                <CTab aria-controls="salary-slips" itemKey={4}>
-                  Salary Slips
-                </CTab>
-                <CTab aria-controls="document-locker" itemKey={5}>
-                  Document Locker
-                </CTab>
-              </CTabList>
-              <CTabContent>
-                <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
-                  <AttendanceSection driverId={selectedDriver.id} />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
-                  <ExpensesTable
-                    expenses={expenses.filter((expense) => expense.driverId === selectedDriver.id)}
-                  />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
-                  <TripsTable trips={trips.filter((trip) => trip.driverId === selectedDriver.id)} />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
-                  <SalarySlipTable
-                    salaries={salaries.filter((salary) => salary.driverId === selectedDriver.id)}
-                  />
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="document-locker" itemKey={5}>
-                  <DocumentLocker documents={selectedDriver} />
-                </CTabPanel>
-              </CTabContent>
-            </CTabs>
-          </CModalBody>
-        </CModal>
-      )}
+              <hr />
+              <CTabs activeItemKey={1}>
+                <CTabList variant="underline">
+                  <CTab aria-controls="attendance" itemKey={1}>
+                    Attendances
+                  </CTab>
+                  <CTab aria-controls="expenses" itemKey={2}>
+                    Expenses
+                  </CTab>
+                  <CTab aria-controls="trip-details" itemKey={3}>
+                    Logbook Details
+                  </CTab>
+                  <CTab aria-controls="salary-slips" itemKey={4}>
+                    Salary Slips
+                  </CTab>
+                  <CTab aria-controls="document-locker" itemKey={5}>
+                    Document Locker
+                  </CTab>
+                </CTabList>
+                <CTabContent>
+                  <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
+                    <AttendanceSection driverId={selectedDriver.id} />
+                  </CTabPanel>
+                  <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
+                    <ExpensesTable
+                      expenses={expenses.filter((expense) => expense.driverId === selectedDriver.id)}
+                    />
+                  </CTabPanel>
+                  <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
+                    <TripsTable trips={trips.filter((trip) => trip.driverId === selectedDriver.id)} />
+                  </CTabPanel>
+                  <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
+                    <SalarySlipTable
+                      salaries={salaries.filter((salary) => salary.driverId === selectedDriver.id)}
+                    />
+                  </CTabPanel>
+                  <CTabPanel className="p-3" aria-labelledby="document-locker" itemKey={5}>
+                    <DocumentLocker documents={selectedDriver} />
+                  </CTabPanel>
+                </CTabContent>
+              </CTabs>
+            </CModalBody>
+          </CModal>
+        )
+      }
 
       {/* Add Driver Modal */}
       <CModal
@@ -957,180 +967,182 @@ const DriversExp = () => {
       </CModal>
 
       {/* Edit Driver Modal */}
-      {editModalOpen && driverToEdit && (
-        <CModal
-          alignment="center"
-          visible={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
-          size="xl"
-        >
-          <CModalHeader>
-            <CModalTitle>Edit Driver</CModalTitle>
-          </CModalHeader>
-          <CModalBody>
-            <CForm>
-              <div
-                className="flex-wrap gap-5"
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
-              >
-                <CCol md={15}>
-                  <CInputGroup className="mt-4">
-                    <CInputGroupText className="border-end">
-                      <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="text"
-                      required
-                      value={driverToEdit.name}
-                      onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
-                    />
-                  </CInputGroup>
-                </CCol>
-
-                <CCol md={15}>
-                  <CInputGroup className="mt-4">
-                    <CInputGroupText className="border-end">
-                      <IoCall style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="text"
-                      value={driverToEdit.contactNumber}
-                      onChange={(e) =>
-                        setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
-                      }
-                    />
-                  </CInputGroup>
-                </CCol>
-              </div>
-
-              <div
-                className="flex-wrap gap-5"
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
-              >
-                <CCol md={15}>
-                  <CInputGroup className="mt-5">
-                    <CInputGroupText className="border-end">
-                      <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="email"
-                      value={driverToEdit.email}
-                      onChange={(e) => setDriverToEdit({ ...driverToEdit, email: e.target.value })}
-                    />
-                  </CInputGroup>
-                </CCol>
-
-                <CCol md={15}>
-                  <CInputGroup className="mt-5">
-                    <CInputGroupText className="border-end">
-                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="text"
-                      value={driverToEdit.licenseNumber}
-                      onChange={(e) =>
-                        setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
-                      }
-                    />
-                  </CInputGroup>
-                </CCol>
-              </div>
-
-              <div
-                className="flex-wrap gap-5"
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
-              >
-                <CCol md={15}>
-                  <CInputGroup className="mt-5">
-                    <CInputGroupText className="border-end">
-                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="text"
-                      value={driverToEdit.aadharNumber}
-                      onChange={(e) =>
-                        setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
-                      }
-                    />
-                  </CInputGroup>
-                </CCol>
-
-                <CCol md={15}>
-                  <CInputGroup className="mt-5">
-                    <CInputGroupText className="border-end">
-                      <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="password"
-                      value={driverToEdit.password}
-                      onChange={(e) =>
-                        setDriverToEdit({ ...driverToEdit, password: e.target.value })
-                      }
-                    />
-                  </CInputGroup>
-                </CCol>
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  marginTop: '30px',
-                  gap: '20px',
-                  width: '100%',
-                }}
-              >
-                <CCol md={20}>
-                  <h6>Upload Profile Image </h6>
-                  <CInputGroup className="mt-0">
-                    <CInputGroupText className="border-end">
-                      <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="file"
-                      onChange={(e) => handleFileChange(e, setProfileImage)}
-                    />
-                  </CInputGroup>
-                </CCol>
-
-                <CCol md={20}>
-                  <h6>Upload License </h6>
-                  <CInputGroup className="mt-0">
-                    <CInputGroupText className="border-end">
-                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="file"
-                      onChange={(e) => handleFileChange(e, setLicenseImage)}
-                    />
-                  </CInputGroup>
-                </CCol>
-
-                <CCol md={20}>
-                  <h6>Upload Aadhar</h6>
-                  <CInputGroup className="mt-0">
-                    <CInputGroupText className="border-end">
-                      <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
-                    </CInputGroupText>
-                    <CFormInput type="file" onChange={(e) => handleFileChange(e, setAadharImage)} />
-                  </CInputGroup>
-                </CCol>
-              </div>
-
-              <div className="d-flex justify-content-end">
-                <CButton
-                  color="primary"
-                  className="mt-3"
-                  onClick={handleSaveEdit}
-                  disabled={loading}
+      {
+        editModalOpen && driverToEdit && (
+          <CModal
+            alignment="center"
+            visible={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            size="xl"
+          >
+            <CModalHeader>
+              <CModalTitle>Edit Driver</CModalTitle>
+            </CModalHeader>
+            <CModalBody>
+              <CForm>
+                <div
+                  className="flex-wrap gap-5"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
                 >
-                  {loading ? 'Editing...' : 'Edit'}
-                </CButton>
-              </div>
-            </CForm>
-          </CModalBody>
-        </CModal>
-      )}
+                  <CCol md={15}>
+                    <CInputGroup className="mt-4">
+                      <CInputGroupText className="border-end">
+                        <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="text"
+                        required
+                        value={driverToEdit.name}
+                        onChange={(e) => setDriverToEdit({ ...driverToEdit, name: e.target.value })}
+                      />
+                    </CInputGroup>
+                  </CCol>
+
+                  <CCol md={15}>
+                    <CInputGroup className="mt-4">
+                      <CInputGroupText className="border-end">
+                        <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="text"
+                        value={driverToEdit.contactNumber}
+                        onChange={(e) =>
+                          setDriverToEdit({ ...driverToEdit, contactNumber: e.target.value })
+                        }
+                      />
+                    </CInputGroup>
+                  </CCol>
+                </div>
+
+                <div
+                  className="flex-wrap gap-5"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+                >
+                  <CCol md={15}>
+                    <CInputGroup className="mt-5">
+                      <CInputGroupText className="border-end">
+                        <MdEmail style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="email"
+                        value={driverToEdit.email}
+                        onChange={(e) => setDriverToEdit({ ...driverToEdit, email: e.target.value })}
+                      />
+                    </CInputGroup>
+                  </CCol>
+
+                  <CCol md={15}>
+                    <CInputGroup className="mt-5">
+                      <CInputGroupText className="border-end">
+                        <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="text"
+                        value={driverToEdit.licenseNumber}
+                        onChange={(e) =>
+                          setDriverToEdit({ ...driverToEdit, licenseNumber: e.target.value })
+                        }
+                      />
+                    </CInputGroup>
+                  </CCol>
+                </div>
+
+                <div
+                  className="flex-wrap gap-5"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+                >
+                  <CCol md={15}>
+                    <CInputGroup className="mt-5">
+                      <CInputGroupText className="border-end">
+                        <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="text"
+                        value={driverToEdit.aadharNumber}
+                        onChange={(e) =>
+                          setDriverToEdit({ ...driverToEdit, aadharNumber: e.target.value })
+                        }
+                      />
+                    </CInputGroup>
+                  </CCol>
+
+                  <CCol md={15}>
+                    <CInputGroup className="mt-5">
+                      <CInputGroupText className="border-end">
+                        <RiLockPasswordFill style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="password"
+                        value={driverToEdit.password}
+                        onChange={(e) =>
+                          setDriverToEdit({ ...driverToEdit, password: e.target.value })
+                        }
+                      />
+                    </CInputGroup>
+                  </CCol>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    marginTop: '30px',
+                    gap: '20px',
+                    width: '100%',
+                  }}
+                >
+                  <CCol md={20}>
+                    <h6>Upload Profile Image </h6>
+                    <CInputGroup className="mt-0">
+                      <CInputGroupText className="border-end">
+                        <AiFillPicture style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="file"
+                        onChange={(e) => handleFileChange(e, setProfileImage)}
+                      />
+                    </CInputGroup>
+                  </CCol>
+
+                  <CCol md={20}>
+                    <h6>Upload License </h6>
+                    <CInputGroup className="mt-0">
+                      <CInputGroupText className="border-end">
+                        <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput
+                        type="file"
+                        onChange={(e) => handleFileChange(e, setLicenseImage)}
+                      />
+                    </CInputGroup>
+                  </CCol>
+
+                  <CCol md={20}>
+                    <h6>Upload Aadhar</h6>
+                    <CInputGroup className="mt-0">
+                      <CInputGroupText className="border-end">
+                        <IoDocumentText style={{ fontSize: '22px', color: 'gray' }} />
+                      </CInputGroupText>
+                      <CFormInput type="file" onChange={(e) => handleFileChange(e, setAadharImage)} />
+                    </CInputGroup>
+                  </CCol>
+                </div>
+
+                <div className="d-flex justify-content-end">
+                  <CButton
+                    color="primary"
+                    className="mt-3"
+                    onClick={handleSaveEdit}
+                    disabled={loading}
+                  >
+                    {loading ? 'Editing...' : 'Edit'}
+                  </CButton>
+                </div>
+              </CForm>
+            </CModalBody>
+          </CModal>
+        )
+      }
 
       <ToastContainer />
     </>
