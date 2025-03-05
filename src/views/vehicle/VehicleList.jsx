@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import Select from 'react-select';
+import Select from 'react-select'
 import { cilSearch } from '@coreui/icons'
 import { CIcon } from '@coreui/icons-react'
 // import { vehicles } from '../views/vehicle/data/data'
@@ -34,12 +34,17 @@ import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { auto } from '@popperjs/core'
 import axios from 'axios'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
 
 const VehicleProfile = React.lazy(() => import('./VehicleProfile'))
 const Pagination = React.lazy(() => import('../paginations/Pagination'))
 
 const VehicleList = () => {
   const Navigate = useNavigate()
+
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
 
   const columns = [
     { label: 'SN', key: 'sn', sortable: true },
@@ -48,8 +53,6 @@ const VehicleList = () => {
     { label: 'Category', key: 'category', sortable: true },
     { label: 'View', key: 'view', sortable: true },
   ]
-
-
 
   const [vehicles, setVehicles] = useState([])
   const [selectedVehicle, setSelectedVehicle] = useState(null)
@@ -60,7 +63,7 @@ const VehicleList = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([])
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   // const itemsPerPage = 10
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const fetchVehicles = async () => {
     try {
@@ -142,289 +145,46 @@ const VehicleList = () => {
   }
 
   // Export to Excel
-  // Export to Excel with header and footer
-  const exportToExcel = async () => {
-    try {
-      if (!Array.isArray(filteredVehicles) || filteredVehicles.length === 0) {
-        throw new Error('No data available for Excel export')
-      }
 
-      // Define some colors and formatting values
-      const primaryColor = 'FF0A2D63' // Company blue (ARGB)
-      const secondaryColor = 'FF6C757D' // Gray for headers
-      const textColor = 'FFFFFFFF' // White text
-      const borderStyle = 'thin'
-      const companyName = 'Credence Tracker'
-      const currentYear = new Date().getFullYear()
-      const footerText = `© ${currentYear} ${companyName}`
-
-      // Create workbook and worksheet
-      const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Vehicle List')
-
-      // --- HEADER SECTION ---
-      // Add title row
-      const titleRow = worksheet.addRow([companyName])
-      titleRow.font = { bold: true, size: 16, color: { argb: textColor } }
-      titleRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: primaryColor },
-      }
-      titleRow.alignment = { horizontal: 'center' }
-      // Merge cells across all 6 columns (adjust if you have a different number)
-      worksheet.mergeCells(`A${titleRow.number}:F${titleRow.number}`)
-
-      // Add a spacer row after title
-      worksheet.addRow([])
-
-      // Add header row with column titles
-      const headerRow = worksheet.addRow([
-        'SN',
-        'Vehicle ID',
-        'Make',
-        'Year',
-        'Model',
-        'License Number',
-      ])
-      headerRow.eachCell((cell) => {
-        cell.font = { bold: true, size: 12, color: { argb: textColor } }
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: secondaryColor },
-        }
-        cell.alignment = { horizontal: 'center' }
-        cell.border = {
-          top: { style: borderStyle },
-          left: { style: borderStyle },
-          bottom: { style: borderStyle },
-          right: { style: borderStyle },
-        }
-      })
-
-      // --- DATA SECTION ---
-      // Add data rows from filteredVehicles
-      filteredVehicles.forEach((vehicle, index) => {
-        const row = worksheet.addRow([
-          index + 1,
-          vehicle.id,
-          vehicle.make,
-          vehicle.year,
-          vehicle.model,
-          vehicle.licenseNumber,
-        ])
-        row.eachCell((cell) => {
-          cell.font = { size: 11 }
-          cell.border = {
-            top: { style: borderStyle },
-            left: { style: borderStyle },
-            bottom: { style: borderStyle },
-            right: { style: borderStyle },
-          }
-        })
-      })
-
-      // --- FOOTER SECTION ---
-      // Add a spacer row before the footer
-      worksheet.addRow([])
-      // Add the footer row
-      const footerRow = worksheet.addRow([footerText])
-      footerRow.font = { italic: true, size: 11 }
-      // Align the footer text to the right
-      footerRow.getCell(1).alignment = { horizontal: 'right' }
-      // Merge footer cells so the footer spans across all columns (A to F here)
-      worksheet.mergeCells(`A${footerRow.number}:F${footerRow.number}`)
-
-      // --- FINALIZE ---
-      // Generate file buffer and trigger download
-      const buffer = await workbook.xlsx.writeBuffer()
-      const blob = new Blob([buffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      })
-      const filename = `Vehicle_List_${new Date().toISOString().split('T')[0]}.xlsx`
-      saveAs(blob, filename)
-      toast.success('Excel file downloaded successfully')
-    } catch (error) {
-      console.error('Excel Export Error:', error)
-      toast.error(error.message || 'Failed to export Excel file')
-    }
+  const handleDownload1 = () => {
+    exportToExcel({
+      title: 'Vehicle Report',
+      columns: [
+        { label: 'SN', key: 'sn' },
+        { label: 'Name', key: 'name' },
+        { label: 'Model', key: 'model' },
+        { label: 'Category', key: 'category' },
+        // { label: 'View', key: 'view' },
+      ],
+      data: vehicles,
+      metaData: {
+        GeneratedBy: 'Admin',
+        // 'Date Range': '01/01/2024 - 01/03/2024',
+        'Generated On': new Date().toLocaleDateString(),
+      },
+      fileName: 'Vehicle_Report',
+    })
   }
 
   // Export to PDF
-  const exportToPDF = () => {
-    try {
-      // Validate data before proceeding
-      if (!Array.isArray(currentData) || currentData.length === 0) {
-        console.error('No data available for PDF export')
-        return
-      }
-
-      // Configuration object for styling and layout
-      const CONFIG = {
-        colors: {
-          primary: [10, 45, 99],
-          secondary: [70, 70, 70],
-          border: [220, 220, 220],
-          background: [249, 250, 251],
-        },
-        company: {
-          name: 'Credence Tracker',
-          logo: { x: 15, y: 15, size: 8 },
-        },
-        layout: {
-          margin: 16,
-          lineHeight: 6,
-        },
-        fonts: {
-          primary: 'helvetica',
-        },
-      }
-
-      // Create a new jsPDF instance (landscape A4)
-      const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-      })
-
-      // --- Header Section ---
-      // Company logo (a simple filled rectangle as placeholder)
-      doc.setFillColor(...CONFIG.colors.primary)
-      doc.rect(
-        CONFIG.company.logo.x,
-        CONFIG.company.logo.y,
-        CONFIG.company.logo.size,
-        CONFIG.company.logo.size,
-        'F',
-      )
-      // Company name
-      doc.setFont(CONFIG.fonts.primary, 'bold')
-      doc.setFontSize(16)
-      doc.text(CONFIG.company.name, 28, 21)
-      // Header line
-      doc.setDrawColor(...CONFIG.colors.primary)
-      doc.setLineWidth(0.5)
-      doc.line(CONFIG.layout.margin, 25, doc.internal.pageSize.width - CONFIG.layout.margin, 25)
-
-      // --- Title & Date ---
-      doc.setFontSize(24)
-      doc.text('Vehicles Report', CONFIG.layout.margin, 35)
-      const currentDate = new Date().toLocaleDateString('en-GB')
-      const dateText = `Generated: ${currentDate}`
-      doc.setFontSize(10)
-      doc.text(
-        dateText,
-        doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText),
-        21,
-      )
-
-      // --- Table Data Preparation ---
-      const tableColumns = ['SN', 'ID', 'Make', 'Year', 'Model', 'License Number']
-      const tableRows = currentData.map((row, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
-        row.id,
-        row.make,
-        row.year,
-        row.model,
-        row.licenseNumber,
-      ])
-
-      // --- Create Table using autoTable ---
-      doc.autoTable({
-        startY: 45,
-        head: [tableColumns],
-        body: tableRows,
-        theme: 'grid',
-        styles: {
-          fontSize: 10,
-          halign: 'center',
-          lineColor: CONFIG.colors.border,
-          lineWidth: 0.1,
-        },
-        headStyles: {
-          fillColor: CONFIG.colors.primary,
-          textColor: 255,
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: CONFIG.colors.background,
-        },
-        margin: { left: CONFIG.layout.margin, right: CONFIG.layout.margin },
-        didDrawPage: (data) => {
-          // Add header text on subsequent pages
-          if (doc.getCurrentPageInfo().pageNumber > 1) {
-            doc.setFontSize(15)
-            doc.setFont(CONFIG.fonts.primary, 'bold')
-            doc.text('Vehicles Report', CONFIG.layout.margin, 10)
-          }
-        },
-      })
-
-      const addMetadata = () => {
-        const metadata = [
-          { label: 'User:', value: decodedToken.username || 'N/A' },
-          { label: 'Group:', value: selectedGroupName || 'N/A' },
-          {
-            label: 'Date Range:',
-            value:
-              selectedFromDate && selectedToDate
-                ? `${selectedFromDate} To ${selectedToDate}`
-                : `${getDateRangeFromPeriod(selectedPeriod)}`,
-          },
-          { label: 'Vehicle:', value: selectedDeviceName || 'N/A' },
-        ]
-
-        doc.setFontSize(10)
-        doc.setFont(CONFIG.fonts.primary, 'bold')
-
-        let yPosition = 45
-        const xPosition = 15
-        const lineHeight = 6
-
-        metadata.forEach((item) => {
-          doc.text(`${item.label} ${item.value.toString()}`, xPosition, yPosition)
-          yPosition += lineHeight
-        })
-      }
-
-      // --- Footer Section ---
-      const pageCount = doc.getNumberOfPages()
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        // Footer line
-        doc.setDrawColor(...CONFIG.colors.border)
-        doc.setLineWidth(0.5)
-        doc.line(
-          CONFIG.layout.margin,
-          doc.internal.pageSize.height - 15,
-          doc.internal.pageSize.width - CONFIG.layout.margin,
-          doc.internal.pageSize.height - 15,
-        )
-        // Copyright text
-        doc.setFontSize(9)
-        doc.text(
-          `© ${CONFIG.company.name}`,
-          CONFIG.layout.margin,
-          doc.internal.pageSize.height - 10,
-        )
-        // Page number
-        const pageNumber = `Page ${i} of ${pageCount}`
-        const pageNumberWidth = doc.getTextWidth(pageNumber)
-        doc.text(
-          pageNumber,
-          doc.internal.pageSize.width - CONFIG.layout.margin - pageNumberWidth,
-          doc.internal.pageSize.height - 10,
-        )
-      }
-
-      // --- Save the PDF ---
-      doc.save(`Vehicles_Report_${new Date().toISOString().split('T')[0]}.pdf`)
-      toast.success('PDF downloaded successfully')
-    } catch (error) {
-      console.error('PDF Export Error:', error)
-      toast.error(error.message || 'Failed to export PDF')
-    }
+  const handleDownload = () => {
+    exportToPDF({
+      title: 'Vehicle Report',
+      columns: [
+        { label: 'SN', key: 'sn', sortable: true },
+        { label: 'Name', key: 'name', sortable: true },
+        { label: 'Model', key: 'model', sortable: true },
+        { label: 'Category', key: 'category', sortable: true },
+        { label: 'View', key: 'view', sortable: true },
+      ],
+      data: vehicles,
+      metaData: {
+        User: 'Admin',
+        // 'Date Range': '01/01/2024 - 01/03/2024',
+        'Generated On': new Date().toLocaleDateString(),
+      },
+      fileName: 'Vehicles_Report',
+    })
   }
 
   // Dummy logout function; replace with your actual logout logic
@@ -438,12 +198,12 @@ const VehicleList = () => {
     {
       icon: FaRegFilePdf,
       label: 'Download PDF',
-      onClick: () => exportToPDF(),
+      onClick: () => handleDownload(),
     },
     {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
-      onClick: () => exportToExcel(),
+      onClick: () => handleDownload1(),
     },
     {
       icon: FaPrint,
@@ -462,49 +222,57 @@ const VehicleList = () => {
     },
   ]
 
-  const [nameFilter, setNameFilter] = useState(null);
-  const [modelFilter, setModelFilter] = useState(null);
-  const [categoryFilter, setCategoryFilter] = useState(null);
-  const [filteredOptions, setFilteredOptions] = useState({ names: [], models: [], categories: [] });
+  const [nameFilter, setNameFilter] = useState(null)
+  const [modelFilter, setModelFilter] = useState(null)
+  const [categoryFilter, setCategoryFilter] = useState(null)
+  const [filteredOptions, setFilteredOptions] = useState({ names: [], models: [], categories: [] })
 
   useEffect(() => {
-    if (!Array.isArray(vehicles)) return;
+    if (!Array.isArray(vehicles)) return
 
-    const uniqueNames = [...new Set(vehicles.map((v) => v.name))].map((name) => ({ label: name, value: name }));
-    const uniqueModels = [...new Set(vehicles.map((v) => v.model))].map((model) => ({ label: model, value: model }));
-    const uniqueCategories = [...new Set(vehicles.map((v) => v.category))].map((category) => ({ label: category, value: category }));
+    const uniqueNames = [...new Set(vehicles.map((v) => v.name))].map((name) => ({
+      label: name,
+      value: name,
+    }))
+    const uniqueModels = [...new Set(vehicles.map((v) => v.model))].map((model) => ({
+      label: model,
+      value: model,
+    }))
+    const uniqueCategories = [...new Set(vehicles.map((v) => v.category))].map((category) => ({
+      label: category,
+      value: category,
+    }))
 
     setFilteredOptions({
       names: uniqueNames,
       models: uniqueModels,
       categories: uniqueCategories,
-    });
-  }, [vehicles]);
+    })
+  }, [vehicles])
   useEffect(() => {
-    let filtered = vehicles;
+    let filtered = vehicles
 
     if (nameFilter) {
-      filtered = filtered.filter((v) => v.name === nameFilter.value);
+      filtered = filtered.filter((v) => v.name === nameFilter.value)
     }
     if (modelFilter) {
-      filtered = filtered.filter((v) => v.model === modelFilter.value);
+      filtered = filtered.filter((v) => v.model === modelFilter.value)
     }
     if (categoryFilter) {
-      filtered = filtered.filter((v) => v.category === categoryFilter.value);
+      filtered = filtered.filter((v) => v.category === categoryFilter.value)
     }
 
-    setFilteredVehicles(filtered);
-  }, [nameFilter, modelFilter, categoryFilter, vehicles]);
+    setFilteredVehicles(filtered)
+  }, [nameFilter, modelFilter, categoryFilter, vehicles])
 
   const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);  // Reset to first page when changing items per page
-  };
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1) // Reset to first page when changing items per page
+  }
 
   return (
     <>
-      <div className='d-flex justify-content-between mb-3'>
-
+      <div className="d-flex justify-content-between mb-3">
         <CRow className="">
           {/* Name Filter */}
           <CCol style={{ width: '15rem', paddingRight: '0rem' }}>
@@ -558,7 +326,6 @@ const VehicleList = () => {
           <CCard className="mb-4">
             <CCardHeader className="d-flex justify-content-between align-items-center">
               <strong>Vehicles</strong>
-
             </CCardHeader>
             <CCardBody>
               {filteredVehicles.length === 0 ? (
@@ -589,7 +356,10 @@ const VehicleList = () => {
                         <CTableDataCell className="text-center">{row.model}</CTableDataCell>
                         <CTableDataCell className="text-center">{row.category}</CTableDataCell>
                         <CTableDataCell className="text-center">
-                          <CButton onClick={() => handleViewClick(row)} style={{ backgroundColor: `rgb(10, 45, 99)`, color: "white" }}>
+                          <CButton
+                            onClick={() => handleViewClick(row)}
+                            style={{ backgroundColor: `rgb(10, 45, 99)`, color: 'white' }}
+                          >
                             View
                           </CButton>
                         </CTableDataCell>

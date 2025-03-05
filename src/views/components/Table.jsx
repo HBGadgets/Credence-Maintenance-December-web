@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
 function Table() {
-    return ()
+  return <></>
 }
 export default Table
