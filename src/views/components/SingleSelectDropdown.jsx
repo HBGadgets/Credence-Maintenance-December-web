@@ -23,9 +23,6 @@ const SingleSelectDropdown = ({
         isSearchable={true} // Enables typing & search
       />
       {isInvalid && <CFormFeedback invalid>Please select a valid option.</CFormFeedback>}
-
-      {/* Render the CustomComponent if provided */}
-      {/* <VehicleList DropdownComponent={SingleSelectDropdown} /> */}
     </CCol>
   )
 }
