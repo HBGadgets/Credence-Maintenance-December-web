@@ -113,41 +113,42 @@ function Table({
                               </CTableDataCell>
                             ),
                         )}
-                        <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
-                          {editButton && (
-                            <button
-                              className="btn btn-link p-0 me-2"
-                              onClick={() => handleEditButton(row.id)}
-                              aria-label="Edit"
-                            >
-                              <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-                            </button>
-                          )}
-                          {deleteButton && (
-                            <button
-                              className="btn btn-link p-0 me-3"
-                              onClick={() => handleDeleteButton(row.id)}
-                              aria-label="Delete"
-                            >
-                              <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-                            </button>
-                          )}
-
-                          {viewButton && (
-                            <button
-                              className="btn btn-sm d-flex align-items-center gap-1"
-                              onClick={() => handleViewButton(row.id)}
-                              style={{
-                                backgroundColor: 'rgb(10, 45, 99)',
-                                color: 'white',
-                                borderColor: 'rgb(10, 45, 99)',
-                              }}
-                            >
-                              <Eye size={16} />
-                              <span>View</span>
-                            </button>
-                          )}
-                        </CTableDataCell>
+                        {(editButton || deleteButton || viewButton) && (
+                          <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
+                            {editButton && (
+                              <button
+                                className="btn btn-link p-0 me-2"
+                                onClick={() => handleEditButton(row.id)}
+                                aria-label="Edit"
+                              >
+                                <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
+                              </button>
+                            )}
+                            {deleteButton && (
+                              <button
+                                className="btn btn-link p-0 me-3"
+                                onClick={() => handleDeleteButton(row.id)}
+                                aria-label="Delete"
+                              >
+                                <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
+                              </button>
+                            )}
+                            {viewButton && (
+                              <button
+                                className="btn btn-sm d-flex align-items-center gap-1"
+                                onClick={() => handleViewButton(row.id)}
+                                style={{
+                                  backgroundColor: 'rgb(10, 45, 99)',
+                                  color: 'white',
+                                  borderColor: 'rgb(10, 45, 99)',
+                                }}
+                              >
+                                <Eye size={16} />
+                                <span>View</span>
+                              </button>
+                            )}
+                          </CTableDataCell>
+                        )}
                       </CTableRow>
                     ))}
                   </CTableBody>

@@ -120,7 +120,8 @@ export const drivers = [
       drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
       tpPass: 'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=800',
     },
-  }, {
+  },
+  {
     id: '9',
     name: 'Emma Patel',
     contactNumber: '+91 9876543214',
@@ -134,7 +135,8 @@ export const drivers = [
       drivingLicense: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800',
       tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
     },
-  }, {
+  },
+  {
     id: '10',
     name: 'Emma Patel',
     contactNumber: '+91 9876543214',
@@ -148,7 +150,8 @@ export const drivers = [
       drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
       tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
     },
-  }, {
+  },
+  {
     id: '11',
     name: 'Emma Patel',
     contactNumber: '+91 9876543214',
@@ -162,7 +165,8 @@ export const drivers = [
       drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
       tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
     },
-  }, {
+  },
+  {
     id: '12',
     name: 'Emma Patel',
     contactNumber: '+91 9876543214',
@@ -177,5 +181,4 @@ export const drivers = [
       tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
     },
   },
-
-];
+]
