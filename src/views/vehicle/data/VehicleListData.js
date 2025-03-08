@@ -1,5 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+// Vehicle List Table.
 
 export const useVehicleListData = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -98,3 +101,99 @@ export const useVehicleListData = () => {
         setSearchQuery,
     };
 };
+
+
+
+// -----------------------------------------------------------------------------------------------------
+// Vehicle Profile Section
+
+export const useVehicleProfileData = () => {
+    const { id } = useParams();
+    const [vehicles, setVehicles] = useState([]);
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
+    const [filteredLogs, setFilteredLogs] = useState([]);
+
+    useEffect(() => {
+        const fetchVehicles = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/credence`);
+                console.log('Devices from credence:', response.data);
+                setVehicles(response.data.devices || []);
+
+                // Find the selected vehicle by ID
+                const vehicleData = response.data.devices.find((v) => v._id === id);
+                setSelectedVehicle(vehicleData || null);
+                setFilteredLogs(vehicleData?.maintenanceLogs || []);
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+            }
+        };
+
+        fetchVehicles();
+    }, [id]);
+
+    return { vehicles, selectedVehicle, filteredLogs };
+};
+
+// -----------------------------------------------------------------------------------------------------
+
+
+// Vehcile Document locker
+
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+export const getDocuments = async (id) => {
+    try {
+        return await axios.get(`${API_URL}/api/vehicle-documents/get/${id}`);
+    } catch (error) {
+        console.error("Error fetching documents:", error);
+        throw error;
+    }
+};
+
+export const uploadDocuments = async (id, formData) => {
+    try {
+        return await axios.post(
+            `${API_URL}/api/vehicle-documents/add/${id}`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Accept": "application/json"
+                },
+            }
+        );
+    } catch (error) {
+        console.error("Error uploading documents:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+
+export const editDocument = async (id, docId, formData) => {
+    try {
+        return await axios.patch(
+            `${API_URL}/api/vehicle-documents/update/${id}/${docId}`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+        );
+    } catch (error) {
+        console.error("Error updating document:", error);
+        throw error;
+    }
+};
+
+export const deleteDocumentAPI = async (id, docId) => {
+    try {
+        return await axios.delete(
+            `${API_URL}/api/vehicle-documents/delete-image?vehicleId=${id}/field=${docId}`
+        );
+    } catch (error) {
+        console.error("Error deleting document:", error);
+        throw error;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------
+

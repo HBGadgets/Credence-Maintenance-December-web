@@ -8,6 +8,10 @@ const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.jsx'))
 import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
 import VehicleTripModal from './views/vehicle/modals/VehicleTripModal.jsx'
+// Tyre Management
+const TyreInventory = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
+const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
+const TyreShowDoc = React.lazy(() => import('./views/Tyre-Management/TyreShowDoc.js'))
 
 
 // Supervisor
@@ -28,10 +32,7 @@ const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/In
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 const ShowDriverExpenseDoc = React.lazy(() => import('./views/Expenses-Management/driver-expenses/showDoc.js'))
 
-// Tyre Management
-const TyreInventory = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
-const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
-const TyreShowDoc = React.lazy(() => import('./views/Tyre-Management/TyreShowDoc.js'))
+
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(() => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'))
