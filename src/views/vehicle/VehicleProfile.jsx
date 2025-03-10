@@ -14,6 +14,7 @@ function VehicleProfile() {
 
   console.log('Selected Vehicle:', selectedVehicle)
   console.log('Filtered Logs:', filteredLogs)
+  console.log('gagannnnnnnnnnnnnnnnnn', vehicles)
 
   // Services Info
   const servicesVehicle = {
@@ -30,7 +31,7 @@ function VehicleProfile() {
 
   return (
     <div>
-      {!selectedVehicle ? (
+      {!vehicles ? (
         <div
           style={{
             position: 'absolute',
@@ -45,18 +46,23 @@ function VehicleProfile() {
         <>
           <div>
             <span>
-              <strong className="fs-4 d-flex flex-column">{selectedVehicle.name}</strong>
+              <strong className="fs-4 d-flex flex-column">{vehicles.device?.name}</strong>
             </span>
             <div className="d-flex flex-column">
-              <span className="text-body-secondary">Device Model: {selectedVehicle.model}</span>
-              <span className="text-body-secondary">Category: {selectedVehicle.category}</span>
+              <span className="text-body-secondary">Device Model: {vehicles.device?.model}</span>
+              <span className="text-body-secondary">Category: {vehicles.device?.category}</span>
             </div>
           </div>
           <hr />
 
           {/* Document section */}
           {/* <VehicleDoc /> */}
-          <VehicleDocument />
+          <VehicleDocument
+            Insurance={vehicles.vehicleDocument?.Insurance}
+            fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
+            rc={vehicles.vehicleDocument?.rc}
+            puc={vehicles.vehicleDocument?.puc}
+          />
 
           <hr />
 

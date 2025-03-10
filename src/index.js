@@ -5,9 +5,11 @@ import 'core-js'
 
 import App from './App'
 import store from './store'
+// import appStore from './store/redux/appStore'
+
 
 createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
+  <Provider store={store} >
     <App />
   </Provider>,
 )

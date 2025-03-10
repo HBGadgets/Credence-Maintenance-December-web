@@ -43,10 +43,10 @@ const DocumentModal = ({
                   onChange={(e) => setDocumentData({ ...documentData, category: e.target.value })}
                 >
                   <option value="">Select Category</option>
-                  <option value="PUC">PUC</option>
-                  <option value="RC">RC</option>
+                  <option value="puc">PUC</option>
+                  <option value="rc">RC</option>
                   <option value="Insurance">Insurance</option>
-                  <option value="Fitness Certificate">Fitness Certificate</option>
+                  <option value="fitnessCertificate">Fitness Certificate</option>
                 </CFormSelect>
               </CInputGroup>
             </CCol>
