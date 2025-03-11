@@ -24,9 +24,9 @@ const DateRangeFilter = React.lazy(() => import('../../../components/DateRangeFi
 import { useParams } from 'react-router-dom'
 import { vehicles } from '../data/data'
 
-function VehicleTripModal({  }) {
+function VehicleTripModal({}) {
   const { id } = useParams()
-  const vehicle = vehicles.find((v) => v.id === "V001")
+  const vehicle = vehicles.find((v) => v.id === 'V001')
   const [trip, setTrips] = useState(vehicle.trips)
   const [filteredLogs, setFilteredLogs] = useState(vehicle.trips)
   const [searchQuery, setSearchQuery] = useState('')
@@ -109,79 +109,79 @@ function VehicleTripModal({  }) {
 
   return (
     <>
-        <div className="d-flex gap-3 align-items-end">
-          <DateRangeFilter onFilter={handleDateFilter} />
-          <CInputGroup className="w-50">
-            <CFormInput
-              type="text"
-              placeholder="Search trips..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </CInputGroup>
-          <CButton color="secondary" onClick={handleClearFilter} title="Clear Filter">
-            Clear Filter
-          </CButton>
-        </div>
-        <CRow>
-          <CCol xs={12}>
-            <CCard className="mb-4">
-              <CCardHeader>
-                <strong>Trips</strong>
-              </CCardHeader>
-              <CCardBody>
-                {filteredLogs.length === 0 ? (
-                  <p className="text-center">No trips match the filter criteria.</p>
-                ) : (
-                  <div className="table-responsive">
-                    <CTable striped hover responsive bordered>
-                      <CTableHead>
-                        <CTableRow>
-                          {columns.map((column, index) => (
-                            <CTableHeaderCell
-                              key={index}
-                              className="text-center"
-                              onClick={() => handleSort(column)}
-                              style={{ cursor: 'pointer' }}
-                            >
-                              {column} {getSortIcon(column)}
-                            </CTableHeaderCell>
-                          ))}
-                        </CTableRow>
-                      </CTableHead>
-                      <CTableBody>
-                        {filteredLogs.map((row, rowIndex) => (
-                          <CTableRow key={rowIndex}>
-                            <CTableDataCell className="text-center">{row.driver}</CTableDataCell>
-                            <CTableDataCell className="text-center">
-                              {row.startLocation} &rarr; {row.endLocation}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">{row.distance}</CTableDataCell>
-                            <CTableDataCell className="text-center">{row.startDate}</CTableDataCell>
-                            <CTableDataCell className="text-center">{row.endDate}</CTableDataCell>
-                            <CTableDataCell className="text-center">{row.duration}</CTableDataCell>
-                            <CTableDataCell className="text-center">{row.totalCost}</CTableDataCell>
-                            <CTableDataCell
-                              className={`text-center ${
-                                row.status === 'completed'
-                                  ? 'text-success'
-                                  : row.status === 'in-progress'
-                                    ? 'text-warning'
-                                    : 'text-danger'
-                              }`}
-                            >
-                              {row.status}
-                            </CTableDataCell>
-                          </CTableRow>
+      <div className="d-flex gap-3 align-items-end">
+        <DateRangeFilter onFilter={handleDateFilter} />
+        <CInputGroup className="w-50">
+          <CFormInput
+            type="text"
+            placeholder="Search trips..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </CInputGroup>
+        <CButton color="secondary" onClick={handleClearFilter} title="Clear Filter">
+          Clear Filter
+        </CButton>
+      </div>
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="mb-4">
+            <CCardHeader>
+              <strong>Trips</strong>
+            </CCardHeader>
+            <CCardBody>
+              {filteredLogs.length === 0 ? (
+                <p className="text-center">No trips match the filter criteria.</p>
+              ) : (
+                <div className="table-responsive">
+                  <CTable striped hover responsive bordered>
+                    <CTableHead>
+                      <CTableRow>
+                        {columns.map((column, index) => (
+                          <CTableHeaderCell
+                            key={index}
+                            className="text-center"
+                            onClick={() => handleSort(column)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {column} {getSortIcon(column)}
+                          </CTableHeaderCell>
                         ))}
-                      </CTableBody>
-                    </CTable>
-                  </div>
-                )}
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {filteredLogs.map((row, rowIndex) => (
+                        <CTableRow key={rowIndex}>
+                          <CTableDataCell className="text-center">{row.driver}</CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            {row.startLocation} &rarr; {row.endLocation}
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">{row.distance}</CTableDataCell>
+                          <CTableDataCell className="text-center">{row.startDate}</CTableDataCell>
+                          <CTableDataCell className="text-center">{row.endDate}</CTableDataCell>
+                          <CTableDataCell className="text-center">{row.duration}</CTableDataCell>
+                          <CTableDataCell className="text-center">{row.totalCost}</CTableDataCell>
+                          <CTableDataCell
+                            className={`text-center ${
+                              row.status === 'completed'
+                                ? 'text-success'
+                                : row.status === 'in-progress'
+                                  ? 'text-warning'
+                                  : 'text-danger'
+                            }`}
+                          >
+                            {row.status}
+                          </CTableDataCell>
+                        </CTableRow>
+                      ))}
+                    </CTableBody>
+                  </CTable>
+                </div>
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
     </>
   )
 }

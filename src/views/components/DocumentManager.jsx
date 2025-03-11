@@ -1,29 +1,20 @@
-import { useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CButton, CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilPencil, cilTrash, cilZoom } from '@coreui/icons'
-import { CCard, CCardBody, CCardHeader, CButton, CRow, CCol } from '@coreui/react'
 import DocumentUploadButton from './DocumentUploadButton'
+import { useState } from 'react'
 
-const DocumentManager = () => {
-  const [documents, setDocuments] = useState([])
+const DocumentManager = ({ documents = [], onUpload, onDelete, onEdit, onView }) => {
   const [uploadModalVisible, setUploadModalVisible] = useState(false)
 
-  const handleUpload = (newDocs) => {
-    const formattedDocs = newDocs.map((doc, index) => ({
-      ...doc,
-      id: documents.length + index, // Assign unique ID
-      file: {
-        filename: doc.file?.name || 'Uploaded File',
-        contentType: doc.file?.type || '',
-        data: doc.file ? URL.createObjectURL(doc.file) : '', // Convert to previewable URL
-      },
-    }))
-
-    setDocuments([...documents, ...formattedDocs])
-  }
-
-  const handleDelete = (docId) => {
-    setDocuments(documents.filter((doc) => doc.id !== docId))
+  const handleDownload = (file) => {
+    if (!file?.data) return
+    const link = document.createElement('a')
+    link.href = file.data
+    link.download = file.filename || 'document'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -87,28 +78,28 @@ const DocumentManager = () => {
                         size="sm"
                         className="text-info"
                         style={{ cursor: 'pointer' }}
-                        onClick={() => console.log('View:', doc)}
+                        onClick={() => onView && onView(doc)}
                       />
                       <CIcon
                         icon={cilCloudDownload}
                         size="sm"
                         className="text-success"
                         style={{ cursor: 'pointer' }}
-                        onClick={() => console.log('Download:', doc)}
+                        onClick={() => handleDownload(file)}
                       />
                       <CIcon
                         icon={cilPencil}
                         size="sm"
                         className="text-warning"
                         style={{ cursor: 'pointer' }}
-                        onClick={() => console.log('Edit:', doc)}
+                        onClick={() => onEdit && onEdit(doc)}
                       />
                       <CIcon
                         icon={cilTrash}
                         size="sm"
                         className="text-danger"
                         style={{ cursor: 'pointer' }}
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => onDelete && onDelete(doc.id)}
                       />
                     </div>
                   </div>
@@ -127,7 +118,7 @@ const DocumentManager = () => {
       <DocumentUploadButton
         visible={uploadModalVisible}
         onClose={() => setUploadModalVisible(false)}
-        onUpload={handleUpload}
+        onUpload={onUpload}
       />
     </CCard>
   )
