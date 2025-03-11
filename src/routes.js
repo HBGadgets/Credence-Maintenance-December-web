@@ -56,8 +56,8 @@ const BudgetAllocation = React.lazy(
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 
 // DriverExperts
-const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
-const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.js'))
+const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.jsx'))
+const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.jsx'))
 
 const routes = [
   // Dashboard
