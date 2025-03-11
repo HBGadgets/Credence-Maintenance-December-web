@@ -15,6 +15,22 @@ import {
 } from '@coreui/react'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 
+// CSS for skeleton
+
+const skeletonStyles = `
+  @keyframes pulse {
+    0% { opacity: 1 }
+    50% { opacity: 0.4 }
+    100% { opacity: 1 }
+  }
+
+  .skeleton-loader {
+    background: #e0e0e0;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite;
+  }
+`
+
 function Table({
   title,
   filteredData,
@@ -28,6 +44,7 @@ function Table({
   handleDeleteButton,
   currentPage,
   itemsPerPage,
+  isFetching,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
@@ -67,34 +84,76 @@ function Table({
 
   return (
     <CRow>
+      <style>{skeletonStyles}</style>
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader className="d-flex justify-content-between align-items-center">
             <strong>{title}</strong>
           </CCardHeader>
           <CCardBody>
-            {!filteredData.length ? (
-              <p className="text-center">No {title} found.</p>
-            ) : (
-              <CTable striped hover responsive bordered>
-                <CTableHead>
+            <CTable striped hover responsive bordered>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
+                  {columns.map((column, index) => (
+                    <CTableHeaderCell
+                      key={index}
+                      className="text-center"
+                      onClick={() => column.sortable && handleSort(column.key)}
+                      style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                    >
+                      {column.label} {column.sortable && getSortIcon(column.key)}
+                    </CTableHeaderCell>
+                  ))}
+                  {(editButton || deleteButton || viewButton) && (
+                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                  )}
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {isFetching ? (
+                  Array.from({ length: itemsPerPage }).map((_, index) => (
+                    <CTableRow key={`skeleton-${index}`}>
+                      <CTableDataCell className="text-center">
+                        <div className="skeleton-loader" style={{ height: '20px' }} />
+                      </CTableDataCell>
+                      {columns.map((_, colIndex) => (
+                        <CTableDataCell key={colIndex} className="text-center">
+                          <div className="skeleton-loader" style={{ height: '20px' }} />
+                        </CTableDataCell>
+                      ))}
+                      {(editButton || deleteButton || viewButton) && (
+                        <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
+                          {editButton && (
+                            <div
+                              className="skeleton-loader"
+                              style={{ width: '20px', height: '20px' }}
+                            />
+                          )}
+                          {deleteButton && (
+                            <div
+                              className="skeleton-loader"
+                              style={{ width: '20px', height: '20px' }}
+                            />
+                          )}
+                          {viewButton && (
+                            <div
+                              className="skeleton-loader"
+                              style={{ width: '60px', height: '30px' }}
+                            />
+                          )}
+                        </CTableDataCell>
+                      )}
+                    </CTableRow>
+                  ))
+                ) : filteredData.length === 0 ? (
                   <CTableRow>
-                    {columns.map((column, index) => (
-                      <CTableHeaderCell
-                        key={index}
-                        className="text-center"
-                        onClick={() => column.sortable && handleSort(column.key)}
-                        style={{
-                          cursor: column.sortable ? 'pointer' : 'default',
-                        }}
-                      >
-                        {column.label} {column.sortable && getSortIcon(column.key)}
-                      </CTableHeaderCell>
-                    ))}
+                    <CTableDataCell colSpan={columns.length + 2} className="text-center">
+                      No {title} found.
+                    </CTableDataCell>
                   </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {currentData.map((row, rowIndex) => (
+                ) : (
+                  currentData.map((row, rowIndex) => (
                     <CTableRow key={rowIndex}>
                       <CTableDataCell className="text-center">
                         {(currentPage - 1) * itemsPerPage + rowIndex + 1}
@@ -145,10 +204,10 @@ function Table({
                         </CTableDataCell>
                       )}
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            )}
+                  ))
+                )}
+              </CTableBody>
+            </CTable>
           </CCardBody>
         </CCard>
       </CCol>
@@ -157,7 +216,7 @@ function Table({
 }
 
 Table.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.string,
   filteredData: PropTypes.array,
   columns: PropTypes.array,
   setFilteredData: PropTypes.func,
@@ -169,6 +228,11 @@ Table.propTypes = {
   handleDeleteButton: PropTypes.func,
   currentPage: PropTypes.number,
   itemsPerPage: PropTypes.number,
+  isFetching: PropTypes.bool,
+}
+
+Table.defaultProps = {
+  isFetching: false,
 }
 
 export default Table
