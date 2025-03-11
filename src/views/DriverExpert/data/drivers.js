@@ -1,27 +1,44 @@
-export const drivers = Array.from({ length: 100 }, (_, index) => {
-  const id = (index + 1).toString()
-  const name = `Driver ${index + 1}`
-  const contactNumber = `+91 ${Math.floor(1000000000 + Math.random() * 9000000000)}`
-  const email = `driver${index + 1}@example.com`
-  const licenseNumber = `DL${Math.floor(10000000 + Math.random() * 90000000)}`
-  const aadharNumber = `1234 5678 ${Math.floor(1000 + Math.random() * 9000)}`
-  const password = '123456'
-  const profileImage = `https://images.unsplash.com/photo-${Math.floor(1000000000 + Math.random() * 9000000000)}?w=400`
-  const documents = {
-    aadharCard: `https://images.unsplash.com/photo-${Math.floor(1000000000 + Math.random() * 9000000000)}?w=800`,
-    drivingLicense: `https://images.unsplash.com/photo-${Math.floor(1000000000 + Math.random() * 9000000000)}?w=800`,
-    tpPass: `https://images.unsplash.com/photo-${Math.floor(1000000000 + Math.random() * 9000000000)}?w=800`,
-  }
+import axios from 'axios'
 
-  return {
-    id,
-    name,
-    contactNumber,
-    email,
-    licenseNumber,
-    aadharNumber,
-    password,
-    profileImage,
-    documents,
+const token =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
+
+export const drivers = async () => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    return response.data.map((data) => ({
+      name: data.name,
+      contactNumber: data.contactNumber,
+      email: data.email,
+      password: data.password,
+      id: data._id,
+    }))
+  } catch (error) {
+    console.log(error)
+    throw error
   }
-})
+}
+
+export const driverProfile = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/get/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    return response.data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
