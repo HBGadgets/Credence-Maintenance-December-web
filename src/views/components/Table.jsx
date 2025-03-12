@@ -15,8 +15,6 @@ import {
 } from '@coreui/react'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 
-// CSS for skeleton
-
 const skeletonStyles = `
   @keyframes pulse {
     0% { opacity: 1 }

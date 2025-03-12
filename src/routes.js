@@ -56,8 +56,11 @@ const BudgetAllocation = React.lazy(
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 
 // DriverExperts
-const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.js'))
-const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.js'))
+const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.jsx'))
+const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.jsx'))
+const Attendance = React.lazy(
+  () => import('./views/DriverExpert/components/attendance/Attendance.jsx'),
+)
 
 const routes = [
   // Dashboard
@@ -112,7 +115,8 @@ const routes = [
 
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
-  { path: '/DriverExp/:id', name: 'Driver Profile', element: DriverProfile },
+  { path: '/DriverProfile/:id', name: 'Driver Profile', element: DriverProfile },
+  { path: '/DriverAttendance/:id', name: 'Driver Attendance', element: Attendance },
 ]
 
 export default routes

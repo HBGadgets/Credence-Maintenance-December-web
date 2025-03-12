@@ -22,9 +22,10 @@ function Tabs({ tabs }) {
         {tabs.map((tab, index) => (
           <CTabPanel
             key={index}
-            className="p-3"
             aria-labelledby={`${tab.label}-tab-pane`}
             itemKey={index + 1}
+            className="border mt-3 rounded"
+            style={{ paddingTop: '15px', paddingBottom: '30px' }}
           >
             {tab.content}
           </CTabPanel>

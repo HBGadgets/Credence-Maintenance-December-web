@@ -42,3 +42,23 @@ export const driverProfile = async (id) => {
     throw error
   }
 }
+
+export const driverAttendance = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendence-month-wise?driverId=${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return response.data
+  } catch (error) {
+    console.log(error.message)
+    throw error
+  }
+}
