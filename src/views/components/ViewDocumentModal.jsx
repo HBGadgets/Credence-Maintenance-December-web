@@ -4,7 +4,7 @@ import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilPencil, cilTrash } from '@coreui/icons'
 
 const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDownload }) => {
-  console.log(document)
+  console.log('docxxxxxx', document)
   return (
     <CModal
       visible={visible}

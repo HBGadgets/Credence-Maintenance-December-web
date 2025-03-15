@@ -1,0 +1,49 @@
+.doc-item {
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ✅ Ensures both folder & loader are properly positioned */
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    /* Ensures spacing */
+    position: relative;
+    min-width: 50px;
+}
+
+/* ✅ Folder Icon Always Visible */
+.folder-icon {
+    color: #333;
+    z-index: 1;
+}
+
+/* ✅ Loader Appears BESIDE Folder */
+.loading-icon {
+    color: #c83232;
+    position: absolute;
+    right: -25px;
+    /* Moves loader to the right */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 🔄 Loader Animation */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

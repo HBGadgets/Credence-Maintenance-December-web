@@ -65,13 +65,14 @@ function VehicleProfile() {
 
           {/* Document section */}
           {/* <VehicleDoc /> */}
-          <VehicleDocument
-            Insurance={vehicles.vehicleDocument?.Insurance}
-            fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
-            rc={vehicles.vehicleDocument?.rc}
-            puc={vehicles.vehicleDocument?.puc}
-          />
-
+          <div className="custom-doc">
+            <VehicleDocument
+              Insurance={vehicles.vehicleDocument?.Insurance}
+              fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
+              rc={vehicles.vehicleDocument?.rc}
+              puc={vehicles.vehicleDocument?.puc}
+            />
+          </div>
           <br />
 
           {/* Services section */}

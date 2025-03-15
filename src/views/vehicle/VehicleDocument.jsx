@@ -745,6 +745,7 @@ import {
   editDocument,
   deleteDocumentAPI,
 } from './data/VehicleListData'
+import { LoaderCircle } from 'lucide-react'
 
 const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const { id } = useParams()
@@ -888,16 +889,18 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   }
 
   const handleDownload = (doc) => {
-    if (doc?.file?.data) {
-      const link = document.createElement('a')
-      link.href = `data:${doc.file.contentType};base64,${doc.file.data}`
-      link.download = doc.file.filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } else {
-      console.error('No file data available for download')
+    if (!doc || !doc.image) {
+      console.error('Invalid document structure', doc)
+      return
     }
+
+    // Extract Base64 data and create a downloadable link
+    const link = document.createElement('a')
+    link.href = doc.image // The Base64 image string
+    link.download = `${doc.name || 'document'}.jpg` // Default filename if none is provided
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const openAddModal = () => {
@@ -917,7 +920,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       console.log(`Fetching document for field: ${field}`) // Debugging log
       const imageData = await getDocuments(id, field)
 
-      console.log('Fetched Base64 Data:', imageData) // Log the base64 image
+      // console.log('Fetched Base64 Data:', imageData) // Log the base64 image
 
       if (imageData) {
         setImageSrc(imageData)
@@ -963,7 +966,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
         </CCardHeader>
         <CCardBody>
           {loading ? (
-            <Loader />
+            <LoaderCircle /> // Show loader when loading
           ) : hasDocuments ? (
             <ul className="d-flex gap-3 list-unstyled">
               {documentsList.map(
@@ -973,6 +976,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
                       key={index}
                       className="text-center"
                       onClick={() => handleDocumentClick(doc.name)}
+                      style={{ position: 'relative' }} // Ensure proper layout
                     >
                       <FaRegFolderClosed size={40} />
                       <div className="mt-1 text-black fw-bold">{doc.name}</div>
@@ -981,7 +985,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
               )}
             </ul>
           ) : (
-            <p className="text-center">No documents found.</p>
+            <p className="text-center">No documents found.</p> // Show message when no documents
           )}
         </CCardBody>
       </CCard>
