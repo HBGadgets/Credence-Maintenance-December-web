@@ -7,6 +7,8 @@ import ServiceInfo from '../components/ServiceInfo'
 import { CButton, CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import './VehicleProfile.css'
 import VehicleDocument from './VehicleDocument'
+import { IoCarOutline, IoSpeedometerOutline } from 'react-icons/io5'
+import { TbCategory } from 'react-icons/tb'
 
 function VehicleProfile() {
   const navigate = useNavigate()
@@ -44,16 +46,22 @@ function VehicleProfile() {
         </div>
       ) : (
         <>
-          <div>
-            <span>
-              <strong className="fs-4 d-flex flex-column">{vehicles.device?.name}</strong>
-            </span>
-            <div className="d-flex flex-column">
-              <span className="text-body-secondary">Device Model: {vehicles.device?.model}</span>
-              <span className="text-body-secondary">Category: {vehicles.device?.category}</span>
+          <div className="vehicle-heading">
+            {/* 🚘 Vehicle Icon */}
+            <div className="vehicle-icon">
+              <IoCarOutline />
+            </div>
+
+            {/* 🚗 Heading Content */}
+            <div className="heading-content">
+              <h2 className="vehicle-title">{vehicles.device?.name || 'Vehicle Name'}</h2>
+              <p className="vehicle-subtitle">
+                Model: <strong>{vehicles.device?.model || 'N/A'}</strong> | Category:{' '}
+                <strong>{vehicles.device?.category || 'N/A'}</strong>
+              </p>
             </div>
           </div>
-          <hr />
+          <br />
 
           {/* Document section */}
           {/* <VehicleDoc /> */}
@@ -64,11 +72,11 @@ function VehicleProfile() {
             puc={vehicles.vehicleDocument?.puc}
           />
 
-          <hr />
+          <br />
 
           {/* Services section */}
           <ServiceInfo title="Services Information" data={vehicleServiceData} />
-          <hr />
+          <br />
 
           <div className="p-2">
             <CRow className="justify-content-between">

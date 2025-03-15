@@ -156,7 +156,6 @@ export const useVehicleProfileData = () => {
 
 // Vehcile Document locker
 
-// const API_URL = import.meta.env.VITE_API_URL;
 
 export const getDocuments = async (id, field) => {
     try {
@@ -169,56 +168,125 @@ export const getDocuments = async (id, field) => {
             }
         );
         const data = await response.json();
+
         if (data.vehicleDocument?.documents?.[field]?.image?.base64Data) {
-            setImageSrc(data.vehicleDocument.documents[field].image.base64Data);
+            return data.vehicleDocument.documents[field].image.base64Data;
         }
-        console.log("dsadasdaskd", data)
+
+        return null;
     } catch (error) {
         console.error("Error fetching vehicle document:", error);
+        return null;
     }
 };
 
-export const uploadDocuments = async (id, formData) => {
+
+
+export const uploadDocuments = async (vehicleId, documents) => {
+    if (!vehicleId || !documents || typeof documents !== "object") {
+        console.error("Invalid parameters: vehicle ID or document data is missing.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("vehicleId", vehicleId);
+
+    const documentType = Object.keys(documents)[0]; // Get the selected document type
+    const documentData = documents[documentType]; // Get the document details
+
+    if (!documentData || !documentData.file) {
+        console.error("No document file selected for upload.");
+        return;
+    }
+
+    // Map document type to the correct field name
+    const documentFieldMapping = {
+        rc: "rcImage",
+        Insurance: "insuranceImage",
+        puc: "pucImage",
+        fitnessCertificate: "fitnessCertificateImage",
+    };
+
+    const mappedFieldName = documentFieldMapping[documentType] || documentType; // Default to original key if not mapped
+
+    formData.append(`documents[${documentType}][issueDate]`, documentData.issueDate || "");
+    formData.append(`documents[${documentType}][expiryDate]`, documentData.expiryDate || "");
+    formData.append(mappedFieldName, documentData.file); // Append correct field name
+
+    console.log("Uploading Document:", mappedFieldName);
+
     try {
-        return await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/vehicle-documents/add${id}`,
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/vehicle-documents/add`,
             formData,
             {
                 headers: {
+                    "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${TOKEN}`,
                 },
             }
         );
+        return response.data;
     } catch (error) {
-        console.error("Error uploading documents:", error.response?.data || error.message);
+        console.error("Error uploading document:", error.response?.data || error.message);
         throw error;
     }
 };
 
 
-export const editDocument = async (id, docId, formData) => {
+
+
+export const editDocument = async (vehicleId, formData) => {
+    if (!vehicleId || !formData) {
+        console.error("Invalid parameters: Vehicle ID or document data is missing.");
+        return;
+    }
+
     try {
-        return await axios.patch(
-            `${API_URL}/api/vehicle-documents/update/${id}/${docId}`,
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/vehicle-documents/update/${vehicleId}`,
             formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
         );
+        console.log("Document updated successfully:", response.data);
+        return response.data;
     } catch (error) {
-        console.error("Error updating document:", error);
+        console.error("Error updating document:", error.response?.data || error.message);
         throw error;
     }
 };
+
+
+
+
 
 export const deleteDocumentAPI = async (id, docId) => {
     try {
-        return await axios.delete(
-            `${API_URL}/api/vehicle-documents/delete-image?vehicleId=${id}/field=${docId}`
+        const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/vehicle-documents/delete-image?vehicleId=${id}&field=${docId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`, // Ensure TOKEN is valid
+                },
+            }
         );
+
+        console.log("Delete API Response:", response.data); // Debugging log
+        return response.data; // Return the API response
     } catch (error) {
-        console.error("Error deleting document:", error);
+        console.error("Error deleting document:", error.response?.data || error.message);
         throw error;
     }
 };
+
+
+
+
 
 // -----------------------------------------------------------------------------------------------------
 

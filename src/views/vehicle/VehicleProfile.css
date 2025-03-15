@@ -24,3 +24,64 @@
   color: rgb(10, 45, 99);
   border: 2px solid rgb(10, 45, 99); /* Keep border to prevent shifting */
 }
+
+/* -----------------------------------------------------------------------------------------------  */
+
+/* 🚗 Vehicle Profile Card */
+
+.vehicle-heading {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  margin: auto;
+}
+
+.vehicle-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(10, 45, 99);
+  color: white;
+  font-size: 28px;
+  border-radius: 50%;
+}
+
+.heading-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🚘 Profile Section */
+.profile-section {
+  display: flex;
+  align-items: center;
+}
+
+.vehicle-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.vehicle-subtitle {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* 🌟 Responsive Design */
+@media (max-width: 768px) {
+  .vehicle-heading {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}

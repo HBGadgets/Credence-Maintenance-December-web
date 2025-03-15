@@ -4,17 +4,18 @@ import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilPencil, cilTrash } from '@coreui/icons'
 
 const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDownload }) => {
+  console.log(document)
   return (
     <CModal
       visible={visible}
       onClose={onClose}
-      size="l"
+      size="xl"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       backdrop="static"
       centered
     >
       <CModalHeader>
-        <h5>{document?.file?.filename}</h5>
+        <h5>{document?.name || 'Document'}</h5> {/* Display document name */}
       </CModalHeader>
       <div
         style={{
@@ -50,19 +51,8 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
         />
       </div>
       <CModalBody className="text-center">
-        {document?.file?.contentType.startsWith('image/') ? (
-          <img
-            src={`data:${document.file?.contentType};base64,${document.file?.data}`}
-            alt={document.file?.filename}
-            width="100%"
-          />
-        ) : document?.file?.contentType === 'application/pdf' ? (
-          <iframe
-            src={`data:${document.file?.contentType};base64,${document.file?.data}`}
-            width="100%"
-            height="600px"
-            title="PDF Viewer"
-          ></iframe>
+        {document?.image ? (
+          <img src={document?.image} alt={document.file?.filename} width="100%" />
         ) : (
           <p>Unsupported file type</p>
         )}

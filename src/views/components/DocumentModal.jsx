@@ -1,4 +1,155 @@
-import React from 'react'
+// import React, { useState } from 'react'
+// import {
+//   CModal,
+//   CModalHeader,
+//   CModalBody,
+//   CModalFooter,
+//   CButton,
+//   CForm,
+//   CRow,
+//   CCol,
+//   CFormInput,
+//   CInputGroup,
+//   CInputGroupText,
+//   CFormCheck,
+// } from '@coreui/react'
+// import CIcon from '@coreui/icons-react'
+// import { cilCalendar, cilFile } from '@coreui/icons'
+
+// const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit }) => {
+//   const [selectedDocument, setSelectedDocument] = useState('insurance') // Default selection
+//   const [documents, setDocuments] = useState({
+//     insurance: { issueDate: '', expiryDate: '', file: null },
+//     rc: { issueDate: '', expiryDate: '', file: null },
+//     puc: { issueDate: '', expiryDate: '', file: null },
+//     fitnessCertificate: { issueDate: '', expiryDate: '', file: null },
+//   })
+
+//   const handleInputChange = (type, field, value) => {
+//     setDocuments((prev) => ({
+//       ...prev,
+//       [type]: { ...prev[type], [field]: value },
+//     }))
+//   }
+
+//   const handleFileChange = (type, file) => {
+//     setDocuments((prev) => ({
+//       ...prev,
+//       [type]: { ...prev[type], file },
+//     }))
+//   }
+
+//   const handleSubmit = () => {
+//     if (!selectedDocument) {
+//       console.error('No document type selected.')
+//       return
+//     }
+
+//     const documentData = documents[selectedDocument]
+
+//     if (!documentData || !documentData.file) {
+//       console.error('No file selected for upload.')
+//       return
+//     }
+
+//     const selectedData = { [selectedDocument]: documentData } // Format correctly
+//     console.log('Sending selected document:', selectedData)
+//     onSubmit(selectedData)
+//   }
+
+//   const renderDocumentForm = (title, type) => (
+//     <div className={`mb-3 p-3 border rounded ${selectedDocument === type ? '' : 'd-none'}`}>
+//       <h6>{title}</h6>
+//       <CRow>
+//         <CCol md={6}>
+//           <CInputGroup>
+//             <CInputGroupText>
+//               <CIcon icon={cilCalendar} />
+//             </CInputGroupText>
+//             <CFormInput
+//               type="date"
+//               value={documents[type].issueDate}
+//               onChange={(e) => handleInputChange(type, 'issueDate', e.target.value)}
+//             />
+//           </CInputGroup>
+//         </CCol>
+//         <CCol md={6}>
+//           <CInputGroup>
+//             <CInputGroupText>
+//               <CIcon icon={cilCalendar} />
+//             </CInputGroupText>
+//             <CFormInput
+//               type="date"
+//               value={documents[type].expiryDate}
+//               onChange={(e) => handleInputChange(type, 'expiryDate', e.target.value)}
+//             />
+//           </CInputGroup>
+//         </CCol>
+//       </CRow>
+//       <CRow className="mt-2">
+//         <CCol md={12}>
+//           <CInputGroup>
+//             <CInputGroupText>
+//               <CIcon icon={cilFile} />
+//             </CInputGroupText>
+//             <CFormInput
+//               type="file"
+//               accept="image/*, application/pdf"
+//               onChange={(e) => handleFileChange(type, e.target.files[0])}
+//             />
+//           </CInputGroup>
+//         </CCol>
+//       </CRow>
+//     </div>
+//   )
+
+//   return (
+//     <CModal visible={visible} onClose={onClose} alignment="center" size="lg">
+//       <CModalHeader>
+//         <h5>Upload Vehicle Documents</h5>
+//       </CModalHeader>
+//       <CModalBody>
+//         <CForm>
+//           <h6>Select Document Type</h6>
+//           <CRow className="mb-3">
+//             {['insurance', 'rc', 'puc', 'fitnessCertificate'].map((doc) => (
+//               <CCol key={doc} md={3}>
+//                 <CFormCheck
+//                   type="radio"
+//                   name="documentType"
+//                   id={doc}
+//                   label={doc.toUpperCase()}
+//                   checked={selectedDocument === doc}
+//                   onChange={() => setSelectedDocument(doc)}
+//                 />
+//               </CCol>
+//             ))}
+//           </CRow>
+
+//           {renderDocumentForm('Insurance', 'insurance')}
+//           {renderDocumentForm('RC', 'rc')}
+//           {renderDocumentForm('PUC', 'puc')}
+//           {renderDocumentForm('Fitness Certificate', 'fitnessCertificate')}
+//         </CForm>
+//       </CModalBody>
+//       <CModalFooter>
+//         <CButton color="primary" onClick={handleSubmit} disabled={loadingSubmit}>
+//           {loadingSubmit ? 'Processing...' : 'Upload Document'}
+//         </CButton>
+//         <CButton color="secondary" onClick={onClose}>
+//           Cancel
+//         </CButton>
+//       </CModalFooter>
+//     </CModal>
+//   )
+// }
+
+// export default DocumentModal
+// -------------------------------------------------------------------------------
+
+// experiment code
+
+import React, { useState, useEffect } from 'react'
 import {
   CModal,
   CModalHeader,
@@ -8,94 +159,144 @@ import {
   CForm,
   CRow,
   CCol,
-  CFormSelect,
   CFormInput,
   CInputGroup,
   CInputGroupText,
+  CFormCheck,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilCalendar, cilFile, cilCameraControl } from '@coreui/icons'
+import { cilCalendar, cilFile } from '@coreui/icons'
 
-const DocumentModal = ({
-  visible,
-  onClose,
-  onSubmit,
-  documentData,
-  setDocumentData,
-  type,
-  loadingSubmit,
-}) => {
+const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit, initialData = {} }) => {
+  const [selectedDocument, setSelectedDocument] = useState('Insurance')
+  const [documents, setDocuments] = useState({
+    Insurance: { issueDate: '', expiryDate: '', file: null },
+    rc: { issueDate: '', expiryDate: '', file: null },
+    puc: { issueDate: '', expiryDate: '', file: null },
+    fitnessCertificate: { issueDate: '', expiryDate: '', file: null },
+  })
+
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setDocuments((prev) => ({
+        ...prev,
+        ...initialData,
+      }))
+      setSelectedDocument(Object.keys(initialData)[0] || 'insurance')
+    }
+  }, [initialData])
+
+  const handleInputChange = (type, field, value) => {
+    setDocuments((prev) => ({
+      ...prev,
+      [type]: { ...prev[type], [field]: value },
+    }))
+  }
+
+  const handleFileChange = (type, file) => {
+    setDocuments((prev) => ({
+      ...prev,
+      [type]: { ...prev[type], file },
+    }))
+  }
+
+  const handleSubmit = () => {
+    if (!selectedDocument) {
+      console.error('No document type selected.')
+      return
+    }
+
+    const documentData = documents[selectedDocument]
+
+    if (!documentData || !documentData.file) {
+      console.error('No file selected for upload.')
+      return
+    }
+
+    if (!documentData.issueDate || !documentData.expiryDate) {
+      console.error('Please provide both issue and expiry dates.')
+      return
+    }
+
+    onSubmit({ [selectedDocument]: documentData })
+  }
+
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" size="lg">
       <CModalHeader>
-        <h5>{type === 'add' ? 'Upload Vehicle Documents' : 'Edit Document'}</h5>
+        <h5>Upload Vehicle Documents</h5>
       </CModalHeader>
       <CModalBody>
         <CForm>
-          <CRow>
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilCameraControl} />
-                </CInputGroupText>
-                <CFormSelect
-                  value={documentData.category}
-                  onChange={(e) => setDocumentData({ ...documentData, category: e.target.value })}
-                >
-                  <option value="">Select Category</option>
-                  <option value="puc">PUC</option>
-                  <option value="rc">RC</option>
-                  <option value="Insurance">Insurance</option>
-                  <option value="fitnessCertificate">Fitness Certificate</option>
-                </CFormSelect>
-              </CInputGroup>
-            </CCol>
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilCalendar} />
-                </CInputGroupText>
-                <CFormInput
-                  type="date"
-                  value={documentData.issueDate}
-                  onChange={(e) => setDocumentData({ ...documentData, issueDate: e.target.value })}
-                  placeholder="Issue Date"
+          <h6>Select Document Type</h6>
+          <CRow className="mb-3">
+            {Object.keys(documents).map((doc) => (
+              <CCol key={doc} md={3}>
+                <CFormCheck
+                  type="radio"
+                  name="documentType"
+                  id={doc}
+                  label={doc.toUpperCase()}
+                  checked={selectedDocument === doc}
+                  onChange={() => setSelectedDocument(doc)}
                 />
-              </CInputGroup>
-            </CCol>
+              </CCol>
+            ))}
           </CRow>
-          <CRow className="mt-3">
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilCalendar} />
-                </CInputGroupText>
-                <CFormInput
-                  type="date"
-                  value={documentData.expiryDate}
-                  onChange={(e) => setDocumentData({ ...documentData, expiryDate: e.target.value })}
-                  placeholder="Expiry Date"
-                />
-              </CInputGroup>
-            </CCol>
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilFile} />
-                </CInputGroupText>
-                <CFormInput
-                  type="file"
-                  accept="image/*, application/pdf"
-                  onChange={(e) => setDocumentData({ ...documentData, file: e.target.files[0] })}
-                />
-              </CInputGroup>
-            </CCol>
-          </CRow>
+
+          {Object.keys(documents).map((doc) => (
+            <div
+              key={doc}
+              className={`mb-3 p-3 border rounded ${selectedDocument === doc ? '' : 'd-none'}`}
+            >
+              <h6>{doc.toUpperCase()}</h6>
+              <CRow>
+                <CCol md={6}>
+                  <CInputGroup>
+                    <CInputGroupText>
+                      <CIcon icon={cilCalendar} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="date"
+                      value={documents[doc].issueDate}
+                      onChange={(e) => handleInputChange(doc, 'issueDate', e.target.value)}
+                    />
+                  </CInputGroup>
+                </CCol>
+                <CCol md={6}>
+                  <CInputGroup>
+                    <CInputGroupText>
+                      <CIcon icon={cilCalendar} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="date"
+                      value={documents[doc].expiryDate}
+                      onChange={(e) => handleInputChange(doc, 'expiryDate', e.target.value)}
+                    />
+                  </CInputGroup>
+                </CCol>
+              </CRow>
+              <CRow className="mt-2">
+                <CCol md={12}>
+                  <CInputGroup>
+                    <CInputGroupText>
+                      <CIcon icon={cilFile} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="file"
+                      accept="image/*, application/pdf"
+                      onChange={(e) => handleFileChange(doc, e.target.files[0])}
+                    />
+                  </CInputGroup>
+                </CCol>
+              </CRow>
+            </div>
+          ))}
         </CForm>
       </CModalBody>
       <CModalFooter>
-        <CButton color="primary" onClick={onSubmit} disabled={loadingSubmit}>
-          {loadingSubmit ? 'Processing...' : type === 'add' ? 'Upload' : 'Save Changes'}
+        <CButton color="primary" onClick={handleSubmit} disabled={loadingSubmit}>
+          {loadingSubmit ? 'Processing...' : 'Upload Document'}
         </CButton>
         <CButton color="secondary" onClick={onClose}>
           Cancel
