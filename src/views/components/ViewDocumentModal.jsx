@@ -11,7 +11,7 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
       onClose={onClose}
       size="xl"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      backdrop="static"
+      // backdrop="static"
       centered
     >
       <CModalHeader>

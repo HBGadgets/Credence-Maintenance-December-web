@@ -734,11 +734,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { CCard, CCardBody, CCardHeader, CButton } from '@coreui/react'
-import { FaRegFolderClosed } from 'react-icons/fa6'
+import { CCard, CCardBody, CCardHeader, CButton, CSpinner } from '@coreui/react'
+import { FaRegFolderClosed, FaUpload } from 'react-icons/fa6'
 import DocumentModal from '../components/DocumentModal'
 import ViewDocumentModal from '../components/ViewDocumentModal'
-import Loader from '../../components/Loader/Loader'
+import Loader2 from '../../components/Loader2/Loader2'
 import {
   getDocuments,
   uploadDocuments,
@@ -752,6 +752,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
+  const [loadingDocs, setLoadingDocs] = useState({})
   const [modalType, setModalType] = useState(null)
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [imageSrc, setImageSrc] = useState(null) // Add this state
@@ -914,13 +915,34 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     setModalType('add')
   }
 
-  const handleDocumentClick = async (field) => {
-    setLoading(true)
-    try {
-      console.log(`Fetching document for field: ${field}`) // Debugging log
-      const imageData = await getDocuments(id, field)
+  // const handleDocumentClick = async (field) => {
+  //   setLoading(true)
+  //   try {
+  //     console.log(`Fetching document for field: ${field}`) // Debugging log
+  //     const imageData = await getDocuments(id, field)
 
-      // console.log('Fetched Base64 Data:', imageData) // Log the base64 image
+  //     // console.log('Fetched Base64 Data:', imageData) // Log the base64 image
+
+  //     if (imageData) {
+  //       setImageSrc(imageData)
+  //       setSelectedDocument({ name: field, image: imageData })
+  //       setModalType('view')
+  //     } else {
+  //       console.error(`No image data found for ${field}.`)
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching document:', error)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
+  const handleDocumentClick = async (field) => {
+    setLoadingDocs((prev) => ({ ...prev, [field]: true })) // Start loading for the clicked document
+
+    try {
+      console.log(`Fetching document for field: ${field}`)
+      const imageData = await getDocuments(id, field)
 
       if (imageData) {
         setImageSrc(imageData)
@@ -932,7 +954,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     } catch (error) {
       console.error('Error fetching document:', error)
     } finally {
-      setLoading(false)
+      setLoadingDocs((prev) => ({ ...prev, [field]: false })) // Stop loading for the clicked document
     }
   }
 
@@ -957,38 +979,57 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
 
   return (
     <div>
-      <CCard>
-        <CCardHeader className="d-flex">
-          Documents
-          <CButton color="primary" className="ms-auto" onClick={openAddModal}>
-            Upload Documents
+      <CCard className="shadow-sm border-0">
+        <CCardHeader className="d-flex align-items-center bg-light fw-bold">
+          <span>📂 Documents</span>
+          <CButton color="primary" className="ms-auto px-3 py-2" onClick={openAddModal}>
+            <FaUpload className="me-2" /> Upload Documents
           </CButton>
         </CCardHeader>
-        <CCardBody>
+        <CCardBody className="p-4">
           {loading ? (
-            <LoaderCircle /> // Show loader when loading
+            <div className="text-center">
+              <CSpinner color="primary" />
+            </div>
           ) : hasDocuments ? (
-            <ul className="d-flex gap-3 list-unstyled">
+            <div className="d-flex flex-wrap gap-4">
               {documentsList.map(
                 (doc, index) =>
                   doc.value && (
-                    <li
+                    <div
                       key={index}
-                      className="text-center"
+                      className="text-center p-3 rounded border document-card"
                       onClick={() => handleDocumentClick(doc.name)}
-                      style={{ position: 'relative' }} // Ensure proper layout
+                      style={{
+                        width: '120px',
+                        cursor: 'pointer',
+                        transition: '0.3s',
+                      }}
                     >
-                      <FaRegFolderClosed size={40} />
-                      <div className="mt-1 text-black fw-bold">{doc.name}</div>
-                    </li>
+                      {loadingDocs[doc.name] ? (
+                        <CSpinner variant="grow" size={30} className="text-primary" />
+                      ) : (
+                        <FaRegFolderClosed size={40} className="text-primary" />
+                      )}
+                      <div className="mt-2 text-dark fw-bold small">{doc.name}</div>
+                    </div>
                   ),
               )}
-            </ul>
+            </div>
           ) : (
-            <p className="text-center">No documents found.</p> // Show message when no documents
+            <p className="text-center text-muted">No documents found.</p>
           )}
         </CCardBody>
       </CCard>
+
+      <style>
+        {`
+  .document-card:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-3px);
+  }
+`}
+      </style>
 
       {/* Upload & Edit Modal */}
       {(modalType === 'add' || modalType === 'edit') && (
