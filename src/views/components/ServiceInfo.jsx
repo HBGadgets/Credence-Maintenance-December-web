@@ -11,7 +11,7 @@ const ServiceInfo = ({ title, data }) => {
   return (
     <CCard className="mb-3 shadow-sm border-0">
       {title && (
-        <CCardHeader className="bg-secondary text-white d-flex align-items-center">
+        <CCardHeader className=" text-black d-flex align-items-center">
           <Info size={20} className="me-2" />
           <h5 className="mb-0">{title}</h5>
         </CCardHeader>
