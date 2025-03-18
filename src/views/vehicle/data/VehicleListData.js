@@ -181,7 +181,6 @@ export const getDocuments = async (id, field) => {
 };
 
 
-
 export const uploadDocuments = async (vehicleId, documents) => {
     if (!vehicleId || !documents || typeof documents !== "object") {
         console.error("Invalid parameters: vehicle ID or document data is missing.");
@@ -235,7 +234,6 @@ export const uploadDocuments = async (vehicleId, documents) => {
 
 
 
-
 export const editDocument = async (vehicleId, formData) => {
     if (!vehicleId || !formData) {
         console.error("Invalid parameters: Vehicle ID or document data is missing.");
@@ -262,9 +260,6 @@ export const editDocument = async (vehicleId, formData) => {
 };
 
 
-
-
-
 export const deleteDocumentAPI = async (id, docId) => {
     try {
         const response = await axios.delete(
@@ -285,8 +280,27 @@ export const deleteDocumentAPI = async (id, docId) => {
 };
 
 
-
-
-
 // -----------------------------------------------------------------------------------------------------
+
+// Maintnaces Log Api
+
+export const maintenanceLogApi = async (id) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/get-vehicle-expense-by-vehicle-id/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This all maintnaces log of vehicle : ", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting document:", error.message?.data || error.message);
+        throw error;
+    }
+}
+
+
 

@@ -746,6 +746,8 @@ import {
   deleteDocumentAPI,
 } from './data/VehicleListData'
 import { LoaderCircle } from 'lucide-react'
+import Swal from 'sweetalert2'
+import { toast } from 'react-toastify'
 
 const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const { id } = useParams()
@@ -771,9 +773,11 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     setLoading(true)
     try {
       const response = await getDocuments(id)
-      setDocuments(response?.data || []) // Ensure documents is always an array
+      setDocuments(response?.data || {}) // Ensure documents is always an array
+      toast.success('Documents fetched successfully!')
     } catch (error) {
       console.error('Error fetching documents:', error)
+      toast.error('Failed to fetch documents.')
       setDocuments([])
     } finally {
       setLoading(false)
@@ -786,17 +790,20 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
 
     if (!documentType || !documentData?.file) {
       console.error('No file selected for upload.')
+      toast.error('No file selected for upload.')
       return
     }
 
     setLoadingSubmit(true)
     try {
       await uploadDocuments(id, { [documentType]: documentData })
+      toast.success('Document uploaded successfully!')
       window.location.reload()
       fetchDocuments()
       handleCloseModal()
     } catch (error) {
       console.error('Error uploading document:', error)
+      toast.error('Failed to upload document.')
     } finally {
       setLoadingSubmit(false)
     }
@@ -807,11 +814,13 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     const documentData = documents?.[documentType]
 
     if (!id) {
+      toast.error('Vehicle ID is missing.')
       console.error('Error: Vehicle ID is missing.')
       return
     }
 
     if (!documentType || !documentData) {
+      toast.error('Invalid document data.')
       console.error('Invalid document data.')
       return
     }
@@ -838,11 +847,13 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       }
 
       await editDocument(id, formData) // Pass vehicleId separately
+      toast.success('Document updated successfully!')
       fetchDocuments()
       handleCloseModal()
       window.location.reload()
     } catch (error) {
       console.error('Error editing document:', error)
+      toast.error('Failed to update document.')
     } finally {
       setLoadingSubmit(false)
     }
@@ -870,33 +881,50 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
 
   const handleDelete = async (doc) => {
     if (!doc || !doc.name) {
+      toast.error('Invalid document structure.')
       console.error('Invalid document structure', doc)
       return
     }
 
-    const fieldName = doc.name // Example: "rc", "Insurance", etc.
+    const fieldName = doc.name
 
-    if (window.confirm(`Are you sure you want to delete the ${fieldName} document?`)) {
+    // Show SweetAlert confirmation
+    const result = await Swal.fire({
+      title: `Delete ${fieldName}?`,
+      text: 'Are you sure you want to delete this document? This action cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (result.isConfirmed) {
       try {
-        const response = await deleteDocumentAPI(id, fieldName)
+        await deleteDocumentAPI(id, fieldName)
+        toast.success(`${fieldName} deleted successfully!`)
+        console.log('Document deleted successfully')
         window.location.reload()
-        console.log('Document deleted successfully:', response)
-        fetchDocuments()
+        fetchDocuments() // Refresh document list
         setModalType(null)
       } catch (error) {
         console.error('Error deleting document:', error.response?.data || error.message)
+        toast.error(`Failed to delete ${fieldName}.`)
       }
     }
   }
 
   const handleDownload = (doc) => {
     if (!doc || !doc.image) {
+      toast.error('Failed to delete document.')
       console.error('Invalid document structure', doc)
       return
     }
 
     // Extract Base64 data and create a downloadable link
     const link = document.createElement('a')
+    toast.success('Document downloaded successfully!')
     link.href = doc.image // The Base64 image string
     link.download = `${doc.name || 'document'}.jpg` // Default filename if none is provided
     document.body.appendChild(link)
@@ -915,28 +943,6 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     setModalType('add')
   }
 
-  // const handleDocumentClick = async (field) => {
-  //   setLoading(true)
-  //   try {
-  //     console.log(`Fetching document for field: ${field}`) // Debugging log
-  //     const imageData = await getDocuments(id, field)
-
-  //     // console.log('Fetched Base64 Data:', imageData) // Log the base64 image
-
-  //     if (imageData) {
-  //       setImageSrc(imageData)
-  //       setSelectedDocument({ name: field, image: imageData })
-  //       setModalType('view')
-  //     } else {
-  //       console.error(`No image data found for ${field}.`)
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching document:', error)
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const handleDocumentClick = async (field) => {
     setLoadingDocs((prev) => ({ ...prev, [field]: true })) // Start loading for the clicked document
 
@@ -945,13 +951,16 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       const imageData = await getDocuments(id, field)
 
       if (imageData) {
+        toast.success('Document downloaded successfully!')
         setImageSrc(imageData)
         setSelectedDocument({ name: field, image: imageData })
         setModalType('view')
       } else {
+        toast.error(`No image data found for ${field}.`)
         console.error(`No image data found for ${field}.`)
       }
     } catch (error) {
+      toast.error('Error retrieving document.')
       console.error('Error fetching document:', error)
     } finally {
       setLoadingDocs((prev) => ({ ...prev, [field]: false })) // Stop loading for the clicked document
@@ -981,7 +990,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     <div>
       <CCard className="shadow-sm border-0">
         <CCardHeader className="d-flex align-items-center bg-light fw-bold">
-          <span>📂 Documents</span>
+          <h5 className="text-black">📂 Documents</h5>
           <CButton color="primary" className="ms-auto px-3 py-2" onClick={openAddModal}>
             <FaUpload className="me-2" /> Upload Documents
           </CButton>
@@ -991,11 +1000,11 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
             <div className="text-center">
               <CSpinner color="primary" />
             </div>
-          ) : hasDocuments ? (
+          ) : documentsList?.length > 0 ? (
             <div className="d-flex flex-wrap gap-4">
               {documentsList.map(
                 (doc, index) =>
-                  doc.value && (
+                  doc?.value && (
                     <div
                       key={index}
                       className="text-center p-3 rounded border document-card"
@@ -1006,7 +1015,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
                         transition: '0.3s',
                       }}
                     >
-                      {loadingDocs[doc.name] ? (
+                      {loadingDocs?.[doc.name] ? (
                         <CSpinner variant="grow" size={30} className="text-primary" />
                       ) : (
                         <FaRegFolderClosed size={40} className="text-primary" />

@@ -14,7 +14,6 @@ const VehicleMaintenanceLogModal = () => {
   const [filteredData, setFilteredData] = useState(vehicle.maintenanceLogs)
 
   const columns = [
-    { label: 'SN', key: 'sn', sortable: true },
     { label: 'Service Date', key: 'servicedate', sortable: true },
     { label: 'Mileage', key: 'mileage', sortable: true },
     { label: 'Work Performed', key: 'workperformed', sortable: true },
