@@ -12,7 +12,7 @@ import { TbCategory } from 'react-icons/tb'
 
 function VehicleProfile() {
   const navigate = useNavigate()
-  const { vehicles, selectedVehicle, filteredLogs } = useVehicleProfileData()
+  const { vehicles, selectedVehicle, filteredLogs, status, error } = useVehicleProfileData()
 
   console.log('Selected Vehicle:', selectedVehicle)
   console.log('Filtered Logs:', filteredLogs)
@@ -30,6 +30,25 @@ function VehicleProfile() {
     { label: 'Last Maintenance', value: servicesVehicle.lastMaintenance },
     { label: 'Next Maintenance', value: servicesVehicle.nextMaintenance, highlight: true },
   ]
+
+  if (status === 'loading') {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <Loader />
+      </div>
+    )
+  }
+
+  if (status === 'failed') {
+    return <p>Error: {error || 'An unknown error occurred'}</p> // Fallback for undefined error
+  }
 
   return (
     <div>

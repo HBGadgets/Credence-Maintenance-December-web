@@ -156,6 +156,31 @@ export const useVehicleProfileData = () => {
 
 // Vehcile Document locker
 
+// Get API Document
+
+// export const getDocuments = async (id, field) => {
+//     try {
+//         const response = await fetch(
+//             `${import.meta.env.VITE_API_URL}/api/vehicle-documents/get?vehicleId=${id}&field=${field}`,
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${TOKEN}`,
+//                 },
+//             }
+//         );
+//         const data = await response.json();
+//         console.log("data for images ex and is", data)
+
+//         if (data.vehicleDocument?.documents?.[field]?.image?.base64Data) {
+//             return data.vehicleDocument.documents[field].image.base64Data;
+//         }
+
+//         return null;
+//     } catch (error) {
+//         console.error("Error fetching vehicle document:", error);
+//         return null;
+//     }
+// };
 
 export const getDocuments = async (id, field) => {
     try {
@@ -167,20 +192,37 @@ export const getDocuments = async (id, field) => {
                 },
             }
         );
-        const data = await response.json();
 
-        if (data.vehicleDocument?.documents?.[field]?.image?.base64Data) {
-            return data.vehicleDocument.documents[field].image.base64Data;
+        const data = await response.json();
+        console.log(`API Response for ${field}:`, data); // Full API response
+
+        if (data.vehicleDocument?.documents?.[field]) {
+            const document = data.vehicleDocument.documents[field];
+
+            const documentDetails = {
+                expiryDate: document.expiryDate || null,
+                issueDate: document.issueDate || null,
+                imageBase64: document.image?.base64Data || null, // Image Base64
+                contentType: document.image?.contentType || null, // Image Content Type
+            };
+
+            console.log(`Formatted Document Data for ${field}:`, documentDetails);
+
+            return documentDetails; // Return full document data including Base64
         }
 
-        return null;
+        return {};
     } catch (error) {
         console.error("Error fetching vehicle document:", error);
-        return null;
+        return {};
     }
+
 };
 
 
+
+
+// POST API Document
 export const uploadDocuments = async (vehicleId, documents) => {
     if (!vehicleId || !documents || typeof documents !== "object") {
         console.error("Invalid parameters: vehicle ID or document data is missing.");
@@ -233,6 +275,7 @@ export const uploadDocuments = async (vehicleId, documents) => {
 };
 
 
+// PATCH API Document
 
 export const editDocument = async (vehicleId, formData) => {
     if (!vehicleId || !formData) {
@@ -260,6 +303,7 @@ export const editDocument = async (vehicleId, formData) => {
 };
 
 
+// DELETE API Document
 export const deleteDocumentAPI = async (id, docId) => {
     try {
         const response = await axios.delete(
@@ -284,6 +328,7 @@ export const deleteDocumentAPI = async (id, docId) => {
 
 // Maintnaces Log Api
 
+// GET API Maintance Log
 export const maintenanceLogApi = async (id) => {
     try {
         const response = await axios.get(

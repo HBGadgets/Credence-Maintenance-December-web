@@ -53,6 +53,16 @@ const MaintenanceLog = () => {
     // navigate(`/VehicleProfile/${id}`)
   }
 
+  // Creating a variable for the mapped data
+  const tableData = filteredData.map((data) => ({
+    date: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
+    expenseType: data.expenseType,
+    vendor: data.vendor,
+    description: data.description,
+    amount: data.amount,
+    paymentMode: data.paymentMode,
+  }))
+
   return (
     <div>
       <div className="mb-2 d-flex justify-content-between align-items-center">
@@ -64,14 +74,7 @@ const MaintenanceLog = () => {
         <Table
           title="Vehicle Maintenance Logs"
           columns={columns}
-          filteredData={filteredData.map((data) => ({
-            date: data.date,
-            expenseType: data.expenseType,
-            vendor: data.vendor,
-            description: data.description,
-            amount: data.amount,
-            paymentMode: data.paymentMode,
-          }))}
+          filteredData={tableData} // Using the variable here
           setFilteredData={setFilteredData}
           viewButton={true}
           handleViewButton={handleViewButton}

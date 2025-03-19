@@ -769,16 +769,42 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     fetchDocuments()
   }, [id])
 
+  // const fetchDocuments = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const response = await getDocuments(id)
+  //     setSelectedDocument(response?.data || {}) // Ensure documents is always an array
+  //     toast.success('Documents fetched successfully!')
+  //   } catch (error) {
+  //     console.error('Error fetching documents:', error)
+  //     toast.error('Failed to fetch documents.')
+  //     setSelectedDocument([])
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
   const fetchDocuments = async () => {
     setLoading(true)
     try {
-      const response = await getDocuments(id)
-      setDocuments(response?.data || {}) // Ensure documents is always an array
+      const fields = ['Insurance', 'rc', 'puc', 'fitnessCertificate'] // List of dynamic document fields
+      const allDocuments = {} // Store all documents
+
+      for (const field of fields) {
+        const response = await getDocuments(id, field)
+
+        if (response) {
+          allDocuments[field] = response // Store response under its respective field
+        } else {
+          allDocuments[field] = {} // Store empty object if no data
+        }
+      }
+      setSelectedDocument(allDocuments) // Store all document data in state
       toast.success('Documents fetched successfully!')
     } catch (error) {
       console.error('Error fetching documents:', error)
       toast.error('Failed to fetch documents.')
-      setDocuments([])
+      setSelectedDocument({})
     } finally {
       setLoading(false)
     }
@@ -925,7 +951,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     // Extract Base64 data and create a downloadable link
     const link = document.createElement('a')
     toast.success('Document downloaded successfully!')
-    link.href = doc.image // The Base64 image string
+    link.href = doc.image.imageBase64 // The Base64 image string
     link.download = `${doc.name || 'document'}.jpg` // Default filename if none is provided
     document.body.appendChild(link)
     link.click()
