@@ -5,8 +5,11 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.jsx'))
-import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
+const MaintenanceLog = React.lazy(() => import('./views/vehicle/MaintanceLog.jsx'))
+
+// import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
 import VehicleTripModal from './views/vehicle/modals/VehicleTripModal.jsx'
+
 // Tyre Management
 const TyreInventory = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
 const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
@@ -70,11 +73,7 @@ const routes = [
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
   { path: 'VehicleProfile/:id', name: 'VehicleProfile', element: VehicleProfile },
-  {
-    path: 'VehicleProfile/:id/maintenancelog',
-    name: 'Maintenanace Log',
-    element: VehicleMaintenanceLogModal,
-  },
+  { path: 'VehicleProfile/:id/MaintenanceLog', name: 'Maintenanace Log', element: MaintenanceLog },
   { path: 'VehicleProfile/:id/tripinfo', name: 'Trip Info', element: VehicleTripModal },
   { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
 

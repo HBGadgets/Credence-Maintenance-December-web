@@ -178,6 +178,7 @@ function VehicleList() {
   const [selectedName, setSelectedName] = useState(null)
   const [selectedModel, setSelectedModel] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [isFetching, setIsFetching] = useState(true)
 
   useEffect(() => {
     setFilteredData(initialData)
@@ -185,11 +186,9 @@ function VehicleList() {
 
   // Columns for table
   const columns = [
-    { label: 'SN', key: 'sn', sortable: true },
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Model', key: 'model', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
-    { label: 'View', key: 'view', sortable: false },
   ]
 
   const handleViewButton = (id) => {
@@ -211,19 +210,25 @@ function VehicleList() {
 
   // Dropdown filter handler
   useEffect(() => {
-    let filtered = initialData
+    try {
+      let filtered = initialData
 
-    if (selectedName) {
-      filtered = filtered.filter((item) => item.name === selectedName.value)
-    }
-    if (selectedModel) {
-      filtered = filtered.filter((item) => item.model === selectedModel.value)
-    }
-    if (selectedCategory) {
-      filtered = filtered.filter((item) => item.category === selectedCategory.value)
-    }
+      if (selectedName) {
+        filtered = filtered.filter((item) => item.name === selectedName.value)
+      }
+      if (selectedModel) {
+        filtered = filtered.filter((item) => item.model === selectedModel.value)
+      }
+      if (selectedCategory) {
+        filtered = filtered.filter((item) => item.category === selectedCategory.value)
+      }
 
-    setFilteredData(filtered)
+      setFilteredData(filtered)
+    } catch (error) {
+      throw new Error('error')
+    } finally {
+      setIsFetching(false)
+    }
   }, [selectedName, selectedModel, selectedCategory, initialData])
 
   // Dropdown options
@@ -305,6 +310,7 @@ function VehicleList() {
         handleViewButton={handleViewButton}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        isFetching={isFetching}
       />
 
       <SmartPagination

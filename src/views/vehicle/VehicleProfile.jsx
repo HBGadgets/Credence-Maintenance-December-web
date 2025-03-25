@@ -7,10 +7,12 @@ import ServiceInfo from '../components/ServiceInfo'
 import { CButton, CCard, CCardBody, CCol, CRow } from '@coreui/react'
 import './VehicleProfile.css'
 import VehicleDocument from './VehicleDocument'
+import { IoCarOutline, IoSpeedometerOutline } from 'react-icons/io5'
+import { TbCategory } from 'react-icons/tb'
 
 function VehicleProfile() {
   const navigate = useNavigate()
-  const { vehicles, selectedVehicle, filteredLogs } = useVehicleProfileData()
+  const { vehicles, selectedVehicle, filteredLogs, status, error } = useVehicleProfileData()
 
   console.log('Selected Vehicle:', selectedVehicle)
   console.log('Filtered Logs:', filteredLogs)
@@ -29,6 +31,25 @@ function VehicleProfile() {
     { label: 'Next Maintenance', value: servicesVehicle.nextMaintenance, highlight: true },
   ]
 
+  if (status === 'loading') {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <Loader />
+      </div>
+    )
+  }
+
+  if (status === 'failed') {
+    return <p>Error: {error || 'An unknown error occurred'}</p> // Fallback for undefined error
+  }
+
   return (
     <div>
       {!vehicles ? (
@@ -44,31 +65,38 @@ function VehicleProfile() {
         </div>
       ) : (
         <>
-          <div>
-            <span>
-              <strong className="fs-4 d-flex flex-column">{vehicles.device?.name}</strong>
-            </span>
-            <div className="d-flex flex-column">
-              <span className="text-body-secondary">Device Model: {vehicles.device?.model}</span>
-              <span className="text-body-secondary">Category: {vehicles.device?.category}</span>
+          <div className="vehicle-heading">
+            {/* 🚘 Vehicle Icon */}
+            <div className="vehicle-icon">
+              <IoCarOutline />
+            </div>
+
+            {/* 🚗 Heading Content */}
+            <div className="heading-content">
+              <h2 className="vehicle-title">{vehicles.device?.name || 'Vehicle Name'}</h2>
+              <p className="vehicle-subtitle">
+                Model: <strong>{vehicles.device?.model || 'N/A'}</strong> | Category:{' '}
+                <strong>{vehicles.device?.category || 'N/A'}</strong>
+              </p>
             </div>
           </div>
-          <hr />
+          <br />
 
           {/* Document section */}
           {/* <VehicleDoc /> */}
-          <VehicleDocument
-            Insurance={vehicles.vehicleDocument?.Insurance}
-            fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
-            rc={vehicles.vehicleDocument?.rc}
-            puc={vehicles.vehicleDocument?.puc}
-          />
-
-          <hr />
+          <div className="custom-doc">
+            <VehicleDocument
+              Insurance={vehicles.vehicleDocument?.Insurance}
+              fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
+              rc={vehicles.vehicleDocument?.rc}
+              puc={vehicles.vehicleDocument?.puc}
+            />
+          </div>
+          <br />
 
           {/* Services section */}
           <ServiceInfo title="Services Information" data={vehicleServiceData} />
-          <hr />
+          <br />
 
           <div className="p-2">
             <CRow className="justify-content-between">
