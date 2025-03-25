@@ -4,24 +4,22 @@ import { useParams } from 'react-router-dom'
 import Tabs from '../../components/Tabs'
 import AttendanceSummary from './components/attendance/AttendanceSummary'
 import { driverProfile } from './data/drivers'
+import { useQuery } from '@tanstack/react-query'
 
 function DriverProfile() {
   const { id } = useParams()
   const [filterData, setFilteredData] = useState([])
-  const [isFetching, setIsFetching] = useState(true)
+
+  // Fetch driver details (uses cache if available, fetches if not)
+  const { data: driversProfile = {}, isFetching } = useQuery({
+    queryKey: ['driversProfile', id],
+    queryFn: () => driverProfile(id),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  })
+
   useEffect(() => {
-    const fetchDriverData = async () => {
-      try {
-        const response = await driverProfile(id)
-        setFilteredData(response)
-      } catch (error) {
-        console.error('Error fetching drivers:', error)
-      } finally {
-        setIsFetching(false)
-      }
-    }
-    fetchDriverData()
-  }, [])
+    setFilteredData(driversProfile)
+  }, [driversProfile])
 
   const tabData = [
     {

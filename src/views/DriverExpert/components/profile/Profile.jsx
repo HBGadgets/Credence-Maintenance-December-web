@@ -6,23 +6,8 @@ import '../styles.css'
 import { IdCard, Mail, Phone } from 'lucide-react'
 
 function Profile({ filterData }) {
-  // const [isFetching, setIsFetching] = useState(true)
   const isAvailable = Boolean(filterData?.currentVehicleName)
   const badgeText = isAvailable ? 'Available' : 'Unavailable'
-
-  // useEffect(() => {
-  //   const fetchDriverData = async () => {
-  //     try {
-  //       const response = await driverProfile(id)
-  //       setFilteredData(response.driver)
-  //     } catch (error) {
-  //       console.error('Error fetching drivers:', error)
-  //     } finally {
-  //       setIsFetching(false)
-  //     }
-  //   }
-  //   fetchDriverData()
-  // }, [])
 
   return (
     <>

@@ -1,31 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import { drivers } from './data/drivers'
+import { fetchDrivers } from './data/drivers'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
 function DriversPage() {
-  const [isFetching, setIsFetching] = useState(true)
+  // const [isFetching, setIsFetching] = useState(true)
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        setIsFetching(true)
-        const response = await drivers()
-        setFilteredData(response)
-      } catch (error) {
-        console.error('Error fetching drivers:', error)
-      } finally {
-        setIsFetching(false)
-      }
-    }
+  const { data: drivers = [], isFetching } = useQuery({
+    queryKey: ['drivers'],
+    queryFn: fetchDrivers,
+    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+  })
 
-    fetchDrivers()
-  }, [])
+  useEffect(() => {
+    setFilteredData(drivers)
+  }, [drivers])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
