@@ -342,10 +342,30 @@ export const maintenanceLogApi = async (id) => {
         console.log("This all maintnaces log of vehicle : ", response.data);
         return response.data;
     } catch (error) {
-        console.error("Error deleting document:", error.message?.data || error.message);
+        console.error("Error:", error.message?.data || error.message);
         throw error;
     }
 }
 
+// -----------------------------------------------------------------------------------------------------
 
+// GET API for Vehcile Trip
+
+export const VehicleTripsApi = async (id) => {
+    try {
+        const respone = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/trips/get-trip-by-vehicle-id/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This Particular Vehicle Trip log : ", respone.data);
+        return respone.data;
+    } catch (error) {
+        console.error("Error : ", error.message?.data || error.message);
+        throw error;
+    }
+}
 

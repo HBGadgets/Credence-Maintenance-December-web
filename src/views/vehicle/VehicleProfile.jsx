@@ -104,7 +104,7 @@ function VehicleProfile() {
                 <CCard className="custom-card">
                   <CCardBody className="text-center">
                     <h5 className="fw-bold mb-3">Maintenance Log</h5>
-                    <CButton onClick={() => navigate('maintenancelog')} className="custom-btn">
+                    <CButton onClick={() => navigate('MaintenanceLog')} className="custom-btn">
                       View Details
                     </CButton>
                   </CCardBody>
@@ -115,7 +115,7 @@ function VehicleProfile() {
                 <CCard className="custom-card">
                   <CCardBody className="text-center">
                     <h5 className="fw-bold mb-3">Trip</h5>
-                    <CButton onClick={() => navigate('tripinfo')} className="custom-btn">
+                    <CButton onClick={() => navigate('VehicleTrips')} className="custom-btn">
                       View Details
                     </CButton>
                   </CCardBody>

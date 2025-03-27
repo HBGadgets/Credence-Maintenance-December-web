@@ -6,13 +6,15 @@ import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import SearchInput from '../components/SearchInput'
 import Table from '../components/Table'
 import Loader from '../../components/Loader/Loader'
+import Page404 from '../pages/page404/Page404'
 
 const MaintenanceLog = () => {
   const { id } = useParams()
-  const [filteredData, setFilteredData] = useState([])
-  console.log('filterererererererer', filteredData)
+  const [allData, setAllData] = useState([]) // Store full API data
+  const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch Maintenance Logs
   useEffect(() => {
@@ -20,7 +22,8 @@ const MaintenanceLog = () => {
       try {
         setLoading(true)
         const data = await maintenanceLogApi(id) // Fetch data from API
-        setFilteredData(data) // Update state with API response
+        setAllData(data) // Store the full data separately
+        setFilteredData(data) // Initially, show all data
       } catch (err) {
         setError(err.message)
       } finally {
@@ -30,6 +33,25 @@ const MaintenanceLog = () => {
 
     if (id) fetchMaintenanceLogs()
   }, [id])
+
+  // Search handler (Filters allData)
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+
+    if (!query) {
+      setFilteredData(allData) // Reset to full data if search is empty
+      return
+    }
+
+    const filtered = allData.filter(
+      (item) =>
+        item.expenseType.toLowerCase().includes(query.toLowerCase()) ||
+        item.vendor.toLowerCase().includes(query.toLowerCase()) ||
+        item.amount.toString().includes(query) ||
+        item.paymentMode.toLowerCase().includes(query.toLowerCase()),
+    )
+    setFilteredData(filtered)
+  }
 
   // Define table columns (ONLY required fields)
   const columns = [
@@ -46,11 +68,10 @@ const MaintenanceLog = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   if (loading) return <Loader />
-  if (error) return <p>Error: {error}</p>
+  if (error) return <Page404 />
 
   const handleViewButton = (id) => {
-    console.log('SSSSSSSSSSSSSSSSSss', id)
-    // navigate(`/VehicleProfile/${id}`)
+    console.log('Viewing Maintenance Log:', id)
   }
 
   // Creating a variable for the mapped data
@@ -67,7 +88,7 @@ const MaintenanceLog = () => {
     <div>
       <div className="mb-2 d-flex justify-content-between align-items-center">
         <DateRangeFilterCredence title="Date Range" />
-        <SearchInput />
+        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
       <div>
