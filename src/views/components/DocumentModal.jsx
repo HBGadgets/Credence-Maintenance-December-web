@@ -182,7 +182,7 @@ const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit, initialData 
         ...prev,
         ...initialData,
       }))
-      setSelectedDocument(Object.keys(initialData)[0] || 'insurance')
+      setSelectedDocument(Object.keys(initialData)[0])
     }
   }, [initialData])
 

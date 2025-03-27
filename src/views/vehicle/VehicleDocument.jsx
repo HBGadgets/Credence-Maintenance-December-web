@@ -893,14 +893,13 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
 
     setSelectedDocument(doc.name)
 
-    setDocumentData((prev) => ({
-      ...prev,
+    setDocumentData({
       [doc.name]: {
         issueDate: doc.issueDate || '',
         expiryDate: doc.expiryDate || '',
-        file: null, // User will select file
+        file: doc.file || null, // Ensure file is preserved
       },
-    }))
+    })
 
     setModalType('edit')
   }
@@ -1074,8 +1073,9 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
           onSubmit={modalType === 'add' ? handleSaveChanges : handleEditSubmit}
           loadingSubmit={loadingSubmit}
           type={modalType}
-          documentData={documentData}
-          setDocumentData={setDocumentData}
+          initialData={documentData} // Ensure initialData is passed correctly
+          // documentData={documentData}
+          // setDocumentData={setDocumentData}
         />
       )}
 
