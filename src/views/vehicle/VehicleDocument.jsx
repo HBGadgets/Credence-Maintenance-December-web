@@ -769,21 +769,6 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     fetchDocuments()
   }, [id])
 
-  // const fetchDocuments = async () => {
-  //   setLoading(true)
-  //   try {
-  //     const response = await getDocuments(id)
-  //     setSelectedDocument(response?.data || {}) // Ensure documents is always an array
-  //     toast.success('Documents fetched successfully!')
-  //   } catch (error) {
-  //     console.error('Error fetching documents:', error)
-  //     toast.error('Failed to fetch documents.')
-  //     setSelectedDocument([])
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const fetchDocuments = async () => {
     setLoading(true)
     try {
