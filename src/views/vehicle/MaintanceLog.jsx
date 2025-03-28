@@ -7,8 +7,16 @@ import SearchInput from '../components/SearchInput'
 import Table from '../components/Table'
 import Loader from '../../components/Loader/Loader'
 import Page404 from '../pages/page404/Page404'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import IconDropdown from '../Supervisor/IconDropdown'
 
 const MaintenanceLog = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const { id } = useParams()
   const [allData, setAllData] = useState([]) // Store full API data
   const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
@@ -67,6 +75,47 @@ const MaintenanceLog = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'Vehicle Maintenance Logs Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Vehicle_Maintenanc_Logs_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () =>
+        exportToExcel({
+          title: 'Vehicle Maintenance Logs Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Vehicle_Maintenanc_Logs_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   if (loading) return <Loader />
   if (error) return <Page404 />
 
@@ -112,6 +161,9 @@ const MaintenanceLog = () => {
             setCurrentPage(1)
           }}
         />
+      </div>
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </div>
   )

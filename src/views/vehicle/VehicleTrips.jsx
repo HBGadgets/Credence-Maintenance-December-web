@@ -7,8 +7,16 @@ import { useParams } from 'react-router-dom'
 import Loader from '../../components/Loader/Loader'
 import Page404 from '../pages/page404/Page404'
 import { VehicleTripsApi } from './data/VehicleListData'
+import IconDropdown from '../Supervisor/IconDropdown'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
 
 const VehicleTrips = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const { id } = useParams()
   const [allData, setAllData] = useState([]) // Store full API data
   const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
@@ -104,6 +112,47 @@ const VehicleTrips = () => {
     ),
   }))
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'Vehicle Trips Logs Report', // Dynamic title
+          columns: columns,
+          data: tableData,
+          fileName: 'Vehicle_Trips_Logs_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () =>
+        exportToExcel({
+          title: 'Vehicle Trips Logs Report', // Dynamic title
+          columns: columns,
+          data: tableData,
+          fileName: 'Vehicle_Trips_Logs_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <div>
       <div className="mb-2 d-flex justify-content-between align-items-center">
@@ -130,6 +179,9 @@ const VehicleTrips = () => {
             setCurrentPage(1)
           }}
         />
+      </div>
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </div>
   )

@@ -64,7 +64,7 @@ const usePdfExporter = () => {
                 doc.text(dateText, doc.internal.pageSize.width - CONFIG.layout.margin - doc.getTextWidth(dateText), 21);
 
                 // --- Table Data ---
-                const tableColumns = columns.map((col) => col.label);
+                const tableColumns = ['SN', ...columns.map((col) => col.label)]; // Added "SN"
                 const tableRows = data.map((row, index) => [
                     index + 1, // Auto SN
                     ...columns.map((col) => row[col.key] || 'N/A'), // Extracting Data Dynamically
