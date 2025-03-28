@@ -6,11 +6,11 @@ import { toast } from 'react-toastify';
 const usePdfExporter = () => {
     const exportToPDF = useCallback(
         ({
-            title = 'Report', // Custom Title
+            title, // Custom Title
             columns = [], // Table Columns
             data = [], // Table Data
             metaData = {}, // Extra Metadata (e.g., User, Date Range)
-            fileName = 'Report', // PDF File Name
+            fileName, // PDF File Name
             config = {}, // Custom Configurations
         }) => {
             try {

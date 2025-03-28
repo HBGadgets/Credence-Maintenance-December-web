@@ -6,11 +6,11 @@ import { toast } from 'react-toastify';
 const useExcelExporter = () => {
     const exportToExcel = useCallback(
         async ({
-            title = 'Report', // Custom Title
+            title, // Custom Title
             columns = [], // Table Columns [{ label: "ID", key: "id" }]
             data = [], // Table Data [{ id: 1, name: "John" }]
             metaData = {}, // Extra Metadata (e.g., User, Date Range)
-            fileName = 'Report', // Excel File Name
+            fileName, // Excel File Name
             config = {}, // Custom Configurations
         }) => {
             try {

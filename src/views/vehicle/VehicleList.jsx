@@ -146,8 +146,16 @@ import SearchInput from '../components/SearchInput'
 import { useNavigate } from 'react-router-dom'
 import SmartPagination from '../components/SmartPagination'
 import Loader from '../../components/Loader/Loader'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import IconDropdown from '../Supervisor/IconDropdown'
+import useExcelExporter from '../customhooks/useExcelExporter'
 
 function VehicleList() {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { vehicles, status, error } = useSelector((state) => state.vehicle)
@@ -250,6 +258,47 @@ function VehicleList() {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'Vehicle Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Vehicle_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () =>
+        exportToExcel({
+          title: 'Vehicle Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Vehicle_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   if (status === 'loading')
     return (
       <div
@@ -320,6 +369,10 @@ function VehicleList() {
         itemsPerPage={itemsPerPage}
         onItemsPerPageChange={setItemsPerPage}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
