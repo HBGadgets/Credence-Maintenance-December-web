@@ -202,6 +202,7 @@ const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit, initialData 
 
   const handleSubmit = () => {
     if (!selectedDocument) {
+      toast.error('No document type selected.')
       console.error('No document type selected.')
       return
     }
@@ -209,11 +210,13 @@ const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit, initialData 
     const documentData = documents[selectedDocument]
 
     if (!documentData || !documentData.file) {
+      toast.error('No file selected for upload.')
       console.error('No file selected for upload.')
       return
     }
 
     if (!documentData.issueDate || !documentData.expiryDate) {
+      toast.error('Please provide both issue and expiry dates.')
       console.error('Please provide both issue and expiry dates.')
       return
     }
