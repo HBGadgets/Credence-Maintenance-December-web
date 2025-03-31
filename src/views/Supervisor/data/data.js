@@ -43,3 +43,26 @@ export const markAttendanceBySupervisorApi = async (id) => {
         throw error;
     }
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// GET API for Leave Request list for supervisor.
+
+export const getLeaveResquestDriverApi = async (id) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/leave/get-leaves-for-approval`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This is leave request of Driver : ", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error:", error.message?.data || error.message);
+        throw error;
+    }
+}

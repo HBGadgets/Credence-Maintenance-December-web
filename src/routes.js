@@ -39,7 +39,7 @@ const DriverExpenses = React.lazy(
   () => import('./views/Expenses-Management/driver-expenses/DriverExpensesBill.js'),
 )
 const VehicleExpensesBill = React.lazy(
-  () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.js'),
+  () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.jsx'),
 )
 const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/Bills.js'))
 const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
