@@ -747,7 +747,7 @@ import {
 } from './data/VehicleListData'
 import { LoaderCircle } from 'lucide-react'
 import Swal from 'sweetalert2'
-import { toast } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 
 const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const { id } = useParams()
@@ -814,7 +814,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       handleCloseModal()
     } catch (error) {
       console.error('Error uploading document:', error)
-      toast.error('Failed to upload document.')
+      toast.error(`Already this filed ${documentType} of document exists.`)
     } finally {
       setLoadingSubmit(false)
     }
@@ -961,7 +961,6 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       const imageData = await getDocuments(id, field)
 
       if (imageData) {
-        toast.success('Document downloaded successfully!')
         setImageSrc(imageData)
         setSelectedDocument({ name: field, image: imageData })
         setModalType('view')
@@ -998,6 +997,8 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
 
   return (
     <div>
+      <ToastContainer />
+
       <CCard className="shadow-sm border-0">
         <CCardHeader className="d-flex align-items-center bg-light fw-bold">
           <h5 className="text-black">📂 Documents</h5>
