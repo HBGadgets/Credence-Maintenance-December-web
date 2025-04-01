@@ -66,3 +66,36 @@ export const getLeaveResquestDriverApi = async (id) => {
         throw error;
     }
 }
+
+// PATCH API for Approved Leave Request.
+
+export const updateLeaveRequestStatus = async (id, status) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/leave/update/${id}`,
+            { status }, // Sending status as payload
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`, // Ensure you have the token available
+                    'Content-Type': 'application/json',
+                },
+            }
+        )
+
+        console.log('Leave Request Updated:', response.data)
+        return response.data
+    } catch (error) {
+        console.error('Error updating leave request:', error.response?.data || error.message)
+        throw error
+    }
+}
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------- 
+
+
+
+
+
+
+

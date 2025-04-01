@@ -6,7 +6,7 @@ import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
-import { getLeaveResquestDriverApi } from '../data/data'
+import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
 
 const LeaveRequests = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -18,16 +18,16 @@ const LeaveRequests = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-  // Utility function to format dates (YYYY-MM-DD)
+  // Format date to "dd/mm/yyyy"
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
     return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
   }
 
-  // Function to get the appropriate badge for status
+  // Get badge based on status
   const getStatusBadge = (status) => {
-    let badgeClass = 'badge bg-secondary' // Default color
+    let badgeClass = 'badge bg-secondary' // Default
     if (status === 'Pending') badgeClass = 'badge bg-warning text-dark'
     if (status === 'Rejected') badgeClass = 'badge bg-danger'
     if (status === 'Approved') badgeClass = 'badge bg-success'
@@ -35,7 +35,42 @@ const LeaveRequests = () => {
     return <span className={badgeClass}>{status}</span>
   }
 
-  // Function to render action buttons
+  // Function to update status and update UI
+  const updateStatusInUI = (id, newStatus) => {
+    setFilteredData((prevData) =>
+      prevData.map((item) =>
+        item._id === id ? { ...item, status: getStatusBadge(newStatus) } : item,
+      ),
+    )
+  }
+
+  // Approve function (removes request from table after update)
+  const handleApprove = async (id) => {
+    try {
+      await updateLeaveRequestStatus(id, 'Approved')
+      toast.success('Leave request approved successfully!')
+
+      // Remove approved request from table
+      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
+    } catch (error) {
+      toast.error('Failed to approve leave request!')
+    }
+  }
+
+  // Reject function (removes request from table after update)
+  const handleReject = async (id) => {
+    try {
+      await updateLeaveRequestStatus(id, 'Rejected')
+      toast.success('Leave request rejected successfully!')
+
+      // Remove rejected request from table
+      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
+    } catch (error) {
+      toast.error('Failed to reject leave request!')
+    }
+  }
+
+  // Render action buttons (centered)
   const renderActionButtons = (id) => (
     <div className="d-flex justify-content-center gap-2">
       <button className="btn btn-sm btn-success" onClick={() => handleApprove(id)}>
@@ -47,21 +82,7 @@ const LeaveRequests = () => {
     </div>
   )
 
-  // Approve function (Implement API call here)
-  const handleApprove = (id) => {
-    console.log('Approving leave request:', id)
-    toast.success('Leave Approved!')
-    // Call API to update leave status to "Approved"
-  }
-
-  // Reject function (Implement API call here)
-  const handleReject = (id) => {
-    console.log('Rejecting leave request:', id)
-    toast.error('Leave Rejected!')
-    // Call API to update leave status to "Rejected"
-  }
-
-  // Fetch Request list of drivers
+  // Fetch driver leave requests
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -69,15 +90,15 @@ const LeaveRequests = () => {
         const responseData = await getLeaveResquestDriverApi()
         console.log('Fetched Driver Data:', responseData)
 
-        // Flatten data structure and format missing fields
+        // Format data properly
         const formattedData = responseData.map((item) => ({
           _id: item._id,
-          name: item.driverId?.name || 'Unknown', // driver name
+          name: item.driverId?.name || 'Unknown',
           startDate: formatDate(item.startDate),
           endDate: formatDate(item.endDate),
-          description: item.description || '', //  descriptions
-          status: getStatusBadge(item.status || 'Pending'), // Highlight status with badge
-          actions: renderActionButtons(item._id), //  Add Approve & Reject buttons
+          description: item.description || '',
+          status: getStatusBadge(item.status || 'Pending'),
+          actions: renderActionButtons(item._id),
         }))
 
         setData(formattedData)
@@ -92,18 +113,16 @@ const LeaveRequests = () => {
     fetchData()
   }, [])
 
-  // Search handler (Filters allData)
+  // Search handler
   const handleSearch = (query) => {
     setSearchQuery(query)
 
     if (!query) {
-      setFilteredData(data) // Reset to full data if search is empty
+      setFilteredData(data)
       return
     }
 
-    const filtered = data.filter(
-      (item) => item.name.toLowerCase().includes(query.toLowerCase()), //Searching in flattened `name`
-    )
+    const filtered = data.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()))
     setFilteredData(filtered)
   }
 
@@ -117,7 +136,7 @@ const LeaveRequests = () => {
     { label: 'End Date', key: 'endDate', sortable: true },
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Status', key: 'status', sortable: false },
-    { label: 'Actions', key: 'actions' }, //Buttons will be shown here
+    { label: 'Actions', key: 'actions' },
   ]
 
   return (

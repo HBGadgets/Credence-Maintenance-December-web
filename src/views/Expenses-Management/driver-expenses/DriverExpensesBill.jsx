@@ -86,8 +86,8 @@ const DriverExpensesBill = () => {
       return
     }
 
-    const filtered = data.filter((item) =>
-      item.driverName.toLowerCase().includes(query.toLowerCase()) // Correct key usage
+    const filtered = data.filter(
+      (item) => item.driverName.toLowerCase().includes(query.toLowerCase()), // Correct key usage
     )
     setFilteredData(filtered)
   }
@@ -116,7 +116,7 @@ const DriverExpensesBill = () => {
       </div>
 
       <Table
-        title="Driver Expenses"
+        title="All Drivers Expenses Sheets"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
