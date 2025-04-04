@@ -18,13 +18,16 @@ const MaintenanceLog = () => {
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const { id } = useParams()
+
   const [allData, setAllData] = useState([]) // Store full API data
   const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [startDate, setStartDate] = useState(null)
+  const [endDate, setEndDate] = useState(null)
 
-  // Fetch Maintenance Logs
+  // ✅ Fetch Maintenance Logs
   useEffect(() => {
     const fetchMaintenanceLogs = async () => {
       try {
@@ -42,12 +45,12 @@ const MaintenanceLog = () => {
     if (id) fetchMaintenanceLogs()
   }, [id])
 
-  // Search handler (Filters allData)
+  // ✅ Search handler (Filters allData)
   const handleSearch = (query) => {
     setSearchQuery(query)
 
     if (!query) {
-      setFilteredData(allData) // Reset to full data if search is empty
+      applyFilters() // Reset to full data if search is empty
       return
     }
 
@@ -61,7 +64,46 @@ const MaintenanceLog = () => {
     setFilteredData(filtered)
   }
 
-  // Define table columns (ONLY required fields)
+  // Handle Date Range Filter (Now Fully Fixed)
+  const handleDateRangeChange = (start, end) => {
+    console.log('Date range changed:', { start, end })
+
+    setStartDate(start)
+    setEndDate(end)
+
+    applyFilters(start, end, searchQuery)
+  }
+
+  // Apply Filtering Based on Date Range & Search
+  const applyFilters = (start = startDate, end = endDate, query = searchQuery) => {
+    let filtered = [...allData]
+
+    // Apply Date Filter
+    if (start && end) {
+      const startMillis = new Date(start).setHours(0, 0, 0, 0)
+      const endMillis = new Date(end).setHours(23, 59, 59, 999)
+
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.date).setHours(0, 0, 0, 0)
+        return itemDate >= startMillis && itemDate <= endMillis
+      })
+    }
+
+    // Apply Search Filter
+    if (query) {
+      filtered = filtered.filter(
+        (item) =>
+          item.expenseType.toLowerCase().includes(query.toLowerCase()) ||
+          item.vendor.toLowerCase().includes(query.toLowerCase()) ||
+          item.amount.toString().includes(query) ||
+          item.paymentMode.toLowerCase().includes(query.toLowerCase()),
+      )
+    }
+
+    setFilteredData(filtered)
+  }
+
+  // Define table columns
   const columns = [
     { label: 'Service Date', key: 'date', sortable: true },
     { label: 'Expense Type', key: 'expenseType', sortable: true },
@@ -82,10 +124,10 @@ const MaintenanceLog = () => {
       label: 'Download PDF',
       onClick: () =>
         exportToPDF({
-          title: 'Vehicle Maintenance Logs Report', // Dynamic title
+          title: 'Vehicle Maintenance Logs Report',
           columns: columns,
           data: filteredData,
-          fileName: 'Vehicle_Maintenanc_Logs_Report', // Dynamic file name
+          fileName: 'Vehicle_Maintenance_Logs_Report',
         }),
     },
     {
@@ -93,10 +135,10 @@ const MaintenanceLog = () => {
       label: 'Download Excel',
       onClick: () =>
         exportToExcel({
-          title: 'Vehicle Maintenance Logs Report', // Dynamic title
+          title: 'Vehicle Maintenance Logs Report',
           columns: columns,
           data: filteredData,
-          fileName: 'Vehicle_Maintenanc_Logs_Report', // Dynamic file name
+          fileName: 'Vehicle_Maintenance_Logs_Report',
         }),
     },
     {
@@ -123,9 +165,8 @@ const MaintenanceLog = () => {
     console.log('Viewing Maintenance Log:', id)
   }
 
-  // Creating a variable for the mapped data
   const tableData = filteredData.map((data) => ({
-    date: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
+    date: new Date(data.date).toLocaleDateString('en-GB'),
     expenseType: data.expenseType,
     vendor: data.vendor,
     description: data.description,
@@ -136,7 +177,8 @@ const MaintenanceLog = () => {
   return (
     <div>
       <div className="mb-2 d-flex justify-content-between align-items-center">
-        <DateRangeFilterCredence title="Date Range" />
+        {/*  Date Range Picker with working handler */}
+        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
@@ -144,7 +186,7 @@ const MaintenanceLog = () => {
         <Table
           title="Vehicle Maintenance Logs"
           columns={columns}
-          filteredData={tableData} // Using the variable here
+          filteredData={tableData}
           setFilteredData={setFilteredData}
           viewButton={true}
           handleViewButton={handleViewButton}

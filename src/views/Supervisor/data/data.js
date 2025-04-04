@@ -93,8 +93,58 @@ export const updateLeaveRequestStatus = async (id, status) => {
 
 // ----------------------------------------------------------------------------------------------------------------------------------- 
 
+//  GET API FOR Driver Salary List.
+export const getDriverSalaryListApiByMonth = async (month) => {
+    try {
+        console.log(`Fetching Driver Salary List for month: ${month}`);
+
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/salary/get-by-month/${month}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+
+        if (!response.data || response.status !== 200) {
+            throw new Error("Invalid response from server");
+        }
+
+        console.log("Driver Salary List:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        return []; // Return an empty array to prevent crashes
+    }
+};
 
 
+// POST API for Driver Salary.
+
+export const postDriverSalaryApi = async (id) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/salary/create/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                }
+            }
+        );
+
+        if (response.status === 200) {
+            console.log("Driver Salary Created Successfully:", response.data);
+            return response.data;
+        }
+        throw new Error("Failed to create Driver Salary");
+
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        return null; // Return null to indicate failure
+    }
+}
 
 
 

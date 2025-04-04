@@ -16,6 +16,7 @@ import { fetchDrivers } from '../DriverExpert/data/drivers'
 const DriverSalaryModal = () => {
   const [visible, setVisible] = useState(false)
   const [drivers, setDrivers] = useState([])
+  const [loading, setLoading] = useState(false) // Loading state
   const initialFormData = {
     driverId: '',
     basicPay: '',
@@ -25,14 +26,12 @@ const DriverSalaryModal = () => {
   }
   const [formData, setFormData] = useState(initialFormData)
 
-  // Fetch drivers when modal opens
   useEffect(() => {
     if (visible) {
       fetchDrivers()
         .then(setDrivers)
         .catch((error) => console.error('Error fetching drivers:', error))
 
-      // Reset form when modal opens
       setFormData(initialFormData)
     }
   }, [visible])
@@ -42,23 +41,22 @@ const DriverSalaryModal = () => {
   }
 
   const handleSubmit = () => {
-    console.log('Saved Salary Data:', formData)
+    setLoading(true) // Set loading to true when submitting
 
-    // Reset form data after submission
-    setFormData(initialFormData)
-
-    // Close modal
-    setVisible(false)
+    setTimeout(() => {
+      console.log('Saved Salary Data:', formData)
+      setFormData(initialFormData)
+      setLoading(false) // Reset loading state
+      setVisible(false) // Close modal
+    }, 2000) // Simulating a network request
   }
 
   return (
     <div className="container mt-4">
-      {/* Button to Open Modal */}
       <CButton color="primary" onClick={() => setVisible(true)}>
         Create Driver Salary
       </CButton>
 
-      {/* Modal */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
         <CModalHeader closeButton>
           <CModalTitle>Driver Salary Details</CModalTitle>
@@ -127,11 +125,11 @@ const DriverSalaryModal = () => {
         </CModalBody>
 
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisible(false)}>
+          <CButton color="secondary" onClick={() => setVisible(false)} disabled={loading}>
             Cancel
           </CButton>
-          <CButton color="primary" onClick={handleSubmit}>
-            Save
+          <CButton color="primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Submitting...' : 'Submit'}
           </CButton>
         </CModalFooter>
       </CModal>
