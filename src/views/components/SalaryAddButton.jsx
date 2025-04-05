@@ -10,13 +10,18 @@ import {
   CFormLabel,
   CFormInput,
   CFormSelect,
+  CSpinner,
 } from '@coreui/react'
+import { toast } from 'react-toastify'
 import { fetchDrivers } from '../DriverExpert/data/drivers'
+import { useQueryClient } from '@tanstack/react-query' // Import useQueryClient
 
-const DriverSalaryModal = () => {
+const SalaryAddButton = ({ onSubmit, month }) => {
   const [visible, setVisible] = useState(false)
   const [drivers, setDrivers] = useState([])
-  const [loading, setLoading] = useState(false) // Loading state
+  const [loading, setLoading] = useState(false)
+  const queryClient = useQueryClient() // React Query client for refetching data
+
   const initialFormData = {
     driverId: '',
     basicPay: '',
@@ -30,9 +35,11 @@ const DriverSalaryModal = () => {
     if (visible) {
       fetchDrivers()
         .then(setDrivers)
-        .catch((error) => console.error('Error fetching drivers:', error))
-
-      setFormData(initialFormData)
+        .catch((error) => {
+          console.error('Error fetching drivers:', error)
+          toast.error('Failed to fetch drivers')
+        })
+      setFormData(initialFormData) // Reset form when modal opens
     }
   }, [visible])
 
@@ -40,15 +47,30 @@ const DriverSalaryModal = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = () => {
-    setLoading(true) // Set loading to true when submitting
+  const handleSubmit = async () => {
+    if (!formData.driverId) {
+      toast.error('Driver selection is required!')
+      return
+    }
+    if (!formData.basicPay || Number(formData.basicPay) <= 0) {
+      toast.error('Basic Pay must be greater than 0!')
+      return
+    }
 
-    setTimeout(() => {
-      console.log('Saved Salary Data:', formData)
-      setFormData(initialFormData)
-      setLoading(false) // Reset loading state
-      setVisible(false) // Close modal
-    }, 2000) // Simulating a network request
+    setLoading(true)
+    try {
+      await onSubmit(formData) // Call the function from parent
+
+      // Invalidate and refetch salary list
+      await queryClient.invalidateQueries(['driverSalaries', month])
+      queryClient.refetchQueries(['driverSalaries', month]) // Force refetch if needed
+      // toast.success('Salary created successfully!')
+      setFormData(initialFormData) // Reset form
+    } catch (error) {
+      toast.error('Failed to create salary')
+    }
+    setLoading(false)
+    setVisible(false) // Close modal after successful submission
   }
 
   return (
@@ -66,12 +88,7 @@ const DriverSalaryModal = () => {
           <CForm>
             <div className="mb-3">
               <CFormLabel>Driver Name</CFormLabel>
-              <CFormSelect
-                name="driverId"
-                value={formData.driverId}
-                onChange={handleChange}
-                required
-              >
+              <CFormSelect name="driverId" value={formData.driverId} onChange={handleChange}>
                 <option value="">Select Driver</option>
                 {drivers.map((driver) => (
                   <option key={driver.id} value={driver.id}>
@@ -88,7 +105,6 @@ const DriverSalaryModal = () => {
                 name="basicPay"
                 value={formData.basicPay}
                 onChange={handleChange}
-                required
               />
             </div>
 
@@ -129,7 +145,7 @@ const DriverSalaryModal = () => {
             Cancel
           </CButton>
           <CButton color="primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Submitting...' : 'Submit'}
+            {loading ? <CSpinner size="sm" /> : 'Submit'}
           </CButton>
         </CModalFooter>
       </CModal>
@@ -137,4 +153,4 @@ const DriverSalaryModal = () => {
   )
 }
 
-export default DriverSalaryModal
+export default SalaryAddButton
