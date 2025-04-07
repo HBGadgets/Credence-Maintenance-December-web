@@ -15,8 +15,8 @@ import {
 import { toast, ToastContainer } from 'react-toastify'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
-import SalaryFrom from '../../components/SalaryFrom.jsx'
 import { CButton } from '@coreui/react'
+import SalaryFrom from './componets/SalaryFrom.jsx'
 
 const DriverSalary = () => {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
