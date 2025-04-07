@@ -129,25 +129,30 @@ export const postDriverSalaryApi = async (id, salaryData) => {
             salaryData,
             {
                 headers: {
-                    Authorization: `Bearer ${TT}`, // FIXED: Use `token`, not `TT`
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${TT}`, // Make sure TT is your valid token
+                    'Content-Type': 'application/json',
                 },
             }
-        );
+        )
 
-        if (response.status === 201 || response.status === 200) { // FIXED: Handle both 200 & 201
-            console.log("Driver Salary Created Successfully:", response.data);
-            return response.data;
+        if (response.status === 201 || response.status === 200) {
+            console.log('Driver Salary Created Successfully:', response.data)
+            return response.data
         } else {
-            throw new Error(`Unexpected response status: ${response.status}`);
+            throw new Error(`Unexpected response status: ${response.status}`)
         }
     } catch (error) {
-        console.error("API Error:", error.response?.data?.message || error.message);
+        console.error('API Error:', error.response?.data?.message || error.message)
 
-        // Return error message for better debugging
-        return { error: error.response?.data?.message || "Failed to create salary" };
+        // Properly throw the error to be caught in parent function
+        const err = new Error(
+            error.response?.data?.message || 'Failed to create salary'
+        )
+        err.response = error.response // Attach the original response if needed
+        throw err
     }
-};
+}
+
 
 
 // DELETE API for Driver Salary.

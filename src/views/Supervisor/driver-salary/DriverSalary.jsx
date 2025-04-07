@@ -139,13 +139,22 @@ const DriverSalary = () => {
         await patchDriverSalaryApi(_id, updateData)
         toast.success('Salary updated successfully!')
       } else {
-        // Create new salary (existing logic)
+        if (!submittedData.driverId) {
+          throw new Error('Driver ID is required to create salary.')
+        }
         await postDriverSalaryApi(submittedData.driverId, submittedData)
         toast.success('Salary created successfully!')
       }
+
+      // Invalidate query only after successful API call
       await queryClient.invalidateQueries(['driverSalaries', month])
     } catch (error) {
-      toast.error(error.message || 'Failed to save salary.')
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Something went wrong while saving the salary.'
+      toast.error(errorMessage)
     }
   }
 

@@ -81,6 +81,7 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
       return
     }
 
+    setLoading(true)
     try {
       await onSubmit({
         ...changedFields,
@@ -88,7 +89,12 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
       })
       onClose()
     } catch (error) {
-      // Error is handled in parent component
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to save changes.'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
