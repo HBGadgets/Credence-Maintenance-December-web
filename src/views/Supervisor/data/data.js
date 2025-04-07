@@ -122,11 +122,8 @@ export const getDriverSalaryListApiByMonth = async (month) => {
 
 
 // POST API for Driver Salary.
-
 export const postDriverSalaryApi = async (id, salaryData) => {
     try {
-
-
         const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/api/salary/create/${id}`,
             salaryData,
@@ -170,5 +167,28 @@ export const deleteDriverSalaryApi = async (id) => {
     }
 }
 
+// PATCH API for Driver Salary.
 
+export const patchDriverSalaryApi = async (id, updatedData) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/salary/update/${id}`,
+            updatedData, // Only changed fields
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
 
+        if (response.status === 201 || response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        throw error;
+    }
+};

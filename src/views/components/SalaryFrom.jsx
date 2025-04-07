@@ -16,8 +16,8 @@ import { toast } from 'react-toastify'
 import { fetchDrivers } from '../DriverExpert/data/drivers'
 import { useQueryClient } from '@tanstack/react-query' // Import useQueryClient
 
-const SalaryAddButton = ({ onSubmit, month }) => {
-  const [visible, setVisible] = useState(false)
+const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
+  // const [visible, setVisible] = useState(false)
   const [drivers, setDrivers] = useState([])
   const [loading, setLoading] = useState(false)
   const queryClient = useQueryClient() // React Query client for refetching data
@@ -28,62 +28,81 @@ const SalaryAddButton = ({ onSubmit, month }) => {
     overtime: '',
     incentives: '',
     deductions: '',
+    _id: '', // Add _id for edit mode
   }
+
   const [formData, setFormData] = useState(initialFormData)
+  const [initialValues, setInitialValues] = useState({})
 
   useEffect(() => {
     if (visible) {
+      // Fetch drivers
       fetchDrivers()
         .then(setDrivers)
         .catch((error) => {
           console.error('Error fetching drivers:', error)
           toast.error('Failed to fetch drivers')
         })
-      setFormData(initialFormData) // Reset form when modal opens
+
+      // If editing (initialData provided)
+      if (initialData) {
+        const formattedData = {
+          driverId: initialData.driverId?._id || initialData.driverId,
+          basicPay: initialData.basicPay?.toString() || '',
+          overtime: initialData.overtime?.toString() || '',
+          incentives: initialData.incentives?.toString() || '',
+          deductions: initialData.deductions?.toString() || '',
+          _id: initialData._id,
+        }
+
+        setFormData(formattedData)
+        setInitialValues(formattedData)
+      } else {
+        setFormData(initialFormData) // Reset to empty/default form
+      }
     }
-  }, [visible])
+  }, [visible, initialData])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async () => {
-    if (!formData.driverId) {
-      toast.error('Driver selection is required!')
-      return
-    }
-    if (!formData.basicPay || Number(formData.basicPay) <= 0) {
-      toast.error('Basic Pay must be greater than 0!')
+    // Get changed fields only
+    const changedFields = Object.keys(formData).reduce((acc, key) => {
+      if (formData[key] !== initialValues[key]) {
+        acc[key] = formData[key]
+      }
+      return acc
+    }, {})
+
+    if (Object.keys(changedFields).length === 0) {
+      toast.error('No changes detected')
       return
     }
 
-    setLoading(true)
     try {
-      await onSubmit(formData) // Call the function from parent
-
-      // Invalidate and refetch salary list
-      await queryClient.invalidateQueries(['driverSalaries', month])
-      queryClient.refetchQueries(['driverSalaries', month]) // Force refetch if needed
-      // toast.success('Salary created successfully!')
-      setFormData(initialFormData) // Reset form
+      await onSubmit({
+        ...changedFields,
+        _id: formData._id, // Include ID for edit mode
+      })
+      onClose()
     } catch (error) {
-      toast.error('Failed to create salary')
+      // Error is handled in parent component
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-    setVisible(false) // Close modal after successful submission
   }
 
   return (
     <div className="container mt-4">
-      <CButton color="primary" onClick={() => setVisible(true)}>
+      {/* <CButton color="primary" onClick={() => setVisible(true)}>
         Create Driver Salary
-      </CButton>
-
-      <CModal visible={visible} onClose={() => setVisible(false)}>
+      </CButton> */}
+      <CModal visible={visible} onClose={onClose}>
         <CModalHeader closeButton>
-          <CModalTitle>Driver Salary Details</CModalTitle>
+          <CModalTitle>{formData._id ? 'Edit' : 'Create'} Driver Salary</CModalTitle>
         </CModalHeader>
-
         <CModalBody>
           <CForm>
             <div className="mb-3">
@@ -98,6 +117,7 @@ const SalaryAddButton = ({ onSubmit, month }) => {
               </CFormSelect>
             </div>
 
+            {/* Rest of the form inputs */}
             <div className="mb-3">
               <CFormLabel>Basic Pay</CFormLabel>
               <CFormInput
@@ -139,9 +159,8 @@ const SalaryAddButton = ({ onSubmit, month }) => {
             </div>
           </CForm>
         </CModalBody>
-
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisible(false)} disabled={loading}>
+          <CButton color="secondary" onClick={onClose} disabled={loading}>
             Cancel
           </CButton>
           <CButton color="primary" onClick={handleSubmit} disabled={loading}>
@@ -153,4 +172,4 @@ const SalaryAddButton = ({ onSubmit, month }) => {
   )
 }
 
-export default SalaryAddButton
+export default SalaryFrom

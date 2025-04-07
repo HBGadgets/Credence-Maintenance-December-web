@@ -9,12 +9,14 @@ import DateRangePicker from '../../components/DateRangePicker.jsx'
 import {
   deleteDriverSalaryApi,
   getDriverSalaryListApiByMonth,
+  patchDriverSalaryApi,
   postDriverSalaryApi,
 } from '../data/data.js'
-import SalaryAddButton from '../../components/SalaryAddButton.jsx'
 import { toast, ToastContainer } from 'react-toastify'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
+import SalaryFrom from '../../components/SalaryFrom.jsx'
+import { CButton } from '@coreui/react'
 
 const DriverSalary = () => {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
@@ -22,6 +24,8 @@ const DriverSalary = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false)
+  const [selectedSalary, setSelectedSalary] = useState(null)
 
   const lastFetchedMonth = useRef(null)
   const queryClient = useQueryClient() // React Query client for refetching
@@ -93,7 +97,10 @@ const DriverSalary = () => {
           <div className="d-flex justify-content-center gap-2">
             <button
               className="btn btn-sm btn-outline-primary"
-              onClick={() => console.log('Edit clicked', item)}
+              onClick={() => {
+                setSelectedSalary(item) // Pass the full original item
+                setIsSalaryModalOpen(true)
+              }}
             >
               <FaEdit />
             </button>
@@ -124,58 +131,21 @@ const DriverSalary = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   // Function to refresh salary list POST SUBMIT
-  const handleSalarySubmit = async (formData) => {
-    // Validate driverId (assuming it could be an object or string)
-    if (
-      !formData.driverId ||
-      (typeof formData.driverId === 'string' && formData.driverId.trim() === '')
-    ) {
-      toast.error('Please select a driver.')
-      return
-    }
-
-    // Validate basicPay
-    if (!formData.basicPay || isNaN(formData.basicPay) || Number(formData.basicPay) <= 0) {
-      toast.error('Basic Pay must be a valid positive number.')
-      return
-    }
-
-    // Validate optional fields: overtime, incentives, deductions
-    const validateOptional = (field, label) => {
-      if (formData[field] !== undefined && formData[field] !== '') {
-        if (isNaN(formData[field]) || Number(formData[field]) < 0) {
-          toast.error(`${label} must be a valid non-negative number.`)
-          return false
-        }
-      }
-      return true
-    }
-
-    if (
-      !validateOptional('overtime', 'Overtime') ||
-      !validateOptional('incentives', 'Incentives') ||
-      !validateOptional('deductions', 'Deductions')
-    ) {
-      return
-    }
-
+  const handleSalarySubmit = async (submittedData) => {
     try {
-      console.log('Submitting salary:', formData)
-
-      const response = await postDriverSalaryApi(formData.driverId, formData)
-
-      console.log('API Response:', response)
-
-      if (response?.status === 201 && response?.data) {
-        toast.success('Salary successfully created!')
+      if (submittedData._id) {
+        // Remove metadata fields and send only changed data
+        const { driverId, _id, ...updateData } = submittedData
+        await patchDriverSalaryApi(_id, updateData)
+        toast.success('Salary updated successfully!')
       } else {
-        throw new Error('Unexpected response from server.')
+        // Create new salary (existing logic)
+        await postDriverSalaryApi(submittedData.driverId, submittedData)
+        toast.success('Salary created successfully!')
       }
-    } catch (error) {
-      console.error('Error submitting salary:', error)
-    } finally {
-      // Always refresh the data
       await queryClient.invalidateQueries(['driverSalaries', month])
+    } catch (error) {
+      toast.error(error.message || 'Failed to save salary.')
     }
   }
 
@@ -207,10 +177,10 @@ const DriverSalary = () => {
   }
 
   return (
-    <div className="container-fluid">
+    <div>
       <ToastContainer />
       {/* Header Section */}
-      <div className="row mb-3">
+      <div className="row mb-0">
         {/* Left Side: Date Picker */}
         <div className="col-md-2 d-flex align-items-center">
           <DateRangePicker
@@ -228,8 +198,23 @@ const DriverSalary = () => {
             <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           </div>
           <div>
-            {/* Pass the callback function */}
-            <SalaryAddButton onSubmit={handleSalarySubmit} month={month} />
+            <CButton
+              color="primary"
+              style={{ marginTop: '2.8rem' }}
+              onClick={() => {
+                setSelectedSalary(null)
+                setIsSalaryModalOpen(true)
+              }}
+            >
+              Add Salary
+            </CButton>
+            <SalaryFrom
+              onSubmit={handleSalarySubmit}
+              month={month}
+              visible={isSalaryModalOpen}
+              onClose={() => setIsSalaryModalOpen(false)}
+              initialData={selectedSalary}
+            />
           </div>
         </div>
       </div>
