@@ -13,7 +13,7 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { toast } from 'react-toastify'
-import { fetchDrivers } from '../DriverExpert/data/drivers'
+import { fetchDrivers } from '../../../DriverExpert/data/drivers'
 import { useQueryClient } from '@tanstack/react-query' // Import useQueryClient
 
 const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
