@@ -234,22 +234,18 @@ const Trip = () => {
     }
   }, [searchQuery, allData])
 
-  // const handleViewButton = (id) => {
-  //   console.log('Viewing Trips log:', id)
-  // }
-
   return (
     <div>
       <ToastContainer />
 
-      <div className="mb-2 d-flex justify-content-between align-items-center">
-        {/* Left side: Date Range */}
-        <div>
+      <div className="mb-3 row align-items-center">
+        {/* Left Side: Date Range */}
+        <div className="col-md-6 col-12 mb-2 mb-md-0">
           <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         </div>
 
-        {/* Right side: Search and Add Button */}
-        <div className="d-flex  gap-2">
+        {/* Right Side: Search and Add Button */}
+        <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start gap-2">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
           <TripFrom mode="add" onSubmit={handleAdd} />
         </div>
@@ -267,6 +263,14 @@ const Trip = () => {
           itemsPerPage={itemsPerPage}
           mode="edit"
           onSubmit={handleEdit}
+          isFetching={loading}
+          errorMessage={
+            error
+              ? 'Error fetching trips. Please try again later.'
+              : filteredData.length === 0 && !loading
+                ? 'No trip records found for the selected filters.'
+                : ''
+          }
         />
 
         <SmartPagination

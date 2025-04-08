@@ -189,7 +189,7 @@ const DriverSalary = () => {
     <div>
       <ToastContainer />
       {/* Header Section */}
-      <div className="row mb-0">
+      <div className="row">
         {/* Left Side: Date Picker */}
         <div className="col-md-2 d-flex align-items-center">
           <DateRangePicker
