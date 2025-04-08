@@ -197,3 +197,94 @@ export const patchDriverSalaryApi = async (id, updatedData) => {
         throw error;
     }
 };
+
+
+// -------------------------------------------------------------------------------------------------------------------------------- 
+
+// GET API for Trip List.
+export const getTripListApi = async () => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/trips/get`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This is Trip List : ", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error:", error.message?.data || error.message);
+        throw error;
+    }
+}
+
+// POST API for Trip.
+
+export const postTripApi = async (tripData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/trips/create`,
+            tripData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (response.status === 201 || response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        throw error;
+    }
+}
+
+
+// PATCH API for Trip List by ID.
+
+export const patchTripApi = async (id, update) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/trips/update/${id}`,
+            update,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This is Trip Update List by ID : ", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error:", error.message?.data || error.message);
+        throw error;
+    }
+}
+
+
+// DELETE API for Trip List by ID.
+
+export const deleteTripApi = async (id) => {
+    try {
+        const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/trips/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This is Trip Delete List by ID : ", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error:", error.message?.data || error.message);
+        throw error;
+    }
+}

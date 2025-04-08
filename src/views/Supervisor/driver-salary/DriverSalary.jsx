@@ -175,7 +175,7 @@ const DriverSalary = () => {
       try {
         await deleteDriverSalaryApi(id)
         toast.success('Salary deleted successfully.')
-
+        Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
         // Refresh salary list
         await queryClient.invalidateQueries(['driverSalaries', month])
       } catch (error) {
