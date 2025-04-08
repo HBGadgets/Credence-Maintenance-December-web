@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import { MdOutlineAnalytics } from 'react-icons/md'
 import Swal from 'sweetalert2'
-import { Toast, ToastContainer } from 'react-bootstrap'
+import { toast, ToastContainer } from 'react-toastify'
 
 const Trip = () => {
   const [allData, setAllData] = useState([]) // Original fetched data
@@ -24,6 +24,8 @@ const Trip = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const { id } = useParams()
   const isFetchedRef = useRef(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedTrip, setSelectedTrip] = useState(null)
 
   const fetchTripData = async () => {
     try {
@@ -91,8 +93,10 @@ const Trip = () => {
 
       await postTripApi(payload)
       await fetchTripData()
+      toast.success('Trip Added successfully!')
     } catch (err) {
       console.error('Add Trip Failed:', err.message)
+      toast.error('Trip Error on add trip!')
     }
   }
 
@@ -112,8 +116,10 @@ const Trip = () => {
 
       await patchTripApi(formData._id, updatePayload) // Pass ID and payload
       await fetchTripData() // Refresh data
+      toast.success('Trip Updated successfully!')
       console.log('Trip updated successfully.')
     } catch (err) {
+      toast.success('Trip Error on Update trip!')
       console.error('Trip update failed:', err.message)
     }
   }
@@ -135,22 +141,33 @@ const Trip = () => {
       try {
         await deleteTripApi(tripId)
         await fetchTripData()
+        toast.success('Trip Deleted successfully!')
         Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
       } catch (err) {
+        toast.error('Trip Error occured!')
         console.error('Delete failed:', err.message)
         Swal.fire('Error!', 'Failed to delete the trip.', 'error')
       }
     }
   }
 
+  // Handle view action
+  const handleViewButton = (id) => {
+    const trip = allData.find((item) => item._id === id)
+    if (trip) {
+      setSelectedTrip(trip)
+      setShowViewModal(true)
+    }
+  }
+
   //  Coloumns for the table
   const columns = [
-    { label: 'Trip Date', key: 'date', sortable: true },
+    { label: 'Trip Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Start Location', key: 'startLocation', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
-    { label: 'Update Date', key: 'updateDate', sortable: true },
+    { label: 'Trip Update Date', key: 'updateDate', sortable: true },
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'Spent Amounts', key: 'spentAmount', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
@@ -217,13 +234,14 @@ const Trip = () => {
     }
   }, [searchQuery, allData])
 
-  const handleViewButton = (id) => {
-    console.log('Viewing Maintenance Log:', id)
-  }
+  // const handleViewButton = (id) => {
+  //   console.log('Viewing Trips log:', id)
+  // }
 
   return (
     <div>
       <ToastContainer />
+
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left side: Date Range */}
         <div>
@@ -261,6 +279,64 @@ const Trip = () => {
           }}
         />
       </div>
+
+      {/* modal */}
+      {showViewModal && selectedTrip && (
+        <div className="modal show d-block" tabIndex="-1" role="dialog" center>
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Trip Analytics - {selectedTrip?.driverId?.name}</h5>
+                <button
+                  type="button"
+                  className="btn-close ms-auto"
+                  aria-label="Close"
+                  onClick={() => setShowViewModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Trip Date:</strong>{' '}
+                  {new Date(selectedTrip.date).toLocaleDateString('en-GB')}
+                </p>
+                <p>
+                  <strong>Driver Name:</strong> {selectedTrip.driverId?.name}
+                </p>
+                <p>
+                  <strong>Vehicle Name:</strong>{' '}
+                  {typeof selectedTrip.vehicleName === 'string'
+                    ? selectedTrip.vehicleName
+                    : selectedTrip.vehicleId?.name}
+                </p>
+                <p>
+                  <strong>Start Location:</strong> {selectedTrip.startLocation}
+                </p>
+                <p>
+                  <strong>End Location:</strong> {selectedTrip.endLocation}
+                </p>
+                <p>
+                  <strong>Budget Allocated:</strong> ₹{selectedTrip.budgetAllocated}
+                </p>
+                <p>
+                  <strong>Spent Amount:</strong> ₹{selectedTrip.spentAmount ?? 0}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedTrip.status}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
