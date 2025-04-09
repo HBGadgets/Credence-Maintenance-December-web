@@ -50,7 +50,7 @@ const VehicleExpensesBill = () => {
 
         // Format API data
         const formattedData = responseData.map((item) => ({
-          _id: item._id,
+          id: item._id, // Add an alias field `id`
           date: formatDate(item.date),
           vehicleName: item.vehicleName || 'Unknown',
           driverName: item.driverId?.name || 'Unknown',
@@ -97,6 +97,18 @@ const VehicleExpensesBill = () => {
     }
   }
 
+  // Handle view button click
+  const handleViewButton = (id) => {
+    console.log('Selected Driver Expense ID:', id)
+    const vehiclesexpense = data.find((item) => String(item.id) === String(id))
+
+    if (vehiclesexpense) {
+      console.log('Selected Driver Expense Details:', vehiclesexpense)
+    } else {
+      console.warn('Expense not found for ID:', id)
+    }
+  }
+
   // Define Table Columns
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
@@ -126,6 +138,8 @@ const VehicleExpensesBill = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        viewButton={true}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination

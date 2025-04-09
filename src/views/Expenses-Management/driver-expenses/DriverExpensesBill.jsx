@@ -95,10 +95,10 @@ const DriverExpensesBill = () => {
   // Handle view button click
   const handleViewButton = (id) => {
     console.log('Selected Driver Expense ID:', id)
-    const expense = data.find((item) => String(item.id) === String(id))
+    const driverexpense = data.find((item) => String(item.id) === String(id))
 
-    if (expense) {
-      console.log('Selected Driver Expense Details:', expense)
+    if (driverexpense) {
+      console.log('Selected Driver Expense Details:', driverexpense)
     } else {
       console.warn('Expense not found for ID:', id)
     }
