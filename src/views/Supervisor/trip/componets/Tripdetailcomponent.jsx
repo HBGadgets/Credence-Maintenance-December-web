@@ -3,6 +3,19 @@ import React from 'react'
 const TripDetailsCard = ({ trip }) => {
   if (!trip) return <p>No trip selected.</p>
 
+  const getStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'in-progress':
+        return 'badge bg-warning text-dark'
+      case 'cancelled':
+        return 'badge bg-danger'
+      case 'completed':
+        return 'badge bg-success'
+      default:
+        return 'badge bg-secondary'
+    }
+  }
+
   return (
     <div className="bg-white text-dark shadow-sm border-0 p-4 w-100">
       <div className="mb-3">
@@ -30,17 +43,7 @@ const TripDetailsCard = ({ trip }) => {
       </div>
       <div className="mb-3">
         <strong>Status:</strong>{' '}
-        <span
-          className={`badge ${
-            trip.status === 'Completed'
-              ? 'bg-success'
-              : trip.status === 'Pending'
-                ? 'bg-warning text-dark'
-                : 'bg-secondary'
-          }`}
-        >
-          {trip.status || 'N/A'}
-        </span>
+        <span className={getStatusBadge(trip.status)}>{trip.status || 'N/A'}</span>
       </div>
     </div>
   )
