@@ -10,6 +10,9 @@ import { FaEdit, FaTrash } from 'react-icons/fa'
 import { MdOutlineAnalytics } from 'react-icons/md'
 import Swal from 'sweetalert2'
 import { toast, ToastContainer } from 'react-toastify'
+import TripDetailsCard from './componets/Tripdetailcomponent'
+import TripBudgetPieChart from './componets/TripBudgetPieChart'
+import TripBudgetBarChart from './componets/TripBudgetBarChart'
 
 const Trip = () => {
   const [allData, setAllData] = useState([]) // Original fetched data
@@ -160,6 +163,11 @@ const Trip = () => {
     }
   }
 
+  const handleCloseModal = () => {
+    setShowViewModal(false)
+    setSelectedTrip(null)
+  }
+
   // show status condition color
 
   const getStatusBadge = (status) => {
@@ -301,52 +309,71 @@ const Trip = () => {
 
       {/* modal */}
       {showViewModal && selectedTrip && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog" center>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          onClick={() => setShowViewModal(false)}
+        >
           <div className="modal-dialog modal-xl" role="document" style={{ marginTop: '4rem' }}>
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Trip Analytics - {selectedTrip?.driverId?.name}</h5>
+            <div className="modal-content rounded-3 shadow-lg border-0">
+              <div className="modal-header rounded-top">
+                <h5 className="modal-title fw-semibold">
+                  Trip Analytics - {selectedTrip?.driverId?.name}
+                </h5>
                 <button
                   type="button"
-                  className="btn-close ms-auto"
+                  className="btn-close btn-close ms-auto"
                   aria-label="Close"
                   onClick={() => setShowViewModal(false)}
                 ></button>
               </div>
-              <div className="modal-body">
-                <p>
-                  <strong>Trip Date:</strong>{' '}
-                  {new Date(selectedTrip.date).toLocaleDateString('en-GB')}
-                </p>
-                <p>
-                  <strong>Driver Name:</strong> {selectedTrip.driverId?.name}
-                </p>
-                <p>
-                  <strong>Vehicle Name:</strong>{' '}
-                  {typeof selectedTrip.vehicleName === 'string'
-                    ? selectedTrip.vehicleName
-                    : selectedTrip.vehicleId?.name}
-                </p>
-                <p>
-                  <strong>Start Location:</strong> {selectedTrip.startLocation}
-                </p>
-                <p>
-                  <strong>End Location:</strong> {selectedTrip.endLocation}
-                </p>
-                <p>
-                  <strong>Budget Allocated:</strong> ₹{selectedTrip.budgetAllocated}
-                </p>
-                <p>
-                  <strong>Spent Amount:</strong> ₹{selectedTrip.spentAmount ?? 0}
-                </p>
-                <p>
-                  <strong>Status:</strong> {selectedTrip.status}
-                </p>
+
+              <div className="container-fluid px-4 py-3 bg-light">
+                {/* Row 1: Trip Details & Pie Chart */}
+                <div className="row mb-4 g-4">
+                  <div className="col-md-6">
+                    <div className="card bg-white text-dark shadow-sm border-light rounded-3 h-100">
+                      <div className="card-body">
+                        <h5 className="card-title text-primary fw-semibold">Trip Details</h5>
+                        <TripDetailsCard trip={selectedTrip} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="card bg-white text-dark shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
+                      <div className="card-body">
+                        <h5 className="card-title text-primary fw-semibold">Budget Overview</h5>
+                        <TripBudgetPieChart
+                          budget={selectedTrip.budgetAllocated}
+                          spent={selectedTrip.spentAmount}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Bar Chart */}
+                <div className="row">
+                  <div className="col-12">
+                    <div className="card bg-white text-dark shadow-sm border-light rounded-3">
+                      <div className="card-body">
+                        <h5 className="card-title text-primary fw-semibold">Budget Analysis</h5>
+                        <TripBudgetBarChart
+                          budget={selectedTrip.budgetAllocated}
+                          spent={selectedTrip.spentAmount}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="modal-footer">
+
+              <div className="modal-footer bg-white border-top-0">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-outline-primary px-4"
                   onClick={() => setShowViewModal(false)}
                 >
                   Close
