@@ -23,22 +23,36 @@ const TripBudgetBarChart = ({ budget = 0, spent = 0 }) => {
   ]
 
   return (
-    <div className="card shadow-sm border-0">
+    <div className=" shadow-sm border-0">
       <div className="card-body">
-        <h5 className="card-title mb-4">Budget Analysis</h5>
-
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
             <XAxis dataKey="name" />
             <YAxis tickFormatter={(val) => `₹${val.toLocaleString()}`} />
-            <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
-            <Legend
-              formatter={(value) =>
-                value === 'Budget'
-                  ? `Budget Allocated (100%)`
-                  : `Spent Amount (${utilizationRate}%)`
-              }
+            <Tooltip
+              formatter={(value) => `₹${value.toLocaleString()}`}
+              labelFormatter={(label) => label}
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                color: 'black',
+              }}
+              labelStyle={{ color: 'black' }}
+              itemStyle={{ color: 'black' }}
             />
+
+            <Legend
+              formatter={(value) => {
+                const isSpent = value === 'Spent'
+                const label = isSpent
+                  ? `Spent Amount (${utilizationRate}%)`
+                  : `Budget Allocated (100%)`
+
+                // Force black text for both
+                return <span style={{ color: 'black', fontWeight: 500 }}>{label}</span>
+              }}
+            />
+
             <Bar dataKey="Budget" fill="#90caf9" radius={[4, 4, 0, 0]}>
               <LabelList
                 dataKey="Budget"
@@ -46,11 +60,12 @@ const TripBudgetBarChart = ({ budget = 0, spent = 0 }) => {
                 formatter={(val) => `₹${val.toLocaleString()}`}
               />
             </Bar>
-            <Bar dataKey="Spent" fill="#007bff" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="Spent" fill="#E9DCC9" radius={[4, 4, 0, 0]}>
               <LabelList
                 dataKey="Spent"
                 position="top"
                 formatter={(val) => `₹${val.toLocaleString()}`}
+                fill="black" // 👈 This sets the text color to black
               />
             </Bar>
           </BarChart>

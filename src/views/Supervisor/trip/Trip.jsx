@@ -163,10 +163,10 @@ const Trip = () => {
     }
   }
 
-  const handleCloseModal = () => {
-    setShowViewModal(false)
-    setSelectedTrip(null)
-  }
+  // const handleCloseModal = () => {
+  //   setShowViewModal(false)
+  //   setSelectedTrip(null)
+  // }
 
   // show status condition color
 
@@ -316,35 +316,37 @@ const Trip = () => {
           onClick={() => setShowViewModal(false)}
         >
           <div className="modal-dialog modal-xl" role="document" style={{ marginTop: '4rem' }}>
-            <div className="modal-content rounded-3 shadow-lg border-0">
-              <div className="modal-header rounded-top">
+            <div className="modal-content rounded-4 shadow-lg border-0 overflow-hidden">
+              <div className="modal-header bg-white">
                 <h5 className="modal-title fw-semibold">
                   Trip Analytics - {selectedTrip?.driverId?.name}
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close ms-auto"
+                  className="btn-close ms-auto"
                   aria-label="Close"
                   onClick={() => setShowViewModal(false)}
                 ></button>
               </div>
 
-              <div className="container-fluid px-4 py-3 bg-light">
-                {/* Row 1: Trip Details & Pie Chart */}
-                <div className="row mb-4 g-4">
+              <div className="container-fluid px-4 py-4 bg-light">
+                {/* Row 1: Trip Summary & Pie Chart */}
+                <div className="row g-4 mb-4">
                   <div className="col-md-6">
-                    <div className="card bg-white text-dark shadow-sm border-light rounded-3 h-100">
-                      <div className="card-body">
-                        <h5 className="card-title text-primary fw-semibold">Trip Details</h5>
+                    <div className="card bg-white shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
+                      <div className="card-body p-4">
+                        <h5 className="card-title text-primary fw-semibold mb-3">Trip Summary</h5>
                         <TripDetailsCard trip={selectedTrip} />
                       </div>
                     </div>
                   </div>
 
                   <div className="col-md-6">
-                    <div className="card bg-white text-dark shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
-                      <div className="card-body">
-                        <h5 className="card-title text-primary fw-semibold">Budget Overview</h5>
+                    <div className="card bg-white shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
+                      <div className="card-body p-4">
+                        <h5 className="card-title text-primary fw-semibold mb-3">
+                          Budget Overview
+                        </h5>
                         <TripBudgetPieChart
                           budget={selectedTrip.budgetAllocated}
                           spent={selectedTrip.spentAmount}
@@ -357,9 +359,11 @@ const Trip = () => {
                 {/* Row 2: Bar Chart */}
                 <div className="row">
                   <div className="col-12">
-                    <div className="card bg-white text-dark shadow-sm border-light rounded-3">
-                      <div className="card-body">
-                        <h5 className="card-title text-primary fw-semibold">Budget Analysis</h5>
+                    <div className="card bg-white shadow-sm border-light rounded-3 h-100">
+                      <div className="card-body py-3 px-4">
+                        <h5 className="card-title text-primary fw-semibold mb-3">
+                          Budget Analysis
+                        </h5>
                         <TripBudgetBarChart
                           budget={selectedTrip.budgetAllocated}
                           spent={selectedTrip.spentAmount}

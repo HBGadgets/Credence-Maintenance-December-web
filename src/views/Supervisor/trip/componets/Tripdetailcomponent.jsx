@@ -6,7 +6,6 @@ const TripDetailsCard = ({ trip }) => {
   return (
     <div className="card shadow-sm border-0">
       <div className="card-body">
-        <h5 className="card-title mb-3 text-primary">Trip Summary</h5>
         <div className="mb-2">
           <strong>Trip Date:</strong>{' '}
           {trip.date ? new Date(trip.date).toLocaleDateString('en-GB') : 'N/A'}

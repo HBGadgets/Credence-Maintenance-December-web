@@ -17,12 +17,11 @@ const TripBudgetPieChart = ({ budget = 0, spent = 0 }) => {
     },
   ]
 
-  const COLORS = ['#007bff', '#E9DCC9'] // Blue & light gray
+  const COLORS = ['#007bff', '#E9DCC9'] // Blue & light white
 
   return (
     <div className="card shadow-sm border-0">
       <div className="card-body text-center">
-        <h5 className="card-title mb-3">Budget Overview</h5>
         <ResponsiveContainer width="100%" height={230}>
           <PieChart>
             <Pie

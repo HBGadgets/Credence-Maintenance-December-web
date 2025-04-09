@@ -50,7 +50,7 @@ const DriverExpensesBill = () => {
 
         // Format and map data
         const formattedData = responseData.map((item) => ({
-          _id: item._id,
+          id: item._id, // Add an alias field `id`
           date: formatDate(item.date), // Formatted Date
           driverName: item.driverId?.name || 'Unknown', // Driver Name
           currentVehicleName: item.driverId?.currentVehicleName || 'N/A', // Current Vehicle
@@ -92,6 +92,18 @@ const DriverExpensesBill = () => {
     setFilteredData(filtered)
   }
 
+  // Handle view button click
+  const handleViewButton = (id) => {
+    console.log('Selected Driver Expense ID:', id)
+    const expense = data.find((item) => String(item.id) === String(id))
+
+    if (expense) {
+      console.log('Selected Driver Expense Details:', expense)
+    } else {
+      console.warn('Expense not found for ID:', id)
+    }
+  }
+
   if (loading) return <Loader />
   if (error) return <Page404 />
 
@@ -122,6 +134,8 @@ const DriverExpensesBill = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        viewButton={true}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination
