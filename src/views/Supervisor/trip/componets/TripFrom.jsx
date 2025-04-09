@@ -4,6 +4,7 @@ import { FaEdit } from 'react-icons/fa'
 import { fetchDrivers } from '../../../DriverExpert/data/drivers'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchVehicles } from '../../../../slices/vehicleSlice'
+import { CSpinner } from '@coreui/react'
 
 const TripFrom = ({
   mode = 'add',
@@ -14,6 +15,7 @@ const TripFrom = ({
 }) => {
   const [show, setShow] = useState(false)
   const [drivers, setDrivers] = useState([])
+  const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
   const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
 
@@ -117,11 +119,17 @@ const TripFrom = ({
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Payload to send:', formData) // Debugging
-    onSubmit(formData)
-    setShow(false)
+    setLoading(true) // start loader
+    try {
+      await onSubmit(formData) // assuming onSubmit is async
+      setShow(false)
+    } catch (error) {
+      console.error('Submit error:', error)
+    } finally {
+      setLoading(false) // stop loader
+    }
   }
 
   console.log('driversssssssssssssssssssss', drivers) // Debugging
@@ -279,8 +287,17 @@ const TripFrom = ({
             <Button variant="secondary" onClick={() => setShow(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              {mode === 'add' ? 'Add Trip' : 'Update'}
+            <Button type="submit" variant="primary" disabled={loading}>
+              {loading ? (
+                <>
+                  <CSpinner size="sm" className="me-2" />{' '}
+                  {mode === 'add' ? 'Adding...' : 'Updating...'}
+                </>
+              ) : mode === 'add' ? (
+                'Add Trip'
+              ) : (
+                'Update'
+              )}
             </Button>
           </Modal.Footer>
         </Form>

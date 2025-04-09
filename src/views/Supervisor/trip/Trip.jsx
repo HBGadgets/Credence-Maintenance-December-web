@@ -160,6 +160,21 @@ const Trip = () => {
     }
   }
 
+  // show status condition color
+
+  const getStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'in-progress':
+        return 'badge bg-warning text-dark' // Yellow warning
+      case 'cancelled':
+        return 'badge bg-danger' // Red danger
+      case 'completed':
+        return 'badge bg-success' // Green success
+      default:
+        return 'badge bg-secondary' // Default gray
+    }
+  }
+
   //  Coloumns for the table
   const columns = [
     { label: 'Trip Start Date', key: 'date', sortable: true },
@@ -187,7 +202,7 @@ const Trip = () => {
         updateDate: new Date(data.updatedAt).toLocaleDateString('en-GB'),
         budgetAllocated: data.budgetAllocated ?? 0,
         spentAmount: data.spentAmount ?? 0,
-        status: data.status || 'N/A',
+        status: <span className={getStatusBadge(data.status)}>{data.status || 'N/A'}</span>,
         actions: (
           <div className="d-flex justify-content-center gap-2">
             <button
@@ -287,7 +302,7 @@ const Trip = () => {
       {/* modal */}
       {showViewModal && selectedTrip && (
         <div className="modal show d-block" tabIndex="-1" role="dialog" center>
-          <div className="modal-dialog modal-lg" role="document">
+          <div className="modal-dialog modal-xl" role="document" style={{ marginTop: '4rem' }}>
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Trip Analytics - {selectedTrip?.driverId?.name}</h5>

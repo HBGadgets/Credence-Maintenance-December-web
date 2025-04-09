@@ -165,13 +165,30 @@ const MaintenanceLog = () => {
     console.log('Viewing Maintenance Log:', id)
   }
 
+  const getPaymentBadge = (mode) => {
+    switch (mode?.toLowerCase()) {
+      case 'upi':
+        return 'badge bg-secondary' // UPI = secondary
+      case 'cash':
+        return 'badge bg-success' // Cash = success
+      case 'card':
+        return 'badge bg-warning' // Card = warning
+      default:
+        return 'badge bg-primary' // Default
+    }
+  }
+
   const tableData = filteredData.map((data) => ({
     date: new Date(data.date).toLocaleDateString('en-GB'),
     expenseType: data.expenseType,
     vendor: data.vendor,
     description: data.description,
     amount: data.amount,
-    paymentMode: data.paymentMode,
+    paymentMode: (
+      <span className={getPaymentBadge(data.paymentMode)}>
+        {(data.paymentMode || 'N/A').charAt(0).toUpperCase() + (data.paymentMode || 'N/A').slice(1)}
+      </span>
+    ),
   }))
 
   return (
