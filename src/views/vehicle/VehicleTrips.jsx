@@ -83,7 +83,7 @@ const VehicleTrips = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   if (loading) return <Loader />
-  if (error) return <Page404 />
+  // if (error) return <Page404 />
 
   // Creating a variable for the mapped data
   const tableData = filteredData.map((data) => ({

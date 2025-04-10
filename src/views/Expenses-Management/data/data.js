@@ -26,7 +26,7 @@ export const getDriverExpesesListApi = async (id) => {
 
 // ------------------------------------------------------------------------------------------------------------------
 
-// GET API Supervisor See All Vehicles Exxpense List.
+// GET API Supervisor See All Vehicles Expense List.
 
 export const getVehicleExpesesListApi = async (id) => {
     try {
@@ -45,3 +45,27 @@ export const getVehicleExpesesListApi = async (id) => {
         throw error;
     }
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------- 
+
+// Get API for Supervisor See Lorry report  
+
+export const getLorryReciptApi = async (id) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/lorry-receipt/get-all-lorry-receipt`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+        console.log("This is all Lorry recipt list :", response.data);
+        return response.data;
+    } catch (error) {
+        console.log("Error:", error.message?.data || error.message);
+        throw error;
+    }
+}
+
+
