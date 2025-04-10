@@ -19,7 +19,7 @@ const TripDetailsCard = ({ trip }) => {
   return (
     <div className="bg-white text-dark shadow-sm border-0 p-4 w-100">
       <div className="mb-3">
-        <strong>Trip Date:</strong>{' '}
+        <strong>Trip Start Date:</strong>{' '}
         {trip.date ? new Date(trip.date).toLocaleDateString('en-GB') : 'N/A'}
       </div>
       <div className="mb-3">
@@ -42,6 +42,10 @@ const TripDetailsCard = ({ trip }) => {
         <strong>Spent Amount:</strong> ₹{trip.spentAmount ?? 0}
       </div>
       <div className="mb-3">
+        <div className="mb-3">
+          <strong>Trip Updated Date:</strong>{' '}
+          {trip.date ? new Date(trip.updatedAt).toLocaleDateString('en-GB') : 'N/A'}
+        </div>
         <strong>Status:</strong>{' '}
         <span className={getStatusBadge(trip.status)}>{trip.status || 'N/A'}</span>
       </div>

@@ -215,6 +215,7 @@ const Trip = () => {
           <div className="d-flex justify-content-center gap-2">
             <button
               className="btn btn-sm btn-outline-success"
+              title="View Analyatics"
               onClick={() => handleViewButton(data._id)}
             >
               <MdOutlineAnalytics />
@@ -224,7 +225,7 @@ const Trip = () => {
               mode="edit"
               onSubmit={handleEdit}
               initialData={{
-                _id: data._id, // Make sure to pass _id for patching
+                _id: data._id,
                 driverId: data.driverId?._id || data.driverId,
                 vehicleId: data.vehicleId?._id || data.vehicleId,
                 vehicleName: data.vehicleName || data.vehicleId?.name,
@@ -233,9 +234,15 @@ const Trip = () => {
                 date: data.date,
                 budgetAllocated: data.budgetAllocated,
               }}
+              buttonProps={{
+                className: 'btn btn-sm btn-outline-primary',
+                title: 'Edit Trip', // Tooltip here
+              }}
             />
+
             <button
               className="btn btn-sm btn-outline-danger"
+              title="Delete Trip"
               onClick={() => handleDelete(data._id, 'Trip')}
             >
               <FaTrash />
