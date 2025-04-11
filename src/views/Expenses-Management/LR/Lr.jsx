@@ -1,26 +1,36 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Button } from 'react-bootstrap'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Button, Modal } from 'react-bootstrap'
 import LorryReceiptForm from './componets/LorryReceiptForm'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaEdit, FaFileInvoice, FaTrash } from 'react-icons/fa'
 import { ToastContainer } from 'react-toastify'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import { getLorryReciptApi } from '../data/data'
+import {
+  deleteLorryReciptApi,
+  getLorryReciptApi,
+  patchLorryReciptApi,
+  postLorryReciptApi,
+} from '../data/data'
 import Swal from 'sweetalert2'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import InvoiceBill from './componets/InvoiceBill'
 
 const Lr = () => {
   const [showForm, setShowForm] = useState(false)
   const [formMode, setFormMode] = useState('add')
   const [selectedData, setSelectedData] = useState(null)
   const [filteredData, setFilteredData] = useState([])
+  const [rawData, setRawData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const isFetchedRef = useRef(false)
+  const [show, setShow] = useState(false)
+  const [selectedInvoiceData, setSelectedInvoiceData] = useState(null)
+
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   // Format Date (DD/MM/YYYY)
@@ -35,69 +45,10 @@ const Lr = () => {
     try {
       setLoading(true)
       const responseData = await getLorryReciptApi()
-
-      const formattedData = responseData.map((data) => ({
-        _id: data.id,
-        companyName: data.companyName,
-        companyAddress: data.companyAddress,
-        gstin: data.gstin,
-        officeNumber: data.officeNumber,
-        mobileNumber: data.mobileNumber,
-        lorryNumber: data.lorryNumber,
-        date: formatDate(data.date),
-        vehicleName: data.vehicleName,
-        ownerName: data.ownerName,
-        consignorName: data.consignorName,
-        consignorAddress: data.consignorAddress,
-        consigneeName: data.consigneeName,
-        consigneeAddress: data.consigneeAddress,
-        customerName: data.customerName,
-        customerAddress: data.customerAddress,
-        from: data.startLocation,
-        to: data.endLocation,
-        driverName: data.driverName,
-        driverContact: data.driverContact,
-        containerNumber: data.containerNumber,
-        sealNumber: data.sealNumber,
-        itemName: data.itemName,
-        itemQuantity: data.itemQuantity,
-        itemUnit: data.itemUnit,
-        itemWeight: data.itemWeight,
-        itemcost: data.itemcost,
-        customerRate: data.customerRate,
-        totalAmount: data.totalAmount,
-        transporterRate: data.transporterRate,
-        totalTransporterAmount: data.totalTransporterAmount,
-        transporterRateOn: data.transporterRateOn,
-        customerRateOn: data.customerRateOn,
-        customerFreight: data.customerFreight,
-        transporterFreight: data.transporterFreight,
-        actions: (
-          <div className="d-flex justify-content-center gap-2">
-            <Button
-              variant="light"
-              size="sm"
-              onClick={() => handleEdit(data)}
-              className="btn btn-sm btn-outline-primary"
-              style={{ padding: '4px 8px' }}
-            >
-              <FaEdit />
-            </Button>
-
-            <button
-              className="btn btn-sm btn-outline-danger"
-              title="Delete Lorry Receipt"
-              onClick={() => handleDelete(data.id, 'Lorry Receipt')}
-            >
-              <FaTrash />
-            </button>
-          </div>
-        ),
-      }))
-
-      setFilteredData(formattedData)
-    } catch (error) {
-      console.error('Failed to fetch lorry receipts:', error)
+      setRawData(responseData)
+      setFilteredData(responseData)
+    } catch (err) {
+      setError(err?.errorMessage || 'Something went to Wrong')
     } finally {
       setLoading(false)
     }
@@ -125,14 +76,109 @@ const Lr = () => {
     setShowForm(true)
   }
 
-  // Handle Submit
-  const handleFormSubmit = (formData) => {
-    if (formMode === 'edit') {
-      console.log('Updating...', formData)
-    } else {
-      console.log('Creating...', formData)
+  // Handle View
+  const handleViewButton = (id) => {
+    console.log('Clicked ID:', id)
+    console.log('Raw Data:', rawData)
+    const invoiceData = rawData.find((data) => data._id === id)
+    if (!invoiceData) {
+      console.warn('Invoice data not found for ID:', id)
     }
-    setShowForm(false)
+    setSelectedInvoiceData(invoiceData)
+    setShow(true)
+  }
+
+  const handleClose = () => {
+    setShow(false)
+    setSelectedInvoiceData(null)
+  }
+
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (formMode === 'edit') {
+        console.log('Updating...', formData)
+        const result = await patchLorryReciptApi(selectedData._id, formData)
+        Swal.fire('Success!', 'Lorry Receipt updated successfully.', 'success')
+        fetchData() // Refresh the list with updated data
+        // Update the edited record in filteredData
+        setFilteredData((prevData) =>
+          prevData.map((data) =>
+            data._id === selectedData._id
+              ? {
+                  ...data,
+                  ...formData,
+                  date: formatDate(formData.date),
+                  actions: (
+                    <div className="d-flex justify-content-center gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-success"
+                        title="Invoice bill"
+                        onClick={() => handleViewButton(data._id)}
+                      >
+                        <FaFileInvoice />
+                      </button>
+                      <Button
+                        variant="light"
+                        size="sm"
+                        onClick={() => handleEdit(data)}
+                        className="btn btn-sm btn-outline-primary"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <FaEdit />
+                      </Button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        title="Delete Lorry Receipt"
+                        onClick={() => handleDelete(data._id, 'Lorry Receipt')}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ),
+                }
+              : data,
+          ),
+        )
+      } else {
+        // ADD flow (already working)
+        const result = await postLorryReciptApi(formData)
+        Swal.fire('Success!', 'Lorry Receipt added successfully.', 'success')
+        fetchData() // Refresh the list with updated data
+        setFilteredData((prev) => [
+          ...prev,
+          {
+            ...formData,
+            _id: result.id,
+            date: formatDate(formData.date),
+            actions: (
+              <div className="d-flex justify-content-center gap-2">
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => handleEdit(result)}
+                  className="btn btn-sm btn-outline-primary"
+                  style={{ padding: '4px 8px' }}
+                >
+                  <FaEdit />
+                </Button>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  title="Delete Lorry Receipt"
+                  onClick={() => handleDelete(result._id || result.id, 'Lorry Receipt')}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            ),
+          },
+        ])
+      }
+    } catch (error) {
+      console.error('Failed to submit Lorry Receipt:', error)
+      Swal.fire('Error!', 'Failed to submit Lorry Receipt.', 'error')
+    } finally {
+      setShowForm(false)
+    }
   }
 
   // Handel delete
@@ -149,20 +195,16 @@ const Lr = () => {
 
     if (confirm.isConfirmed) {
       try {
-        await deleteLorryReceiptApi(id) // Your API call to delete
+        await deleteLorryReciptApi(id) // Your API call to delete
         Swal.fire('Deleted!', 'Lorry Receipt has been deleted.', 'success')
         // Re-fetch or filter out deleted data from state
         setFilteredData((prev) => prev.filter((data) => data._id !== id))
+        fetchData()
       } catch (error) {
         console.error('Failed to delete:', error)
         Swal.fire('Error!', 'Failed to delete the Lorry Receipt.', 'error')
       }
     }
-  }
-
-  // Handle View
-  const handleViewButton = (id) => {
-    console.log('id for trip', id)
   }
 
   // Handle Date Range
@@ -174,7 +216,8 @@ const Lr = () => {
   const columns = [
     { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Company Address', key: 'companyAddress', sortable: true },
-    { label: 'GSTIN', key: 'gstin', sortable: true },
+    { label: 'Company Email ', key: 'companyEmail', sortable: true },
+    { label: 'GSTIN', key: 'gstIn', sortable: true },
     { label: 'Office Number', key: 'officeNumber', sortable: true },
     { label: 'Mobile Number', key: 'mobileNumber', sortable: true },
     { label: 'Lorry Receipt No.', key: 'lorryNumber', sortable: true },
@@ -208,6 +251,79 @@ const Lr = () => {
     { label: 'Transporter Freight', key: 'transporterFreight', sortable: true },
     { label: 'Actions', key: 'actions', sortable: false },
   ]
+
+  // fetch in table data
+  const formattedData = useMemo(() => {
+    return filteredData
+      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+      .map((data) => ({
+        _id: data._id,
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        companyEmail: data.companyEmail,
+        gstIn: data.gstIn,
+        companyOfficeNumber: data.companyOfficeNumber,
+        companyMobileNumber: data.companyMobileNumber,
+        lorryNumber: data.lorryNumber,
+        date: formatDate(data.date),
+        vehicleName: data.vehicleName,
+        ownerName: data.ownerName,
+        consignorName: data.consignorName,
+        consignorAddress: data.consignorAddress,
+        consigneeName: data.consigneeName,
+        consigneeAddress: data.consigneeAddress,
+        customerName: data.customerName,
+        customerAddress: data.customerAddress,
+        from: data.from || data.startLocation,
+        to: data.to || data.endLocation,
+        driverName: data.driverId?.name || 'N/A',
+        driverContact: data.driverId?.contactNumber || 'N/A',
+        containerNumber: data.containerNumber,
+        sealNumber: data.sealNumber,
+        itemName: data.itemName,
+        itemQuantity: data.itemQuantity,
+        itemUnit: data.itemUnit,
+        itemWeight: data.itemWeight,
+        itemcost: data.itemcost,
+        customerRate: data.customerRate,
+        totalAmount: data.totalAmount,
+        transporterRate: data.transporterRate,
+        totalTransporterAmount: data.totalTransporterAmount,
+        transporterRateOn: data.transporterRateOn,
+        customerRateOn: data.customerRateOn,
+        customerFreight: data.customerFreight,
+        transporterFreight: data.transporterFreight,
+        actions: (
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              className="btn btn-sm btn-outline-success"
+              title="Invoice bill"
+              onClick={() => handleViewButton(data._id)}
+            >
+              <FaFileInvoice />
+            </button>
+
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => handleEdit(data)}
+              className="btn btn-sm btn-outline-primary"
+              style={{ padding: '4px 8px' }}
+            >
+              <FaEdit />
+            </Button>
+
+            <button
+              className="btn btn-sm btn-outline-danger"
+              title="Delete Lorry Receipt"
+              onClick={() => handleDelete(data._id, 'Lorry Receipt')}
+            >
+              <FaTrash />
+            </button>
+          </div>
+        ),
+      }))
+  }, [filteredData, currentPage, itemsPerPage])
 
   return (
     <div>
@@ -244,7 +360,7 @@ const Lr = () => {
           <Table
             title="Lorry Recipts"
             columns={columns}
-            filteredData={filteredData}
+            filteredData={formattedData}
             setFilteredData={setFilteredData}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
@@ -269,6 +385,18 @@ const Lr = () => {
           />
         </div>
       </div>
+      <Modal show={show} onHide={handleClose} size="xl">
+        <Modal.Header closeButton>
+          <Modal.Title>Invoice Bill</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedInvoiceData ? (
+            <InvoiceBill invoiceData={selectedInvoiceData} />
+          ) : (
+            <p>No invoice data available.</p>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }
