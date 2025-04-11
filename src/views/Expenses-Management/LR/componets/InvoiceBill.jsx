@@ -6,28 +6,31 @@ const InvoiceBill = ({ invoiceData }) => {
   const invoiceRef = useRef()
 
   const handleDownloadPDF = () => {
-    const element = invoiceRef.current
-
-    // Hide all elements with class 'no-print' before generating PDF
-    const noPrintElements = element.querySelectorAll('.no-print')
-    noPrintElements.forEach((el) => (el.style.display = 'none'))
+    const downloadSection = invoiceRef.current.cloneNode(true)
+    const footer = downloadSection.querySelector('.invoice-footer')
+    if (footer) footer.remove()
 
     const opt = {
-      margin: 0.5,
+      margin: [0.2, 0.2, 0.2, 0.2], // smaller margins
       filename: `Invoice-${invoiceData?.lorryNumber || 'Bill'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1200,
+      },
+      jsPDF: {
+        unit: 'pt',
+        format: 'a4',
+        orientation: 'portrait',
+        compress: true,
+      },
+      pagebreak: { avoid: ['.section', '.two-column', 'table'] },
     }
 
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .then(() => {
-        // Show the hidden elements again
-        noPrintElements.forEach((el) => (el.style.display = ''))
-      })
+    html2pdf().set(opt).from(downloadSection).save()
   }
 
   const {
@@ -35,8 +38,8 @@ const InvoiceBill = ({ invoiceData }) => {
     companyAddress,
     companyEmail,
     gstIn,
-    officeNumber,
-    mobileNumber,
+    companyOfficeNumber,
+    companyMobileNumber,
     lorryNumber,
     date,
     vehicleName,
@@ -71,83 +74,166 @@ const InvoiceBill = ({ invoiceData }) => {
   return (
     <div>
       <div className="invoice-container" ref={invoiceRef}>
-        <div className="invoice-header">
-          <h2>{companyName || 'Company Name'}</h2>
-          <p>{companyAddress}</p>
-          <p>
-            Email: {companyEmail} | GSTIN: {gstIn}
-          </p>
-          <p>
-            Office: {officeNumber} | Mobile: {mobileNumber}
-          </p>
-          <hr />
+        <h2 className="title">Lorry Receipt (LR)</h2>
+
+        <div className="section">
+          <div className="two-column">
+            <div>
+              <h4>Transporter Information</h4>
+              <p>
+                <strong>Transporter Name:</strong> {companyName}
+              </p>
+              <p>
+                <strong>Transporter Address:</strong> {companyAddress}
+              </p>
+              <p>
+                <strong>Contact Email:</strong> {companyEmail}
+              </p>
+              <p>
+                <strong>Contact Details:</strong> {companyOfficeNumber} / {companyMobileNumber}
+              </p>
+            </div>
+            <div>
+              <h4>Receipt Details</h4>
+              <p>
+                <strong>LR Number:</strong> {lorryNumber}
+              </p>
+              <p>
+                <strong>Date of Issue:</strong> {date}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="invoice-section">
-          <strong>Lorry Receipt No.:</strong> {lorryNumber}
-          <br />
-          <strong>Date:</strong> {date}
+        <div className="section">
+          <div className="two-column">
+            <div>
+              <h4>Consignor (Sender) Details</h4>
+              <p>
+                <strong>Name:</strong> {consignorName}
+              </p>
+              <p>
+                <strong>Address:</strong> {consignorAddress}
+              </p>
+              <p>
+                <strong>GSTIN:</strong> {gstIn}
+              </p>
+              <p>
+                <strong>Contact:</strong> {companyMobileNumber}
+              </p>
+            </div>
+            <div>
+              <h4>Consignee (Receiver) Details</h4>
+              <p>
+                <strong>Name:</strong> {consigneeName}
+              </p>
+              <p>
+                <strong>Address:</strong> {consigneeAddress}
+              </p>
+              <p>
+                <strong>GSTIN:</strong> {gstIn}
+              </p>
+              <p>
+                <strong>Contact:</strong> {companyMobileNumber}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="invoice-section">
-          <h4>Vehicle & Driver Details</h4>
-          <p>
-            Vehicle: {vehicleName} | Owner: {ownerName}
-          </p>
-          <p>
-            Driver: {driverName} | Contact: {driverContact}
-          </p>
-          <p>
-            Container No: {containerNumber} | Seal No: {sealNumber}
-          </p>
+        <div className="section">
+          <div className="two-column">
+            <div>
+              <h4>Transportation Details</h4>
+              <p>
+                <strong>Vehicle Number:</strong> {vehicleName}
+              </p>
+              <p>
+                <strong>Driver Name:</strong> {driverName}
+              </p>
+              <p>
+                <strong>Driver Contact:</strong> {driverContact}
+              </p>
+              <p>
+                <strong>Destination:</strong> {startLocation} → {endLocation}
+              </p>
+            </div>
+            <div>
+              <h4>Charges</h4>
+              <table className="charges-table">
+                <thead>
+                  <tr>
+                    <th>Charge Type</th>
+                    <th>Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Freight Charges</td>
+                    <td>{customerFreight}</td>
+                  </tr>
+                  <tr>
+                    <td>Other Charges (if any)</td>
+                    <td>{transporterFreight}</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Total Charges</strong>
+                    </td>
+                    <td>
+                      <strong>{totalAmount}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <div className="invoice-section">
-          <h4>Customer Details</h4>
-          <p>Name: {customerName}</p>
-          <p>Address: {customerAddress}</p>
-          <p>
-            From: {startLocation} → To: {endLocation}
-          </p>
+        <div className="section">
+          <h4>Goods Details</h4>
+          <table className="goods-table">
+            <thead>
+              <tr>
+                <th>Description of Goods</th>
+                <th>Quantity</th>
+                <th>Weight (KG)</th>
+                <th>Value (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{itemName}</td>
+                <td>
+                  {itemQuantity} {itemUnit}
+                </td>
+                <td>{itemWeight}</td>
+                <td>{itemcost}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div className="invoice-section">
-          <h4>Consignor & Consignee</h4>
-          <p>
-            Consignor: {consignorName} - {consignorAddress}
-          </p>
-          <p>
-            Consignee: {consigneeName} - {consigneeAddress}
-          </p>
+        <div className="section">
+          <h4>Terms and Conditions</h4>
+          <ul>
+            <li>Goods are transported at the owner's risk unless otherwise specified.</li>
+            <li>
+              Transporter is not liable for damages caused by natural calamities or accidents.
+            </li>
+            <li>Delivery will be made only upon presentation of the original lorry receipt.</li>
+          </ul>
         </div>
 
-        <div className="invoice-section">
-          <h4>Item Details</h4>
+        <div className="section signature-section">
           <p>
-            {itemName} | {itemQuantity} {itemUnit} | Weight: {itemWeight}kg
+            <strong>Authorized Signatory (Transporter):</strong> ______________________
           </p>
-          <p>Item Cost: ₹{itemcost}</p>
+          <p>Consignor: ______________________</p>
+          <p>Consignee: ______________________</p>
         </div>
 
-        <div className="invoice-section">
-          <h4>Rates & Freight</h4>
-          <p>
-            Customer Rate: ₹{customerRate} on {customerRateOn}
-          </p>
-          <p>
-            Transporter Rate: ₹{transporterRate} on {transporterRateOn}
-          </p>
-          <p>
-            Customer Freight: ₹{customerFreight} | Transporter Freight: ₹{transporterFreight}
-          </p>
-          <p>
-            Total Amount: ₹{totalAmount} | Transporter Total: ₹{totalTransporterAmount}
-          </p>
-        </div>
-
-        {/* Footer only visible on screen, not in PDF */}
-        <div className="invoice-footer text-center mt-5 no-print">
-          <p>Thank you for your business!</p>
+        <div className="invoice-footer text-center mt-5">
+          <p className="stamp">[Transport Company Stamp]</p>
           <button className="btn btn-primary mt-2" onClick={handleDownloadPDF}>
             Download PDF
           </button>
