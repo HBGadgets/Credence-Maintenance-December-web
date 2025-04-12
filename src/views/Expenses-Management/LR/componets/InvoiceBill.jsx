@@ -33,6 +33,11 @@ const InvoiceBill = ({ invoiceData }) => {
     html2pdf().set(opt).from(downloadSection).save()
   }
 
+  const driverName = invoiceData?.driverId?.name || 'N/A'
+  const driverContact = invoiceData?.driverId?.contactNumber || 'N/A'
+
+  console.log('Driver Info:', invoiceData?.driverId)
+
   const {
     companyName,
     companyAddress,
@@ -52,8 +57,6 @@ const InvoiceBill = ({ invoiceData }) => {
     customerAddress,
     startLocation,
     endLocation,
-    driverName,
-    driverContact,
     containerNumber,
     sealNumber,
     itemName,
@@ -99,7 +102,8 @@ const InvoiceBill = ({ invoiceData }) => {
                 <strong>LR Number:</strong> {lorryNumber}
               </p>
               <p>
-                <strong>Date of Issue:</strong> {date}
+                <strong>Date of Issue:</strong>{' '}
+                {date ? new Date(date).toLocaleDateString('en-GB') : ''}
               </p>
             </div>
           </div>

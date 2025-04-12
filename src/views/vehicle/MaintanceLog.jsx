@@ -93,6 +93,7 @@ const MaintenanceLog = () => {
     if (query) {
       filtered = filtered.filter(
         (item) =>
+          item.driverName.toLowerCase().includes(query.toLocaleLowerCase()) ||
           item.expenseType.toLowerCase().includes(query.toLowerCase()) ||
           item.vendor.toLowerCase().includes(query.toLowerCase()) ||
           item.amount.toString().includes(query) ||
@@ -106,6 +107,7 @@ const MaintenanceLog = () => {
   // Define table columns
   const columns = [
     { label: 'Service Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Expense Type', key: 'expenseType', sortable: true },
     { label: 'Vendor', key: 'vendor', sortable: true },
     { label: 'Description', key: 'description', sortable: true },
@@ -180,6 +182,7 @@ const MaintenanceLog = () => {
 
   const tableData = filteredData.map((data) => ({
     date: new Date(data.date).toLocaleDateString('en-GB'),
+    driverName: data.driverName,
     expenseType: data.expenseType,
     vendor: data.vendor,
     description: data.description,
