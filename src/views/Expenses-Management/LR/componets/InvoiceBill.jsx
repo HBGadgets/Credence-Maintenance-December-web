@@ -1,17 +1,29 @@
 import React, { useRef } from 'react'
 import html2pdf from 'html2pdf.js'
 import './InvoiceBill.css'
+import logo from '../../../../assets/brand/2.png'
 
 const InvoiceBill = ({ invoiceData }) => {
   const invoiceRef = useRef()
 
   const handleDownloadPDF = () => {
-    const downloadSection = invoiceRef.current.cloneNode(true)
-    const footer = downloadSection.querySelector('.invoice-footer')
+    const element = invoiceRef.current.cloneNode(true)
+    const footer = element.querySelector('.invoice-footer')
     if (footer) footer.remove()
 
+    element.style.padding = '30px'
+    element.style.backgroundColor = 'white'
+    element.style.fontFamily = "'Segoe UI', sans-serif"
+
+    const signature = element.querySelector('.signature-section')
+    if (signature) {
+      signature.style.pageBreakInside = 'avoid'
+      signature.style.breakInside = 'avoid'
+      signature.style.marginTop = '30px'
+    }
+
     const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2], // smaller margins
+      margin: 0,
       filename: `Invoice-${invoiceData?.lorryNumber || 'Bill'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
@@ -19,24 +31,22 @@ const InvoiceBill = ({ invoiceData }) => {
         useCORS: true,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 1200,
+        windowWidth: 1400,
       },
       jsPDF: {
-        unit: 'pt',
+        unit: 'mm',
         format: 'a4',
         orientation: 'portrait',
         compress: true,
       },
-      pagebreak: { avoid: ['.section', '.two-column', 'table'] },
+      pagebreak: {
+        avoid: ['.signature-section'],
+        mode: ['avoid-all', 'css', 'legacy'],
+      },
     }
 
-    html2pdf().set(opt).from(downloadSection).save()
+    html2pdf().set(opt).from(element).save()
   }
-
-  const driverName = invoiceData?.driverId?.name || 'N/A'
-  const driverContact = invoiceData?.driverId?.contactNumber || 'N/A'
-
-  console.log('Driver Info:', invoiceData?.driverId)
 
   const {
     companyName,
@@ -72,153 +82,187 @@ const InvoiceBill = ({ invoiceData }) => {
     customerRateOn,
     customerFreight,
     transporterFreight,
+    driverId,
   } = invoiceData || {}
 
-  return (
-    <div>
-      <div className="invoice-container" ref={invoiceRef}>
-        <h2 className="title">Lorry Receipt (LR)</h2>
+  const driverName = driverId?.name || 'N/A'
+  const driverContact = driverId?.contactNumber || 'N/A'
 
-        <div className="section">
-          <div className="two-column">
-            <div>
-              <h4>Transporter Information</h4>
+  return (
+    <div className="invoice-wrapper">
+      <div className="invoice" ref={invoiceRef}>
+        {/* Header */}
+        <div className="invoice-header page-break">
+          <div className="header-left">
+            <div className="company-logo-name">
+              <img src={logo} alt="Company Logo" className="company-logo" crossOrigin="anonymous" />
+              <div>
+                <h1>{companyName}</h1>
+                <p>{companyAddress}</p>
+              </div>
+            </div>
+          </div>
+          <div className="header-right">
+            <p>
+              <strong>GSTIN:</strong> {gstIn}
+            </p>
+            <p>
+              <strong>Email:</strong> {companyEmail}
+            </p>
+            <p>
+              <strong>Office:</strong> {companyOfficeNumber}
+            </p>
+            <p>
+              <strong>Mobile:</strong> {companyMobileNumber}
+            </p>
+          </div>
+        </div>
+
+        {/* Vehicle & Route */}
+        <div className="section two-column page-break">
+          <div className="card">
+            <h3>Vehicle Details</h3>
+            <div className="details-row">
               <p>
-                <strong>Transporter Name:</strong> {companyName}
+                <strong>Lorry Number:</strong> {lorryNumber}
               </p>
               <p>
-                <strong>Transporter Address:</strong> {companyAddress}
-              </p>
-              <p>
-                <strong>Contact Email:</strong> {companyEmail}
-              </p>
-              <p>
-                <strong>Contact Details:</strong> {companyOfficeNumber} / {companyMobileNumber}
+                <strong>Date:</strong> {date ? new Date(date).toLocaleDateString('en-GB') : ''}
               </p>
             </div>
-            <div>
-              <h4>Receipt Details</h4>
+            <div className="details-row">
               <p>
-                <strong>LR Number:</strong> {lorryNumber}
+                <strong>Vehicle:</strong> {vehicleName}
               </p>
               <p>
-                <strong>Date of Issue:</strong>{' '}
-                {date ? new Date(date).toLocaleDateString('en-GB') : ''}
+                <strong>Owner:</strong> {ownerName}
+              </p>
+            </div>
+          </div>
+          <div className="card">
+            <h3>Route Details</h3>
+            <div className="details-row">
+              <p>
+                <strong>Destination:</strong> {startLocation} → {endLocation}
+              </p>
+              <p>
+                <strong>Container No.:</strong> {containerNumber}
+              </p>
+            </div>
+            <div className="details-row">
+              <p>
+                <strong>Seal No.:</strong> {sealNumber}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="section">
-          <div className="two-column">
-            <div>
-              <h4>Consignor (Sender) Details</h4>
+        {/* Consignor & Consignee */}
+        <div className="section two-column page-break">
+          <div className="card">
+            <h3>Consignor Details (Sender)</h3>
+            <div className="details-row">
               <p>
                 <strong>Name:</strong> {consignorName}
               </p>
               <p>
                 <strong>Address:</strong> {consignorAddress}
               </p>
-              <p>
-                <strong>GSTIN:</strong> {gstIn}
-              </p>
-              <p>
-                <strong>Contact:</strong> {companyMobileNumber}
-              </p>
             </div>
-            <div>
-              <h4>Consignee (Receiver) Details</h4>
+          </div>
+          <div className="card">
+            <h3>Consignee Details (Receiver)</h3>
+            <div className="details-row">
               <p>
                 <strong>Name:</strong> {consigneeName}
               </p>
               <p>
                 <strong>Address:</strong> {consigneeAddress}
               </p>
-              <p>
-                <strong>GSTIN:</strong> {gstIn}
-              </p>
-              <p>
-                <strong>Contact:</strong> {companyMobileNumber}
-              </p>
             </div>
           </div>
         </div>
 
-        <div className="section">
-          <div className="two-column">
-            <div>
-              <h4>Transportation Details</h4>
-              <p>
-                <strong>Vehicle Number:</strong> {vehicleName}
-              </p>
-              <p>
-                <strong>Driver Name:</strong> {driverName}
-              </p>
-              <p>
-                <strong>Driver Contact:</strong> {driverContact}
-              </p>
-              <p>
-                <strong>Destination:</strong> {startLocation} → {endLocation}
-              </p>
-            </div>
-            <div>
-              <h4>Charges</h4>
-              <table className="charges-table">
-                <thead>
-                  <tr>
-                    <th>Charge Type</th>
-                    <th>Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Freight Charges</td>
-                    <td>{customerFreight}</td>
-                  </tr>
-                  <tr>
-                    <td>Other Charges (if any)</td>
-                    <td>{transporterFreight}</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Total Charges</strong>
-                    </td>
-                    <td>
-                      <strong>{totalAmount}</strong>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h4>Goods Details</h4>
-          <table className="goods-table">
+        {/* Items */}
+        <div className="section page-break">
+          <h3>Item Details</h3>
+          <table className="item-table">
             <thead>
               <tr>
-                <th>Description of Goods</th>
+                <th>Item Name</th>
                 <th>Quantity</th>
-                <th>Weight (KG)</th>
-                <th>Value (₹)</th>
+                <th>Unit</th>
+                <th>Weight (kg)</th>
+                <th>Cost (₹)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>{itemName}</td>
-                <td>
-                  {itemQuantity} {itemUnit}
-                </td>
+                <td>{itemQuantity}</td>
+                <td>{itemUnit}</td>
                 <td>{itemWeight}</td>
-                <td>{itemcost}</td>
+                <td>₹{itemcost?.toLocaleString() || 0}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div className="section">
-          <h4>Terms and Conditions</h4>
+        {/* Customer & Transporter */}
+        <div className="section two-column page-break">
+          <div className="card">
+            <h3>Customer Details</h3>
+            <div className="details-row">
+              <p>
+                <strong>Name:</strong> {customerName}
+              </p>
+              <p>
+                <strong>Address:</strong> {customerAddress}
+              </p>
+            </div>
+            <div className="details-row">
+              <p>
+                <strong>Customer Rate On:</strong> ₹{customerRateOn}
+              </p>
+              <p>
+                <strong>Customer Rate:</strong> ₹{customerRate}
+              </p>
+            </div>
+            <div className="details-row">
+              <p>
+                <strong>Total Freight:</strong> ₹{customerFreight?.toLocaleString() || 0}
+              </p>
+            </div>
+          </div>
+          <div className="card">
+            <h3>Transporter Details</h3>
+            <div className="details-row">
+              <p>
+                <strong>Driver:</strong> {driverName}
+              </p>
+              <p>
+                <strong>Contact:</strong> {driverContact}
+              </p>
+            </div>
+            <div className="details-row">
+              <p>
+                <strong>Transporter Rate On:</strong> ₹{transporterRateOn}
+              </p>
+              <p>
+                <strong>Transporter Rate:</strong> ₹{transporterRate}
+              </p>
+            </div>
+            <div className="details-row">
+              <p>
+                <strong>Total Amount:</strong> ₹{totalTransporterAmount?.toLocaleString() || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* T&C and Signature */}
+        <div className="invoice-page">
+          <h3>Terms & Conditions</h3>
           <ul>
             <li>Goods are transported at the owner's risk unless otherwise specified.</li>
             <li>
@@ -226,19 +270,18 @@ const InvoiceBill = ({ invoiceData }) => {
             </li>
             <li>Delivery will be made only upon presentation of the original lorry receipt.</li>
           </ul>
+          <div className="signature-section">
+            <p>
+              <strong>Authorized Signatory (Transporter):</strong> ____________
+            </p>
+            <p>Consignor: ____________ Consignee: ____________</p>
+          </div>
         </div>
 
-        <div className="section signature-section">
-          <p>
-            <strong>Authorized Signatory (Transporter):</strong> ______________________
-          </p>
-          <p>Consignor: ______________________</p>
-          <p>Consignee: ______________________</p>
-        </div>
-
-        <div className="invoice-footer text-center mt-5">
+        {/* Footer */}
+        <div className="invoice-footer text-center">
           <p className="stamp">[Transport Company Stamp]</p>
-          <button className="btn btn-primary mt-2" onClick={handleDownloadPDF}>
+          <button className="download-btn" onClick={handleDownloadPDF}>
             Download PDF
           </button>
         </div>
