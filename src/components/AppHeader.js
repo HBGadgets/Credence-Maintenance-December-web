@@ -136,7 +136,12 @@ const AppHeader = () => {
             </CDropdownToggle>
             <CDropdownMenu>
               <CNavItem>
-                <CDropdownItem className="d-flex align-items-center gap-4 disable">
+                <CDropdownItem
+                  className="d-flex align-items-center gap-4"
+                  type="button"
+                  to="/ProfileSection"
+                  as={NavLink}
+                >
                   {' '}
                   <User /> User Name
                 </CDropdownItem>

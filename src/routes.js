@@ -66,6 +66,9 @@ const Attendance = React.lazy(
   () => import('./views/DriverExpert/components/attendance/Attendance.jsx'),
 )
 
+// Profile Section
+const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
+
 const routes = [
   // Dashboard
   { path: '/', exact: true, name: 'Home' },
@@ -117,6 +120,11 @@ const routes = [
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
   { path: '/DriverProfile/:id', name: 'Driver Profile', element: DriverProfile },
   { path: '/DriverAttendance/:id', name: 'Driver Attendance', element: Attendance },
+
+  // Profile Section
+  { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
+
+
 ]
 
 export default routes
