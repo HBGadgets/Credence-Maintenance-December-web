@@ -13,6 +13,8 @@ import { toast, ToastContainer } from 'react-toastify'
 import TripDetailsCard from './componets/Tripdetailcomponent'
 import TripBudgetPieChart from './componets/TripBudgetPieChart'
 import TripBudgetBarChart from './componets/TripBudgetBarChart'
+import Loader from '../../../components/Loader/Loader'
+import Page404 from '../../pages/page404/Page404'
 
 const Trip = () => {
   const [allData, setAllData] = useState([]) // Original fetched data
@@ -37,7 +39,11 @@ const Trip = () => {
       setAllData(data)
       setFilteredData(data)
     } catch (err) {
-      setError(err?.message || 'Something went wrong')
+      if (!err.response) {
+        setError('Network Error') // Internet/server unreachable
+      } else if (err.response.status === 500) {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -263,6 +269,9 @@ const Trip = () => {
       setFilteredData(filtered)
     }
   }, [searchQuery, allData])
+
+  if (loading) return <Loader />
+  if (error) return <Page404 />
 
   return (
     <div>

@@ -37,8 +37,10 @@ const VehicleTrips = () => {
         setAllData(formattedData) // Store the full data separately
         setFilteredData(formattedData) // Initially, show all data
       } catch (err) {
-        if (err.response && err.response.status === 500) {
-          setError(err.message) // Show error message only for 500 status
+        if (!err.response) {
+          setError('Network Error') // Internet/server unreachable
+        } else if (err.response.status === 500) {
+          setError(err.message)
         }
       } finally {
         setLoading(false)

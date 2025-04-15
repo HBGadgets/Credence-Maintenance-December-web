@@ -67,9 +67,14 @@ const DriverExpensesBill = () => {
 
         setData(formattedData)
         setFilteredData(formattedData)
-      } catch (error) {
-        setError(error.message)
-        toast.error('Failed to fetch driver expenses data!', { position: 'top-right' })
+      } catch (err) {
+        // If the error is a network error
+        if (!err.response) {
+          toast.error('Failed to fetch driver expenses data!', { position: 'top-right' })
+          setError('Network Error') // Internet/server unreachable
+        } else if (err.response.status === 500) {
+          setError(err.message)
+        }
       } finally {
         setLoading(false)
       }

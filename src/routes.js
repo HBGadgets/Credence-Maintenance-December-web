@@ -21,7 +21,7 @@ const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const DriverSalary = React.lazy(() => import('./views/Supervisor/driver-salary/DriverSalary.jsx'))
 const LeaveRequests = React.lazy(() => import('./views/Supervisor/leave-request/LeaveRequests.jsx'))
 const CurrentAttendence = React.lazy(
-  () => import('./views/Supervisor/attendence/CurrentAttendence.js'),
+  () => import('./views/Supervisor/attendence/CurrentAttendence.jsx'),
 )
 const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
 const SelectedCompDetails = React.lazy(

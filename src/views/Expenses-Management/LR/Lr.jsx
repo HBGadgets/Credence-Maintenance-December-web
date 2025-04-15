@@ -15,6 +15,7 @@ import Swal from 'sweetalert2'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import InvoiceBill from './componets/InvoiceBill'
+import Page404 from '../../pages/page404/Page404'
 
 const Lr = () => {
   const [showForm, setShowForm] = useState(false)
@@ -48,7 +49,12 @@ const Lr = () => {
       setRawData(responseData)
       setFilteredData(responseData)
     } catch (err) {
-      setError(err?.errorMessage || 'Something went to Wrong')
+      // If the error is a network error
+      if (!err.response) {
+        setError('Network Error') // Internet/server unreachable
+      } else if (err.response.status === 500) {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -325,66 +331,68 @@ const Lr = () => {
       }))
   }, [filteredData, currentPage, itemsPerPage])
 
+  if (error) return <Page404 />
+
   return (
     <div>
       <ToastContainer />
 
       {/* Filters and Actions Row */}
-      <div className="mb-3 row align-items-center">
-        {/* Left: Date Range Picker */}
-        <div className="col-md-6 col-12 mb-2 mb-md-2">
+      <div className="row align-items-end mb-3">
+        {/* Left: Date Range Filter */}
+        <div className="col-md-6 col-12 mb-2 mb-md-0">
           <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         </div>
 
         {/* Right: Search and Add Button */}
-        <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start gap-2">
-          <div className="d-flex justify-content-end align-items-start gap-3 mb-1">
+        <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start">
+          <div className="d-flex flex-wrap align-items-center gap-2 w-100 justify-content-md-end">
             <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <Button variant="primary" onClick={handleAdd}>
               Add Lorry Receipt
             </Button>
           </div>
         </div>
-
-        {/* Lorry Receipt Form Modal */}
-        <LorryReceiptForm
-          show={showForm}
-          handleClose={() => setShowForm(false)}
-          handleSubmit={handleFormSubmit}
-          initialData={selectedData}
-          mode={formMode}
-        />
-
-        {/* Table and Pagination */}
-        <div>
-          <Table
-            title="Lorry Recipts"
-            columns={columns}
-            filteredData={formattedData}
-            setFilteredData={setFilteredData}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            viewButton={false}
-            handleViewButton={handleViewButton}
-            isFetching={loading}
-            errorMessage={
-              error
-                ? 'Error fetching trips. Please try again later.'
-                : filteredData.length === 0 && !loading
-                  ? 'No trip records found for the selected filters.'
-                  : ''
-            }
-          />
-
-          <SmartPagination
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
-        </div>
       </div>
+
+      {/* Lorry Receipt Form Modal */}
+      <LorryReceiptForm
+        show={showForm}
+        handleClose={() => setShowForm(false)}
+        handleSubmit={handleFormSubmit}
+        initialData={selectedData}
+        mode={formMode}
+      />
+
+      {/* Table and Pagination */}
+      <Table
+        title="Lorry Receipts"
+        columns={columns}
+        filteredData={formattedData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        viewButton={false}
+        handleViewButton={handleViewButton}
+        isFetching={loading}
+        errorMessage={
+          error
+            ? 'Error fetching trips. Please try again later.'
+            : filteredData.length === 0 && !loading
+              ? 'No trip records found for the selected filters.'
+              : ''
+        }
+      />
+
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+      />
+
+      {/* Invoice Modal */}
       <Modal show={show} onHide={handleClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>Invoice Bill</Modal.Title>

@@ -32,12 +32,15 @@ const MaintenanceLog = () => {
     const fetchMaintenanceLogs = async () => {
       try {
         setLoading(true)
-        const data = await maintenanceLogApi(id) // Fetch data from API
-        setAllData(data) // Store the full data separately
-        setFilteredData(data) // Initially, show all data
+        const data = await maintenanceLogApi(id)
+        setAllData(data)
+        setFilteredData(data)
       } catch (err) {
-        if (err.response && err.response.status === 500) {
-          setError(err.message) // Show error message only for 500 status
+        // If the error is a network error
+        if (!err.response) {
+          setError('Network Error') // Internet/server unreachable
+        } else if (err.response.status === 500) {
+          setError(err.message)
         }
       } finally {
         setLoading(false)

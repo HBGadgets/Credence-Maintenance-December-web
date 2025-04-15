@@ -69,6 +69,7 @@ const DriverSalary = () => {
     data: salaryData = [],
     isFetching,
     isError,
+    error, // make sure to destructure this
   } = useQuery({
     queryKey: ['driverSalaries', month],
     queryFn: async () => {
@@ -82,6 +83,14 @@ const DriverSalary = () => {
     enabled: Boolean(month), // only run if month is truthy
     retry: 1,
   })
+
+  if (isError) {
+    if (!error?.response) {
+      return <Page404 message="Network Error: Please check your internet connection." />
+    } else if (error.response.status === 500) {
+      return <Page404 message="Server Error: Something went wrong on our end." />
+    }
+  }
 
   const transformedData = useMemo(
     () =>
@@ -184,6 +193,8 @@ const DriverSalary = () => {
       }
     }
   }
+
+  if (error) return <Page404 />
 
   return (
     <div>
