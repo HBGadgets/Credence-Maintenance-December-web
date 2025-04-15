@@ -4,12 +4,6 @@
     animation: float 3s ease-in-out infinite;
 }
 
-.vehicle-icon {
-    width: 80px;
-    height: 80px;
-    animation: drive 1.5s ease-in-out infinite;
-}
-
 .shadow-circle {
     position: absolute;
     bottom: 0;
@@ -47,20 +41,3 @@
         opacity: 0.5;
     }
 }
-
-@keyframes drive {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(-4px);
-    }
-
-    75% {
-        transform: translateX(4px);
-    }
-}
-

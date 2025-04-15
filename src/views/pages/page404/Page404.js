@@ -1,19 +1,16 @@
 import React from "react";
-import { Ghost, Home, ArrowRight, Truck } from "lucide-react";
+import { Ghost, Home, ArrowRight } from "lucide-react";
 import "./page404.css"; // Import custom CSS file
-import { FaTruck } from "react-icons/fa";
 
 const Page404 = () => {
   return (
     <div className="d-flex align-items-center justify-content-center" style={{ marginTop: '65px' }}>
       <div className="text-center">
         {/* Ghost Animation */}
-        {/* Truck Animation */}
         <div className="position-relative mb-4">
-          <FaTruck className="vehicle-icon text-primary" />
+          <Ghost className="ghost-icon text-primary" />
           <div className="shadow-circle"></div>
         </div>
-
 
         {/* Error Message */}
         <h1 className="display-1 fw-bold text-primary">Check Your Internet Connection</h1>
