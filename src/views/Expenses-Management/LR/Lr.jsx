@@ -68,6 +68,21 @@ const Lr = () => {
     }
   }, [])
 
+  // search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredData(rawData)
+    } else {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      const filtered = rawData.filter((item) =>
+        Object.values(item).some((value) =>
+          value?.toString().toLowerCase().includes(lowercasedQuery),
+        ),
+      )
+      setFilteredData(filtered)
+    }
+  }, [searchQuery, rawData])
+
   // Handle Add
   const handleAdd = () => {
     setFormMode('add')
