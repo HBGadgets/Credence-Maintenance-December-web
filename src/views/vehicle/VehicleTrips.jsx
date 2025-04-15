@@ -37,7 +37,9 @@ const VehicleTrips = () => {
         setAllData(formattedData) // Store the full data separately
         setFilteredData(formattedData) // Initially, show all data
       } catch (err) {
-        setError(err.message)
+        if (err.response && err.response.status === 500) {
+          setError(err.message) // Show error message only for 500 status
+        }
       } finally {
         setLoading(false)
       }
@@ -83,7 +85,7 @@ const VehicleTrips = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   if (loading) return <Loader />
-  // if (error) return <Page404 />
+  if (error) return <Page404 />
 
   // Creating a variable for the mapped data
   const tableData = filteredData.map((data) => ({

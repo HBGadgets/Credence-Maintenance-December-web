@@ -36,7 +36,9 @@ const MaintenanceLog = () => {
         setAllData(data) // Store the full data separately
         setFilteredData(data) // Initially, show all data
       } catch (err) {
-        setError(err.message)
+        if (err.response && err.response.status === 500) {
+          setError(err.message) // Show error message only for 500 status
+        }
       } finally {
         setLoading(false)
       }
