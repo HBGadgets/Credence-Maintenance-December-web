@@ -214,9 +214,22 @@ const Lr = () => {
   }
 
   // Handle Date Range
-  const handleDateRangeChange = () => {
-    console.log('Date range changed:')
+  const handleDateRangeChange = (startDate, endDate) => {
+    const filtered = rawData.filter((item) => {
+      const itemDate = new Date(item.date)
+      return itemDate >= startDate && itemDate <= endDate
+    })
+    setFilteredData(filtered)
   }
+
+  // const handleDateRangeChange = (startDate, endDate) => {
+  //   const filtered = rawData.filter((item) => {
+  //     if (!item.date) return false
+  //     const itemDate = new Date(item.date)
+  //     return itemDate >= startDate && itemDate <= endDate
+  //   })
+  //   setFilteredData(filtered)
+  // }
 
   // Table column
   const columns = [
