@@ -292,11 +292,12 @@ h3 {
      border-bottom: 1px solid #ddd;
  }
 
- .header-left {
+  .header-left {
      display: flex;
      align-items: center;
  }
 
+ 
  .company-logo-name {
      display: flex;
      align-items: center;
@@ -453,7 +454,7 @@ h3 {
      background-color: #0056b3;
  }
 
- .card {
+ .cardtitle {
      padding: 15px;
      background-color: #fff;
      border-radius: 8px;
@@ -546,5 +547,4 @@ h3 {
 
  .no-print {
      display: none;
- }
-
+ } 

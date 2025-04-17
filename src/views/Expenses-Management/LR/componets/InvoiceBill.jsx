@@ -417,7 +417,7 @@ const InvoiceBill = ({ invoiceData }) => {
 
         {/* Vehicle & Route */}
         <div className="section two-column">
-          <div className="card">
+          <div className="cardtitle">
             <h3>Vehicle Details</h3>
             <div className="details-row">
               <p>
@@ -436,7 +436,7 @@ const InvoiceBill = ({ invoiceData }) => {
               </p>
             </div>
           </div>
-          <div className="card">
+          <div className="cardtitle">
             <h3>Route Details</h3>
             <div className="details-row">
               <p>
@@ -456,7 +456,7 @@ const InvoiceBill = ({ invoiceData }) => {
 
         {/* Consignor & Consignee */}
         <div className="section two-column">
-          <div className="card">
+          <div className="cardtitle">
             <h3>Consignor Details</h3>
             <div className="details-row">
               <p>
@@ -467,7 +467,7 @@ const InvoiceBill = ({ invoiceData }) => {
               </p>
             </div>
           </div>
-          <div className="card">
+          <div className="cardtitle">
             <h3>Consignee Details</h3>
             <div className="details-row">
               <p>
@@ -507,7 +507,7 @@ const InvoiceBill = ({ invoiceData }) => {
 
         {/* Customer & Transporter */}
         <div className="section two-column">
-          <div className="card">
+          <div className="cardtitle">
             <h3>Customer Details</h3>
             <div className="details-row">
               <p>
@@ -531,7 +531,7 @@ const InvoiceBill = ({ invoiceData }) => {
               </p>
             </div>
           </div>
-          <div className="card">
+          <div className="cardtitle">
             <h3>Transporter Details</h3>
             <div className="details-row">
               <p>
