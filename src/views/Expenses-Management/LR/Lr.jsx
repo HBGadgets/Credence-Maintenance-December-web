@@ -171,26 +171,6 @@ const Lr = () => {
             ...formData,
             _id: result.id,
             date: formatDate(formData.date),
-            actions: (
-              <div className="d-flex justify-content-center gap-2">
-                <Button
-                  variant="light"
-                  size="sm"
-                  onClick={() => handleEdit(result)}
-                  className="btn btn-sm btn-outline-primary"
-                  style={{ padding: '4px 8px' }}
-                >
-                  <FaEdit />
-                </Button>
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  title="Delete Lorry Receipt"
-                  onClick={() => handleDelete(result._id || result.id, 'Lorry Receipt')}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            ),
           },
         ])
       }
@@ -362,76 +342,78 @@ const Lr = () => {
   if (error) return <Page404 />
 
   return (
-    <div>
-      <ToastContainer />
+    <>
+      <div>
+        <ToastContainer />
 
-      {/* Filters and Actions Row */}
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        {/* Left: Date Range Filter */}
-        <div className="d-flex align-items-center">
-          <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
+        {/* Filters and Actions Row */}
+        <div className="mb-3 d-flex justify-content-between align-items-center">
+          {/* Left: Date Range Filter */}
+          <div className="d-flex align-items-center">
+            <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
+          </div>
+
+          {/* Right: Search and Add Button */}
+          <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+            <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            <Button variant="primary" onClick={handleAdd}>
+              Add Lorry Receipt
+            </Button>
+          </div>
         </div>
 
-        {/* Right: Search and Add Button */}
-        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
-          <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <Button variant="primary" onClick={handleAdd}>
-            Add Lorry Receipt
-          </Button>
-        </div>
+        {/* Lorry Receipt Form Modal */}
+        <LorryReceiptForm
+          show={showForm}
+          handleClose={() => setShowForm(false)}
+          handleSubmit={handleFormSubmit}
+          initialData={selectedData}
+          mode={formMode}
+        />
+
+        {/* Table and Pagination */}
+        <Table
+          title="Lorry Receipts"
+          columns={columns}
+          filteredData={formattedData}
+          setFilteredData={setFilteredData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          viewButton={false}
+          handleViewButton={handleViewButton}
+          isFetching={loading}
+          errorMessage={
+            error
+              ? 'Error fetching trips. Please try again later.'
+              : filteredData.length === 0 && !loading
+                ? 'No trip records found for the selected filters.'
+                : ''
+          }
+        />
+
+        <SmartPagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+
+        {/* Invoice Modal */}
+        <Modal show={show} onHide={handleClose} size="xl">
+          <Modal.Header closeButton>
+            <Modal.Title>Invoice Bill</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedInvoiceData ? (
+              <InvoiceBill invoiceData={selectedInvoiceData} />
+            ) : (
+              <p>No invoice data available.</p>
+            )}
+          </Modal.Body>
+        </Modal>
       </div>
-
-      {/* Lorry Receipt Form Modal */}
-      <LorryReceiptForm
-        show={showForm}
-        handleClose={() => setShowForm(false)}
-        handleSubmit={handleFormSubmit}
-        initialData={selectedData}
-        mode={formMode}
-      />
-
-      {/* Table and Pagination */}
-      <Table
-        title="Lorry Receipts"
-        columns={columns}
-        filteredData={formattedData}
-        setFilteredData={setFilteredData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        viewButton={false}
-        handleViewButton={handleViewButton}
-        isFetching={loading}
-        errorMessage={
-          error
-            ? 'Error fetching trips. Please try again later.'
-            : filteredData.length === 0 && !loading
-              ? 'No trip records found for the selected filters.'
-              : ''
-        }
-      />
-
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        onItemsPerPageChange={setItemsPerPage}
-      />
-
-      {/* Invoice Modal */}
-      <Modal show={show} onHide={handleClose} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Invoice Bill</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedInvoiceData ? (
-            <InvoiceBill invoiceData={selectedInvoiceData} />
-          ) : (
-            <p>No invoice data available.</p>
-          )}
-        </Modal.Body>
-      </Modal>
-    </div>
+    </>
   )
 }
 
