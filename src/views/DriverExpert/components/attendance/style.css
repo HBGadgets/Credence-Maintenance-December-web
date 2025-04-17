@@ -1,4 +1,4 @@
-.card {
+.cardward {
     border-radius: 10px;
     padding: 20px;
     text-align: start;
@@ -24,12 +24,12 @@
     border: 1px solid #a7c4f2;
 }
 
-.card-title {
+.cardward-title {
     font-size: 18px;
     font-weight: 600;
 }
 
-.card-value {
+.cardward-value {
     font-size: 32px;
     font-weight: 700;
 }

@@ -1002,7 +1002,11 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       <CCard className="shadow-sm border-0">
         <CCardHeader className="d-flex align-items-center bg-light fw-bold">
           <h5 className="text-black">📂 Documents</h5>
-          <CButton color="primary" className="ms-auto px-3 py-2" onClick={openAddModal}>
+          <CButton
+            className="ms-auto px-3 py-2"
+            onClick={openAddModal}
+            style={{ backgroundColor: '#0a2d63', color: '#fff' }}
+          >
             <FaUpload className="me-2" /> Upload Documents
           </CButton>
         </CCardHeader>
@@ -1027,9 +1031,9 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
                       }}
                     >
                       {loadingDocs?.[doc.name] ? (
-                        <CSpinner variant="grow" size={30} className="text-primary" />
+                        <CSpinner variant="grow" size={30} style={{ color: '#0a2d63' }} />
                       ) : (
-                        <FaRegFolderClosed size={40} className="text-primary" />
+                        <FaRegFolderClosed size={40} style={{ color: '#0a2d63' }} />
                       )}
                       <div className="mt-2 text-dark fw-bold small">{doc.name}</div>
                     </div>

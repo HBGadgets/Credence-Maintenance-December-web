@@ -25,9 +25,9 @@ function AttendanceSummary({ filterData, id }) {
         <div className="row g-3">
           {attendanceSummary.map(({ title, value, className, cardClass }, index) => (
             <div key={index} className="col-md-3">
-              <div className={`card ${cardClass}`}>
-                <div className={`card-title ${className}`}>{title}</div>
-                <div className="card-value">{value}</div>
+              <div className={`cardward ${cardClass}`}>
+                <div className={`cardward-title ${className}`}>{title}</div>
+                <div className="cardward-value">{value}</div>
                 <div className="text-muted">Current month</div>
               </div>
             </div>
