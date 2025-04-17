@@ -1,55 +1,25 @@
-.custom-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); 
-  /* transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; */
-  border: none;
+/* --- Vehicle Profile Styles --- */
+
+.center-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-
-.custom-doc{
-background: white;
-  border-radius: 12px;
-  border: none;
-}
-
-.custom-btn {
-  background-color: rgb(10, 45, 99); 
-  color: white;
-  border: none;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Soft shadow */
-}
-
-/* .custom-btn:hover {
-  background-color: rgb(10, 45, 99) !important;
-  color: white !important;
-} */
-.custom-btn:hover {
-  background-color: white;
-  font-weight: bold;
-
-  color: rgb(10, 45, 99);
-  border: 2px solid rgb(10, 45, 99); /* Keep border to prevent shifting */
-}
-
-/* -----------------------------------------------------------------------------------------------  */
-
-/* 🚗 Vehicle Profile Card */
 
 .vehicle-heading {
   display: flex;
   align-items: center;
   gap: 15px;
   background: #ffffff;
-  padding: 16px;
+  padding: 12px;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-  margin: auto;
 }
 
 .vehicle-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,26 +34,190 @@ background: white;
   flex-direction: column;
 }
 
-/* 🚘 Profile Section */
-.profile-section {
-  display: flex;
-  align-items: center;
-}
-
 .vehicle-title {
-  font-size: 20px;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #333;
-  margin-bottom: 4px;
 }
 
 .vehicle-subtitle {
-  font-size: 14px;
-  color: #555;
+  font-size: 1rem;
   font-weight: 500;
+  color: #555;
 }
 
-/* 🌟 Responsive Design */
+/* --- Document Section --- */
+/* .custom-doc {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+} */
+
+/* --- Action Panel --- */
+
+/* First code */
+
+/* .action-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.action-tile {
+  flex: 1 1 250px;
+  min-height: 120px;
+  background-color: #f8f9fa;
+  border: 1px solid #e1e5ea;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.action-tile:hover {
+  background-color: #0d6efd;
+  color: white;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.action-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.action-link {
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+
+.action-tile:hover .action-link {
+  color: white;
+}
+
+/* Second code  */
+
+.action-section-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.action-card {
+  flex: 1 1 240px;
+  min-height: 160px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #f0f0f0;
+}
+
+.action-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  background-color: #0a2d63;
+  color: white;
+}
+
+.card-icon {
+  font-size: 2rem;
+  color: #0a2d63;
+  margin-bottom: 12px;
+}
+
+.action-card:hover .card-icon {
+  color: white;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.card-footer {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.action-card:hover .card-footer {
+  color: #dcdcdc;
+}
+
+
+/* Third code */
+
+/* .action-section-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.action-tile-vertical {
+  width: 100%;
+  background-color: #f8f9fa;
+  border: 1px solid #e1e5ea;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.action-tile-vertical:hover {
+  background-color: #0d6efd;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.action-tile-vertical:hover .action-link {
+  color: white;
+}
+
+.action-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.action-link {
+  font-size: 0.95rem;
+  color: #6c757d;
+} */
+
+
+/* --- Buttons --- */
+.custom-btn {
+  background-color: rgb(10, 45, 99);
+  color: white;
+  border: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.custom-btn:hover {
+  background-color: white;
+  color: rgb(10, 45, 99);
+  font-weight: bold;
+  border: 2px solid rgb(10, 45, 99);
+} 
+
+/* --- Responsive --- */
 @media (max-width: 768px) {
   .vehicle-heading {
     flex-direction: column;

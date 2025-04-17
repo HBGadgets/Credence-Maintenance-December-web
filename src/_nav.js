@@ -107,12 +107,12 @@ const _nav = [
       // },
       {
         component: CNavItem,
-        name: 'Driver Expenses',
+        name: 'All Drivers Expenses',
         to: '/DriverExpenseBill',
       },
       {
         component: CNavItem,
-        name: 'Vehicle Expenses',
+        name: 'All Vehicles Expenses',
         to: '/VehicleExpensesBill',
       },
       // {

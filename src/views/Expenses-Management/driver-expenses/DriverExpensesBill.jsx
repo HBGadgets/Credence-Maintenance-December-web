@@ -6,6 +6,7 @@ import SmartPagination from '../../components/SmartPagination'
 import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import { getDriverExpesesListApi } from '../data/data'
+import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 
 const DriverExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -21,6 +22,7 @@ const DriverExpensesBill = () => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
+    if (isNaN(date)) return ''
     return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
   }
 
@@ -109,6 +111,22 @@ const DriverExpensesBill = () => {
     }
   }
 
+  // Handle Date Range Filter Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    // If no date range is selected (Clear button is hit)
+    if (!startDate || !endDate) {
+      setFilteredData(data) // Reset to full data
+      return
+    }
+    // Filter data based on the selected date range
+    const filtered = data.filter((item) => {
+      const itemDate = new Date(item.date)
+      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
+    })
+    setFilteredData(filtered)
+  }
+
+  // loader and error
   if (loading) return <Loader />
   if (error) return <Page404 />
 
@@ -128,7 +146,9 @@ const DriverExpensesBill = () => {
     <div>
       <ToastContainer />
 
-      <div className="mb-2 d-flex justify-content-end align-items-center">
+      <div className="mb-2 d-flex justify-content-between align-items-center">
+        {/* Left: Date Range Filter */}
+        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 

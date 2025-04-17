@@ -366,20 +366,18 @@ const Lr = () => {
       <ToastContainer />
 
       {/* Filters and Actions Row */}
-      <div className="row align-items-end mb-3">
+      <div className="mb-3 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <div className="col-md-6 col-12 mb-2 mb-md-0">
+        <div className="d-flex align-items-center">
           <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         </div>
 
         {/* Right: Search and Add Button */}
-        <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start">
-          <div className="d-flex flex-wrap align-items-center gap-2 w-100 justify-content-md-end">
-            <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-            <Button variant="primary" onClick={handleAdd}>
-              Add Lorry Receipt
-            </Button>
-          </div>
+        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <Button variant="primary" onClick={handleAdd}>
+            Add Lorry Receipt
+          </Button>
         </div>
       </div>
 

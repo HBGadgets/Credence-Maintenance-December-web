@@ -277,14 +277,14 @@ const Trip = () => {
     <div>
       <ToastContainer />
 
-      <div className="mb-3 row align-items-center">
-        {/* Left Side: Date Range */}
-        <div className="col-md-6 col-12 mb-2 mb-md-0">
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        {/* Left: Date Range Filter */}
+        <div className="d-flex align-items-center">
           <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         </div>
 
-        {/* Right Side: Search and Add Button */}
-        <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start gap-2">
+        {/* Right: Search and Add Button */}
+        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
           <TripFrom mode="add" onSubmit={handleAdd} />
         </div>

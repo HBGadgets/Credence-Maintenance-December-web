@@ -200,8 +200,8 @@ const DriverSalary = () => {
     <div>
       <ToastContainer />
       {/* Header Section */}
-      <div className="row">
-        {/* Left Side: Date Picker */}
+      <div className="d-flex justify-content-between align-items-center">
+        {/* Left: Date Picker */}
         <div className="col-md-2 d-flex align-items-center">
           <DateRangePicker
             onMonthChange={(selectedMonth) => {
@@ -212,7 +212,7 @@ const DriverSalary = () => {
           />
         </div>
 
-        {/* Right Side: SearchInput & SalaryComponent */}
+        {/* Right: SearchInput & SalaryComponent */}
         <div className="col-md-10 d-flex justify-content-end align-items-center gap-3">
           <div className="d-flex flex-grow-1 justify-content-end" style={{ marginTop: '1.5rem' }}>
             <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

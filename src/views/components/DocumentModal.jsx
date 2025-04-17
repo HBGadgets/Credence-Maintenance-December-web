@@ -163,6 +163,8 @@ import {
   CInputGroup,
   CInputGroupText,
   CFormCheck,
+  CFormText,
+  CFormLabel,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilCalendar, cilFile } from '@coreui/icons'
@@ -281,16 +283,18 @@ const DocumentModal = ({ visible, onClose, onSubmit, loadingSubmit, initialData 
               </CRow>
               <CRow className="mt-2">
                 <CCol md={12}>
+                  <CFormLabel>Upload Document (PDF or Image)</CFormLabel>
                   <CInputGroup>
                     <CInputGroupText>
                       <CIcon icon={cilFile} />
                     </CInputGroupText>
                     <CFormInput
                       type="file"
-                      accept="image/*, application/pdf"
+                      accept="image/*,application/pdf"
                       onChange={(e) => handleFileChange(doc, e.target.files[0])}
                     />
                   </CInputGroup>
+                  <CFormText className="text-muted">Allowed formats: PDF, JPG, PNG, etc.</CFormText>
                 </CCol>
               </CRow>
             </div>

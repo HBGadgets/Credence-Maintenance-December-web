@@ -75,8 +75,8 @@ const VehicleTrips = () => {
   const columns = [
     { label: 'Trip Route', key: 'startEndLocation', sortable: true }, // Updated column name
     { label: 'Driver Name', key: 'name', sortable: true },
-    { label: 'Start Date', key: 'date', sortable: true },
-    { label: 'End Date', key: 'date1', sortable: true },
+    { label: 'Start Date', key: 'startDate', sortable: true },
+    { label: 'End Date', key: 'endDate', sortable: true },
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'Amount Spent', key: 'spentAmount', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
@@ -86,15 +86,12 @@ const VehicleTrips = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-  if (loading) return <Loader />
-  if (error) return <Page404 />
-
   // Creating a variable for the mapped data
   const tableData = filteredData.map((data) => ({
     startEndLocation: `${data.startLocation} → ${data.endLocation}`, // Format as "Mumbai → Pune"
     name: data.driverId?.name || 'N/A',
-    date: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
-    date1: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
+    startDate: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
+    endDate: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
     budgetAllocated: data.budgetAllocated,
     spentAmount: data.spentAmount,
     status: (
@@ -115,6 +112,21 @@ const VehicleTrips = () => {
       </span>
     ),
   }))
+
+  // Handle Date Range Filter Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    // If no date range is selected (Clear button is hit)
+    if (!startDate || !endDate) {
+      setFilteredData(allData) // Reset to full data
+      return
+    }
+    // Filter data based on the selected date range
+    const filtered = allData.filter((item) => {
+      const itemDate = new Date(item.date)
+      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
+    })
+    setFilteredData(filtered)
+  }
 
   // Dropdown items for export
   const dropdownItems = [
@@ -157,10 +169,13 @@ const VehicleTrips = () => {
     },
   ]
 
+  if (loading) return <Loader />
+  if (error) return <Page404 />
+
   return (
     <div>
       <div className="mb-2 d-flex justify-content-between align-items-center">
-        <DateRangeFilterCredence title="Date Range" />
+        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
