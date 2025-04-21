@@ -1,6 +1,6 @@
 // src/AppHeader.js
 import React, { useRef, useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
@@ -29,6 +29,7 @@ import { AppBreadcrumb } from './index'
 import { User, Headset, LogOut } from 'lucide-react'
 import '../index.css'
 import './header.css'
+import routes from '../routes'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -50,19 +51,43 @@ const AppHeader = () => {
     setView(!view)
   }
 
+  // Display Route name
+  const getRouteName = (pathname, routes) => {
+    const currentRoute = routes.find((route) => route.path === pathname)
+    return currentRoute ? currentRoute.name : 'Dashboard'
+  }
+
+  const currentPathname = useLocation().pathname;
+  const currentRouteName = getRouteName(currentPathname, routes)
+
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
-        <CHeaderToggler
-        // onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-        // style={{ marginInlineStart: '-14px' }}
+        {/* <CHeaderToggler
+          onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+          style={{ marginInlineStart: '-14px' }}
         >
-          {/* <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} /> */}
-        </CHeaderToggler>
+          <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
+        </CHeaderToggler> */}
+
+        <div style={{ display: 'flex' }}>
+          <CHeaderToggler
+            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+            style={{ marginInlineStart: '-14px', background: 'transparent', border: 'none' }}
+          >
+            <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
+          </CHeaderToggler>
+
+          <span style={{ fontWeight: '700', fontSize: '1.3rem', color: 'white' }}>
+            {currentRouteName}
+          </span>
+        </div>
+
+
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
-              Dashboard
+            <CNavLink to="/dashboard" as={NavLink} style={{ fontWeight: '700', fontSize: '1.3rem', color: 'white' }}>
+              {currentRouteName}
             </CNavLink>
           </CNavItem>
         </CHeaderNav> */}
@@ -146,7 +171,7 @@ const AppHeader = () => {
                   <User /> User Name
                 </CDropdownItem>
               </CNavItem>
-              <CDropdownItem
+              {/* <CDropdownItem
                 className="d-flex align-items-center gap-4"
                 type="button"
                 to="/HelpAndSupport"
@@ -154,7 +179,7 @@ const AppHeader = () => {
               >
                 {' '}
                 <Headset /> Help & Support
-              </CDropdownItem>
+              </CDropdownItem> */}
               <CNavItem>
                 <CDropdownItem className="d-flex align-items-center gap-4" type="button">
                   {' '}

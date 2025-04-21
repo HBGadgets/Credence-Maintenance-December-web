@@ -25,6 +25,27 @@ export const getDriverExpesesListApi = async (id) => {
     }
 }
 
+// Show Bill Images of All Drivers Expenses
+export const getDriverBillImageApi = async (billImgId) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/driverExpense/bill-img/${billImgId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        console.log("This is Driver Bill Image : ", response.data)
+        return response.data // contains base64Data and contentType
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
+        throw error
+    }
+}
+
+
+
 // ------------------------------------------------------------------------------------------------------------------
 
 // GET API Supervisor See All Vehicles Expense List.

@@ -7,6 +7,7 @@ import Page404 from '../../pages/page404/Page404'
 import Table from '../../components/Table' // Import the correct Table component
 import { getVehicleExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { FcImageFile } from 'react-icons/fc'
 
 const VehicleExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -64,6 +65,17 @@ const VehicleExpensesBill = () => {
             <span className={getPaymentBadge(item.paymentMode || 'Unknown')}>
               {item.paymentMode || 'Unknown'}
             </span>
+          ),
+          action: (
+            <div className="d-flex justify-content-center gap-2">
+              <button
+                className="btn btn-sm btn-outline-primary"
+                title="View Analyatics"
+                onClick={() => handleViewButton(item._id)}
+              >
+                <FcImageFile />
+              </button>
+            </div>
           ),
         }))
 
@@ -140,6 +152,7 @@ const VehicleExpensesBill = () => {
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Payment Mode', key: 'paymentMode', sortable: false },
+    { label: 'Bill Image', key: 'actions', sortable: false },
   ]
 
   if (loading) return <Loader />
@@ -162,7 +175,7 @@ const VehicleExpensesBill = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
-        viewButton={true}
+        viewButton={false}
         handleViewButton={handleViewButton}
       />
 

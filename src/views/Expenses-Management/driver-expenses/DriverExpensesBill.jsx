@@ -5,8 +5,10 @@ import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
-import { getDriverExpesesListApi } from '../data/data'
+import { getDriverBillImageApi, getDriverExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
+import BillModal from './componet/BillModal'
 
 const DriverExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -17,6 +19,11 @@ const DriverExpensesBill = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Use state for modal
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // Utility function to format dates (DD/MM/YYYY)
   const formatDate = (dateString) => {
@@ -65,6 +72,17 @@ const DriverExpensesBill = () => {
               {item.paymentMode || 'Unknown'}
             </span>
           ), // Styled Payment Mode
+          action: (
+            <div className="d-flex justify-content-center gap-2">
+              <button
+                className="btn btn-sm btn-outline-primary"
+                title={item.billImg ? 'View Bill' : 'No Bill Available'}
+                onClick={() => handleViewButton(item.billImg)}
+              >
+                {item.billImg ? <FcImageFile /> : <FcRemoveImage />}
+              </button>
+            </div>
+          ),
         }))
 
         setData(formattedData)
@@ -100,14 +118,34 @@ const DriverExpensesBill = () => {
   }
 
   // Handle view button click
-  const handleViewButton = (id) => {
-    console.log('Selected Driver Expense ID:', id)
-    const driverexpense = data.find((item) => String(item.id) === String(id))
+  const handleViewButton = async (billImgId) => {
+    if (!billImgId) {
+      toast.info('No bill image available.')
+      return
+    }
 
-    if (driverexpense) {
-      console.log('Selected Driver Expense Details:', driverexpense)
-    } else {
-      console.warn('Expense not found for ID:', id)
+    try {
+      const response = await getDriverBillImageApi(billImgId)
+
+      const { base64Data, contentType } = response
+
+      if (base64Data && contentType) {
+        const fileSrc = `data:${contentType};base64,${base64Data}`
+        console.log('fileconverssssssss', fileSrc)
+        setPdfBase64(fileSrc)
+
+        if (contentType.startsWith('application/pdf')) {
+          setModalTitle('Driver Bill (PDF)')
+        } else if (contentType.startsWith('image')) {
+          setModalTitle('Driver Bill (Image)')
+        }
+
+        setShowModal(true)
+      } else {
+        toast.error('Invalid bill image data.')
+      }
+    } catch (err) {
+      toast.error('Failed to fetch bill image.')
     }
   }
 
@@ -140,6 +178,7 @@ const DriverExpensesBill = () => {
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Payment Mode', key: 'paymentMode', sortable: true },
+    { label: 'Bill Image', key: 'actions', sortable: false },
   ]
 
   return (
@@ -159,7 +198,7 @@ const DriverExpensesBill = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
-        viewButton={true}
+        viewButton={false}
         handleViewButton={handleViewButton}
       />
 
@@ -169,6 +208,14 @@ const DriverExpensesBill = () => {
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
         onItemsPerPageChange={setItemsPerPage}
+      />
+
+      {/* Modal Component */}
+      <BillModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
       />
     </div>
   )

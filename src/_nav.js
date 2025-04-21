@@ -1,7 +1,8 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car } from 'lucide-react'
-import { MdOutlineSupervisorAccount } from 'react-icons/md'
+import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car, Headset } from 'lucide-react'
+import { MdOutlineSupervisorAccount, MdOutlineSupportAgent } from 'react-icons/md'
+
 
 const _nav = [
   {
@@ -133,8 +134,6 @@ const _nav = [
     ],
   },
 
-
-
   // ROAD SIDE ASSISTANCE
   {
     component: CNavGroup,
@@ -158,6 +157,33 @@ const _nav = [
       },
     ],
   },
+
+  // Help and Supports
+  {
+    component: CNavGroup,
+    name: 'Helps & Supports',
+    icon: (
+      <Headset
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [,
+      {
+        component: CNavItem,
+        name: 'Tickets Raised',
+        to: '/HelpAndSupport',
+      },
+      {
+        component: CNavItem,
+        name: 'Chat Bot',
+        to: '/ChatBot',
+      },
+    ],
+  },
+
+
+
 ]
 
 export default _nav

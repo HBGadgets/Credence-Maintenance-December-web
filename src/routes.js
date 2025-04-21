@@ -58,6 +58,8 @@ const BudgetAllocation = React.lazy(
 
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
+const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
+
 
 // DriverExperts
 const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.jsx'))
@@ -75,15 +77,15 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
 
   /**VEHICLE */
-  { path: '/Vehicle', name: 'Vahicle', element: Vehicle },
+  { path: '/Vehicle', name: 'Vehicles', element: Vehicle },
   { path: 'VehicleProfile/:id', name: 'VehicleProfile', element: VehicleProfile },
-  { path: 'VehicleProfile/:id/MaintenanceLog', name: 'Maintenanace Log', element: MaintenanceLog },
+  { path: 'VehicleProfile/:id/MaintenanceLog', name: 'Maintenanace Logs', element: MaintenanceLog },
   { path: 'VehicleProfile/:id/VehicleTrips', name: 'Vehicle Trips', element: VehicleTrips },
   { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
 
   /**SUPERVISOR */
 
-  { path: '/Trip', name: 'Trip', element: Trip },
+  { path: '/Trip', name: 'Trips', element: Trip },
   { path: '/Salary', name: 'Drivers Salary', element: DriverSalary },
   { path: '/Attendence', name: 'Driver Attendence Mark', element: CurrentAttendence },
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
@@ -94,11 +96,11 @@ const routes = [
   /**EXPENSES MANAGEMENT */
 
   { path: '/PurchacePartsBill', name: 'Purchase Parts', element: PurchaseParts },
-  { path: '/DriverExpenseBill', name: 'Driver Expenses', element: DriverExpenses },
-  { path: '/VehicleExpensesBill', name: 'Vehicle Expenses', element: VehicleExpensesBill },
+  { path: '/DriverExpenseBill', name: 'All Drivers Expenses', element: DriverExpenses },
+  { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
   { path: '/Bills', name: 'Bills', element: Bills },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
-  { path: '/LR', name: 'LR', element: LR },
+  { path: '/LR', name: 'Lorry Recipt', element: LR },
   // {
   //   path: '/DriverExpenseBill/:id/documents',
   //   name: 'Show Driver Expense Documents',
@@ -115,6 +117,8 @@ const routes = [
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
+  { path: '/ChatBot', name: 'Chat Bot', element: ChatBot },
+
 
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
