@@ -5,9 +5,10 @@ import SmartPagination from '../../components/SmartPagination'
 import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import Table from '../../components/Table' // Import the correct Table component
-import { getVehicleExpesesListApi } from '../data/data'
+import { getVehicleBillImageApi, getVehicleExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
-import { FcImageFile } from 'react-icons/fc'
+import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
+import BillModal from '../driver-expenses/componet/BillModal'
 
 const VehicleExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -18,6 +19,11 @@ const VehicleExpensesBill = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Use state for modal
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // Utility function to format dates (DD/MM/YYYY)
   const formatDate = (dateString) => {
@@ -70,10 +76,10 @@ const VehicleExpensesBill = () => {
             <div className="d-flex justify-content-center gap-2">
               <button
                 className="btn btn-sm btn-outline-primary"
-                title="View Analyatics"
-                onClick={() => handleViewButton(item._id)}
+                title={item.billImg ? 'View Bill' : 'No Bill Available'}
+                onClick={() => handleViewButton(item.billImg)}
               >
-                <FcImageFile />
+                {item.billImg ? <FcImageFile /> : <FcRemoveImage />}
               </button>
             </div>
           ),
@@ -131,14 +137,34 @@ const VehicleExpensesBill = () => {
   }
 
   // Handle view button click
-  const handleViewButton = (id) => {
-    console.log('Selected Driver Expense ID:', id)
-    const vehiclesexpense = data.find((item) => String(item.id) === String(id))
+  const handleViewButton = async (billImgId) => {
+    if (!billImgId) {
+      toast.info('No bill image available.')
+      return
+    }
 
-    if (vehiclesexpense) {
-      console.log('Selected Driver Expense Details:', vehiclesexpense)
-    } else {
-      console.warn('Expense not found for ID:', id)
+    try {
+      const response = await getVehicleBillImageApi(billImgId)
+
+      const { base64Data, contentType } = response
+
+      if (base64Data && contentType) {
+        const fileSrc = `data:${contentType};base64,${base64Data}`
+        console.log('fileconverssssssss', fileSrc)
+        setPdfBase64(fileSrc)
+
+        if (contentType.startsWith('application/pdf')) {
+          setModalTitle('Driver Bill (PDF)')
+        } else if (contentType.startsWith('image')) {
+          setModalTitle('Driver Bill (Image)')
+        }
+
+        setShowModal(true)
+      } else {
+        toast.error('Invalid bill image data.')
+      }
+    } catch (err) {
+      toast.error('Failed to fetch bill image.')
     }
   }
 
@@ -185,6 +211,14 @@ const VehicleExpensesBill = () => {
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
         onItemsPerPageChange={setItemsPerPage}
+      />
+
+      {/* Modal Component */}
+      <BillModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
       />
     </div>
   )

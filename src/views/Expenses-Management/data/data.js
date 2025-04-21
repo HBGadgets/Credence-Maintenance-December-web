@@ -68,6 +68,25 @@ export const getVehicleExpesesListApi = async (id) => {
     }
 }
 
+// Show Bill Images of All Drivers Expenses
+export const getVehicleBillImageApi = async (billImgId) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/bill-img/${billImgId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        console.log("This is Driver Bill Image : ", response.data)
+        return response.data // contains base64Data and contentType
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
+        throw error
+    }
+}
+
 // ------------------------------------------------------------------------------------------------------------------------------- 
 
 // Get API for Supervisor See Lorry report  
