@@ -59,7 +59,8 @@ const VehicleExpensesBill = () => {
         // Format API data
         const formattedData = responseData.map((item) => ({
           id: item._id, // Add an alias field `id`
-          date: formatDate(item.date),
+          dateshow: formatDate(item.date),
+          rawDate: item.date, // <- keep raw date for filtering
           vehicleName: item.vehicleName || 'Unknown',
           driverName: item.driverId?.name || 'Unknown',
           shopName: item.vendor || 'Unknown',
@@ -103,16 +104,16 @@ const VehicleExpensesBill = () => {
 
   // Handle Date Range Filter Change
   const handleDateRangeChange = (startDate, endDate) => {
-    // If no date range is selected (Clear button is hit)
     if (!startDate || !endDate) {
-      setFilteredData(data) // Reset to full data
+      setFilteredData(data)
       return
     }
-    // Filter data based on the selected date range
+
     const filtered = data.filter((item) => {
-      const itemDate = new Date(item.date)
+      const itemDate = new Date(item.rawDate)
       return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
     })
+
     setFilteredData(filtered)
   }
 
@@ -169,7 +170,7 @@ const VehicleExpensesBill = () => {
 
   // Define Table Columns
   const columns = [
-    { label: 'Date', key: 'date', sortable: true },
+    { label: 'Date', key: 'dateshow', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
