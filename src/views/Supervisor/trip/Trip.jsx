@@ -270,7 +270,7 @@ const Trip = () => {
     }
   }, [searchQuery, allData])
 
-  if (loading) return <Loader />
+  // if (loading) return <Loader />
   if (error) return <Page404 />
 
   return (
@@ -305,9 +305,9 @@ const Trip = () => {
           isFetching={loading}
           errorMessage={
             error
-              ? 'Error fetching trips. Please try again later.'
+              ? 'Error fetching driver expenses. Please try again later.'
               : filteredData.length === 0 && !loading
-                ? 'No trip records found for the selected filters.'
+                ? 'No driver expense records found for the selected period.'
                 : ''
           }
         />

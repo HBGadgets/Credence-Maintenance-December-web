@@ -43,7 +43,7 @@ const CurrentAttendence = () => {
     fetchData()
   }, [])
 
-  if (loading) return <Loader />
+  // if (loading) return <Loader />
   if (error) return <Page404 />
 
   // Handle attendance marking
@@ -149,10 +149,18 @@ const CurrentAttendence = () => {
       <Table
         title="Driver Mark Attendance Lists"
         columns={columns}
-        filteredData={updatedData} // ✅ Updated table data
+        filteredData={updatedData} // Updated table data
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        isFetching={loading}
+        errorMessage={
+          error
+            ? 'Error fetching driver expenses. Please try again later.'
+            : filteredData.length === 0 && !loading
+              ? 'No driver expense records found for the selected period.'
+              : ''
+        }
       />
 
       <SmartPagination
