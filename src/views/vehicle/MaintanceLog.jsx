@@ -165,7 +165,7 @@ const MaintenanceLog = () => {
     },
   ]
 
-  if (loading) return <Loader />
+  // if (loading) return <Loader />
   if (error) return <Page404 />
 
   const handleViewButton = (id) => {
@@ -217,6 +217,14 @@ const MaintenanceLog = () => {
           handleViewButton={handleViewButton}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
+          isFetching={loading}
+          errorMessage={
+            error
+              ? 'Error fetching driver expenses. Please try again later.'
+              : filteredData.length === 0 && !loading
+                ? 'No driver expense records found for the selected period.'
+                : ''
+          }
         />
 
         <SmartPagination

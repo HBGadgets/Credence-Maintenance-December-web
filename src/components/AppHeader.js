@@ -52,13 +52,21 @@ const AppHeader = () => {
   }
 
   // Display Route name
+
   const getRouteName = (pathname, routes) => {
     const currentRoute = routes.find((route) => route.path === pathname)
     return currentRoute ? currentRoute.name : 'Dashboard'
   }
 
-  const currentPathname = useLocation().pathname;
+  // const getRouteName = (pathname) => {
+  //   const segments = pathname.split('/').filter(Boolean)
+  //   return segments.length ? segments[segments.length - 1] : 'Dashboard'
+  // }
+
+
+  const currentPathname = useLocation().pathname
   const currentRouteName = getRouteName(currentPathname, routes)
+
 
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
@@ -82,7 +90,6 @@ const AppHeader = () => {
             {currentRouteName}
           </span>
         </div>
-
 
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
