@@ -3,12 +3,11 @@ import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import { getDriverBillImageApi, getDriverExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
-import BillModal from './componet/BillModal'
+import BillModal from '../componet/BillModal'
 
 const DriverExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -176,7 +175,7 @@ const DriverExpensesBill = () => {
   }
 
   // loader and error
-  if (loading) return <Loader />
+  // if (loading) return <Loader />
   if (error) return <Page404 />
 
   // Define table columns
@@ -211,6 +210,14 @@ const DriverExpensesBill = () => {
         itemsPerPage={itemsPerPage}
         viewButton={false}
         handleViewButton={handleViewButton}
+        isFetching={loading}
+        errorMessage={
+          error
+            ? 'Error fetching driver expenses. Please try again later.'
+            : filteredData.length === 0 && !loading
+              ? 'No driver expense records found for the selected period.'
+              : ''
+        }
       />
 
       <SmartPagination

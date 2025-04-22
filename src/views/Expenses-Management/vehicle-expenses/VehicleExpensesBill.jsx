@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import SmartPagination from '../../components/SmartPagination'
-import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import Table from '../../components/Table' // Import the correct Table component
 import { getVehicleBillImageApi, getVehicleExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
-import BillModal from '../driver-expenses/componet/BillModal'
+import BillModal from '../componet/BillModal'
 
 const VehicleExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -181,7 +180,7 @@ const VehicleExpensesBill = () => {
     { label: 'Bill Image', key: 'actions', sortable: false },
   ]
 
-  if (loading) return <Loader />
+  // if (loading) return <Loader />
   if (error) return <Page404 />
 
   return (
@@ -203,6 +202,14 @@ const VehicleExpensesBill = () => {
         itemsPerPage={itemsPerPage}
         viewButton={false}
         handleViewButton={handleViewButton}
+        isFetching={loading}
+        errorMessage={
+          error
+            ? 'Error fetching driver expenses. Please try again later.'
+            : filteredData.length === 0 && !loading
+              ? 'No driver expense records found for the selected period.'
+              : ''
+        }
       />
 
       <SmartPagination
