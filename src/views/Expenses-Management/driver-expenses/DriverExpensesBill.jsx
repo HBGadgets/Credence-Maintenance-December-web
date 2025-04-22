@@ -82,17 +82,6 @@ const DriverExpensesBill = () => {
               </button>
             </div>
           ),
-          //   action: (
-          //   <div className="d-flex justify-content-center gap-2">
-          //     <button
-          //       className="btn btn-sm btn-outline-primary"
-          //       title={item.billImg ? 'View Bill' : 'No Bill Available'}
-          //       onClick={() => handleViewButton(item.billImg)}
-          //     >
-          //       {loading ? <CSpinner /> : item.billImg ? <FcImageFile /> : <FcRemoveImage />}
-          //     </button>
-          //   </div>
-          // ),
         }))
 
         setData(formattedData)
