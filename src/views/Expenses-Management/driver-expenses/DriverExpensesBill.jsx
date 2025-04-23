@@ -7,7 +7,7 @@ import Page404 from '../../pages/page404/Page404'
 import { getDriverBillImageApi, getDriverExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
-import BillModal from '../componet/BillModal'
+import BillShow from '../../components/BillModal/BillShow'
 
 const DriverExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -218,7 +218,7 @@ const DriverExpensesBill = () => {
       />
 
       {/* Modal Component */}
-      <BillModal
+      <BillShow
         showModal={showModal}
         setShowModal={setShowModal}
         pdfBase64={pdfBase64}

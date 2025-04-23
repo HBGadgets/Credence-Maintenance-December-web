@@ -7,7 +7,7 @@ import Table from '../../components/Table' // Import the correct Table component
 import { getVehicleBillImageApi, getVehicleExpesesListApi } from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
-import BillModal from '../componet/BillModal'
+import BillShow from '../../components/BillModal/BillShow'
 
 const VehicleExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -226,7 +226,7 @@ const VehicleExpensesBill = () => {
       />
 
       {/* Modal Component */}
-      <BillModal
+      <BillShow
         showModal={showModal}
         setShowModal={setShowModal}
         pdfBase64={pdfBase64}

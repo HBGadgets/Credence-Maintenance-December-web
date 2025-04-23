@@ -1,8 +1,8 @@
 import React from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react'
-import './bill.css'
+import './billshow.css'
 
-const BillModal = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
+const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
   return (
     <CModal
       visible={showModal}
@@ -62,4 +62,4 @@ const BillModal = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
   )
 }
 
-export default BillModal
+export default BillShow
