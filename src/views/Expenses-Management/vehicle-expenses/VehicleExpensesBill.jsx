@@ -59,8 +59,8 @@ const VehicleExpensesBill = () => {
         // Format API data
         const formattedData = responseData.map((item) => ({
           id: item._id, // Add an alias field `id`
-          dateshow: formatDate(item.date),
-          rawDate: item.date, // <- keep raw date for filtering
+          date: formatDate(item.date),
+          // rawDate: item.date,
           vehicleName: item.vehicleName || 'Unknown',
           driverName: item.driverId?.name || 'Unknown',
           shopName: item.vendor || 'Unknown',
@@ -102,38 +102,21 @@ const VehicleExpensesBill = () => {
     fetchData()
   }, [])
 
-  // Handle Date Range Filter Change
-  const handleDateRangeChange = (startDate, endDate) => {
-    if (!startDate || !endDate) {
-      setFilteredData(data)
-      return
-    }
-
-    const filtered = data.filter((item) => {
-      const itemDate = new Date(item.rawDate)
-      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
-    })
-
-    setFilteredData(filtered)
-  }
-
   // Search Function
   const handleSearch = (query) => {
     setSearchQuery(query)
     if (!query) {
       setFilteredData(data)
-    } else {
-      const lowerCaseQuery = query.toLowerCase()
-      setFilteredData(
-        data.filter(
-          (item) =>
-            item.driverName.toLowerCase().includes(lowerCaseQuery) ||
-            item.vehicleName.toLowerCase().includes(lowerCaseQuery) ||
-            item.expenseType.toLowerCase().includes(lowerCaseQuery) ||
-            item.shopName.toLowerCase().includes(lowerCaseQuery),
-        ),
-      )
+      return
     }
+    const filtered = data.filter(
+      (item) =>
+        item.driverName.toLowerCase().includes(lowerCaseQuery) ||
+        item.vehicleName.toLowerCase().includes(lowerCaseQuery) ||
+        item.expenseType.toLowerCase().includes(lowerCaseQuery) ||
+        item.shopName.toLowerCase().includes(lowerCaseQuery),
+    )
+    setFilteredData(filtered)
   }
 
   // Handle view button click
@@ -168,9 +151,30 @@ const VehicleExpensesBill = () => {
     }
   }
 
+  // Handle Date Range Filter Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    if (!startDate || !endDate) {
+      setFilteredData(data)
+      return
+    }
+
+    // Convert the start and end dates to Date objects
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    // Filter the data using Date object comparison
+    const filtered = data.filter((item) => {
+      const itemDateParts = item.date.split('/') // Assuming formatDate gives DD/MM/YYYY
+      const itemDate = new Date(`${itemDateParts[2]}-${itemDateParts[1]}-${itemDateParts[0]}`) // Convert to YYYY-MM-DD
+      return itemDate >= start && itemDate <= end
+    })
+
+    setFilteredData(filtered)
+  }
+
   // Define Table Columns
   const columns = [
-    { label: 'Date', key: 'dateshow', sortable: true },
+    { label: 'Date', key: 'date', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
