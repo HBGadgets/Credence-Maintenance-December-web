@@ -28,6 +28,7 @@ function DriverProfile() {
     },
     { label: 'Expenses', content: 'Expenses tab content' },
     { label: 'Logbook Details', content: 'Logbook Details tab content' },
+    { label: 'Trips Details', content: 'Trips Details tab content' },
     { label: 'Salary Slips', content: 'Salary Slips tab content' },
     { label: 'Document Locker', content: 'Document Locker tab content' },
   ]

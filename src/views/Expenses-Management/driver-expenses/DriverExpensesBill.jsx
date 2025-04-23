@@ -104,14 +104,14 @@ const DriverExpensesBill = () => {
   // Search handler (Filters allData)
   const handleSearch = (query) => {
     setSearchQuery(query)
-
     if (!query) {
       setFilteredData(data) // Reset to full data if search is empty
       return
     }
-
     const filtered = data.filter(
-      (item) => item.driverName.toLowerCase().includes(query.toLowerCase()), // Correct key usage
+      (item) =>
+        item.driverName.toLowerCase().includes(query.toLowerCase()) ||
+        item.currentVehicleName.toLowerCase().includes(query.toLowerCase()),
     )
     setFilteredData(filtered)
   }
