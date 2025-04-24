@@ -55,7 +55,7 @@ const AppHeader = () => {
 
   const getRouteName = (pathname, routes) => {
     const currentRoute = routes.find((route) => route.path === pathname)
-    return currentRoute ? currentRoute.name : 'Dashboard'
+    return currentRoute ? currentRoute.name : 'Profile Logs'
   }
 
   // const getRouteName = (pathname) => {

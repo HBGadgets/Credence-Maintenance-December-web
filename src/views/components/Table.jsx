@@ -93,16 +93,18 @@ function Table({
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
-                  {columns.map((column, index) => (
-                    <CTableHeaderCell
-                      key={index}
-                      className="text-center"
-                      onClick={() => column.sortable && handleSort(column.key)}
-                      style={{ cursor: column.sortable ? 'pointer' : 'default' }}
-                    >
-                      {column.label} {column.sortable && getSortIcon(column.key)}
-                    </CTableHeaderCell>
-                  ))}
+                  {columns
+                    .filter((col) => !col.hidden)
+                    .map((column, index) => (
+                      <CTableHeaderCell
+                        key={index}
+                        className="text-center"
+                        onClick={() => column.sortable && handleSort(column.key)}
+                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                      >
+                        {column.label} {column.sortable && getSortIcon(column.key)}
+                      </CTableHeaderCell>
+                    ))}
                   {(editButton || deleteButton || viewButton) && (
                     <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   )}
@@ -156,15 +158,14 @@ function Table({
                       <CTableDataCell className="text-center">
                         {(currentPage - 1) * itemsPerPage + rowIndex + 1}
                       </CTableDataCell>
-                      {Object.keys(row).map(
-                        (key) =>
-                          key !== 'id' &&
-                          key !== '_id' && (
-                            <CTableDataCell key={key} className="text-center">
-                              {row[key]}
-                            </CTableDataCell>
-                          ),
-                      )}
+                      {columns
+                        .filter((col) => !col.hidden)
+                        .map((column) => (
+                          <CTableDataCell key={column.key} className="text-center">
+                            {row[column.key]}
+                          </CTableDataCell>
+                        ))}
+
                       {(editButton || deleteButton || viewButton) && (
                         <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
                           {editButton && (

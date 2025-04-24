@@ -71,7 +71,7 @@ const DriverExpensesBill = () => {
               {item.paymentMode || 'Unknown'}
             </span>
           ), // Styled Payment Mode
-          action: (
+          billImg: (
             <div className="d-flex justify-content-center gap-2">
               <button
                 className="btn btn-sm btn-outline-primary"
@@ -177,7 +177,7 @@ const DriverExpensesBill = () => {
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Payment Mode', key: 'paymentMode', sortable: true },
-    { label: 'Bill Image', key: 'actions', sortable: false },
+    { label: 'Bill Image', key: 'billImg', sortable: false },
   ]
 
   return (

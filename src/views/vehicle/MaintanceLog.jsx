@@ -1,246 +1,224 @@
-import React, { useState, useEffect } from 'react'
-import { maintenanceLogApi } from './data/VehicleListData'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import Table from '../components/Table' // Assuming this is your custom Table component
 import SmartPagination from '../components/SmartPagination'
-import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import { getVehicleBillApi, maintenanceLogApi } from './data/VehicleListData'
+import BillShow from '../components/BillModal/BillShow'
+import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../components/SearchInput'
-import Table from '../components/Table'
-import Loader from '../../components/Loader/Loader'
-import Page404 from '../pages/page404/Page404'
-import usePdfExporter from '../customhooks/usePdfExporter'
-import useExcelExporter from '../customhooks/useExcelExporter'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
-import { PiMicrosoftExcelLogo } from 'react-icons/pi'
-import { HiOutlineLogout } from 'react-icons/hi'
-import IconDropdown from '../Supervisor/IconDropdown'
+import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 
 const MaintenanceLog = () => {
-  const { exportToPDF } = usePdfExporter()
-  const { exportToExcel } = useExcelExporter()
   const { id } = useParams()
+  const [filteredData, setFilteredData] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  const [allData, setAllData] = useState([]) // Store full API data
-  const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // Use state for modal
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+
+  // Date range and search
   const [searchQuery, setSearchQuery] = useState('')
-  const [startDate, setStartDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
+  const [dateRange, setDateRange] = useState({})
 
-  // ✅ Fetch Maintenance Logs
+  const { data: vehicleMaintanceLog = [], isFetching } = useQuery({
+    queryKey: ['vehicleMaintanceLog', id],
+    queryFn: () => maintenanceLogApi(id),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  })
+
   useEffect(() => {
-    const fetchMaintenanceLogs = async () => {
-      try {
-        setLoading(true)
-        const data = await maintenanceLogApi(id)
-        setAllData(data)
-        setFilteredData(data)
-      } catch (err) {
-        // If the error is a network error
-        if (!err.response) {
-          setError('Network Error') // Internet/server unreachable
-        } else if (err.response.status === 500) {
-          setError(err.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
+    let filtered = vehicleMaintanceLog
 
-    if (id) fetchMaintenanceLogs()
-  }, [id])
-
-  // ✅ Search handler (Filters allData)
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-
-    if (!query) {
-      applyFilters() // Reset to full data if search is empty
-      return
-    }
-
-    const filtered = allData.filter(
-      (item) =>
-        item.expenseType.toLowerCase().includes(query.toLowerCase()) ||
-        item.vendor.toLowerCase().includes(query.toLowerCase()) ||
-        item.amount.toString().includes(query) ||
-        item.paymentMode.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredData(filtered)
-  }
-
-  // Handle Date Range Filter (Now Fully Fixed)
-  const handleDateRangeChange = (start, end) => {
-    console.log('Date range changed:', { start, end })
-
-    setStartDate(start)
-    setEndDate(end)
-
-    applyFilters(start, end, searchQuery)
-  }
-
-  // Apply Filtering Based on Date Range & Search
-  const applyFilters = (start = startDate, end = endDate, query = searchQuery) => {
-    let filtered = [...allData]
-
-    // Apply Date Filter
-    if (start && end) {
-      const startMillis = new Date(start).setHours(0, 0, 0, 0)
-      const endMillis = new Date(end).setHours(23, 59, 59, 999)
+    // Apply date filter
+    if (dateRange.startDate && dateRange.endDate) {
+      const start = new Date(dateRange.startDate)
+      const end = new Date(dateRange.endDate)
 
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.date).setHours(0, 0, 0, 0)
-        return itemDate >= startMillis && itemDate <= endMillis
+        if (!item.originalDate) return false
+        const itemDate = new Date(item.originalDate)
+        return itemDate >= start && itemDate <= end
       })
     }
 
-    // Apply Search Filter
-    if (query) {
-      filtered = filtered.filter(
-        (item) =>
-          item.driverName.toLowerCase().includes(query.toLocaleLowerCase()) ||
-          item.expenseType.toLowerCase().includes(query.toLowerCase()) ||
-          item.vendor.toLowerCase().includes(query.toLowerCase()) ||
-          item.amount.toString().includes(query) ||
-          item.paymentMode.toLowerCase().includes(query.toLowerCase()),
+    // Apply search filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
       )
     }
+
+    // Apply styling AFTER filtering
+    const styledData = filtered.map((data) => ({
+      ...data,
+      paymentMode: (
+        <span
+          style={{
+            backgroundColor:
+              data.paymentMode === 'upi'
+                ? '#0000FF'
+                : data.paymentMode === 'cash'
+                  ? '#28a745'
+                  : data.paymentMode === 'card'
+                    ? '#f5a623'
+                    : '#0000FF',
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            display: 'inline-block',
+            textTransform: 'capitalize',
+          }}
+        >
+          {data.paymentMode}
+        </span>
+      ),
+    }))
+
+    setFilteredData(styledData)
+  }, [searchQuery, dateRange, vehicleMaintanceLog])
+
+  console.log('all maintance logsss', vehicleMaintanceLog)
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  const columns = [
+    { label: 'Service Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Shop Name', key: 'shopName', sortable: true },
+    { label: 'Expense Type', key: 'expenseType', sortable: true },
+    { label: 'Description', key: 'description', sortable: true },
+    { label: 'Amount', key: 'amount', sortable: true },
+    { label: 'Payment Mode', key: 'paymentMode', sortable: false },
+  ]
+
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+
+    const lowercasedQuery = query.toLowerCase()
+
+    const filtered = vehicleMaintanceLog.filter((item) =>
+      Object.values(item).some(
+        (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+      ),
+    )
 
     setFilteredData(filtered)
   }
 
-  // Define table columns
-  const columns = [
-    { label: 'Service Date', key: 'date', sortable: true },
-    { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Expense Type', key: 'expenseType', sortable: true },
-    { label: 'Vendor', key: 'vendor', sortable: true },
-    { label: 'Description', key: 'description', sortable: true },
-    { label: 'Amount', key: 'amount', sortable: true },
-    { label: 'Payment Mode', key: 'paymentMode', sortable: true },
-  ]
+  // Handle Date Range Filter
+  const handleDateRangeChange = ({ startDate, endDate }) => {
+    setDateRange({ startDate, endDate })
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+    if (!startDate || !endDate) {
+      setFilteredData(vehicleMaintanceLog)
+      return
+    }
 
-  // Dropdown items for export
-  const dropdownItems = [
-    {
-      icon: FaRegFilePdf,
-      label: 'Download PDF',
-      onClick: () =>
-        exportToPDF({
-          title: 'Vehicle Maintenance Logs Report',
-          columns: columns,
-          data: filteredData,
-          fileName: 'Vehicle_Maintenance_Logs_Report',
-        }),
-    },
-    {
-      icon: PiMicrosoftExcelLogo,
-      label: 'Download Excel',
-      onClick: () =>
-        exportToExcel({
-          title: 'Vehicle Maintenance Logs Report',
-          columns: columns,
-          data: filteredData,
-          fileName: 'Vehicle_Maintenance_Logs_Report',
-        }),
-    },
-    {
-      icon: FaPrint,
-      label: 'Print Page',
-      onClick: () => window.print(),
-    },
-    {
-      icon: HiOutlineLogout,
-      label: 'Logout',
-      onClick: () => handleLogout(),
-    },
-    {
-      icon: FaArrowUp,
-      label: 'Scroll To Top',
-      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-    },
-  ]
+    const start = new Date(startDate)
+    const end = new Date(endDate)
 
-  // if (loading) return <Loader />
-  if (error) return <Page404 />
+    const filtered = vehicleMaintanceLog.filter((item) => {
+      if (!item.originalDate) return false
 
-  const handleViewButton = (id) => {
-    console.log('Viewing Maintenance Log:', id)
+      const itemDate = new Date(item.originalDate)
+      return itemDate >= start && itemDate <= end
+    })
+
+    setFilteredData(filtered)
   }
 
-  const getPaymentBadge = (mode) => {
-    switch (mode?.toLowerCase()) {
-      case 'upi':
-        return 'badge bg-secondary' // UPI = secondary
-      case 'cash':
-        return 'badge bg-success' // Cash = success
-      case 'card':
-        return 'badge bg-warning' // Card = warning
-      default:
-        return 'badge bg-primary' // Default
+  // const handleViewButton = async () => {
+  //   try {
+  //     console.log('vehicle maain log', vehicleMaintanceLog)
+  //     const { base64Data, contentType } = await getVehicleBillApi(vehicleMaintanceLog[0].billImg)
+
+  //     // Set modal data and open it
+  //     setPdfBase64(`data:${contentType};base64,${base64Data}`)
+  //     setModalTitle('Bill Image')
+  //     setShowModal(true)
+  //   } catch (error) {
+  //     console.error('Failed to load bill image:', error)
+  //   }
+  // }
+
+  const handleViewButton = async (index = null) => {
+    let item
+
+    if (index !== null && vehicleMaintanceLog?.[index]) {
+      item = vehicleMaintanceLog[index]
+    } else {
+      item = vehicleMaintanceLog.find((item) => item?.billImg)
+    }
+
+    if (!item) {
+      toast.warning('No bill image found.')
+      return
+    }
+
+    const billImgId = item.billImg
+    console.log('billl imagessss', billImgId)
+
+    try {
+      const { base64Data, contentType } = await getVehicleBillApi(billImgId)
+      setPdfBase64(`data:${contentType};base64,${base64Data}`)
+      setModalTitle('Bill Image')
+      setShowModal(true)
+    } catch (error) {
+      console.error('Failed to load bill image:', error)
+      toast.error('Failed to load bill image.')
     }
   }
 
-  const tableData = filteredData.map((data) => ({
-    date: new Date(data.date).toLocaleDateString('en-GB'),
-    driverName: data.driverName,
-    expenseType: data.expenseType,
-    vendor: data.vendor,
-    description: data.description,
-    amount: data.amount,
-    paymentMode: (
-      <span className={getPaymentBadge(data.paymentMode)}>
-        {(data.paymentMode || 'N/A').charAt(0).toUpperCase() + (data.paymentMode || 'N/A').slice(1)}
-      </span>
-    ),
-  }))
-
   return (
-    <div>
+    <>
+      <ToastContainer />
+
       <div className="mb-2 d-flex justify-content-between align-items-center">
-        {/*  Date Range Picker with working handler */}
+        {/* Left: Date Range Filter */}
         <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
-      <div>
-        <Table
-          title="Vehicle Maintenance Logs"
-          columns={columns}
-          filteredData={tableData}
-          setFilteredData={setFilteredData}
-          viewButton={true}
-          handleViewButton={handleViewButton}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={loading}
-          errorMessage={
-            error
-              ? 'Error fetching driver expenses. Please try again later.'
-              : filteredData.length === 0 && !loading
-                ? 'No driver expense records found for the selected period.'
-                : ''
-          }
-        />
+      <Table
+        title="Vehicle Maintenance Log"
+        columns={columns}
+        filteredData={filteredData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        viewButton={true}
+        handleViewButton={handleViewButton}
+        isFetching={isFetching}
+      />
 
-        <SmartPagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setCurrentPage(1)
-          }}
-        />
-      </div>
-      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
-        <IconDropdown items={dropdownItems} />
-      </div>
-    </div>
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setCurrentPage(1)
+        }}
+      />
+
+      {/* Modal Component */}
+      <BillShow
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
+      />
+    </>
   )
 }
 

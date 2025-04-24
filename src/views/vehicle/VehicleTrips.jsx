@@ -1,216 +1,107 @@
+import { useQuery } from '@tanstack/react-query'
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { getVehicleSubTripApi, getVehicleTripsByIdAPI } from './data/VehicleListData'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import SearchInput from '../components/SearchInput'
-import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
-import { useParams } from 'react-router-dom'
-import Loader from '../../components/Loader/Loader'
-import Page404 from '../pages/page404/Page404'
-import { VehicleTripsApi } from './data/VehicleListData'
-import IconDropdown from '../Supervisor/IconDropdown'
-import usePdfExporter from '../customhooks/usePdfExporter'
-import useExcelExporter from '../customhooks/useExcelExporter'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
-import { PiMicrosoftExcelLogo } from 'react-icons/pi'
-import { HiOutlineLogout } from 'react-icons/hi'
 
 const VehicleTrips = () => {
-  const { exportToPDF } = usePdfExporter()
-  const { exportToExcel } = useExcelExporter()
   const { id } = useParams()
-  const [allData, setAllData] = useState([]) // Store full API data
-  const [filteredData, setFilteredData] = useState([]) // Store searched/filtered data
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredData, setFilteredData] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Fetch Vehicle Trips
+  const { data: vehicleTrips = [], isFetching } = useQuery({
+    queryKey: ['vehicleTrips', id],
+    queryFn: () => getVehicleTripsByIdAPI(id),
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  })
+
   useEffect(() => {
-    const fetchVehicleTrips = async () => {
-      try {
-        setLoading(true)
-        const data = await VehicleTripsApi(id)
+    const styledData = vehicleTrips.map((data) => ({
+      ...data,
+      status: (
+        <span
+          style={{
+            backgroundColor:
+              data.status === 'in-progress'
+                ? '#f5a623' // orange
+                : data.status === 'completed'
+                  ? '#28a745' // green
+                  : data.status === 'cancelled'
+                    ? '#dc3545' // red
+                    : '#6c757d', // gray no data found
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            display: 'inline-block',
+            textTransform: 'capitalize',
+          }}
+        >
+          {data.status}
+        </span>
+      ),
+    }))
+    setFilteredData(styledData)
+  }, [vehicleTrips])
 
-        // Ensure data is an array (API returns a single object)
-        const formattedData = Array.isArray(data) ? data : [data]
+  console.log('vehicleTripsssssssssss', vehicleTrips)
 
-        setAllData(formattedData) // Store the full data separately
-        setFilteredData(formattedData) // Initially, show all data
-      } catch (err) {
-        if (!err.response) {
-          setError('Network Error') // Internet/server unreachable
-        } else if (err.response.status === 500) {
-          setError(err.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-    if (id) fetchVehicleTrips()
-  }, [id])
-
-  // Search handler (Filters allData)
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-
-    if (!query) {
-      setFilteredData(allData) // Reset to full data if search is empty
-      return
-    }
-
-    const filtered = allData.filter(
-      (item) =>
-        item.driverId?.name?.toLowerCase().includes(query.toLowerCase()) || // Driver Name
-        item.startLocation.toLowerCase().includes(query.toLowerCase()) || // Start Location
-        item.endLocation.toLowerCase().includes(query.toLowerCase()) || // End Location
-        item.status.toLowerCase().includes(query.toLowerCase()) || // Trip Status
-        item.budgetAllocated.toString().includes(query) || // Numeric: Convert to String
-        item.spentAmount.toString().includes(query), // Numeric: Convert to String
-    )
-    setFilteredData(filtered)
-  }
-
-  // Define table columns (ONLY required fields)
+  //   Tables columns
   const columns = [
-    { label: 'Trip Route', key: 'startEndLocation', sortable: true }, // Updated column name
-    { label: 'Driver Name', key: 'name', sortable: true },
-    { label: 'Start Date', key: 'startDate', sortable: true },
-    { label: 'End Date', key: 'endDate', sortable: true },
+    { label: 'Trip ID', key: 'id', sortable: true },
+    { label: 'Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Start Location', key: 'startLocation', sortable: true },
+    { label: 'End Location', key: 'endLocation', sortable: true },
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
-    { label: 'Amount Spent', key: 'spentAmount', sortable: true },
+    { label: 'Spent Amount', key: 'spentAmount', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-
-  // Creating a variable for the mapped data
-  const tableData = filteredData.map((data) => ({
-    startEndLocation: `${data.startLocation} → ${data.endLocation}`, // Format as "Mumbai → Pune"
-    name: data.driverId?.name || 'N/A',
-    startDate: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
-    endDate: new Date(data.date).toLocaleDateString('en-GB'), // Converts to dd-mm-yyyy
-    budgetAllocated: data.budgetAllocated,
-    spentAmount: data.spentAmount,
-    status: (
-      <span
-        style={{
-          color:
-            data.status === 'in-progress'
-              ? 'orange'
-              : data.status === 'completed'
-                ? 'green'
-                : data.status === 'cancelled'
-                  ? 'red'
-                  : 'black',
-          fontWeight: 'bold',
-        }}
-      >
-        {data.status}
-      </span>
-    ),
-  }))
-
-  // Handle Date Range Filter Change
-  const handleDateRangeChange = (startDate, endDate) => {
-    // If no date range is selected (Clear button is hit)
-    if (!startDate || !endDate) {
-      setFilteredData(allData) // Reset to full data
-      return
+  // Handle View Button
+  const handleViewButton = async (id) => {
+    console.log('Trip ID passed to View Button:', id) // <- You should see the correct _id here
+    try {
+      const subTripData = await getVehicleSubTripApi(id)
+      console.log('Sub Trip Data:', subTripData)
+    } catch (error) {
+      console.error('Error fetching sub trip data:', error)
     }
-    // Filter data based on the selected date range
-    const filtered = allData.filter((item) => {
-      const itemDate = new Date(item.date)
-      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
-    })
-    setFilteredData(filtered)
   }
 
-  // Dropdown items for export
-  const dropdownItems = [
-    {
-      icon: FaRegFilePdf,
-      label: 'Download PDF',
-      onClick: () =>
-        exportToPDF({
-          title: 'Vehicle Trips Logs Report', // Dynamic title
-          columns: columns,
-          data: tableData,
-          fileName: 'Vehicle_Trips_Logs_Report', // Dynamic file name
-        }),
-    },
-    {
-      icon: PiMicrosoftExcelLogo,
-      label: 'Download Excel',
-      onClick: () =>
-        exportToExcel({
-          title: 'Vehicle Trips Logs Report', // Dynamic title
-          columns: columns,
-          data: tableData,
-          fileName: 'Vehicle_Trips_Logs_Report', // Dynamic file name
-        }),
-    },
-    {
-      icon: FaPrint,
-      label: 'Print Page',
-      onClick: () => window.print(),
-    },
-    {
-      icon: HiOutlineLogout,
-      label: 'Logout',
-      onClick: () => handleLogout(),
-    },
-    {
-      icon: FaArrowUp,
-      label: 'Scroll To Top',
-      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-    },
-  ]
-
-  // if (loading) return <Loader />
-  if (error) return <Page404 />
-
   return (
-    <div>
-      <div className="mb-2 d-flex justify-content-between align-items-center">
-        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
-        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-      </div>
+    <>
+      <Table
+        title="Vehicle Trips"
+        columns={columns}
+        filteredData={filteredData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        viewButton={true}
+        handleViewButton={handleViewButton}
+        isFetching={isFetching}
+      />
 
-      <div>
-        <Table
-          title="Vehicle Trips Logs"
-          columns={columns}
-          filteredData={tableData} // Using the variable here
-          setFilteredData={setFilteredData}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={loading}
-          errorMessage={
-            error
-              ? 'Error fetching driver expenses. Please try again later.'
-              : filteredData.length === 0 && !loading
-                ? 'No driver expense records found for the selected period.'
-                : ''
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setCurrentPage(1)
+          if (value === -1) {
+            setItemsPerPage(filteredData.length)
           }
-        />
-
-        <SmartPagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setCurrentPage(1)
-          }}
-        />
-      </div>
-      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
-        <IconDropdown items={dropdownItems} />
-      </div>
-    </div>
+        }}
+      />
+    </>
   )
 }
 
