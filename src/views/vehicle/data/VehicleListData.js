@@ -412,7 +412,6 @@ export const getVehicleTripsByIdAPI = async (id) => {
 //  get Image Api for vehicle expeses bill by id
 
 export const getVehicleSubTripApi = async (id) => {
-
     if (!TOKEN) throw new Error('Authentication token not found');
 
     const { data } = await axios.get(
@@ -422,17 +421,22 @@ export const getVehicleSubTripApi = async (id) => {
         }
     );
 
-    console.log("Vehicle Sub Trips Data: ", data);
+    console.log("Raw Vehicle Sub Trips Data: ", data);
 
-    return data.map((vehicleSubTrips) => ({
-        id: vehicleSubTrips._id,
-        date: formatDateToDDMMYYYY(vehicleSubTrips.date),
-        startLocation: vehicleSubTrips.startLocation,
-        endLocation: vehicleSubTrips.endLocation,
-        status: vehicleSubTrips.status,
-    }));
-
+    if (Array.isArray(data.subtrip)) {
+        return data.subtrip.map((vehicleSubTrips) => ({
+            date: formatDateToDDMMYYYY(vehicleSubTrips.date),
+            startLocation: vehicleSubTrips.startLocation,
+            endLocation: vehicleSubTrips.endLocation,
+            status: vehicleSubTrips.status,
+        }));
+    } else {
+        console.error("Expected 'subtrip' to be an array:", data);
+        return [];
+    }
 };
+
+
 
 
 

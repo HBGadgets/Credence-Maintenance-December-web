@@ -1,0 +1,107 @@
+/* Container for the vehicle track */
+.vehicle-track {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+}
+
+/* The track line behind the truck */
+.track-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    border-style: dashed;
+    border-color: #6c757d;
+    border-width: 2.5px;
+    /* Add dashed border without background */
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+
+
+/* Base styles for the truck icon */
+.truck-icon {
+    position: absolute;
+    top: -10px;
+    font-size: 1.4rem;
+}
+
+/* Green for active status */
+.truck-icon .text-success {
+    color: #28a745;
+}
+
+/* Red for cancelled */
+.truck-icon .text-danger {
+    color: #dc3545;
+}
+
+/* Yellow for in-progress */
+.truck-icon .text-warning {
+    color: #f0ad4e !important;
+    /* softer warning yellow */
+}
+
+/* Animation class when sub-trip is in-progress */
+.truck-icon.animate-progress {
+    animation: driveTruck 2s ease-in-out forwards;
+}
+
+/* Truck at the start of the track */
+.truck-icon.truck-start {
+    left: 0;
+}
+
+/* Truck at the midpoint of the track */
+.truck-icon.truck-mid {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Truck at the end of the track */
+.truck-icon.truck-end {
+    left: calc(100% - 1.4rem);
+}
+
+/* Animation keyframes for truck movement from start to mid */
+@keyframes driveTruck {
+    0% {
+        left: 0;
+        opacity: 0.5;
+        transform: translateX(0);
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        left: calc(50% - 0.7rem);
+        transform: translateX(0);
+    }
+}
+
+/* Utility classes (from Bootstrap or your custom overrides) */
+.fw-semibold {
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+

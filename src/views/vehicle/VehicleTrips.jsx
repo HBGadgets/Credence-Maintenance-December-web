@@ -4,12 +4,19 @@ import { useParams } from 'react-router-dom'
 import { getVehicleSubTripApi, getVehicleTripsByIdAPI } from './data/VehicleListData'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
+import SubTripDetailsModal from './modals/SubtripVehicle'
 
 const VehicleTrips = () => {
   const { id } = useParams()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  // Modal state for SubTrips
+  const [modalVisible, setModalVisible] = useState(false)
+  const [subTrips, setSubTrips] = useState([])
+  const [selectedTripId, setSelectedTripId] = useState(null) // Track selected trip
+  const [loadingSubTrip, setLoadingSubTrip] = useState(false) // Loading state for sub-trips
 
   const { data: vehicleTrips = [], isFetching } = useQuery({
     queryKey: ['vehicleTrips', id],
@@ -53,7 +60,7 @@ const VehicleTrips = () => {
 
   //   Tables columns
   const columns = [
-    { label: 'Trip ID', key: 'id', sortable: true },
+    { label: 'Trip ID', key: 'id', sortable: true, hidden: true },
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
@@ -64,14 +71,23 @@ const VehicleTrips = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
-  // Handle View Button
   const handleViewButton = async (id) => {
-    console.log('Trip ID passed to View Button:', id) // <- You should see the correct _id here
+    setLoadingSubTrip(true) // Start loading state for sub-trip data
     try {
       const subTripData = await getVehicleSubTripApi(id)
-      console.log('Sub Trip Data:', subTripData)
+      console.log('Returned Sub Trip Data:', subTripData)
+
+      if (!Array.isArray(subTripData)) {
+        throw new Error('Expected array but got: ' + JSON.stringify(subTripData))
+      }
+
+      setSelectedTripId(id)
+      setSubTrips(subTripData)
+      setModalVisible(true)
     } catch (error) {
       console.error('Error fetching sub trip data:', error)
+    } finally {
+      setLoadingSubTrip(false) // End loading state
     }
   }
 
@@ -101,6 +117,21 @@ const VehicleTrips = () => {
           }
         }}
       />
+
+      {/* Show Modal with Sub-Trips for selected Trip ID */}
+      {modalVisible && (
+        <SubTripDetailsModal
+          subTrips={subTrips}
+          visible={modalVisible}
+          onClose={() => {
+            setModalVisible(false)
+            setSubTrips([])
+            setSelectedTripId(null)
+          }}
+          tripId={selectedTripId} // Optional: pass it to show in modal
+          loadingSubTrip={loadingSubTrip} // Pass loading state to modal
+        />
+      )}
     </>
   )
 }

@@ -45,6 +45,7 @@ function Table({
   isFetching,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+  const [viewLoadingId, setViewLoadingId] = useState(null)
 
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage)
@@ -189,15 +190,21 @@ function Table({
                           {viewButton && (
                             <button
                               className="btn btn-sm d-flex align-items-center gap-1"
-                              onClick={() => handleViewButton(row.id)}
+                              onClick={async () => {
+                                setViewLoadingId(row.id)
+                                await handleViewButton(row.id)
+                                setViewLoadingId(null)
+                              }}
+                              disabled={viewLoadingId === row.id}
                               style={{
                                 backgroundColor: 'rgb(10, 45, 99)',
                                 color: 'white',
                                 borderColor: 'rgb(10, 45, 99)',
+                                opacity: viewLoadingId === row.id ? 0.6 : 1,
                               }}
                             >
                               <Eye size={16} />
-                              <span>View</span>
+                              <span>{viewLoadingId === row.id ? 'Loading...' : 'View'}</span>
                             </button>
                           )}
                         </CTableDataCell>
