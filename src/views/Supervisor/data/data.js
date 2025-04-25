@@ -8,21 +8,24 @@ const TT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhhcnNoYWwiLCJ
 // GET API Supervisor See Driver List all
 
 export const getDriverListApi = async (id) => {
-    try {
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/attendance/get-remaining-attendence-of-drivers`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                },
-            }
-        );
-        console.log("This all drivers list for today mark for present : ", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error:", error.message?.data || error.message);
-        throw error;
-    }
+    if (!TOKEN) throw new Error("Authentication token not found");
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/attendance/get-remaining-attendence-of-drivers`,
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+            },
+        }
+    );
+    console.log("This all drivers list for today mark for present : ", data);
+
+    return data.map((driverlist) => ({
+        id: driverlist._id,
+        name: driverlist.name,
+        contactNumber: driverlist.contactNumber,
+        email: driverlist.email,
+    }));
 }
 
 // Get API for Mark Attendance Fromm Supervisor.

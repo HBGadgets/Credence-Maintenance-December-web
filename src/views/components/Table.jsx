@@ -35,6 +35,9 @@ function Table({
   setFilteredData,
   columns,
   viewButton,
+  viewButtonLabel = 'View', // <-- Default value added here
+  viewButtonIcon = <Eye size={16} />, // NEW icon replace
+  viewButtonColor = 'rgb(10, 45, 99)', // NEW color replace
   handleViewButton,
   editButton,
   handleEditButton,
@@ -197,14 +200,16 @@ function Table({
                               }}
                               disabled={viewLoadingId === row.id}
                               style={{
-                                backgroundColor: 'rgb(10, 45, 99)',
+                                backgroundColor: viewButtonColor,
                                 color: 'white',
-                                borderColor: 'rgb(10, 45, 99)',
+                                borderColor: viewButtonColor,
                                 opacity: viewLoadingId === row.id ? 0.6 : 1,
                               }}
                             >
-                              <Eye size={16} />
-                              <span>{viewLoadingId === row.id ? 'Loading...' : 'View'}</span>
+                              {viewButtonIcon}
+                              <span>
+                                {viewLoadingId === row.id ? 'Loading...' : viewButtonLabel}
+                              </span>
                             </button>
                           )}
                         </CTableDataCell>
@@ -227,6 +232,9 @@ Table.propTypes = {
   columns: PropTypes.array,
   setFilteredData: PropTypes.func,
   viewButton: PropTypes.bool,
+  viewButtonLabel: PropTypes.string, // <-- Add this line view button label customization
+  viewButtonIcon: PropTypes.node, // <-- Add this line for icon customization
+  viewButtonColor: PropTypes.string, // <-- Add this line for color customization
   handleViewButton: PropTypes.func,
   editButton: PropTypes.bool,
   handleEditButton: PropTypes.func,

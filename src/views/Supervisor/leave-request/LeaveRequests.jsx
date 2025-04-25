@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import { FaCheck, FaTimes } from 'react-icons/fa'
 import SearchInput from '../../components/SearchInput'
@@ -7,15 +7,14 @@ import SmartPagination from '../../components/SmartPagination'
 import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
+import { useQuery } from '@tanstack/react-query'
+import Swal from 'sweetalert2'
 
 const LeaveRequests = () => {
   const [filteredData, setFilteredData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [data, setData] = useState([]) // Store full API data
+  const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [searchQuery, setSearchQuery] = useState('')
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   // Format date to "dd/mm/yyyy"
@@ -48,7 +47,7 @@ const LeaveRequests = () => {
   const handleApprove = async (id) => {
     try {
       await updateLeaveRequestStatus(id, 'Approved')
-      toast.success('Leave request approved successfully!')
+      Swal.fire('Success!', 'Leave Approved Successfully.', 'success')
 
       // Remove approved request from table
       setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
@@ -61,7 +60,7 @@ const LeaveRequests = () => {
   const handleReject = async (id) => {
     try {
       await updateLeaveRequestStatus(id, 'Rejected')
-      toast.success('Leave request rejected successfully!')
+      Swal.fire('Error', 'Leave Reject Successfully.', 'error')
 
       // Remove rejected request from table
       setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
@@ -82,56 +81,50 @@ const LeaveRequests = () => {
     </div>
   )
 
-  // Fetch driver leave requests
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const responseData = await getLeaveResquestDriverApi()
-        console.log('Fetched Driver Data:', responseData)
+  // Fetch driver leave requests with useQuery
+  const {
+    data: responseData = [],
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ['driverleaveRequests'],
+    queryFn: getLeaveResquestDriverApi,
+    staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
+  })
 
-        // Format data properly
-        const formattedData = responseData.map((item) => ({
-          _id: item._id,
-          name: item.driverId?.name || 'Unknown',
-          startDate: formatDate(item.startDate),
-          endDate: formatDate(item.endDate),
-          description: item.description || '',
-          status: getStatusBadge(item.status || 'Pending'),
-          actions: renderActionButtons(item._id),
-        }))
+  // Format and set data
+  React.useEffect(() => {
+    if (responseData.length > 0) {
+      const formattedData = responseData.map((item) => ({
+        _id: item._id,
+        name: item.driverId?.name || 'Unknown',
+        startDate: formatDate(item.startDate),
+        endDate: formatDate(item.endDate),
+        description: item.description || '',
+        status: getStatusBadge(item.status || 'Pending'),
+        actions: renderActionButtons(item._id),
+      }))
 
-        setData(formattedData)
-        setFilteredData(formattedData)
-      } catch (err) {
-        // If the error is a network error
-        if (!err.response) {
-          toast.error('Failed to fetch driver data!', { position: 'top-right' })
-          setError('Network Error') // Internet/server unreachable
-        } else if (err.response.status === 500) {
-          setError(err.message)
-        }
-      } finally {
-        setLoading(false)
-      }
+      setFilteredData(formattedData)
     }
-    fetchData()
-  }, [])
+  }, [responseData])
 
-  // Search handler
+  // Handle search
   const handleSearch = (query) => {
     setSearchQuery(query)
 
     if (!query) {
-      setFilteredData(data)
+      setFilteredData(responseData)
       return
     }
 
-    const filtered = data.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()))
+    const filtered = responseData.filter((item) =>
+      item.name.toLowerCase().includes(query.toLowerCase()),
+    )
     setFilteredData(filtered)
   }
 
-  // if (loading) return <Loader />
+  if (isFetching) return <Loader />
   if (error) return <Page404 />
 
   // Table columns
@@ -159,11 +152,11 @@ const LeaveRequests = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
-        isFetching={loading}
+        isFetching={isFetching}
         errorMessage={
           error
             ? 'Error fetching driver expenses. Please try again later.'
-            : filteredData.length === 0 && !loading
+            : filteredData.length === 0 && !isFetching
               ? 'No driver expense records found for the selected period.'
               : ''
         }
