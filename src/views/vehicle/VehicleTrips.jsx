@@ -6,12 +6,15 @@ import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
 import SubTripDetailsModal from './modals/SubtripVehicle'
 import { ToastContainer } from 'react-toastify'
+import SearchInput from '../components/SearchInput'
+import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 
 const VehicleTrips = () => {
   const { id } = useParams()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Modal state for SubTrips
   const [modalVisible, setModalVisible] = useState(false)
@@ -26,19 +29,19 @@ const VehicleTrips = () => {
   })
 
   useEffect(() => {
-    const styledData = vehicleTrips.map((data) => ({
+    let styledData = vehicleTrips.map((data) => ({
       ...data,
       status: (
         <span
           style={{
             backgroundColor:
               data.status === 'in-progress'
-                ? '#f5a623' // orange
+                ? '#f5a623'
                 : data.status === 'completed'
-                  ? '#28a745' // green
+                  ? '#28a745'
                   : data.status === 'cancelled'
-                    ? '#dc3545' // red
-                    : '#6c757d', // gray no data found
+                    ? '#dc3545'
+                    : '#6c757d',
             color: 'white',
             padding: '4px 10px',
             borderRadius: '20px',
@@ -52,8 +55,18 @@ const VehicleTrips = () => {
         </span>
       ),
     }))
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      styledData = styledData.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
+    }
+
     setFilteredData(styledData)
-  }, [vehicleTrips])
+  }, [searchQuery, vehicleTrips])
 
   console.log('vehicleTripsssssssssss', vehicleTrips)
 
@@ -71,6 +84,21 @@ const VehicleTrips = () => {
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]
+
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+
+    const lowercasedQuery = query.toLowerCase()
+
+    const filtered = vehicleTrips.filter((item) =>
+      Object.values(item).some(
+        (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+      ),
+    )
+
+    setFilteredData(filtered)
+  }
 
   // handle view button
 
@@ -97,6 +125,12 @@ const VehicleTrips = () => {
   return (
     <>
       <ToastContainer />
+
+      <div className="mb-2 d-flex justify-content-between align-items-center">
+        {/* Left: Date Range Filter */}
+        <DateRangeFilterCredence title="Date Range" />
+        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      </div>
 
       <Table
         title="Vehicle Trips"

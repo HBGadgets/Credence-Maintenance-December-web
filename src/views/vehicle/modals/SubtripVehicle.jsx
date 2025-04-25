@@ -17,7 +17,9 @@ const SubTripDetailsModal = ({ visible, onClose, subTrips, loadingSubTrip }) => 
   return (
     <CModal visible={visible} onClose={onClose} size="lg" scrollable>
       <CModalHeader>
-        <CModalTitle>Sub-Trip Details</CModalTitle>
+        <CModalTitle>
+          <strong>Sub-Trip Details</strong>
+        </CModalTitle>
       </CModalHeader>
 
       <CModalBody>
@@ -35,7 +37,9 @@ const SubTripDetailsModal = ({ visible, onClose, subTrips, loadingSubTrip }) => 
                 <div className="status-badge-top-right">
                   <StatusBadge status={subTrip.status} />
                 </div>
-                <h6 className="fw-bold text-primary mb-3">Sub Trip {index + 1}</h6>
+                <h6 className="fw-bold text-primary mb-3">
+                  <strong>Sub Trip {index + 1}</strong>
+                </h6>
                 {/* Date */}
                 <div className="col-md-6 d-flex gap-2 align-items-start">
                   <FaCalendarAlt className="text-secondary mt-1" />
