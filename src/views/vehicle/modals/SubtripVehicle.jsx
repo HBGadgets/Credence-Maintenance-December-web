@@ -9,9 +9,9 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { FaCalendarAlt, FaMapMarkerAlt, FaFlagCheckered } from 'react-icons/fa'
-import StatusBadge from './StatusBadge' // Make sure the path is correct
-import { FaTruck } from 'react-icons/fa' // Truck icon for animation
-import './subtrip.css' // Import your CSS file for styles
+import StatusBadge from './StatusBadge' // Ensure the correct path
+import { FaTruck } from 'react-icons/fa' // For the truck icon
+import './subtrip.css' // Include your custom styles
 
 const SubTripDetailsModal = ({ visible, onClose, subTrips, loadingSubTrip }) => {
   return (
@@ -31,33 +31,39 @@ const SubTripDetailsModal = ({ visible, onClose, subTrips, loadingSubTrip }) => 
         ) : (
           <div className="d-grid gap-4">
             {subTrips.map((subTrip, index) => (
-              <div key={index} className="border rounded shadow-sm p-4 bg-white">
+              <div key={index} className="sub-trip-card border rounded shadow-sm p-4 bg-white">
+                <div className="status-badge-top-right">
+                  <StatusBadge status={subTrip.status} />
+                </div>
                 <h6 className="fw-bold text-primary mb-3">Sub Trip {index + 1}</h6>
-                <div className="row g-4">
-                  {/* Date */}
-                  <div className="col-md-6 d-flex gap-2 align-items-start">
-                    <FaCalendarAlt className="text-secondary mt-1" />
-                    <div>
-                      <div className="text-muted small">Date</div>
-                      <div className="fw-semibold">{subTrip.date}</div>
-                    </div>
+                {/* Date */}
+                <div className="col-md-6 d-flex gap-2 align-items-start">
+                  <FaCalendarAlt className="text-secondary mt-1" />
+                  <div>
+                    <div className="text-muted small">Date</div>
+                    <div className="fw-semibold">{subTrip.date}</div>
                   </div>
+                </div>
+                <br />
 
-                  {/* Status */}
-                  <div className="col-md-6">
-                    <div className="text-muted small">Status</div>
-                    <StatusBadge status={subTrip.status} />
-                  </div>
-
-                  {/* Start Location with Animation */}
-                  <div className="col-md-6 d-flex gap-2 align-items-start">
-                    <FaMapMarkerAlt className="text-success mt-1" />
-                    <div>
+                <div
+                  className="flex justify-between  item-center row"
+                  style={{ placeContent: 'space-between' }}
+                >
+                  {/* Start Location */}
+                  <div className="col-md-2 d-flex gap-2 align-items-start">
+                    {/* <FaMapMarkerAlt className="text-success mt-1" /> */}
+                    <div className="d-flex flex-column">
                       <div className="text-muted small">Start Location</div>
-                      <div className="fw-semibold text-success">{subTrip.startLocation}</div>
+                      <div className="fw-semibold text-success">
+                        {' '}
+                        <FaMapMarkerAlt className="text-success" /> {subTrip.startLocation}
+                      </div>
                     </div>
+                  </div>
 
-                    {/* Animation Line with Vehicle */}
+                  {/* Vehicle Track (between Start and End Location) */}
+                  <div className="col-md-2 gap-2 vehicle-track-container d-flex justify-content-center">
                     <div className="vehicle-track ms-3 flex-grow-1 position-relative">
                       <div className="track-line"></div>
 
@@ -91,11 +97,15 @@ const SubTripDetailsModal = ({ visible, onClose, subTrips, loadingSubTrip }) => 
                   </div>
 
                   {/* End Location */}
-                  <div className="col-md-6 d-flex gap-2 align-items-start">
-                    <FaFlagCheckered className="text-danger mt-1" />
+                  <div className="col-md-2 d-flex gap-2 align-items-start">
+                    {/* <FaFlagCheckered className="text-danger mt-1" /> */}
                     <div>
                       <div className="text-muted small">End Location</div>
-                      <div className="fw-semibold text-danger">{subTrip.endLocation}</div>
+
+                      <div className="fw-semibold text-danger">
+                        {' '}
+                        <FaFlagCheckered className="text-danger" /> {subTrip.endLocation}
+                      </div>
                     </div>
                   </div>
                 </div>
