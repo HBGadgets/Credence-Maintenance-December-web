@@ -345,7 +345,6 @@ export const maintenanceLogApi = async (id) => {
 
     return data.map((vehiclelogs) => ({
         id: vehiclelogs._id,
-        originalDate: vehiclelogs.date, // Use raw Date for filtering
         date: formatDateToDDMMYYYY(vehiclelogs.date),
         driverName: vehiclelogs.driverName || 'N/A',
         shopName: vehiclelogs.vendor,

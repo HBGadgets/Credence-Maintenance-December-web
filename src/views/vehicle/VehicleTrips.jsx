@@ -5,6 +5,7 @@ import { getVehicleSubTripApi, getVehicleTripsByIdAPI } from './data/VehicleList
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
 import SubTripDetailsModal from './modals/SubtripVehicle'
+import { ToastContainer } from 'react-toastify'
 
 const VehicleTrips = () => {
   const { id } = useParams()
@@ -71,6 +72,8 @@ const VehicleTrips = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
+  // handle view button
+
   const handleViewButton = async (id) => {
     setLoadingSubTrip(true) // Start loading state for sub-trip data
     try {
@@ -93,6 +96,8 @@ const VehicleTrips = () => {
 
   return (
     <>
+      <ToastContainer />
+
       <Table
         title="Vehicle Trips"
         columns={columns}

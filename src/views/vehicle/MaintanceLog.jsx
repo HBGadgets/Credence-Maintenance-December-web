@@ -33,18 +33,6 @@ const MaintenanceLog = () => {
   useEffect(() => {
     let filtered = vehicleMaintanceLog
 
-    // Apply date filter
-    if (dateRange.startDate && dateRange.endDate) {
-      const start = new Date(dateRange.startDate)
-      const end = new Date(dateRange.endDate)
-
-      filtered = filtered.filter((item) => {
-        if (!item.originalDate) return false
-        const itemDate = new Date(item.originalDate)
-        return itemDate >= start && itemDate <= end
-      })
-    }
-
     // Apply search filter
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase()
@@ -84,7 +72,7 @@ const MaintenanceLog = () => {
     }))
 
     setFilteredData(styledData)
-  }, [searchQuery, dateRange, vehicleMaintanceLog])
+  }, [searchQuery, vehicleMaintanceLog])
 
   console.log('all maintance logsss', vehicleMaintanceLog)
 
@@ -115,67 +103,34 @@ const MaintenanceLog = () => {
     setFilteredData(filtered)
   }
 
-  // Handle Date Range Filter
-  const handleDateRangeChange = ({ startDate, endDate }) => {
-    setDateRange({ startDate, endDate })
+  // Handle View Button
 
-    if (!startDate || !endDate) {
-      setFilteredData(vehicleMaintanceLog)
-      return
-    }
-
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-
-    const filtered = vehicleMaintanceLog.filter((item) => {
-      if (!item.originalDate) return false
-
-      const itemDate = new Date(item.originalDate)
-      return itemDate >= start && itemDate <= end
-    })
-
-    setFilteredData(filtered)
-  }
-
-  // const handleViewButton = async () => {
-  //   try {
-  //     console.log('vehicle maain log', vehicleMaintanceLog)
-  //     const { base64Data, contentType } = await getVehicleBillApi(vehicleMaintanceLog[0].billImg)
-
-  //     // Set modal data and open it
-  //     setPdfBase64(`data:${contentType};base64,${base64Data}`)
-  //     setModalTitle('Bill Image')
-  //     setShowModal(true)
-  //   } catch (error) {
-  //     console.error('Failed to load bill image:', error)
+  // const handleViewButton = (id) => {
+  //   const selectedRow = filteredData.find((item) => item.id === id)
+  //   if (selectedRow) {
+  //     console.log('billImg value:', selectedRow.billImg)
+  //   } else {
+  //     console.warn('Row not found for id:', id)
   //   }
   // }
 
-  const handleViewButton = async (index = null) => {
-    let item
-
-    if (index !== null && vehicleMaintanceLog?.[index]) {
-      item = vehicleMaintanceLog[index]
-    } else {
-      item = vehicleMaintanceLog.find((item) => item?.billImg)
-    }
-
-    if (!item) {
-      toast.warning('No bill image found.')
-      return
-    }
-
-    const billImgId = item.billImg
-    console.log('billl imagessss', billImgId)
+  const handleViewButton = async (id) => {
+    const selectedRow = filteredData.find((item) => item.id === id)
+    if (!selectedRow) return toast.error('Data not found for this ID')
 
     try {
-      const { base64Data, contentType } = await getVehicleBillApi(billImgId)
+      if (!selectedRow.billImg) {
+        return toast.warn('No bill image available for this entry.')
+      }
+
+      const { base64Data, contentType } = await getVehicleBillApi(selectedRow.billImg)
+
       setPdfBase64(`data:${contentType};base64,${base64Data}`)
       setModalTitle('Bill Image')
       setShowModal(true)
     } catch (error) {
-      console.error('Failed to load bill image:', error)
-      toast.error('Failed to load bill image.')
+      console.error('Failed to fetch bill image:', error)
+      toast.error('Failed to fetch bill image.')
     }
   }
 
@@ -185,7 +140,7 @@ const MaintenanceLog = () => {
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
+        <DateRangeFilterCredence title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
