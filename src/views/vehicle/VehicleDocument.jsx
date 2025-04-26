@@ -785,7 +785,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
         }
       }
       setSelectedDocument(allDocuments) // Store all document data in state
-      toast.success('Documents fetched successfully!')
+      // toast.success('Documents fetched successfully!')
     } catch (error) {
       console.error('Error fetching documents:', error)
       toast.error('Failed to fetch documents.')
