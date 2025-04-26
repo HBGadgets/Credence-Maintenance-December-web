@@ -5,7 +5,7 @@ import { getVehicleSubTripApi, getVehicleTripsByIdAPI } from './data/VehicleList
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
 import SubTripDetailsModal from './modals/SubtripVehicle'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 
@@ -116,6 +116,7 @@ const VehicleTrips = () => {
       setSubTrips(subTripData)
       setModalVisible(true)
     } catch (error) {
+      toast.error('No Sub-Trips Data!')
       console.error('Error fetching sub trip data:', error)
     } finally {
       setLoadingSubTrip(false) // End loading state
