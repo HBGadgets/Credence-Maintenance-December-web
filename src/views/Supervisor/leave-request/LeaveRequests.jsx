@@ -4,7 +4,6 @@ import { FaCheck, FaTimes } from 'react-icons/fa'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import Loader from '../../../components/Loader/Loader'
 import Page404 from '../../pages/page404/Page404'
 import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
 import { useQuery } from '@tanstack/react-query'
@@ -124,7 +123,6 @@ const LeaveRequests = () => {
     setFilteredData(filtered)
   }
 
-  if (isFetching) return <Loader />
   if (error) return <Page404 />
 
   // Table columns
