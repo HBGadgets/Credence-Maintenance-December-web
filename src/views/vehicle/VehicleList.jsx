@@ -217,6 +217,7 @@ function VehicleList() {
 
   // Dropdown filter handler
   useEffect(() => {
+    setIsFetching(true) // Start loading
     try {
       let filtered = initialData
 
@@ -232,9 +233,9 @@ function VehicleList() {
 
       setFilteredData(filtered)
     } catch (error) {
-      throw new Error('error')
+      console.error('Filtering error:', error)
     } finally {
-      setIsFetching(false)
+      setTimeout(() => setIsFetching(false), 300) // Optional delay for smoother UX
     }
   }, [selectedName, selectedModel, selectedCategory, initialData])
 
