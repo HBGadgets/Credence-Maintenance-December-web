@@ -27,6 +27,7 @@ const TripFrom = ({
     endLocation: '',
     date: '',
     budgetAllocated: '',
+    materialType: '',
   })
 
   useEffect(() => {
@@ -91,6 +92,7 @@ const TripFrom = ({
         endLocation: initialData.endLocation || '',
         date: initialData.date?.slice(0, 10) || '',
         budgetAllocated: initialData.budgetAllocated || '',
+        materialType: initialData.materialType || '',
         status: initialData.status || '',
       })
     }
@@ -241,6 +243,20 @@ const TripFrom = ({
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <Form.Group>
+                  <Form.Label>Material Types</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="materialType"
+                    value={formData.materialType}
+                    onChange={handleChange}
+                    placeholder="Enter Material Type"
                     required
                   />
                 </Form.Group>

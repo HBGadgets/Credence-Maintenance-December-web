@@ -4,17 +4,18 @@ import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import TripFrom from './componets/TripFrom'
-import { deleteTripApi, getTripListApi, patchTripApi, postTripApi } from '../data/data'
 import { useParams } from 'react-router-dom'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaTrash } from 'react-icons/fa'
 import { MdOutlineAnalytics } from 'react-icons/md'
-import Swal from 'sweetalert2'
-import { toast, ToastContainer } from 'react-toastify'
-import TripDetailsCard from './componets/Tripdetailcomponent'
-import TripBudgetPieChart from './componets/TripBudgetPieChart'
-import TripBudgetBarChart from './componets/TripBudgetBarChart'
-import Loader from '../../../components/Loader/Loader'
+import { ToastContainer } from 'react-toastify'
 import Page404 from '../../pages/page404/Page404'
+import TripViewModal from './componets/TripViewModal'
+import {
+  fetchTripDataHelper,
+  handleAddHelper,
+  handleDeleteHelper,
+  handleEditHelper,
+} from './componets/tripHelpers'
 
 const Trip = () => {
   const [allData, setAllData] = useState([]) // Original fetched data
@@ -32,22 +33,9 @@ const Trip = () => {
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
 
-  const fetchTripData = async () => {
-    try {
-      setLoading(true)
-      const data = await getTripListApi(id)
-      setAllData(data)
-      setFilteredData(data)
-    } catch (err) {
-      if (!err.response) {
-        setError('Network Error') // Internet/server unreachable
-      } else if (err.response.status === 500) {
-        setError(err.message)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Fetch trip data
+  const fetchTripData = () =>
+    fetchTripDataHelper(id, setAllData, setFilteredData, setLoading, setError)
 
   useEffect(() => {
     if (!isFetchedRef.current) {
@@ -56,6 +44,7 @@ const Trip = () => {
     }
   }, [id])
 
+  // Apply filters based on date range and search query
   const applyFilters = (start, end, query) => {
     let filtered = [...allData]
 
@@ -88,77 +77,13 @@ const Trip = () => {
   }
 
   // Handle add action
-  const handleAdd = async (formData) => {
-    try {
-      const payload = {
-        driverId: formData.driverId,
-        vehicleId: formData.vehicleId,
-        vehicleName: formData.vehicleName,
-        startLocation: formData.startLocation,
-        endLocation: formData.endLocation,
-        budgetAllocated: Number(formData.budgetAllocated),
-        date: formData.date,
-      }
-
-      await postTripApi(payload)
-      await fetchTripData()
-      toast.success('Trip Added successfully!')
-    } catch (err) {
-      console.error('Add Trip Failed:', err.message)
-      toast.error('Trip Error on add trip!')
-    }
-  }
+  const handleAdd = (formData) => handleAddHelper(formData, fetchTripData)
 
   // Handle edit action
-  const handleEdit = async (formData) => {
-    try {
-      const updatePayload = {
-        driverId: formData.driverId,
-        vehicleId: formData.vehicleId,
-        vehicleName: formData.vehicleName,
-        startLocation: formData.startLocation,
-        endLocation: formData.endLocation,
-        budgetAllocated: Number(formData.budgetAllocated),
-        date: formData.date,
-        status: formData.status,
-      }
-
-      await patchTripApi(formData._id, updatePayload) // Pass ID and payload
-      await fetchTripData() // Refresh data
-      toast.success('Trip Updated successfully!')
-      console.log('Trip updated successfully.')
-    } catch (err) {
-      toast.success('Trip Error on Update trip!')
-      console.error('Trip update failed:', err.message)
-    }
-  }
+  const handleEdit = (formData) => handleEditHelper(formData, fetchTripData)
 
   // Handle delete action
-  const handleDelete = async (tripId, fieldName = 'Trip') => {
-    const result = await Swal.fire({
-      title: `Delete ${fieldName}?`,
-      text: 'Are you sure you want to delete this trip? This action cannot be undone!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-    })
-
-    if (result.isConfirmed) {
-      try {
-        await deleteTripApi(tripId)
-        await fetchTripData()
-        toast.success('Trip Deleted successfully!')
-        Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
-      } catch (err) {
-        toast.error('Trip Error occured!')
-        console.error('Delete failed:', err.message)
-        Swal.fire('Error!', 'Failed to delete the trip.', 'error')
-      }
-    }
-  }
+  const handleDelete = (tripId, fieldName) => handleDeleteHelper(tripId, fetchTripData, fieldName)
 
   // Handle view action
   const handleViewButton = (id) => {
@@ -169,14 +94,11 @@ const Trip = () => {
     }
   }
 
-  // const handleCloseModal = () => {
-  //   setShowViewModal(false)
-  //   setSelectedTrip(null)
-  // }
-
   // show status condition color
 
   const getStatusBadge = (status) => {
+    if (typeof status !== 'string') return // Handle non-string cases
+
     switch (status?.toLowerCase()) {
       case 'in-progress':
         return 'badge bg-warning text-dark' // Yellow warning
@@ -191,84 +113,78 @@ const Trip = () => {
 
   //  Coloumns for the table
   const columns = [
-    { label: 'Trip Start Date', key: 'date', sortable: true },
+    { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Start Location', key: 'startLocation', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
-    { label: 'Trip Update Date', key: 'updateDate', sortable: true },
+    { label: 'End Date', key: 'updateDate', sortable: true },
+    { label: 'Material Type', key: 'materialType', sortable: true },
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'Spent Amounts', key: 'spentAmount', sortable: true },
-    { label: 'Status', key: 'status', sortable: true },
+    { label: 'Status', key: 'status', sortable: false },
     { label: 'Actions', key: 'actions', sortable: false },
   ]
 
   const currentPageData = useMemo(() => {
-    return filteredData
-      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-      .map((data) => ({
-        date: new Date(data.date).toLocaleDateString('en-GB'),
-        driverName: data.driverId?.name || 'N/A',
-        vehicleName:
-          typeof data.vehicleName === 'string' ? data.vehicleName : data.vehicleId?.name || 'N/A',
-        startLocation: data.startLocation || 'N/A',
-        endLocation: data.endLocation || 'N/A',
-        updateDate: new Date(data.updatedAt).toLocaleDateString('en-GB'),
-        budgetAllocated: data.budgetAllocated ?? 0,
-        spentAmount: data.spentAmount ?? 0,
-        status: <span className={getStatusBadge(data.status)}>{data.status || 'N/A'}</span>,
-        actions: (
-          <div className="d-flex justify-content-center gap-2">
-            <button
-              className="btn btn-sm btn-outline-success"
-              title="View Analyatics"
-              onClick={() => handleViewButton(data._id)}
-            >
-              <MdOutlineAnalytics />
-            </button>
+    const pageData = filteredData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    )
 
-            <TripFrom
-              mode="edit"
-              onSubmit={handleEdit}
-              initialData={{
-                _id: data._id,
-                driverId: data.driverId?._id || data.driverId,
-                vehicleId: data.vehicleId?._id || data.vehicleId,
-                vehicleName: data.vehicleName || data.vehicleId?.name,
-                startLocation: data.startLocation,
-                endLocation: data.endLocation,
-                date: data.date,
-                budgetAllocated: data.budgetAllocated,
-              }}
-              buttonProps={{
-                className: 'btn btn-sm btn-outline-primary',
-                title: 'Edit Trip', // Tooltip here
-              }}
-            />
+    return pageData.map((data) => ({
+      date: new Date(data.date).toLocaleDateString('en-GB'),
+      driverName: data.driverId?.name || 'N/A',
+      vehicleName:
+        typeof data.vehicleName === 'string' ? data.vehicleName : data.vehicleId?.name || 'N/A',
+      startLocation: data.startLocation || 'N/A',
+      endLocation: data.endLocation || 'N/A',
+      materialType: data.materialType || 'N/A',
+      updateDate: new Date(data.updatedAt).toLocaleDateString('en-GB'),
+      budgetAllocated: data.budgetAllocated ?? 0,
+      spentAmount: data.spentAmount ?? 0,
+      status: <span className={getStatusBadge(data.status)}>{data.status || 'N/A'}</span>,
+      actions: (
+        <div className="d-flex justify-content-center gap-2">
+          <button
+            className="btn btn-sm btn-outline-success"
+            title="View Analyatics"
+            onClick={() => handleViewButton(data._id)}
+          >
+            <MdOutlineAnalytics />
+          </button>
 
-            <button
-              className="btn btn-sm btn-outline-danger"
-              title="Delete Trip"
-              onClick={() => handleDelete(data._id, 'Trip')}
-            >
-              <FaTrash />
-            </button>
-          </div>
-        ),
-      }))
+          <TripFrom
+            mode="edit"
+            onSubmit={handleEdit}
+            initialData={{
+              _id: data._id,
+              driverId: data.driverId?._id || data.driverId,
+              vehicleId: data.vehicleId?._id || data.vehicleId,
+              vehicleName: data.vehicleName || data.vehicleId?.name,
+              startLocation: data.startLocation,
+              endLocation: data.endLocation,
+              date: data.date,
+              budgetAllocated: data.budgetAllocated,
+              materialType: data.materialType,
+            }}
+            buttonProps={{
+              className: 'btn btn-sm btn-outline-primary',
+              title: 'Edit Trip', // Tooltip here
+            }}
+          />
+
+          <button
+            className="btn btn-sm btn-outline-danger"
+            title="Delete Trip"
+            onClick={() => handleDelete(data._id, 'Trip')}
+          >
+            <FaTrash />
+          </button>
+        </div>
+      ),
+    }))
   }, [filteredData, currentPage, itemsPerPage])
-
-  // Search and filter logic
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredData(allData)
-    } else {
-      const filtered = allData.filter((item) =>
-        (item.driverId?.name || '').toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-      setFilteredData(filtered)
-    }
-  }, [searchQuery, allData])
 
   // if (loading) return <Loader />
   if (error) return <Page404 />
@@ -324,85 +240,11 @@ const Trip = () => {
       </div>
 
       {/* modal */}
-      {showViewModal && selectedTrip && (
-        <div
-          className="modal show d-block"
-          tabIndex="-1"
-          role="dialog"
-          onClick={() => setShowViewModal(false)}
-        >
-          <div className="modal-dialog modal-xl" role="document" style={{ marginTop: '4rem' }}>
-            <div className="modal-content rounded-4 shadow-lg border-0 overflow-hidden">
-              <div className="modal-header bg-white">
-                <h5 className="modal-title fw-semibold">
-                  Trip Analytics - {selectedTrip?.driverId?.name}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close ms-auto"
-                  aria-label="Close"
-                  onClick={() => setShowViewModal(false)}
-                ></button>
-              </div>
-
-              <div className="container-fluid px-4 py-4 bg-light">
-                {/* Row 1: Trip Summary & Pie Chart */}
-                <div className="row g-4 mb-4">
-                  <div className="col-md-6">
-                    <div className="card bg-white shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
-                      <div className="card-body p-4">
-                        <h5 className="card-title text-primary fw-semibold mb-3">Trip Summary</h5>
-                        <TripDetailsCard trip={selectedTrip} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <div className="card bg-white shadow-sm border-light rounded-3 h-100 d-flex flex-column justify-content-center">
-                      <div className="card-body p-4">
-                        <h5 className="card-title text-primary fw-semibold mb-3">
-                          Budget Overview
-                        </h5>
-                        <TripBudgetPieChart
-                          budget={selectedTrip.budgetAllocated}
-                          spent={selectedTrip.spentAmount}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 2: Bar Chart */}
-                <div className="row">
-                  <div className="col-12">
-                    <div className="card bg-white shadow-sm border-light rounded-3 h-100">
-                      <div className="card-body py-3 px-4">
-                        <h5 className="card-title text-primary fw-semibold mb-3">
-                          Budget Analysis
-                        </h5>
-                        <TripBudgetBarChart
-                          budget={selectedTrip.budgetAllocated}
-                          spent={selectedTrip.spentAmount}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer bg-white border-top-0">
-                <button
-                  type="button"
-                  className="btn btn-outline-primary px-4"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TripViewModal
+        show={showViewModal}
+        trip={selectedTrip}
+        onClose={() => setShowViewModal(false)}
+      />
     </div>
   )
 }
