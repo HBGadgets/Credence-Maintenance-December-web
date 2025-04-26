@@ -145,7 +145,6 @@ import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import SearchInput from '../components/SearchInput'
 import { useNavigate } from 'react-router-dom'
 import SmartPagination from '../components/SmartPagination'
-import Loader from '../../components/Loader/Loader'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
@@ -299,19 +298,19 @@ function VehicleList() {
     },
   ]
 
-  if (status === 'loading')
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      >
-        <Loader />
-      </div>
-    )
+  // if (status === 'loading')
+  //   return (
+  //     <div
+  //       style={{
+  //         position: 'absolute',
+  //         top: '50%',
+  //         left: '50%',
+  //         transform: 'translate(-50%, -50%)',
+  //       }}
+  //     >
+  //       <Loader />
+  //     </div>
+  //   )
   if (status === 'failed') return <p>Error: {error}</p>
 
   return (
