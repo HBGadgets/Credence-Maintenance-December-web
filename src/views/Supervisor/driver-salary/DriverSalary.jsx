@@ -17,6 +17,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 import { CButton } from '@coreui/react'
 import SalaryFrom from './componets/SalaryFrom.jsx'
+import { Pencil, Trash2 } from 'lucide-react'
 
 const DriverSalary = () => {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
@@ -103,21 +104,21 @@ const DriverSalary = () => {
         deductions: item.deductions,
         netPay: item.netPay,
         actions: (
-          <div className="d-flex justify-content-center gap-2">
+          <div className="d-flex gap-2 justify-content-center align-items-center">
             <button
-              className="btn btn-sm btn-outline-primary"
+              className="btn btn-link p-0 me-2"
               onClick={() => {
                 setSelectedSalary(item) // Pass the full original item
                 setIsSalaryModalOpen(true)
               }}
             >
-              <FaEdit />
+              <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
             </button>
             <button
-              className="btn btn-sm btn-outline-danger"
+              className="btn btn-link p-0 me-2"
               onClick={() => handleDelete(item._id, item.driverId?.name || 'Salary')}
             >
-              <FaTrash />
+              <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
             </button>
           </div>
         ),
