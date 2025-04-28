@@ -43,6 +43,22 @@ const MaintenanceLog = () => {
       )
     }
 
+    // Date Range Filter
+    if (dateRange?.startDate && dateRange?.endDate) {
+      const start = new Date(dateRange.startDate)
+      const end = new Date(dateRange.endDate)
+
+      filtered = filtered.filter((item) => {
+        if (!item.date) return false
+        const parts = item.date.split('/')
+        if (parts.length !== 3) return false
+
+        const itemDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`) // YYYY-MM-DD
+
+        return itemDate >= start && itemDate <= end
+      })
+    }
+
     // Apply styling AFTER filtering
     const styledData = filtered.map((data) => ({
       ...data,
@@ -72,7 +88,7 @@ const MaintenanceLog = () => {
     }))
 
     setFilteredData(styledData)
-  }, [searchQuery, vehicleMaintanceLog])
+  }, [searchQuery, dateRange, vehicleMaintanceLog])
 
   console.log('all maintance logsss', vehicleMaintanceLog)
 
@@ -157,7 +173,11 @@ const MaintenanceLog = () => {
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence title="Date Range" />
+        <DateRangeFilterCredence
+          title="Date Range"
+          onDateRangeChange={(selectedRange) => setDateRange(selectedRange)}
+        />
+
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
