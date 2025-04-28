@@ -175,7 +175,10 @@ const MaintenanceLog = () => {
         {/* Left: Date Range Filter */}
         <DateRangeFilterCredence
           title="Date Range"
-          onDateRangeChange={(selectedRange) => setDateRange(selectedRange)}
+          onDateRangeChange={(range) => {
+            console.log('Selected Range:', range)
+            setDateRange(range)
+          }}
         />
 
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
