@@ -116,21 +116,38 @@ const MaintenanceLog = () => {
 
   const handleViewButton = async (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
-    if (!selectedRow) return toast.error('Data not found for this ID')
+    if (!selectedRow) {
+      return toast.error('Data not found for this ID')
+    }
+
+    if (!selectedRow.billImg) {
+      return toast.warn('No bill image available for this entry.')
+    }
 
     try {
-      if (!selectedRow.billImg) {
-        return toast.warn('No bill image available for this entry.')
+      const response = await getVehicleBillApi(selectedRow.billImg)
+      const { base64Data, contentType } = response
+
+      if (base64Data && contentType) {
+        const fileSrc = `data:${contentType};base64,${base64Data}`
+        console.log('Vehicle bill image:', fileSrc)
+        setPdfBase64(fileSrc)
+
+        if (contentType.startsWith('application/pdf')) {
+          setModalTitle('Vehicle Bill (PDF)')
+        } else if (contentType.startsWith('image')) {
+          setModalTitle('Vehicle Bill (Image)')
+        } else {
+          setModalTitle('Vehicle Bill (File)')
+        }
+
+        setShowModal(true)
+      } else {
+        toast.error('Invalid bill image data.')
       }
-
-      const { base64Data, contentType } = await getVehicleBillApi(selectedRow.billImg)
-
-      setPdfBase64(`data:${contentType};base64,${base64Data}`)
-      setModalTitle('Bill Image')
-      setShowModal(true)
     } catch (error) {
       console.error('Failed to fetch bill image:', error)
-      toast.error('Failed to fetch bill image.')
+      toast.error('No bill image Found.')
     }
   }
 

@@ -3,218 +3,165 @@ import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import Page404 from '../../pages/page404/Page404'
-import { getDriverBillImageApi, getDriverExpesesListApi } from '../data/data'
-import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
-import { FcImageFile, FcRemoveImage } from 'react-icons/fc'
 import BillShow from '../../components/BillModal/BillShow'
+import { useQuery } from '@tanstack/react-query'
+import { getAllDriverExpesesListApi, getDriverBillImageApi } from '../data/data'
+import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 
 const DriverExpensesBill = () => {
   const [filteredData, setFilteredData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [data, setData] = useState([]) // Store full API data
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   // Use state for modal
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
-  // Utility function to format dates (DD/MM/YYYY)
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    if (isNaN(date)) return ''
-    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
-  }
+  // Fetch Data
+  const { data: driverExpenseList = [], isFetching } = useQuery({
+    queryKey: ['driverExpenseList'],
+    queryFn: getAllDriverExpesesListApi,
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  })
 
-  // Function to get badge class based on payment mode
-  const getPaymentBadge = (mode) => {
-    switch (mode.toLowerCase()) {
-      case 'upi':
-        return 'badge bg-seccondary' // Green for digital payments
-      case 'cash':
-        return 'badge bg-success' // Yellow for cash
-      case 'card':
-        return 'badge bg-warning' // Blue for card payments
-      default:
-        return 'badge bg-primary' // Default gray for unknown modes
-    }
-  }
-
-  // Fetch Request list of driver expenses
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const responseData = await getDriverExpesesListApi()
-        if (!Array.isArray(responseData)) throw new Error('Invalid API response format')
+    let filtered = driverExpenseList
 
-        console.log('Fetched Driver Expenses Data:', responseData)
-
-        // Format and map data
-        const formattedData = responseData.map((item) => ({
-          id: item._id, // Add an alias field `id`
-          date: formatDate(item.date), // Formatted Date
-          driverName: item.driverId?.name || 'Unknown', // Driver Name
-          currentVehicleName: item.driverId?.currentVehicleName || 'N/A', // Current Vehicle
-          shopName: item.shopName || 'Unknown', // Shop Name
-          location: item.location || 'Unknown', // Location
-          description: item.description || 'No description', // Expense Description
-          amount: item.amount || 0, // Expense Amount
-          paymentMode: (
-            <span className={getPaymentBadge(item.paymentMode || 'Unknown')}>
-              {item.paymentMode || 'Unknown'}
-            </span>
-          ), // Styled Payment Mode
-          billImg: (
-            <div className="d-flex justify-content-center gap-2">
-              <button
-                className="btn btn-sm btn-outline-primary"
-                title={item.billImg ? 'View Bill' : 'No Bill Available'}
-                onClick={() => handleViewButton(item.billImg)}
-              >
-                {item.billImg ? <FcImageFile /> : <FcRemoveImage />}
-              </button>
-            </div>
-          ),
-        }))
-
-        setData(formattedData)
-        setFilteredData(formattedData)
-      } catch (err) {
-        // If the error is a network error
-        if (!err.response) {
-          toast.error('Failed to fetch driver expenses data!', { position: 'top-right' })
-          setError('Network Error') // Internet/server unreachable
-        } else if (err.response.status === 500) {
-          setError(err.message)
-        }
-      } finally {
-        setLoading(false)
-      }
+    // Apply search filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
     }
-    fetchData()
-  }, [])
 
-  // Search handler (Filters allData)
+    // Apply styling AFTER filtering
+    const styledData = filtered.map((data) => ({
+      ...data,
+      paymentMode: (
+        <span
+          style={{
+            backgroundColor:
+              data.paymentMode === 'upi'
+                ? '#0000FF'
+                : data.paymentMode === 'cash'
+                  ? '#28a745'
+                  : data.paymentMode === 'card'
+                    ? '#f5a623'
+                    : '#0000FF',
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            display: 'inline-block',
+            textTransform: 'capitalize',
+          }}
+        >
+          {data.paymentMode}
+        </span>
+      ),
+    }))
+
+    setFilteredData(styledData)
+  }, [searchQuery, driverExpenseList])
+
+  console.log('All Driver Expenses Data: ', filteredData)
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Table Columns
+
+  const columns = [
+    { label: 'Service Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
+    { label: 'Shop Name', key: 'shopName', sortable: true },
+    { label: 'Location', key: 'location', sortable: true },
+    { label: 'Description', key: 'description', sortable: true },
+    { label: 'Amount', key: 'amount', sortable: true },
+    { label: 'Payment Mode', key: 'paymentMode', sortable: false },
+  ]
+
+  // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
-    if (!query) {
-      setFilteredData(data) // Reset to full data if search is empty
-      return
-    }
-    const filtered = data.filter(
-      (item) =>
-        item.driverName.toLowerCase().includes(query.toLowerCase()) ||
-        item.currentVehicleName.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredData(filtered)
   }
 
-  // Handle view button click
-  const handleViewButton = async (billImgId) => {
-    if (!billImgId) {
-      toast.info('No bill image available.')
-      return
+  // Handle View Button
+
+  const handleViewButton = async (id) => {
+    const selectedRow = filteredData.find((item) => item.id === id)
+    if (!selectedRow) {
+      return toast.error('Data not found for this ID')
+    }
+
+    if (!selectedRow.billImg) {
+      return toast.warn('No bill image available for this entry.')
     }
 
     try {
-      const response = await getDriverBillImageApi(billImgId)
-
+      const response = await getDriverBillImageApi(selectedRow.billImg)
       const { base64Data, contentType } = response
 
       if (base64Data && contentType) {
         const fileSrc = `data:${contentType};base64,${base64Data}`
-        console.log('fileconverssssssss', fileSrc)
+        console.log('Document bill image:', fileSrc)
         setPdfBase64(fileSrc)
 
         if (contentType.startsWith('application/pdf')) {
           setModalTitle('Driver Bill (PDF)')
         } else if (contentType.startsWith('image')) {
           setModalTitle('Driver Bill (Image)')
+        } else {
+          setModalTitle('Driver Bill (File)')
         }
 
         setShowModal(true)
       } else {
         toast.error('Invalid bill image data.')
       }
-    } catch (err) {
-      toast.error('Failed to fetch bill image.')
+    } catch (error) {
+      console.error('Failed to fetch bill image:', error)
+      toast.error('No bill image found.')
     }
   }
-
-  // Handle Date Range Filter Change
-  const handleDateRangeChange = (startDate, endDate) => {
-    // If no date range is selected (Clear button is hit)
-    if (!startDate || !endDate) {
-      setFilteredData(data) // Reset to full data
-      return
-    }
-    // Filter data based on the selected date range
-    const filtered = data.filter((item) => {
-      const itemDate = new Date(item.date)
-      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate)
-    })
-    setFilteredData(filtered)
-  }
-
-  // loader and error
-  // if (loading) return <Loader />
-  if (error) return <Page404 />
-
-  // Define table columns
-  const columns = [
-    { label: 'Date', key: 'date', sortable: true },
-    { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Current Vehicle Name', key: 'currentVehicleName', sortable: true },
-    { label: 'Shop Name', key: 'shopName', sortable: true },
-    { label: 'Location', key: 'location', sortable: true },
-    { label: 'Description', key: 'description', sortable: true },
-    { label: 'Amount', key: 'amount', sortable: true },
-    { label: 'Payment Mode', key: 'paymentMode', sortable: true },
-    { label: 'Bill Image', key: 'billImg', sortable: false },
-  ]
 
   return (
-    <div>
+    <>
       <ToastContainer />
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence onDateRangeChange={handleDateRangeChange} title="Date Range" />
+        <DateRangeFilterCredence title="Date Range" />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
       <Table
-        title="All Drivers Expenses Sheets"
+        title="All Drivers Expenses List"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
-        viewButton={false}
+        viewButton={true}
         handleViewButton={handleViewButton}
-        isFetching={loading}
-        errorMessage={
-          error
-            ? 'Error fetching driver expenses. Please try again later.'
-            : filteredData.length === 0 && !loading
-              ? 'No driver expense records found for the selected period.'
-              : ''
-        }
+        isFetching={isFetching}
       />
 
       <SmartPagination
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        onItemsPerPageChange={setItemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setCurrentPage(1)
+        }}
       />
 
       {/* Modal Component */}
@@ -224,7 +171,7 @@ const DriverExpensesBill = () => {
         pdfBase64={pdfBase64}
         modalTitle={modalTitle}
       />
-    </div>
+    </>
   )
 }
 

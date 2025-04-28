@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ReceiptIcon } from "lucide-react";
+import { formatDateToDDMMYYYY } from "../../customhooks/useFormattedDate";
 
 // Global token variable
 const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhhcnNoYWwiLCJpZCI6IjY3OWIyNmU5Y2UxOTAzYWMyMjdhNDQ0OSIsInVzZXJzIjp0cnVlLCJzdXBlcmFkbWluIjpmYWxzZSwidXNlciI6eyJfaWQiOiI2NzliMjZlOWNlMTkwM2FjMjI3YTQ0NDkiLCJlbWFpbCI6ImhhcnNoYWxAZ21haWwuY29tIiwicGFzc3dvcmQiOiIxOTY3YjNlNjcxNDQ5ZWU0Y2Q5ZjZhODA2MzE1ZmFjMzpjMjdkM2JlNDNhZWRlODRlYjA1NDQxNGIwYzE4ZDY3OSIsInVzZXJuYW1lIjoiaGFyc2hhbCIsIm1vYmlsZSI6IjEyMzQ1Njc4OTAiLCJncm91cHNBc3NpZ25lZCI6WyI2NzliMjZiOWNlMTkwM2FjMjI3YTQ0MmYiXSwiY3JlYXRlZEJ5IjoiNjcxMzY1M2I2MTNjZjJkMmM1MzJlZDBlIiwic3RhdHVzIjoidHJ1ZSIsIm5vdGlmaWNhdGlvbiI6dHJ1ZSwiZGV2aWNlcyI6dHJ1ZSwiZHJpdmVyIjp0cnVlLCJncm91cHMiOnRydWUsImNhdGVnb3J5IjpmYWxzZSwibW9kZWwiOmZhbHNlLCJ1c2VycyI6dHJ1ZSwicmVwb3J0Ijp0cnVlLCJzdG9wIjp0cnVlLCJ0cmF2ZWwiOnRydWUsImdlb2ZlbmNlIjp0cnVlLCJnZW9mZW5jZVJlcG9ydCI6dHJ1ZSwibWFpbnRlbmFuY2UiOnRydWUsInByZWZlcmVuY2VzIjpmYWxzZSwiZGlzdGFuY2UiOnRydWUsImhpc3RvcnkiOnRydWUsInNlbnNvciI6dHJ1ZSwiaWRsZSI6dHJ1ZSwiYWxlcnRzIjp0cnVlLCJ2ZWhpY2xlIjp0cnVlLCJkZXZpY2VsaW1pdCI6ZmFsc2UsImVudHJpZXNDb3VudCI6MCwiX192IjowLCJ0cmlwcyI6dHJ1ZX0sInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQxMzI4ODE3fQ.pjV3ADLMHpkalJNnh975EL-oiUUQ3aQ6xZv_ArXbxgg";
@@ -7,23 +8,33 @@ const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhhcnNoYWwi
 
 // GET API Supervisor See ALL Drivers Expesense List.
 
-export const getDriverExpesesListApi = async (id) => {
-    try {
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/driverExpense/get`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                },
-            }
-        );
-        console.log("This all drivers list there Expenses : ", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error:", error.message?.data || error.message);
-        throw error;
-    }
+export const getAllDriverExpesesListApi = async () => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/driverExpense/get`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("Vehicle Expenses Data: ", data);
+
+    return data.map((driverExpenseList) => ({
+        id: driverExpenseList._id,
+        date: formatDateToDDMMYYYY(driverExpenseList.date),
+        driverName: driverExpenseList.driverId?.name || "Unknown",
+        currentVehicleName: driverExpenseList.driverId?.currentVehicleName || "N/A",
+        shopName: driverExpenseList.shopName || "Unknown",
+        location: driverExpenseList.location || "Unknown",
+        description: driverExpenseList.description || "No description",
+        amount: driverExpenseList.amount || 0,
+        paymentMode: driverExpenseList.paymentMode || "Unknown",
+        billImg: driverExpenseList.billImg || "No Bill",
+    }));
 }
+
+
 
 // Show Bill Images of All Drivers Expenses
 export const getDriverBillImageApi = async (billImgId) => {
@@ -50,23 +61,33 @@ export const getDriverBillImageApi = async (billImgId) => {
 
 // GET API Supervisor See All Vehicles Expense List.
 
-export const getVehicleExpesesListApi = async (id) => {
-    try {
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/get`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                },
-            }
-        );
-        console.log("This all Vehicles Expenses list :", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error:", error.message?.data || error.message);
-        throw error;
-    }
+export const getAllVehicleExpesesListApi = async () => {
+
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/vehicleExpense/get`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Vehicle Expenses Data: ", data);
+
+    return data.map((vehicleExpenseList) => ({
+        id: vehicleExpenseList._id,
+        date: formatDateToDDMMYYYY(vehicleExpenseList.date),
+        driverName: vehicleExpenseList.driverId?.name || "Unknown",
+        currentVehicleName: vehicleExpenseList.driverId?.currentVehicleName || "N/A",
+        shopName: vehicleExpenseList.shopName || "Unknown",
+        expenseType: vehicleExpenseList.expenseType || "Unknown",
+        description: vehicleExpenseList.description || "No description",
+        amount: vehicleExpenseList.amount || 0,
+        paymentMode: vehicleExpenseList.paymentMode || "Unknown",
+        billImg: vehicleExpenseList.billImg || "No Bill",
+    }))
 }
+
 
 // Show Bill Images of All Drivers Expenses
 export const getVehicleBillImageApi = async (billImgId) => {
