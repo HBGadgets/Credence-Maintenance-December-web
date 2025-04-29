@@ -5,7 +5,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.jsx'))
-const MaintenanceLog = React.lazy(() => import('./views/vehicle/MaintanceLog.jsx'))
+const VehicleExpenses = React.lazy(() => import('./views/vehicle/VehicleExpenses.jsx'))
 const VehicleTrips = React.lazy(() => import('./views/vehicle/VehicleTrips.jsx'))
 
 // import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
@@ -79,7 +79,7 @@ const routes = [
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vehicles', element: Vehicle },
   { path: 'VehicleProfile/:id', name: 'VehicleProfile', element: VehicleProfile },
-  { path: 'VehicleProfile/:id/MaintenanceLog', name: 'Maintenanace Logs', element: MaintenanceLog },
+  { path: 'VehicleProfile/:id/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
   { path: 'VehicleProfile/:id/VehicleTrips', name: 'Vehicle Trips', element: VehicleTrips },
   { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
 

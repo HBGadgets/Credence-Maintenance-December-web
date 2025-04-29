@@ -75,7 +75,7 @@ function VehicleProfile() {
           {/* Second code */}
           <div className="action-section-grid mt-4">
             {[
-              { title: 'Maintenance Log', route: 'MaintenanceLog', icon: <IoCarOutline /> },
+              { title: 'Vehicle Expenses', route: 'VehicleExpenses', icon: <IoCarOutline /> },
               { title: 'Trip', route: 'VehicleTrips', icon: <IoSpeedometerOutline /> },
               { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
             ].map((item, index) => (

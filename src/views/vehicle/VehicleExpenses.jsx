@@ -165,7 +165,7 @@ const MaintenanceLog = () => {
       </div>
 
       <Table
-        title="Vehicle Maintenance Log"
+        title="Vehicle Expenses"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
