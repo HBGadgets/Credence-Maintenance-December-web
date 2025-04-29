@@ -112,23 +112,60 @@ export const getVehicleBillImageApi = async (billImgId) => {
 
 // Get API for Supervisor See Lorry report  
 
-export const getLorryReciptApi = async (id) => {
-    try {
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/lorry-receipt/get-all-lorry-receipt`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                },
-            }
-        );
-        console.log("This is all Lorry recipt list :", response.data);
-        return response.data;
-    } catch (error) {
-        console.log("Error:", error.message?.data || error.message);
-        throw error;
-    }
+export const getLorryReciptApi = async () => {
+
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/lorry-receipt/get-all-lorry-receipt`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Lorry Recipts Data: ", data);
+
+    return data.map((lorryReciptList) => ({
+        id: lorryReciptList._id,
+        date: formatDateToDDMMYYYY(lorryReciptList.date),
+        originalDate: lorryReciptList.date,
+        companyName: lorryReciptList.companyName || "Unknown",
+        companyAddress: lorryReciptList.companyAddress || "Unknown",
+        companyEmail: lorryReciptList.companyEmail || "Unknown",
+        gstIn: lorryReciptList.gstIn || "Unknown",
+        companyOfficeNumber: lorryReciptList.companyOfficeNumber || "Unknown",
+        companyMobileNumber: lorryReciptList.companyMobileNumber || "Unknown",
+        lorryNumber: lorryReciptList.lorryNumber || "Unknown",
+        vehicleName: lorryReciptList.vehicleName || "Unknown",
+        ownerName: lorryReciptList.ownerName || "Unknown",
+        consignorName: lorryReciptList.consignorName || "Unknown",
+        consignorAddress: lorryReciptList.consignorAddress || "Unknown",
+        consigneeName: lorryReciptList.consigneeName || "Unknown",
+        consigneeAddress: lorryReciptList.consigneeAddress || "Unknown",
+        customerName: lorryReciptList.customerName || "Unknown",
+        customerAddress: lorryReciptList.customerAddress || "Unknown",
+        startLocation: lorryReciptList.from || lorryReciptList.startLocation || "Unknown",
+        endLocation: lorryReciptList.to || lorryReciptList.endLocation || "Unknown",
+        driverName: lorryReciptList.driverId?.name || "N/A",
+        driverContact: lorryReciptList.driverId?.contactNumber || "N/A",
+        containerNumber: lorryReciptList.containerNumber || "Unknown",
+        sealNumber: lorryReciptList.sealNumber || "Unknown",
+        itemName: lorryReciptList.itemName || "Unknown",
+        itemQuantity: lorryReciptList.itemQuantity || "Unknown",
+        itemUnit: lorryReciptList.itemUnit || "Unknown",
+        itemWeight: lorryReciptList.itemWeight || "Unknown",
+        itemcost: lorryReciptList.itemcost || "Unknown",
+        customerRate: lorryReciptList.customerRate || "Unknown",
+        totalAmount: lorryReciptList.totalAmount || "Unknown",
+        transporterRate: lorryReciptList.transporterRate || "Unknown",
+        totalTransporterAmount: lorryReciptList.totalTransporterAmount || "Unknown",
+        transporterRateOn: lorryReciptList.transporterRateOn || "Unknown",
+        customerRateOn: lorryReciptList.customerRateOn || "Unknown",
+        customerFreight: lorryReciptList.customerFreight || "Unknown",
+        transporterFreight: lorryReciptList.transporterFreight || "Unknown",
+    }));
 }
+
 
 // POST API for Supervisor add Lorry recipt
 

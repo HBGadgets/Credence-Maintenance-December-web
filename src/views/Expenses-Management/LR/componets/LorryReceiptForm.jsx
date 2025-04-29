@@ -72,13 +72,19 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     }
   }, [dispatch, vehicleStatus])
 
+  // Set form data when in edit mode
   useEffect(() => {
-    if (mode === 'edit') {
-      setFormData({ ...defaultFormData, ...initialData })
+    if (mode === 'edit' && initialData) {
+      setFormData({
+        ...defaultFormData,
+        ...initialData,
+        vehicleName: vehicles.find((vehicle) => vehicle._id === initialData.vehicleId)?.name || '',
+        driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
+      })
     } else {
-      setFormData(defaultFormData)
+      setFormData(defaultFormData) // Reset for 'add' mode
     }
-  }, [initialData, mode, show])
+  }, [initialData, mode, vehicles, drivers])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -108,7 +114,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     e.preventDefault()
     const payload = {
       ...formData,
-      date: new Date(formData.date).toISOString(), // ISO format
+      date: formData.date ? new Date(formData.date).toISOString() : '', // Handle date
     }
     handleSubmit(payload)
   }
@@ -130,7 +136,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
           {/* Company Details */}
           <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
           <div className="row g-3 mb-4">
-            <div className="col-md-6">
+            <div className="col-md-4">
               <Form.Label>Company Name</Form.Label>
               <Form.Control
                 name="companyName"
@@ -138,7 +144,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
                 onChange={handleChange}
               />
             </div>
-            <div className="col-md-6">
+            <div className="col-md-4">
               <Form.Label>Company Address</Form.Label>
               <Form.Control
                 name="companyAddress"
@@ -197,7 +203,12 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
 
             <div className="col-md-4">
               <Form.Label>Vehicle Name</Form.Label>
-              <Form.Select name="vehicleId" value={formData.vehicleId} onChange={handleChange}>
+              <Form.Select
+                name="vehicleId"
+                value={formData.vehicleId}
+                onChange={handleChange}
+                required
+              >
                 <option value="">Select Vehicle</option>
                 {vehicles.map((vehicle) => (
                   <option key={vehicle._id} value={vehicle._id}>

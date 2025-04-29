@@ -338,10 +338,12 @@ const InvoiceBill = ({ invoiceData }) => {
     customerFreight,
     transporterFreight,
     driverId,
+    driverName,
+    driverContact,
   } = invoiceData || {}
 
-  const driverName = driverId?.name || 'N/A'
-  const driverContact = driverId?.contactNumber || 'N/A'
+  // const driverName = driverId?.name || 'N/A'
+  // const driverContact = driverId?.contactNumber || 'N/A'
 
   const handleDownloadPDF = () => {
     const element = invoiceRef.current.cloneNode(true)
@@ -424,7 +426,7 @@ const InvoiceBill = ({ invoiceData }) => {
                 <strong>Lorry Number:</strong> {lorryNumber || 'N/A'}
               </p>
               <p>
-                <strong>Date:</strong> {date ? new Date(date).toLocaleDateString('en-GB') : 'N/A'}
+                <strong>Date:</strong> {date || 'N/A'}
               </p>
             </div>
             <div className="details-row">
@@ -527,7 +529,7 @@ const InvoiceBill = ({ invoiceData }) => {
             </div>
             <div className="details-row">
               <p>
-                <strong>Total Freight:</strong> ₹{customerFreight?.toLocaleString() || 0}
+                <strong>Customer Freight:</strong> ₹{customerFreight?.toLocaleString() || 0}
               </p>
             </div>
           </div>
@@ -550,6 +552,9 @@ const InvoiceBill = ({ invoiceData }) => {
               </p>
             </div>
             <div className="details-row">
+              <p>
+                <strong>Transporter Freight:</strong> ₹{transporterFreight?.toLocaleString() || 0}
+              </p>
               <p>
                 <strong>Total Amount:</strong> ₹{totalTransporterAmount?.toLocaleString() || 0}
               </p>
