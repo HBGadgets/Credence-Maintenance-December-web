@@ -15,6 +15,7 @@ const VehicleTrips = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
   // Modal state for SubTrips
   const [modalVisible, setModalVisible] = useState(false)
@@ -29,7 +30,28 @@ const VehicleTrips = () => {
   })
 
   useEffect(() => {
-    let styledData = vehicleTrips.map((data) => ({
+    let filtered = vehicleTrips
+
+    // Filter by date range if available
+    if (dateRange.startDate && dateRange.endDate) {
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.originalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      })
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
+    }
+
+    // Apply styling AFTER filtering
+    const styledData = filtered.map((data) => ({
       ...data,
       status: (
         <span
@@ -56,17 +78,8 @@ const VehicleTrips = () => {
       ),
     }))
 
-    if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase()
-      styledData = styledData.filter((item) =>
-        Object.values(item).some(
-          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
-        ),
-      )
-    }
-
     setFilteredData(styledData)
-  }, [searchQuery, vehicleTrips])
+  }, [searchQuery, vehicleTrips, dateRange])
 
   console.log('vehicleTripsssssssssss', vehicleTrips)
 
@@ -88,16 +101,11 @@ const VehicleTrips = () => {
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
+  }
 
-    const lowercasedQuery = query.toLowerCase()
-
-    const filtered = vehicleTrips.filter((item) =>
-      Object.values(item).some(
-        (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
-      ),
-    )
-
-    setFilteredData(filtered)
+  // Handle Date Range Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
   }
 
   // handle view button
@@ -129,7 +137,7 @@ const VehicleTrips = () => {
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence title="Date Range" />
+        <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 

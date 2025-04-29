@@ -346,6 +346,7 @@ export const maintenanceLogApi = async (id) => {
     return data.map((vehiclelogs) => ({
         id: vehiclelogs._id,
         date: formatDateToDDMMYYYY(vehiclelogs.date),
+        originalDate: vehiclelogs.date,
         driverName: vehiclelogs.driverName || 'N/A',
         shopName: vehiclelogs.vendor,
         expenseType: vehiclelogs.expenseType,
@@ -397,6 +398,7 @@ export const getVehicleTripsByIdAPI = async (id) => {
     return data.map((vehicleTrips) => ({
         id: vehicleTrips._id,
         date: formatDateToDDMMYYYY(vehicleTrips.date),
+        originalDate: vehicleTrips.date,
         driverName: vehicleTrips.driverId?.name || 'N/A',
         vehicleName: vehicleTrips.vehicleName,
         startLocation: vehicleTrips.startLocation,

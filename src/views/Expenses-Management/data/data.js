@@ -23,6 +23,7 @@ export const getAllDriverExpesesListApi = async () => {
     return data.map((driverExpenseList) => ({
         id: driverExpenseList._id,
         date: formatDateToDDMMYYYY(driverExpenseList.date),
+        originalDate: driverExpenseList.date,
         driverName: driverExpenseList.driverId?.name || "Unknown",
         currentVehicleName: driverExpenseList.driverId?.currentVehicleName || "N/A",
         shopName: driverExpenseList.shopName || "Unknown",
@@ -76,10 +77,11 @@ export const getAllVehicleExpesesListApi = async () => {
 
     return data.map((vehicleExpenseList) => ({
         id: vehicleExpenseList._id,
+        originalDate: vehicleExpenseList.date,
         date: formatDateToDDMMYYYY(vehicleExpenseList.date),
         driverName: vehicleExpenseList.driverId?.name || "Unknown",
         currentVehicleName: vehicleExpenseList.driverId?.currentVehicleName || "N/A",
-        shopName: vehicleExpenseList.shopName || "Unknown",
+        shopName: vehicleExpenseList.vendor || "Unknown",
         expenseType: vehicleExpenseList.expenseType || "Unknown",
         description: vehicleExpenseList.description || "No description",
         amount: vehicleExpenseList.amount || 0,

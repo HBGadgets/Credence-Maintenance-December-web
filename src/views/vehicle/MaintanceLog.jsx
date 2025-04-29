@@ -22,7 +22,7 @@ const MaintenanceLog = () => {
 
   // Date range and search
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState({})
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
   const { data: vehicleMaintanceLog = [], isFetching } = useQuery({
     queryKey: ['vehicleMaintanceLog', id],
@@ -43,19 +43,11 @@ const MaintenanceLog = () => {
       )
     }
 
-    // Date Range Filter
-    if (dateRange?.startDate && dateRange?.endDate) {
-      const start = new Date(dateRange.startDate)
-      const end = new Date(dateRange.endDate)
-
+    // Filter by date range if available
+    if (dateRange.startDate && dateRange.endDate) {
       filtered = filtered.filter((item) => {
-        if (!item.date) return false
-        const parts = item.date.split('/')
-        if (parts.length !== 3) return false
-
-        const itemDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`) // YYYY-MM-DD
-
-        return itemDate >= start && itemDate <= end
+        const itemDate = new Date(item.originalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
       })
     }
 
@@ -107,16 +99,11 @@ const MaintenanceLog = () => {
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
+  }
 
-    const lowercasedQuery = query.toLowerCase()
-
-    const filtered = vehicleMaintanceLog.filter((item) =>
-      Object.values(item).some(
-        (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
-      ),
-    )
-
-    setFilteredData(filtered)
+  // Handle Date Range Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
   }
 
   // Handle View Button
@@ -173,14 +160,7 @@ const MaintenanceLog = () => {
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence
-          title="Date Range"
-          onDateRangeChange={(range) => {
-            console.log('Selected Range:', range)
-            setDateRange(range)
-          }}
-        />
-
+        <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 

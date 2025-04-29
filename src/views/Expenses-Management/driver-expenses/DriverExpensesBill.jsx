@@ -13,6 +13,7 @@ const DriverExpensesBill = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
   // Use state for modal
   const [pdfBase64, setPdfBase64] = useState(null)
@@ -28,6 +29,14 @@ const DriverExpensesBill = () => {
 
   useEffect(() => {
     let filtered = driverExpenseList
+
+    // Filter by date range if available
+    if (dateRange.startDate && dateRange.endDate) {
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.originalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      })
+    }
 
     // Apply search filter
     if (searchQuery) {
@@ -68,7 +77,7 @@ const DriverExpensesBill = () => {
     }))
 
     setFilteredData(styledData)
-  }, [searchQuery, driverExpenseList])
+  }, [searchQuery, driverExpenseList, dateRange])
 
   console.log('All Driver Expenses Data: ', filteredData)
 
@@ -91,6 +100,11 @@ const DriverExpensesBill = () => {
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
+  }
+
+  // Handle Date Range Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
   }
 
   // Handle View Button
@@ -138,7 +152,7 @@ const DriverExpensesBill = () => {
 
       <div className="mb-2 d-flex justify-content-between align-items-center">
         {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence title="Date Range" />
+        <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 
