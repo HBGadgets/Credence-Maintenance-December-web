@@ -30,7 +30,7 @@ export const vehicles = [
         workPerformed: 'Brake Pad Replacement',
         performedBy: 'Premium Auto Shop',
         cost: 299.99,
-        invoiceUrl: 'https://example.com/invoice/M002',
+        notes: 'Synthetic oil used',
       },
     ],
     trips: [
@@ -109,6 +109,9 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        notes: 'Synthetic oil used',
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -117,6 +120,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -169,6 +174,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -177,6 +184,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -229,6 +238,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -237,6 +248,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -289,6 +302,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -297,6 +312,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -349,6 +366,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -357,6 +376,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -409,6 +430,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -417,6 +440,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -469,6 +494,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -477,6 +504,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -529,6 +558,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -537,6 +568,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -589,6 +622,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -597,6 +632,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -649,6 +686,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -657,6 +696,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -709,6 +750,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -717,6 +760,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -769,6 +814,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -777,6 +824,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -829,6 +878,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -837,6 +888,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [
@@ -889,6 +942,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
       {
         id: 'M004',
@@ -897,6 +952,8 @@ export const vehicles = [
         workPerformed: 'Tire Rotation',
         performedBy: 'Quick Tire Service',
         cost: 29.99,
+        receipt: 'https://via.placeholder.com/500', // Sample receipt image URL
+
       },
     ],
     trips: [

@@ -4,40 +4,52 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CModal,
-  CModalBody,
-  CModalHeader,
-  CModalTitle,
-  CPagination,
-  CPaginationItem,
+  CFormInput,
 } from '@coreui/react'
-import { ChevronRight } from 'lucide-react'
 import SalaryDetail from './SalaryCard'
-import DateRangeFilter from '../../common/DateRangeFilter'
 
-const SalarySlipTable = ({ salaries }) => {
+const SalarySlipTable = () => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [open, setOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5 // Number of items per page in modal table
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const handleOpen = () => {
-    setCurrentPage(1) // Reset to the first page when opening modal
-    setOpen(true)
-  }
+  // Temporary Salary Data
+  const salaries = [
+    {
+      id: '1',
+      driverId: '1',
+      month: '2024-03-04',
+      basicPay: 25000,
+      overtime: 1800,
+      incentives: 2000,
+      deductions: 1500,
+      netPay: 27300,
+    },
+    {
+      id: '2',
+      driverId: '1',
+      month: '2024-04-04',
+      basicPay: 25000,
+      overtime: 1800,
+      incentives: 2000,
+      deductions: 1500,
+      netPay: 27300,
+    },
+  ]
 
-  // Filter salaries based on the date range
+  // Filter salaries based on date range and search query
   const filteredSalaries = salaries.filter((salary) => {
-    if (!startDate || !endDate) return true
     const date = new Date(salary.month)
-    return date >= new Date(startDate) && date <= new Date(endDate)
-  })
+    const isWithinDateRange =
+      (!startDate || date >= new Date(startDate)) && (!endDate || date <= new Date(endDate))
 
-  // Pagination logic for modal table
-  const totalPages = Math.ceil(filteredSalaries.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentSalaries = filteredSalaries.slice(startIndex, startIndex + itemsPerPage)
+    const matchesSearch =
+      searchQuery === '' ||
+      salary.basicPay.toString().includes(searchQuery) ||
+      salary.netPay.toString().includes(searchQuery)
+
+    return isWithinDateRange && matchesSearch
+  })
 
   // Salary content for each salary slip
   const SalaryContent = ({ data }) => (
@@ -45,19 +57,15 @@ const SalarySlipTable = ({ salaries }) => {
       {data.map((salary) => (
         <CCard key={salary.id} className="mb-4">
           <CCardHeader>
-            Salary Slip - {new Date(salary.month).toLocaleDateString('en-US', {})}
+            Salary Slip - {new Date(salary.month).toLocaleDateString('en-US')}
           </CCardHeader>
           <CCardBody>
             <div className="space-y-2">
               <SalaryDetail label="Basic Pay" amount={salary.basicPay} />
               <SalaryDetail label="Overtime" amount={salary.overtime} className="text-success" />
-              <SalaryDetail
-                label="Incentives"
-                amount={salary.incentives}
-                className="text-success"
-              />
+              <SalaryDetail label="Incentives" amount={salary.incentives} className="text-success" />
               <SalaryDetail label="Deductions" amount={salary.deductions} className="text-danger" />
-              <div className="border-top pt-2 mt-2 mt-0">
+              <div className="border-top pt-2 mt-2">
                 <SalaryDetail
                   label="Net Pay"
                   amount={salary.netPay}
@@ -73,60 +81,37 @@ const SalarySlipTable = ({ salaries }) => {
 
   return (
     <div>
-      <SalaryContent data={filteredSalaries.slice(0, 2)} />
-      <div className="d-flex justify-content-end">
-        <button type="button" className="btn btn-secondary m-1" onClick={handleOpen}>
-          View More
-        </button>
+      {/* Filters and Search Bar */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        {/* Date Range Filter (Left) */}
+        <div className="d-flex gap-2">
+          <CFormInput
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <CFormInput
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <CButton color="primary" onClick={() => console.log('Apply filter')}>
+            Apply
+          </CButton>
+        </div>
+
+        {/* Search Bar (Right) */}
+        <CFormInput
+          type="text"
+          placeholder="Search Salary..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-25"
+        />
       </div>
 
-      <CModal
-        alignment="center"
-        scrollable
-        visible={open}
-        onClose={() => setOpen(false)}
-        fullscreen
-      >
-        <CModalHeader>
-          <CModalTitle>All Salary Slips</CModalTitle>
-        </CModalHeader>
-
-        <CModalBody className="d-flex flex-column gap-3">
-          <DateRangeFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-          />
-          <SalaryContent data={currentSalaries} />
-          {/* Pagination for modal table */}
-          {totalPages > 1 && filteredSalaries.length > itemsPerPage && (
-            <CPagination align="center" className="mt-4">
-              <CPaginationItem
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              >
-                Previous
-              </CPaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <CPaginationItem
-                  key={i + 1}
-                  active={i + 1 === currentPage}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </CPaginationItem>
-              ))}
-              <CPaginationItem
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              >
-                Next
-              </CPaginationItem>
-            </CPagination>
-          )}
-        </CModalBody>
-      </CModal>
+      {/* Salary List */}
+      <SalaryContent data={filteredSalaries} />
     </div>
   )
 }

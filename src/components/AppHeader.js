@@ -1,6 +1,6 @@
 // src/AppHeader.js
 import React, { useRef, useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
@@ -28,6 +28,8 @@ import {
 import { AppBreadcrumb } from './index'
 import { User, Headset, LogOut } from 'lucide-react'
 import '../index.css'
+import './header.css'
+import routes from '../routes'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -49,19 +51,50 @@ const AppHeader = () => {
     setView(!view)
   }
 
+  // Display Route name
+
+  const getRouteName = (pathname, routes) => {
+    const currentRoute = routes.find((route) => route.path === pathname)
+    return currentRoute ? currentRoute.name : 'Profile Logs'
+  }
+
+  // const getRouteName = (pathname) => {
+  //   const segments = pathname.split('/').filter(Boolean)
+  //   return segments.length ? segments[segments.length - 1] : 'Dashboard'
+  // }
+
+
+  const currentPathname = useLocation().pathname
+  const currentRouteName = getRouteName(currentPathname, routes)
+
+
   return (
-    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
+    <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
-        <CHeaderToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
+        {/* <CHeaderToggler
+          onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
           style={{ marginInlineStart: '-14px' }}
         >
-          <CIcon icon={cilMenu} size="lg" />
-        </CHeaderToggler>
+          <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
+        </CHeaderToggler> */}
+
+        <div style={{ display: 'flex' }}>
+          <CHeaderToggler
+            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+            style={{ marginInlineStart: '-14px', background: 'transparent', border: 'none' }}
+          >
+            <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
+          </CHeaderToggler>
+
+          <span style={{ fontWeight: '700', fontSize: '1.3rem', color: 'white' }}>
+            {currentRouteName}
+          </span>
+        </div>
+
         {/* <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
-              Dashboard
+            <CNavLink to="/dashboard" as={NavLink} style={{ fontWeight: '700', fontSize: '1.3rem', color: 'white' }}>
+              {currentRouteName}
             </CNavLink>
           </CNavItem>
         </CHeaderNav> */}
@@ -70,25 +103,23 @@ const AppHeader = () => {
         <CHeaderNav>
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
-              <CIcon icon={cilBell} size="lg" />
+              <CIcon icon={cilBell} size="lg" style={{ color: 'white' }} />
             </CDropdownToggle>
             <CDropdownMenu>
               <CDropdownItem>Notification 1</CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
-          <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          <div className="vr mx-3 bg-white"></div>
 
           {/* THEME */}
-          <CDropdown variant="nav-item" placement="bottom-end">
+          {/* <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="lg" />
+                <CIcon icon={cilMoon} size="lg" style={{ color: 'white' }} />
               ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="lg" />
+                <CIcon icon={cilContrast} size="lg" style={{ color: 'white' }} />
               ) : (
-                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" />
+                <CIcon icon={cilSun} size="lg" className="rotate-on-hover" style={{ color: 'white' }} />
               )}
             </CDropdownToggle>
             <CDropdownMenu>
@@ -120,11 +151,11 @@ const AppHeader = () => {
                 <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
               </CDropdownItem>
             </CDropdownMenu>
-          </CDropdown>
+          </CDropdown> */}
 
-          <li className="nav-item py-1">
+          {/* <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+          </li> */}
           {/* USER PROFILE */}
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
@@ -137,12 +168,17 @@ const AppHeader = () => {
             </CDropdownToggle>
             <CDropdownMenu>
               <CNavItem>
-                <CDropdownItem className="d-flex align-items-center gap-4 disable">
+                <CDropdownItem
+                  className="d-flex align-items-center gap-4"
+                  type="button"
+                  to="/ProfileSection"
+                  as={NavLink}
+                >
                   {' '}
                   <User /> User Name
                 </CDropdownItem>
               </CNavItem>
-              <CDropdownItem
+              {/* <CDropdownItem
                 className="d-flex align-items-center gap-4"
                 type="button"
                 to="/HelpAndSupport"
@@ -150,7 +186,7 @@ const AppHeader = () => {
               >
                 {' '}
                 <Headset /> Help & Support
-              </CDropdownItem>
+              </CDropdownItem> */}
               <CNavItem>
                 <CDropdownItem className="d-flex align-items-center gap-4" type="button">
                   {' '}

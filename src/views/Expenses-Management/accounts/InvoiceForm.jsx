@@ -15,6 +15,10 @@ import {
   Typography,
   Button,
 } from '@mui/material'
+
+import { FaUserEdit } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+
 import CloseIcon from '@mui/icons-material/Close'
 import InvoiceIcon from '@mui/icons-material/Receipt'
 import PersonIcon from '@mui/icons-material/Person'

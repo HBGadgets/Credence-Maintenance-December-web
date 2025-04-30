@@ -1,5 +1,17 @@
 body {
-  background-color: var(--cui-tertiary-bg);
+  // background-color: var(--cui-tertiary-bg);
+  background-color: white;
+}
+
+.sidebar {
+  background-color: rgb(10, 45, 99);
+  color: white;
+}
+
+.header {
+  background-color: rgb(10, 45, 99);
+  color: white;
+
 }
 
 .wrapper {
@@ -10,13 +22,16 @@ body {
   @include transition(padding .15s);
 }
 
-.header > .container-fluid,
+.header>.container-fluid,
 .sidebar-header {
   min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
 }
 
+// Logo
 .sidebar-brand-full {
-  margin-left: 3px;
+  margin-left: 5px;
+  object-fit: contain;
+  cursor: pointer;
 }
 
 .sidebar-header {
@@ -32,6 +47,22 @@ body {
   }
 }
 
+.sidebar .nav-link {
+  color: white !important;
+  /* This applies to all currentColor references in child SVGs */
+}
+
+.nav-title {
+  color: white !important;
+}
+
+.sidebar .nav-link svg {
+  // width: 4rem !important;
+  // height: 4rem !important;
+  color: white !important;
+}
+
+
 .sidebar-toggler {
   @include ltr-rtl("margin-left", auto);
 }
@@ -43,7 +74,7 @@ body {
   }
 }
 
-.header > .container-fluid + .container-fluid {
+.header>.container-fluid+.container-fluid {
   min-height: 3rem;
 }
 

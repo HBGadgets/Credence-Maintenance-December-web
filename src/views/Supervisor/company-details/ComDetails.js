@@ -28,7 +28,10 @@ import {
   CInputGroup,
   CInputGroupText,
 } from '@coreui/react'
-import { Edit, Eye, Trash2 } from 'lucide-react'
+import { FaUserEdit } from 'react-icons/fa'
+import { IoTrashBin } from 'react-icons/io5'
+import { FaEye } from 'react-icons/fa'
+
 import { compaines as initialcompaines } from '../company-details/data/compaines' // Import compaines data
 import { compaines } from '../company-details/data/compaines' // Ensure this import is correct
 // import { trips } from '../compainesExpert/data/trips' // Ensure this import is correct
@@ -46,15 +49,28 @@ import { MdEmail } from 'react-icons/md'
 import { IoDocumentText } from 'react-icons/io5'
 import { FaAddressCard } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
+import { FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { FaPrint } from 'react-icons/fa'
+import { FaArrowUp } from 'react-icons/fa'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+import IconDropdown from '../IconDropdown'
+import { useNavigate } from 'react-router-dom'
 
 const compainesExp = ({ setselectedCompanyId }) => {
+  const Navigate = useNavigate()
   const columns = [
-    { label: 'SN', key: 'sn', sortable: true },
+    { label: 'SN', key: 'sn', sortable: false },
     { label: 'Company Name', key: 'name', sortable: true },
     { label: 'Contact', key: 'contact', sortable: true },
     { label: 'Address', key: 'address', sortable: true },
     { label: 'View Profile', key: 'profile', sortable: true },
-    { label: 'Action', key: 'action', sortable: false },
+    { label: 'Action', key: 'action', sortable: true },
   ]
   // const columns = ['Comapny Name', 'Contact', 'Address', 'Profile']
   const [compaines, setcompaines] = useState(initialcompaines) // Use state for the compaines list
@@ -117,44 +133,10 @@ const compainesExp = ({ setselectedCompanyId }) => {
     return '↕'
   }
 
-  // Handle file input change
-  // const handleProfileImageChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     setNewcompaines({ ...newcompaines, profileImage: file });
-  //   }
-  // };
-
-  // Group trips by compainesId
-  // const groupedTrips = trips.reduce((acc, trip) => {
-  //   if (!acc[trip.compainesId]) {
-  //     acc[trip.compainesId] = []
-  //   }
-  //   acc[trip.compainesId].push(trip)
-  //   return acc
-  // }, {})
-
-  // Group expenses by compainesId
-  // const groupedExpenses = expenses.reduce((acc, expense) => {
-  //   if (!acc[expense.compainesId]) {
-  //     acc[expense.compainesId] = []
-  //   }
-  //   acc[expense.compainesId].push(expense)
-  //   return acc
-  // }, {})
-
-  // Group salaries by compainesId (assuming you have a similar salaries data)
-  // const groupedSalaries = salaries.reduce((acc, salary) => {
-  //   if (!acc[salary.compainesId]) {
-  //     acc[salary.compainesId] = []
-  //   }
-  //   acc[salary.compainesId].push(salary)
-  //   return acc
-  // }, {})
-
   const handleViewClick = (compaines) => {
     setselectedCompany(compaines)
     setOpen(true)
+    Navigate(`${compaines.id}`)
   }
 
   const handleAddcompaines = () => {
@@ -183,6 +165,116 @@ const compainesExp = ({ setselectedCompanyId }) => {
     setEditModalOpen(false)
     alert('compaines updated successfully!')
   }
+  const exportToExcel = async () => {
+    try {
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No data available for Excel export')
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Companies List')
+
+      // Add headers
+      worksheet.addRow(columns.map((col) => col.label))
+
+      // Add data rows
+      data.forEach((company, index) => {
+        worksheet.addRow([
+          index + 1,
+          company.name,
+          company.contactNumber,
+          company.address,
+          company.gstNumber,
+        ])
+      })
+
+      // Generate and save file
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const filename = `Companies_List_${new Date().toISOString().split('T')[0]}.xlsx`
+      saveAs(blob, filename)
+      toast.success('Excel file downloaded successfully')
+    } catch (error) {
+      console.error('Excel Export Error:', error)
+      toast.error(error.message || 'Failed to export Excel file')
+    }
+  }
+
+  // Export to PDF
+  const exportToPDF = () => {
+    try {
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No data available for PDF export')
+      }
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Add headers
+      const headers = columns.map((col) => col.label)
+
+      // Add data rows
+      const pdfData = data.map((company, index) => [
+        index + 1,
+        company.name,
+        company.contactNumber,
+        company.address,
+        company.gstNumber,
+      ])
+
+      // Generate table
+      doc.autoTable({
+        head: [headers],
+        body: pdfData,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [10, 45, 99], textColor: 255, fontStyle: 'bold' },
+      })
+
+      // Save PDF
+      const filename = `Companies_List_${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(filename)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.error(error.message || 'Failed to export PDF')
+    }
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => exportToPDF(),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => exportToExcel(),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
 
   return (
     <>
@@ -246,7 +338,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             onClick={() => handleViewClick(compaines)}
                             className="text-center"
                           >
-                            <Eye className="me-2" size={16} />
+                            <FaEye className="me-2" size={18} />
                             View Profile
                           </CButton>
                         </CTableDataCell>
@@ -256,7 +348,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             size="sm"
                             onClick={() => handleEditcompaines(compaines)}
                           >
-                            <Edit size={16} /> {/* Edit Icon */}
+                            <FaUserEdit size={20} /> {/* Edit Icon */}
                           </CButton>
                           <CButton
                             color="danger"
@@ -264,7 +356,7 @@ const compainesExp = ({ setselectedCompanyId }) => {
                             className="ms-2"
                             onClick={() => handleDeletecompaines(compaines.id)}
                           >
-                            <Trash2 size={16} /> {/* Delete Icon */}
+                            <IoTrashBin size={20} /> {/* Delete Icon */}
                           </CButton>
                         </CTableDataCell>
                       </CTableRow>
@@ -274,146 +366,121 @@ const compainesExp = ({ setselectedCompanyId }) => {
               )}
             </CCardBody>
           </CCard>
+          <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+            <IconDropdown items={dropdownItems} />
+          </div>
         </CCol>
       </CRow>
 
-      {/* View Profile Modal */}
-      {selectedCompany && (
-        <CModal
-          alignment="center"
-          scrollable
-          visible={open}
-          onClose={() => setOpen(false)}
-          fullscreen
-        >
-          <CModalHeader>
-            <CModalTitle className="d-flex align-items-center">
-              <h5>{selectedCompany.name}</h5>
-            </CModalTitle>
-          </CModalHeader>
-          <CModalBody className="shadow-md rounded-lg p-6 mb-6">
-            <div className="d-flex gap-3">
-              <CImage
-                src={selectedCompany.profileImage || '/default-avatar.png'} // Default image fallback
-                alt={selectedCompany.name}
-                className="img-thumbnail rounded-circle me-3"
-                width="120" // Set the desired width
-                height="120" // Set the desired height
-              />
-              <div>
-                <div className="py-2">
-                  <h2>{selectedCompany.name}</h2>
-                </div>
-                <div>
-                  <h6>GST Number: {selectedCompany.gstNumber}</h6>
-                </div>
-                <div>
-                  <h6>Contact: {selectedCompany.contactNumber}</h6>
-                </div>
-                <div>
-                  <h6>Address: {selectedCompany.address}</h6>
-                </div>
-              </div>
-            </div>
-            <hr />
-            {/* Tabs */}
-            <CTabs activeItemKey={1}>
-              <CTabList variant="underline">
-                <CTab aria-controls="attendance" itemKey={1}>
-                  Branches
-                </CTab>
-                <CTab aria-controls="expenses" itemKey={2}>
-                  Vehicles
-                </CTab>
-                <CTab aria-controls="trip-details" itemKey={3}>
-                  Drivers
-                </CTab>
-                <CTab aria-controls="salary-slips" itemKey={4}>
-                  Total Bugets
-                </CTab>
-              </CTabList>
-              <CTabContent>
-                <CTabPanel className="p-3" aria-labelledby="attendance" itemKey={1}>
-                  {/* Replace with actual attendance details */}
-                  {/* <AttendanceSection compainesId={selectedCompany.id} /> */}
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="expenses" itemKey={2}>
-                  {/* Replace with actual expenses table */}
-                  {/* <ExpensesTable expenses={groupedExpenses[selectedCompany.id] || []} /> */}
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="trip-details" itemKey={3}>
-                  {/* Replace with actual trips table */}
-                  {/* <TripsTable trips={groupedTrips[selectedCompany.id] || []} /> */}
-                </CTabPanel>
-                <CTabPanel className="p-3" aria-labelledby="salary-slips" itemKey={4}>
-                  {/* Replace with actual salary slips */}
-                  {/* <SalarySlipTable salaries={groupedSalaries[selectedCompany.id] || []} /> */}
-                </CTabPanel>
-              </CTabContent>
-            </CTabs>
-          </CModalBody>
-        </CModal>
-      )}
-
       {/* Edit compaines Modal */}
       {editModalOpen && compainesToEdit && (
-        <CModal alignment="center" visible={editModalOpen} onClose={() => setEditModalOpen(false)}>
+        <CModal
+          alignment="center"
+          visible={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          size="xl"
+        >
           <CModalHeader>
             <CModalTitle>Edit compaines</CModalTitle>
           </CModalHeader>
           <CModalBody>
             <CForm>
-              <div className="mb-2">
-                <CFormLabel>Name</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.name}
-                  onChange={(e) => setcompainesToEdit({ ...compainesToEdit, name: e.target.value })}
-                />
+              <div
+                className="flex-wrap gap-5"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoPerson style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.name}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, name: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoCall style={{ fontSize: '22px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.contactNumber}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
               </div>
-              <div className="mb-2">
-                <CFormLabel>Contact Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.contactNumber}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, contactNumber: e.target.value })
-                  }
-                />
+
+              <div
+                className="flex-wrap gap-5"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem',
+                  marginTop: '1rem',
+                }}
+              >
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <FaAddressCard style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.address}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, address: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mt-4">
+                    <CInputGroupText className="border-end">
+                      <IoDocumentText style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      value={compainesToEdit.gstNumber}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
+
+                <CCol md={15}>
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText className="border-end">
+                      <RiLockPasswordFill style={{ fontSize: '20px', color: 'gray' }} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      value={compainesToEdit.password}
+                      onChange={(e) =>
+                        setcompainesToEdit({ ...compainesToEdit, password: e.target.value })
+                      }
+                    />
+                  </CInputGroup>
+                </CCol>
               </div>
-              <div className="mb-2">
-                <CFormLabel>Address</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.address}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, address: e.target.value })
-                  }
-                />
+
+              <div className="d-flex justify-content-end">
+                <CButton color="primary" onClick={handleSaveEdit}>
+                  Save Changes
+                </CButton>
               </div>
-              <div className="mb-2">
-                <CFormLabel>GST Number</CFormLabel>
-                <CFormInput
-                  type="text"
-                  value={compainesToEdit.gstNumber}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, gstNumber: e.target.value })
-                  }
-                />
-              </div>
-              <div className="mb-2">
-                <CFormLabel>Password</CFormLabel>
-                <CFormInput
-                  type="password"
-                  value={compainesToEdit.password}
-                  onChange={(e) =>
-                    setcompainesToEdit({ ...compainesToEdit, password: e.target.value })
-                  }
-                />
-              </div>
-              <CButton color="primary" onClick={handleSaveEdit}>
-                Save Changes
-              </CButton>
             </CForm>
           </CModalBody>
         </CModal>

@@ -1,181 +1,57 @@
-export const drivers = [
-  {
-    id: '1',
-    name: 'John Cena',
-    contactNumber: '+91 9876543210',
-    email: 'john.cena@example.com',
-    licenseNumber: 'DL98765432',
-    aadharNumber: '1234 5678 9012',
-    password: '123456',
-    profileImage:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6SBFO_34s3mUw1zz2SuAVXn83OArtd8D9GQ&s?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1572314493295-09c6d5ec3cdf?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1554774853-719586f82d77?w=800',
-    },
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    contactNumber: '+91 9876543211',
-    email: 'sarah.j@example.com',
-    licenseNumber: 'DL98765433',
-    aadharNumber: '1234 5678 9013',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800',
-    },
-  },
-  {
-    id: '3',
-    name: 'Michael Chen',
-    contactNumber: '+91 9876543212',
-    email: 'michael.c@example.com',
-    licenseNumber: 'DL98765434',
-    aadharNumber: '1234 5678 9014',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=800',
-    },
-  },
-  {
-    id: '4',
-    name: 'David Kumar',
-    contactNumber: '+91 9876543213',
-    email: 'david.k@example.com',
-    licenseNumber: 'DL98765435',
-    aadharNumber: '1234 5678 9015',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  },
+import axios from 'axios'
 
-  {
-    id: '5',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  },
-  {
-    id: '6',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1572314493295-09c6d5ec3cdf?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1554774853-719586f82d77?w=800',
-    },
-  },
-  {
-    id: '7',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1617050318658-a9a3175e34cb?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800',
-    },
-  },
-  {
-    id: '8',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160588-241658c0f566?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=800',
-    },
-  }, {
-    id: '9',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  }, {
-    id: '10',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  }, {
-    id: '11',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  }, {
-    id: '12',
-    name: 'Emma Patel',
-    contactNumber: '+91 9876543214',
-    email: 'steve.king345@example.com',
-    licenseNumber: 'DL98765436',
-    aadharNumber: '1234 5678 9016',
-    password: '123456',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-    documents: {
-      aadharCard: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=800',
-      drivingLicense: 'https://images.unsplash.com/photo-1616606103915-dea7be788566?w=800',
-      tpPass: 'https://images.unsplash.com/photo-1606159068450-6d2e9d4a0ea5?w=800',
-    },
-  },
+const token =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
 
-];
+export const fetchDrivers = async () => {
+  if (!token) throw new Error('Authentication token not found')
+
+  const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/all`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  return data.map((driver) => ({
+    name: driver.name,
+    contactNumber: driver.contactNumber,
+    email: driver.email,
+    password: driver.password,
+    id: driver._id,
+  }))
+}
+
+export const driverProfile = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/get/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    return data
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
+
+export const driverAttendance = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendence-month-wise?driverId=${id}&month=2025-03`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return data
+  } catch (error) {
+    console.log(error.message)
+    throw error
+  }
+}

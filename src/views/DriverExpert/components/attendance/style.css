@@ -1,0 +1,41 @@
+.cardward {
+    border-radius: 10px;
+    padding: 20px;
+    text-align: start;
+}
+
+.present {
+    background-color: #e9f9eb;
+    border: 1px solid #a4e1a1;
+}
+
+.absent {
+    background-color: #fdeaea;
+    border: 1px solid #f5a5a5;
+}
+
+.pending {
+    background-color: #fff8e5;
+    border: 1px solid #f8d57e;
+}
+
+.approved {
+    background-color: #eef5ff;
+    border: 1px solid #a7c4f2;
+}
+
+.cardward-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cardward-value {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.custom-hover:hover {
+    background-color: #0a2d63;
+    /* Dark color */
+    color: white;
+}

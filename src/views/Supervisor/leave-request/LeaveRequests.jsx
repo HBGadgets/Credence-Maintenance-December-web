@@ -1,309 +1,172 @@
-/* eslint-disable prettier/prettier */
 import React, { useState } from 'react'
-import {
-  CCard,
-  CCardHeader,
-  CCol,
-  CRow,
-  CTable,
-  CTableBody,
-  CTableHead,
-  CTableHeaderCell,
-  CTableDataCell,
-  CTableRow,
-  CButton,
-  CPagination,
-  CFormInput,
-  CPaginationItem,
-} from '@coreui/react'
-import { CIcon } from '@coreui/icons-react'
-import { cilCheckCircle, cilXCircle } from '@coreui/icons'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { ToastContainer, toast } from 'react-toastify'
+import { FaCheck, FaTimes } from 'react-icons/fa'
+import SearchInput from '../../components/SearchInput'
+import Table from '../../components/Table'
+import SmartPagination from '../../components/SmartPagination'
+import Page404 from '../../pages/page404/Page404'
+import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
+import { useQuery } from '@tanstack/react-query'
+import Swal from 'sweetalert2'
 
 const LeaveRequests = () => {
+  const [filteredData, setFilteredData] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' }) // Store sorting state
-  const [filter, setFilter] = useState('')
-  const recordsPerPage = 10
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-  // State for leave data
-  const [leaveData, setLeaveData] = useState([
-    {
-      name: 'John Cena',
-      contact: '+91 9876543210',
-      date: '01/01/2025 - 02/01/2025',
-      description: 'Meeting',
-      status: 'Pending...',
-    },
-    {
-      name: 'Sarah Johnson',
-      contact: '+91 9876543211',
-      date: '01/01/2025 - 02/01/2025',
-      description: 'Call',
-      status: 'Pending...',
-    },
-    {
-      name: 'Michael Chen',
-      contact: '+91 9876543212',
-      date: '02/01/2025 - 03/01/2025',
-      description: 'Discussion',
-      status: 'Pending...',
-    },
-    {
-      name: 'David Kumar',
-      contact: '+91 9876543213',
-      date: '03/01/2025 - 04/01/2025',
-      description: 'Presentation',
-      status: 'Pending...',
-    },
-    {
-      name: 'Emma Patel',
-      contact: '+91 9876543214',
-      date: '05/01/2025 - 06/01/2025',
-      description: 'Workshop',
-      status: 'Pending...',
-    },
-    {
-      name: 'John Smith',
-      contact: '+91 9876543210',
-      date: '06/01/2025 - 07/01/2025',
-      description: 'Conference',
-      status: 'Pending...',
-    },
-    {
-      name: 'Sophia Johnson',
-      contact: '+91 9876543211',
-      date: '07/01/2025 - 08/01/2025',
-      description: 'Seminar',
-      status: 'Pending...',
-    },
-    {
-      name: 'Ethan Brown',
-      contact: '+91 9876543212',
-      date: '08/01/2025 - 09/01/2025',
-      description: 'Training',
-      status: 'Pending...',
-    },
-    {
-      name: 'Isabella Davis',
-      contact: '+91 9876543213',
-      date: '09/01/2025 - 10/01/2025',
-      description: 'Training',
-      status: 'Pending...',
-    },
-    {
-      name: 'Liam Wilson',
-      contact: '+91 9876543215',
-      date: '10/01/2025 - 11/01/2025',
-      description: 'Workshop',
-      status: 'Pending...',
-    },
-    {
-      name: 'Ava Taylor',
-      contact: '+91 9876543216',
-      date: '11/01/2025 - 12/01/2025',
-      description: 'Conference',
-      status: 'Pending...',
-    },
-    {
-      name: 'Noah Moore',
-      contact: '+91 9876543217',
-      date: '12/01/2025 - 13/01/2025',
-      description: 'Training',
-      status: 'Pending...',
-    },
-    {
-      name: 'Mia Thomas',
-      contact: '+91 9876543218',
-      date: '13/01/2025 - 14/01/2025',
-      description: 'Seminar',
-      status: 'Pending...',
-    },
-    {
-      name: 'Oliver Martinez',
-      contact: '+91 9876543219',
-      date: '14/01/2025 - 15/01/2025',
-      description: 'Meeting',
-      status: 'Pending...',
-    },
-    {
-      name: 'Ella Garcia',
-      contact: '+91 9876543220',
-      date: '15/01/2025 - 16/01/2025',
-      description: 'Workshop',
-      status: 'Pending...',
-    },
-  ])
-  const totalPages = Math.ceil(leaveData.length / recordsPerPage)
+  // Format date to "dd/mm/yyyy"
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+  }
 
-  // Function to get the sorting icon
-  const getSortIcon = (key) => {
-    if (sortConfig.key === key) {
-      return sortConfig.direction === 'asc' ? '▲' : '▼'
+  // Get badge based on status
+  const getStatusBadge = (status) => {
+    let badgeClass = 'badge bg-secondary' // Default
+    if (status === 'Pending') badgeClass = 'badge bg-warning text-dark'
+    if (status === 'Rejected') badgeClass = 'badge bg-danger'
+    if (status === 'Approved') badgeClass = 'badge bg-success'
+
+    return <span className={badgeClass}>{status}</span>
+  }
+
+  // Function to update status and update UI
+  const updateStatusInUI = (id, newStatus) => {
+    setFilteredData((prevData) =>
+      prevData.map((item) =>
+        item._id === id ? { ...item, status: getStatusBadge(newStatus) } : item,
+      ),
+    )
+  }
+
+  // Approve function (removes request from table after update)
+  const handleApprove = async (id) => {
+    try {
+      await updateLeaveRequestStatus(id, 'Approved')
+      Swal.fire('Success!', 'Leave Approved Successfully.', 'success')
+
+      // Remove approved request from table
+      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
+    } catch (error) {
+      toast.error('Failed to approve leave request!')
     }
-    return '↕'
   }
 
-  // Sorting logic
-  const sortData = (data) => {
-    if (!sortConfig.key) return data
-    return [...data].sort((a, b) => {
-      const valueA = a[sortConfig.key].toLowerCase()
-      const valueB = b[sortConfig.key].toLowerCase()
-      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1
-      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1
-      return 0
-    })
-  }
+  // Reject function (removes request from table after update)
+  const handleReject = async (id) => {
+    try {
+      await updateLeaveRequestStatus(id, 'Rejected')
+      Swal.fire('Error', 'Leave Reject Successfully.', 'error')
 
-  const handleApprove = (index) => {
-    const updatedData = [...leaveData]
-    const actualIndex = (currentPage - 1) * recordsPerPage + index
-    updatedData[actualIndex].status = 'Approved'
-    setLeaveData(updatedData)
-    toast.success('Leave Approved')
-  }
-
-  // Handle Deny
-  const handleDeny = (index) => {
-    const updatedData = [...leaveData]
-    const actualIndex = (currentPage - 1) * recordsPerPage + index
-    updatedData[actualIndex].status = 'Denied'
-    setLeaveData(updatedData)
-    toast.error('Leave Denied')
-  }
-
-  // Handle sorting
-  const handleSort = (key) => {
-    let direction = 'asc'
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc'
+      // Remove rejected request from table
+      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
+    } catch (error) {
+      toast.error('Failed to reject leave request!')
     }
-    setSortConfig({ key, direction })
   }
 
-  // Filter, sort, and paginate data
-  const filteredData = leaveData.filter((row) =>
-    row.name.toLowerCase().includes(filter.toLowerCase()),
+  // Render action buttons (centered)
+  const renderActionButtons = (id) => (
+    <div className="d-flex justify-content-center gap-2">
+      <button className="btn btn-sm btn-success" onClick={() => handleApprove(id)}>
+        <FaCheck />
+      </button>
+      <button className="btn btn-sm btn-danger" onClick={() => handleReject(id)}>
+        <FaTimes />
+      </button>
+    </div>
   )
-  const sortedData = sortData(filteredData)
-  const currentRecords = sortedData.slice(
-    (currentPage - 1) * recordsPerPage,
-    currentPage * recordsPerPage,
-  )
+
+  // Fetch driver leave requests with useQuery
+  const {
+    data: responseData = [],
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ['driverleaveRequests'],
+    queryFn: getLeaveResquestDriverApi,
+    staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
+  })
+
+  // Format and set data
+  React.useEffect(() => {
+    if (responseData.length > 0) {
+      const formattedData = responseData.map((item) => ({
+        _id: item._id,
+        name: item.driverId?.name || 'Unknown',
+        startDate: formatDate(item.startDate),
+        endDate: formatDate(item.endDate),
+        description: item.description || '',
+        status: getStatusBadge(item.status || 'Pending'),
+        actions: renderActionButtons(item._id),
+      }))
+
+      setFilteredData(formattedData)
+    }
+  }, [responseData])
+
+  // Handle search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+
+    if (!query) {
+      setFilteredData(responseData)
+      return
+    }
+
+    const filtered = responseData.filter((item) =>
+      item.name.toLowerCase().includes(query.toLowerCase()),
+    )
+    setFilteredData(filtered)
+  }
+
+  if (error) return <Page404 />
+
+  // Table columns
+  const columns = [
+    { label: 'Driver Name', key: 'name', sortable: true },
+    { label: 'Start Date', key: 'startDate', sortable: true },
+    { label: 'End Date', key: 'endDate', sortable: true },
+    { label: 'Description', key: 'description', sortable: true },
+    { label: 'Status', key: 'status', sortable: false },
+    { label: 'Actions', key: 'actions' },
+  ]
 
   return (
     <div>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <CRow>
-        <CCol xs={12}>
-          <CCard className="mb-4">
-            <CCardHeader className="d-flex justify-content-between align-items-center">
-              <strong>Leave Request</strong>
-              <CFormInput
-                type="text"
-                placeholder="Search..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-25"
-              />
-            </CCardHeader>
-            {leaveData.length === 0 ? (
-              <p className="text-center">No logs found.</p>
-            ) : (
-              <>
-                <CTable align="middle" className="mb-0 border" hover responsive>
-                  <CTableHead>
-                    <CTableRow>
-                      <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
-                      {['name', 'contact', 'date', 'description', 'status'].map((col) => (
-                        <CTableHeaderCell
-                          key={col}
-                          className="text-center"
-                          onClick={() => handleSort(col)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          {col.charAt(0).toUpperCase() + col.slice(1)} {getSortIcon(col)}
-                        </CTableHeaderCell>
-                      ))}
-                      <CTableHeaderCell
-                        className="text-center"
-                        onClick={() => handleSort('status')}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        Action {getSortIcon('status')}
-                      </CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {currentRecords.map((item, index) => (
-                      <CTableRow key={index}>
-                        <CTableDataCell className="text-center">
-                          {(currentPage - 1) * recordsPerPage + index + 1}
-                        </CTableDataCell>
-                        <CTableDataCell className="text-center">{item.name}</CTableDataCell>
-                        <CTableDataCell className="text-center">{item.contact}</CTableDataCell>
-                        <CTableDataCell className="text-center">{item.date}</CTableDataCell>
-                        <CTableDataCell className="text-center">{item.description}</CTableDataCell>
-                        <CTableDataCell
-                          className="text-center"
-                          style={{
-                            color:
-                              item.status === 'Approved'
-                                ? 'green'
-                                : item.status === 'Denied'
-                                  ? 'red'
-                                  : 'orange',
-                          }}
-                        >
-                          {item.status}
-                        </CTableDataCell>
-                        <CTableDataCell className="text-center">
-                          <CButton
-                            color="success"
-                            className="me-2"
-                            onClick={() => handleApprove(index)}
-                          >
-                            <CIcon icon={cilCheckCircle} />
-                          </CButton>
-                          <CButton color="danger" onClick={() => handleDeny(index)}>
-                            <CIcon icon={cilXCircle} />
-                          </CButton>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
+      <ToastContainer />
 
-                <CPagination align="center" className="mt-4">
-                  <CPaginationItem
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((prev) => prev - 1)}
-                  >
-                    Previous
-                  </CPaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <CPaginationItem
-                      key={i}
-                      active={i + 1 === currentPage}
-                      onClick={() => setCurrentPage(i + 1)}
-                    >
-                      {i + 1}
-                    </CPaginationItem>
-                  ))}
-                  <CPaginationItem
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                  >
-                    Next
-                  </CPaginationItem>
-                </CPagination>
-              </>
-            )}
-          </CCard>
-        </CCol>
-      </CRow>
+      <div className="mb-2 d-flex justify-content-end align-items-center">
+        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      </div>
+
+      <Table
+        title="Driver Leave Requests"
+        columns={columns}
+        filteredData={filteredData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        isFetching={isFetching}
+        errorMessage={
+          error
+            ? 'Error fetching driver expenses. Please try again later.'
+            : filteredData.length === 0 && !isFetching
+              ? 'No driver expense records found for the selected period.'
+              : ''
+        }
+      />
+
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+      />
     </div>
   )
 }

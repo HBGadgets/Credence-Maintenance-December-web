@@ -5,3 +5,8 @@
 .rotate-on-hover:hover {
     transform: rotate(90deg);
 }
+.common-color{
+   background-color: rgb(10, 45, 99) !important;
+   color: white !important;
+}
+

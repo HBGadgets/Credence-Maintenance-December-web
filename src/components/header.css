@@ -1,0 +1,36 @@
+.darkBackground {
+    background-color: #0a2d63;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+/* .filter-btn {
+  color: black !important;
+} */
+
+/* Custom hover color for CDropdownItem */
+.custom-dropdown-item:hover {
+    background-color: white;
+    /* Gray color on hover */
+    color: black;
+    /* Text color for better contrast */
+}
+
+.custom-dropdown-item.active {
+    background-color: #6c757d;
+    /* Optionally keep active state blue */
+    color: white;
+}
+
+/* Global override for all dropdown items */
+.dropdown-item:hover {
+    background-color: #6c757d !important;
+    /* Grey on hover */
+    color: white !important;
+    /* Text color */
+}

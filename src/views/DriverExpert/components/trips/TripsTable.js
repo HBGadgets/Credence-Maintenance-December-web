@@ -1,59 +1,35 @@
 import React, { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
 import {
-  CButton,
-  CPagination,
-  CPaginationItem,
   CTable,
   CTableBody,
   CTableHead,
   CTableRow,
   CTableHeaderCell,
   CTableDataCell,
-  CModal,
-  CModalBody,
-  CModalHeader,
-  CModalTitle,
-  CFormInput,
   CCardHeader,
   CCard,
+  CFormInput,
 } from '@coreui/react'
 import DateRangeFilter from '../../common/DateRangeFilter'
 import { Button } from '@mui/material'
 import signature from '../../Signature/signature.svg'
+import { toast } from 'react-toastify'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const TripsTable = ({ trips }) => {
-  const [open, setOpen] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [openModal, setOpenModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedImage, setSelectedImage] = useState('')
-  const itemsPerPage = 10 // Number of items per page in modal table
-
-  const handleOpenModal = (image) => {
-    setSelectedImage(image)
-    setOpenModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setOpenModal(false)
-    setSelectedImage('')
-  }
-
-  const handleOpen = () => {
-    setCurrentPage(1) // Reset to the first page when opening modal
-    setOpen(true)
-  }
 
   const handleSearch = (query) => {
     setSearchQuery(query)
-    setCurrentPage(1) // Reset to the first page after filtering
   }
 
   const handleApplyFilter = () => {
-    setCurrentPage(1) // Reset to the first page after filtering
+    // Logic to apply date range filter
   }
 
   // Sort trips by date (descending) for the latest 5 entries
@@ -61,7 +37,7 @@ const TripsTable = ({ trips }) => {
   const latestTrips = sortedTrips.slice(0, 5)
 
   // Filter trips based on search query and date range
-  const filteredTrips = trips.filter((trip) => {
+  const filteredTrips = latestTrips.filter((trip) => {
     const matchesSearch =
       trip.vehicleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trip.tripStart.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,177 +49,126 @@ const TripsTable = ({ trips }) => {
     return date >= new Date(startDate) && date <= new Date(endDate) && matchesSearch
   })
 
-  // Pagination logic for modal table
-  const totalPages = Math.ceil(filteredTrips.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentTrips = filteredTrips.slice(startIndex, startIndex + itemsPerPage)
+  // Export to PDF function
+  const exportToPDF = () => {
+    try {
+      if (!filteredTrips.length) throw new Error('No data available for PDF export')
 
-  // Table component for displaying trips
-  const TripsContent = ({ data }) => {
-    if (data.length === 0) {
-      return (
-        <div className="text-center my-4">
-          <h5>No results found for "{searchQuery}"</h5>
-        </div>
-      )
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+      const headers = ['Date', 'Vehicle', 'Trip Start', 'Trip End', 'Log KM', 'GPS KM']
+      const data = filteredTrips.map((trip) => [
+        trip.date,
+        trip.vehicleName,
+        new Date(trip.tripStart).toLocaleString(),
+        new Date(trip.tripEnd).toLocaleString(),
+        `${trip.logKm} km`,
+        `${trip.gpsKm} km`,
+      ])
+
+      doc.autoTable({ head: [headers], body: data, startY: 20 })
+      doc.save(`Trips_List_${new Date().toISOString().split('T')[0]}.pdf`)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      toast.error(error.message || 'Failed to export PDF')
     }
+  }
 
-    return (
-      <CTable hover responsive bordered striped>
-        <CTableHead>
-          <CTableRow className="text-center">
-            <CTableHeaderCell>Date</CTableHeaderCell>
-            <CTableHeaderCell>Vehicle</CTableHeaderCell>
-            <CTableHeaderCell>Trip Start</CTableHeaderCell>
-            <CTableHeaderCell>Trip End</CTableHeaderCell>
-            <CTableHeaderCell>Log KM</CTableHeaderCell>
-            <CTableHeaderCell>GPS KM</CTableHeaderCell>
-            <CTableHeaderCell>Customer Signature</CTableHeaderCell>
-          </CTableRow>
-        </CTableHead>
-        <CTableBody className="text-center">
-          {data.map((trip) => (
-            <CTableRow key={trip.id}>
-              <CTableDataCell>{trip.date}</CTableDataCell>
-              <CTableDataCell>{trip.vehicleName}</CTableDataCell>
-              <CTableDataCell>{new Date(trip.tripStart).toLocaleString()}</CTableDataCell>
-              <CTableDataCell>{new Date(trip.tripEnd).toLocaleString()}</CTableDataCell>
-              <CTableDataCell>{trip.logKm} km</CTableDataCell>
-              <CTableDataCell>
-                <span
-                  className={`badge ${
-                    Math.abs(trip.logKm - trip.gpsKm) <= 5 ? 'bg-success' : 'bg-danger'
-                  }`}
-                >
-                  {trip.gpsKm} km
-                </span>
-              </CTableDataCell>
-              <CTableDataCell className="text-center">
-                <Button
-                  variant="contained"
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: '#fff',
-                    padding: '6px 12px',
-                    fontSize: '14px',
-                  }}
-                  onClick={() => handleOpenModal(signature)}
-                >
-                  View Sign
-                </Button>
-              </CTableDataCell>
-            </CTableRow>
-          ))}
-        </CTableBody>
-      </CTable>
-    )
+  // Export to Excel function
+  const exportToExcel = () => {
+    try {
+      if (!filteredTrips.length) throw new Error('No data available for Excel export')
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Trips')
+      worksheet.addRow(['Date', 'Vehicle', 'Trip Start', 'Trip End', 'Log KM', 'GPS KM'])
+
+      filteredTrips.forEach((trip) => {
+        worksheet.addRow([
+          trip.date,
+          trip.vehicleName,
+          new Date(trip.tripStart).toLocaleString(),
+          new Date(trip.tripEnd).toLocaleString(),
+          `${trip.logKm} km`,
+          `${trip.gpsKm} km`,
+        ])
+      })
+
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        saveAs(new Blob([buffer]), `Trips_List_${new Date().toISOString().split('T')[0]}.xlsx`)
+        toast.success('Excel file downloaded successfully')
+      })
+    } catch (error) {
+      toast.error(error.message || 'Failed to export Excel')
+    }
   }
 
   return (
-    <div>
-      <CCard className="mb-4">
-        <CCardHeader>
-          <strong>Trip Details</strong>
-        </CCardHeader>
-        <div className="overflow-auto">
-          <TripsContent data={latestTrips} />
-        </div>
-        <div className="d-flex justify-content-end">
-          <button type="button" className="btn btn-secondary m-1" onClick={handleOpen}>
-            View More
-          </button>
-        </div>
+    <CCard className="mb-4">
+      <CCardHeader className="d-flex justify-content-between align-items-center">
+        <strong>Trip Details</strong>
 
-        {/* Main Modal */}
-        <CModal
-          alignment="center"
-          scrollable
-          visible={open}
-          onClose={() => setOpen(false)}
-          fullscreen
-        >
-          <CModalHeader>
-            <CModalTitle>All Trips Details</CModalTitle>
-          </CModalHeader>
+        {/* Search Bar */}
+        <CFormInput
+          type="text"
+          placeholder="Search vehicles..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{ width: '250px', maxWidth: '100%' }}
+        />
+      </CCardHeader>
 
-          <CModalBody className="d-flex flex-column gap-3">
-            <div className="d-flex align-items-center justify-content-between gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <DateRangeFilter
-                  startDate={startDate}
-                  endDate={endDate}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                />
-                <CButton
-                  className="bg-success text-white p-1 mt-3"
-                  onClick={handleApplyFilter}
-                  color="primary"
-                >
-                  Apply Filter
-                </CButton>
-              </div>
-
-              <CFormInput
-                type="text"
-                placeholder="Search vehicles..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{
-                  width: '200px',
-                  boxShadow: searchQuery ? '0 0 8px rgba(0, 123, 255, 0.75)' : 'none',
-                  borderColor: searchQuery ? '#007bff' : undefined,
-                }}
-              />
-            </div>
-            <TripsContent data={currentTrips} />
-
-            {/* Pagination for modal table */}
-            {totalPages > 1 && filteredTrips.length > itemsPerPage && (
-              <CPagination align="center" className="mt-4">
-                <CPaginationItem
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                >
-                  Previous
-                </CPaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <CPaginationItem
-                    key={i + 1}
-                    active={i + 1 === currentPage}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </CPaginationItem>
-                ))}
-                <CPaginationItem
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                >
-                  Next
-                </CPaginationItem>
-              </CPagination>
+      <div className="overflow-auto">
+        <CTable hover responsive bordered striped>
+          <CTableHead>
+            <CTableRow className="text-center">
+              <CTableHeaderCell>SrNo</CTableHeaderCell>
+              <CTableHeaderCell>Date</CTableHeaderCell>
+              <CTableHeaderCell>Vehicle</CTableHeaderCell>
+              <CTableHeaderCell>Trip Start</CTableHeaderCell>
+              <CTableHeaderCell>Trip End</CTableHeaderCell>
+              <CTableHeaderCell>Log KM</CTableHeaderCell>
+              <CTableHeaderCell>GPS KM</CTableHeaderCell>
+              <CTableHeaderCell>Customer Signature</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
+          <CTableBody className="text-center">
+            {filteredTrips.length === 0 ? (
+              <CTableRow>
+                <CTableDataCell colSpan="8" className="text-center">
+                  No results found for "{searchQuery}"
+                </CTableDataCell>
+              </CTableRow>
+            ) : (
+              filteredTrips.map((trip) => (
+                <CTableRow key={trip.id}>
+                  <CTableDataCell>{trip.date}</CTableDataCell>
+                  <CTableDataCell>{trip.vehicleName}</CTableDataCell>
+                  <CTableDataCell>{new Date(trip.tripStart).toLocaleString()}</CTableDataCell>
+                  <CTableDataCell>{new Date(trip.tripEnd).toLocaleString()}</CTableDataCell>
+                  <CTableDataCell>{trip.logKm} km</CTableDataCell>
+                  <CTableDataCell>
+                    <span
+                      className={`badge ${Math.abs(trip.logKm - trip.gpsKm) <= 5 ? 'bg-success' : 'bg-danger'
+                        }`}
+                    >
+                      {trip.gpsKm} km
+                    </span>
+                  </CTableDataCell>
+                  <CTableDataCell className="text-center">
+                    <Button
+                      variant="contained"
+                      style={{ backgroundColor: '#007bff', color: '#fff', padding: '6px 12px' }}
+                    >
+                      View Sign
+                    </Button>
+                  </CTableDataCell>
+                </CTableRow>
+              ))
             )}
-          </CModalBody>
-        </CModal>
-
-        {/* Signature Modal */}
-        <CModal alignment="center" visible={openModal} onClose={handleCloseModal}>
-          <CModalHeader>
-            <CModalTitle>Customer Signature</CModalTitle>
-          </CModalHeader>
-          <CModalBody className="d-flex justify-content-center">
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Customer Signature"
-                style={{ maxWidth: '100%', maxHeight: '400px' }}
-              />
-            )}
-          </CModalBody>
-        </CModal>
-      </CCard>
-    </div>
+          </CTableBody>
+        </CTable>
+      </div>
+    </CCard>
   )
 }
 

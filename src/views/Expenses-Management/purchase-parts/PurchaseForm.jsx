@@ -7,7 +7,6 @@ import {
   CRow,
   CCol,
   CFormInput,
-  CFormLabel,
   CButton,
   CInputGroup,
   CInputGroupText,
