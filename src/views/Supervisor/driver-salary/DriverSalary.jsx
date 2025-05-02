@@ -147,13 +147,23 @@ const DriverSalary = () => {
         // Remove metadata fields and send only changed data
         const { driverId, _id, ...updateData } = submittedData
         await patchDriverSalaryApi(_id, updateData)
-        toast.success('Salary updated successfully!')
+        Swal.fire({
+          icon: 'success',
+          title: 'Salary Updated!',
+          text: 'Salary updated successfully!',
+          confirmButtonText: 'OK',
+        })
       } else {
         if (!submittedData.driverId) {
           throw new Error('Driver ID is required to create salary.')
         }
         await postDriverSalaryApi(submittedData.driverId, submittedData)
-        toast.success('Salary created successfully!')
+        Swal.fire({
+          icon: 'success',
+          title: 'Salary Added!',
+          text: 'Salary created successfully!',
+          confirmButtonText: 'OK',
+        })
       }
 
       // Invalidate query only after successful API call
@@ -184,7 +194,6 @@ const DriverSalary = () => {
     if (result.isConfirmed) {
       try {
         await deleteDriverSalaryApi(id)
-        toast.success('Salary deleted successfully.')
         Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
         // Refresh salary list
         await queryClient.invalidateQueries(['driverSalaries', month])
