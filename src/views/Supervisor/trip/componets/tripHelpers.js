@@ -10,15 +10,17 @@ export const fetchTripDataHelper = async (id, setAllData, setFilteredData, setLo
         setAllData(data)
         setFilteredData(data)
     } catch (err) {
-        if (!err.response) setError('Network Error')
-        else if (err.response.status === 500) setError(err.message)
+        if (typeof setError === 'function') {
+            if (!err.response) setError('Network Error')
+            else if (err.response.status === 500) setError(err.message)
+        }
     } finally {
-        setLoading(false)
+        if (typeof setLoading === 'function') setLoading(false)
     }
 }
 
 // Add Trip
-export const handleAddHelper = async (formData, fetchTripData) => {
+export const handleAddHelper = async (formData, fetchTripData, refetch) => {
     try {
         const payload = {
             driverId: formData.driverId,
@@ -31,7 +33,8 @@ export const handleAddHelper = async (formData, fetchTripData) => {
             date: formData.date,
         }
         await postTripApi(payload)
-        await fetchTripData()
+        if (typeof fetchTripData === 'function') await fetchTripData()
+        if (typeof refetch === 'function') await refetch()
         Swal.fire({
             icon: 'success',
             title: 'Trip Added!',
@@ -44,8 +47,9 @@ export const handleAddHelper = async (formData, fetchTripData) => {
     }
 }
 
+
 // Edit Trip
-export const handleEditHelper = async (formData, fetchTripData) => {
+export const handleEditHelper = async (formData, fetchTripData, refetch) => {
     try {
         const updatePayload = {
             driverId: formData.driverId,
@@ -59,21 +63,30 @@ export const handleEditHelper = async (formData, fetchTripData) => {
             status: formData.status,
         }
         await patchTripApi(formData._id, updatePayload)
-        await fetchTripData()
+
+        if (typeof fetchTripData === 'function') {
+            await fetchTripData()
+        }
+
+        if (typeof refetch === 'function') {
+            await refetch()
+        }
+
         Swal.fire({
             icon: 'success',
-            title: 'Trip Updated !',
+            title: 'Trip Updated!',
             text: 'Trip updated successfully!',
             confirmButtonText: 'OK',
         })
     } catch (err) {
-        toast.error('Trip Error on Update trip!')
+        toast.error('Trip Error on update trip!')
         console.error('Trip update failed:', err.message)
     }
 }
 
+
 // Delete Trip
-export const handleDeleteHelper = async (tripId, fetchTripData, fieldName = 'Trip') => {
+export const handleDeleteHelper = async (tripId, fetchTripData, fieldName = 'Trip', refetch) => {
     const result = await Swal.fire({
         title: `Delete ${fieldName}?`,
         text: 'Are you sure you want to delete this trip? This action cannot be undone!',
@@ -89,12 +102,12 @@ export const handleDeleteHelper = async (tripId, fetchTripData, fieldName = 'Tri
         try {
             await deleteTripApi(tripId)
             await fetchTripData()
-            toast.success('Trip Deleted successfully!')
+            if (typeof refetch === 'function') await refetch()
+            toast.success('Trip deleted successfully!')
             Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
         } catch (err) {
-            toast.error('Trip Error occured!')
+            toast.error('Trip Error occurred!')
             console.error('Delete failed:', err.message)
-            Swal.fire('Error!', 'Failed to delete the trip.', 'error')
         }
     }
 }
