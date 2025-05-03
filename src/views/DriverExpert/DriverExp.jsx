@@ -5,10 +5,13 @@ import { fetchDrivers } from './data/drivers'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import SearchInput from '../components/SearchInput'
+import { Add } from '@mui/icons-material'
+import AddDriverModel from './components/AddDriverModel'
 
 function DriversPage() {
   // const [isFetching, setIsFetching] = useState(true)
   const [filteredData, setFilteredData] = useState([])
+  const [visible, setVisible] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,10 +65,21 @@ function DriversPage() {
     alert('Delete button clicked')
   }
 
+  const handelAddDriver = () => {
+    setVisible(true)
+  }
+
   return (
     <>
-      <div className="mb-2 d-flex justify-content-end align-items-center">
+      <div className="mb-2 d-flex justify-content-end gap-5 align-items-center">
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+        <button
+          className="btn text-white"
+          style={{ backgroundColor: '#0a2d63' }}
+          onClick={handelAddDriver}
+        >
+          Add Driver
+        </button>
       </div>
 
       <Table
@@ -96,6 +110,7 @@ function DriversPage() {
           }
         }}
       />
+      <AddDriverModel visible={visible} setVisible={setVisible} />
     </>
   )
 }
