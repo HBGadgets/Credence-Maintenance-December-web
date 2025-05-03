@@ -214,6 +214,7 @@ const DriverSalary = () => {
         {/* Left: Date Picker */}
         <div className="col-md-2 d-flex align-items-center">
           <DateRangePicker
+            label={true}
             onMonthChange={(selectedMonth) => {
               if (selectedMonth !== month) {
                 setMonth(selectedMonth)

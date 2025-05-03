@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import PropTypes from 'prop-types'
 import './attendance-card.css'
 
-const AttendanceCard = ({ title, subtitle, count, status, rate, statusColor }) => {
+const AttendanceCard = ({ title, subtitle, count, status, rate, statusColor, subStatus }) => {
   return (
     <div className="card attendance-card">
       <div className="card-body">
@@ -17,7 +17,9 @@ const AttendanceCard = ({ title, subtitle, count, status, rate, statusColor }) =
           <span className="status-badge" style={{ backgroundColor: statusColor }}>
             {status}
           </span>
-          <span className="attendance-rate">{rate}% attendance rate</span>
+          <span className="attendance-rate">
+            {rate} {subStatus}
+          </span>
         </div>
       </div>
     </div>

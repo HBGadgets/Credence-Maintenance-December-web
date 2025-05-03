@@ -36,12 +36,12 @@ export const driverProfile = async (id) => {
   }
 }
 
-export const driverAttendance = async (id) => {
+export const driverAttendance = async (id, selectedMonth) => {
   try {
     if (!token) throw new Error('Authentication token not found')
 
     const { data } = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendence-month-wise?driverId=${id}&month=2025-03`,
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendence-month-wise?driverId=${id}&month=${selectedMonth}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
