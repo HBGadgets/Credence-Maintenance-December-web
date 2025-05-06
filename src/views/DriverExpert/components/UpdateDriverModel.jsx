@@ -17,6 +17,7 @@ import {
 import PropTypes from 'prop-types'
 import { updateDriver } from '../data/drivers'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import Swal from 'sweetalert2'
 
 function UpdateDriverModel({ visible, setVisible, driver }) {
   const [formData, setFormData] = useState({
@@ -84,6 +85,11 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
     onSuccess: () => {
       queryClient.invalidateQueries(['drivers'])
       setVisible(false)
+      Swal.fire({
+        icon: 'success',
+        title: 'Driver Updated Successfully!',
+        confirmButtonText: 'OK',
+      })
     },
     onError: (error) => {
       console.error('Update failed:', error.message)

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 
 const token =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
@@ -67,11 +68,6 @@ export const updateDriver = async (id, data) => {
   try {
     if (!token) throw new Error('Authentication token not found')
 
-    // const form = new FormData()
-    // for (const key in data) {
-    //   if (data[key]) form.append(key, data[key])
-    // }
-
     const { data: response } = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/drivers/update/${id}`,
       data,
@@ -122,6 +118,54 @@ export const driverAttendance = async (id, selectedMonth) => {
     )
 
     return data
+  } catch (error) {
+    alert(error.message)
+    throw error
+  }
+}
+
+export const driverExpenses = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/driverExpense/get-driver-expense-by-driver-id/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return data.map((expenses) => ({
+      date: formatDateToDDMMYYYY(expenses.date),
+      description: expenses.description,
+      location: expenses.location,
+      shopName: expenses.shopName,
+      amount: expenses.amount,
+      payment: expenses.paymentMode,
+      billImg: expenses.billImg,
+    }))
+  } catch (error) {
+    alert(error.message)
+    throw error
+  }
+}
+
+export const getDriverBillApi = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { res } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/driverExpense/bill-img/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return res.data
   } catch (error) {
     alert(error.message)
     throw error
