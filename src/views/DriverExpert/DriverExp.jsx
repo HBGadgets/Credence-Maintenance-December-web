@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import { fetchDrivers } from './data/drivers'
+import { fetchDrivers, deleteDriver, updateDriver } from './data/drivers'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import SearchInput from '../components/SearchInput'
-import { Add } from '@mui/icons-material'
 import AddDriverModel from './components/AddDriverModel'
+import UpdateDriverModel from './components/UpdateDriverModel'
+import { filter } from 'lodash'
 
 function DriversPage() {
   // const [isFetching, setIsFetching] = useState(true)
@@ -15,7 +16,11 @@ function DriversPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [editVisible, setEditVisible] = useState(false)
+  const [selectedDriver, setSelectedDriver] = useState(null)
+
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: drivers = [], isFetching } = useQuery({
     queryKey: ['drivers'],
@@ -57,12 +62,23 @@ function DriversPage() {
     { label: 'Password', key: 'password', sortable: false },
   ]
 
-  const handleEditButton = () => {
-    alert('Edit button clicked')
+  const handleEditButton = (driver) => {
+    console.log('Filtered Driver:', filteredData)
+    setSelectedDriver(filteredData.find((item) => item.id === driver))
+    setEditVisible(true)
   }
 
-  const handleDeleteButton = () => {
-    alert('Delete button clicked')
+  const handleDeleteButton = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this driver?')) return
+
+    try {
+      await deleteDriver(id)
+      queryClient.invalidateQueries(['drivers']) // Refresh the driver list
+      alert('Driver deleted successfully')
+    } catch (error) {
+      console.error('Failed to delete driver:', error.response?.data?.message || error.message)
+      alert(`Failed to delete driver: ${error.response?.data?.message || error.message} `)
+    }
   }
 
   const handelAddDriver = () => {
@@ -111,6 +127,14 @@ function DriversPage() {
         }}
       />
       <AddDriverModel visible={visible} setVisible={setVisible} />
+      <UpdateDriverModel
+        visible={editVisible}
+        setVisible={(val) => {
+          setEditVisible(val)
+          if (!val) setSelectedDriver(null) // Clear driver when modal is closed
+        }}
+        driver={selectedDriver}
+      />
     </>
   )
 }

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { use, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   CButton,
   CCol,
@@ -15,10 +15,10 @@ import {
   CRow,
 } from '@coreui/react'
 import PropTypes from 'prop-types'
-import { addDriver, fetchDrivers } from '../data/drivers'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { updateDriver } from '../data/drivers'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-function AddDriverModel({ visible, setVisible }) {
+function UpdateDriverModel({ visible, setVisible, driver }) {
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
@@ -30,65 +30,64 @@ function AddDriverModel({ visible, setVisible }) {
     licenseImage: null,
     aadharImage: null,
   })
+
   const [errors, setErrors] = useState({})
   const queryClient = useQueryClient()
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      contactNumber: '',
-      email: '',
-      password: '',
-      licenseNumber: '',
-      aadharNumber: '',
-      profileImage: null,
-      licenseImage: null,
-      aadharImage: null,
-    })
-    setErrors({})
-  }
+  useEffect(() => {
+    if (driver) {
+      setFormData({
+        name: driver.name || '',
+        contactNumber: driver.contactNumber || '',
+        email: driver.email || '',
+        password: '',
+        licenseNumber: driver.licenseNumber || '',
+        aadharNumber: driver.aadharNumber || '',
+        profileImage: null,
+        licenseImage: null,
+        aadharImage: null,
+      })
+    }
+  }, [driver])
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.name.trim()) newErrors.name = 'Name is required.'
-    if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required.'
-    else if (!/^[0-9]{10}$/.test(formData.contactNumber.trim()))
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required.'
+    }
+
+    const contactStr = String(formData.contactNumber || '').trim()
+    if (!contactStr) {
+      newErrors.contactNumber = 'Contact number is required.'
+    } else if (!/^[0-9]{10}$/.test(contactStr)) {
       newErrors.contactNumber = 'Enter a valid 10-digit number.'
-    if (!formData.password.trim()) newErrors.password = 'Password is required.'
-    else if (formData.password.length < 6)
-      newErrors.password = 'Password must be at least 6 characters long.'
+    }
+
     return newErrors
   }
 
-  useQuery({
-    queryKey: ['drivers'],
-    queryFn: fetchDrivers,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
-  })
-
   const handleChange = (e) => {
     const { name, value, files } = e.target
-    const updatedValue = files ? files[0] : value
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }))
 
-    setFormData({ ...formData, [name]: updatedValue })
-
-    // Clear error on field change
     if (errors[name]) {
-      setErrors({ ...errors, [name]: '' })
+      setErrors((prev) => ({ ...prev, [name]: '' }))
     }
   }
 
   const mutation = useMutation({
-    mutationFn: (formData) => addDriver(formData),
-    onSuccess: (data) => {
-      console.log('Driver added:', data)
-      // Close modal, reset form, refetch list, show toast, etc.
+    mutationFn: ({ id, data }) => updateDriver(id, data),
+    onSuccess: () => {
       queryClient.invalidateQueries(['drivers'])
       setVisible(false)
-      resetForm()
     },
     onError: (error) => {
-      alert(`Failed to add driver: ${error.response?.data?.message || error.message}`)
+      console.error('Update failed:', error.message)
+      alert(error.message || 'Failed to update driver.')
     },
   })
 
@@ -99,35 +98,26 @@ function AddDriverModel({ visible, setVisible }) {
       setErrors(validationErrors)
       return
     }
-    // Trim string fields
-    const cleanedFormData = { ...formData }
-    for (const key in cleanedFormData) {
-      if (typeof cleanedFormData[key] === 'string') {
-        cleanedFormData[key] = cleanedFormData[key].trim()
-      }
-    }
 
     const form = new FormData()
-    for (const key in formData) {
-      if (formData[key]) form.append(key, formData[key])
-    }
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        form.append(key, value)
+      }
+    })
 
-    mutation.mutate(form)
+    console.log('driver:', driver)
+
+    mutation.mutate({ id: driver.id, data: form })
   }
 
   return (
-    <CModal
-      alignment="center"
-      scrollable
-      visible={visible}
-      onClose={() => setVisible(false)}
-      aria-labelledby="AddDriverModal"
-    >
+    <CModal alignment="center" scrollable visible={visible} onClose={() => setVisible(false)}>
       <CModalHeader>
-        <CModalTitle id="AddDriverModal">Add Driver</CModalTitle>
+        <CModalTitle>Edit Driver</CModalTitle>
       </CModalHeader>
-      <CModalBody>
-        <CForm noValidate onSubmit={handleSubmit}>
+      <CForm noValidate onSubmit={handleSubmit}>
+        <CModalBody>
           <CRow className="mb-2">
             <CCol md={6}>
               <CFormLabel htmlFor="name">Name *</CFormLabel>
@@ -169,16 +159,14 @@ function AddDriverModel({ visible, setVisible }) {
               />
             </CCol>
             <CCol md={6}>
-              <CFormLabel htmlFor="password">Password *</CFormLabel>
+              <CFormLabel htmlFor="password">Password</CFormLabel>
               <CFormInput
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                invalid={!!errors.password}
               />
-              {errors.password && <CFormText className="text-danger">{errors.password}</CFormText>}
             </CCol>
           </CRow>
 
@@ -237,23 +225,24 @@ function AddDriverModel({ visible, setVisible }) {
               />
             </CCol>
           </CRow>
-        </CForm>
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" onClick={() => setVisible(false)}>
-          Close
-        </CButton>
-        <CButton color="primary" onClick={handleSubmit}>
-          Save Driver
-        </CButton>
-      </CModalFooter>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisible(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" type="submit">
+            Update Driver
+          </CButton>
+        </CModalFooter>
+      </CForm>
     </CModal>
   )
 }
 
-AddDriverModel.propTypes = {
-  visible: PropTypes.bool,
-  setVisible: PropTypes.func,
+UpdateDriverModel.propTypes = {
+  visible: PropTypes.bool.isRequired,
+  setVisible: PropTypes.func.isRequired,
+  driver: PropTypes.object,
 }
 
-export default AddDriverModel
+export default UpdateDriverModel
