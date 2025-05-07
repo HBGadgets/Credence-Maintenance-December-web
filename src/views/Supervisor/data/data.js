@@ -306,3 +306,87 @@ export const deleteTripApi = async (id) => {
         throw error;
     }
 }
+
+
+// SubTripList
+
+export const getSubTripsApi = async (id) => {
+    if (!TOKEN) throw new Error("Authentication token not found");
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/trips/get-trip-analytics-by-trip-id/${id}`,
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+            },
+        }
+    );
+
+    const mainTrip = data.trips;
+    const subTrips = data.subtrip || [];
+
+    return {
+        mainTrip: {
+            id: mainTrip._id,
+            driverName: mainTrip?.driverId?.name || "",
+            vehicleName: mainTrip.vehicleName,
+            startLocation: mainTrip.startLocation,
+            endLocation: mainTrip.endLocation,
+            date: formatDateToDDMMYYYY(mainTrip.date),
+            budgetAllocated: mainTrip.budgetAllocated,
+            spentAmount: mainTrip.spentAmount,
+            status: mainTrip.status,
+            materialType: mainTrip.materialType,
+        },
+        subTrips: subTrips.map((sub) => ({
+            id: sub._id,
+            startLocation: sub.startLocation,
+            endLocation: sub.endLocation,
+            companyName: sub.companyName || "",
+            materialType: sub.materialType || "",
+            date: formatDateToDDMMYYYY(sub.date),
+            budgetAllocated: sub.budgetAllocated,
+            status: sub.status,
+        })),
+    };
+};
+
+
+// {
+//     "trips": {
+//         "_id": "67f5052f472f6703efa90f5b",
+//             "driverId": {
+//             "name": "Piyush Harde"
+//         },
+//         "vehicleName": "MH49BB9711",
+//             "supervisorId": "679b26e9ce1903ac227a4449",
+//                 "startLocation": "Nagpur",
+//                     "endLocation": "Kolkata",
+//                         "date": "2025-04-10T00:00:00.000Z",
+//                             "budgetAllocated": 5000,
+//                                 "spentAmount": 52800,
+//                                     "status": "in-progress",
+//                                         "updatedAt": "2025-04-26T14:45:53.424Z",
+//                                             "materialType": "Food , metal"
+//     },
+//     "subtrip": [
+//         {
+//             "_id": "680726bed8ff83a2df47ff19",
+//             "startLocation": "Delhi",
+//             "endLocation": "Mumbai",
+//             "date": "2025-04-21T10:30:00.000Z",
+//             "budgetAllocated": 15000,
+//             "status": "in-progress",
+//             "createdAt": "2025-04-22T10:48:54.959Z",
+//             "updatedAt": "2025-04-22T10:48:54.959Z"
+//         },
+//         {
+//             "_id": "68073ae30fae84dedd3fd022",
+//             "startLocation": "Mumbai",
+//             "endLocation": "Pune",
+//             "date": "2025-04-21T10:30:00.000Z",
+//             "budgetAllocated": 15000,
+//             "status": "in-progress",
+//             "createdAt": "2025-04-22T12:14:51.924Z",
+//             "updatedAt": "2025-04-22T12:14:51.924Z"
+//         },

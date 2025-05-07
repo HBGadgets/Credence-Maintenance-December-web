@@ -1,0 +1,20 @@
+/* /* .material-chart-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+} */
+
+.chartile-title {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.no-data-text {
+    text-align: center;
+    color: #6c757d;
+    margin-top: 40px;
+} 

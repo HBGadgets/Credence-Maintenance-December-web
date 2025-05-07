@@ -14,6 +14,7 @@ import ModalTrips from './ModalTrips'
 import { Button } from 'react-bootstrap'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { useNavigate } from 'react-router-dom'
 
 const Trip = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -24,6 +25,7 @@ const Trip = () => {
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+  const navigate = useNavigate()
 
   // Fetch Data
   const {
@@ -128,6 +130,7 @@ const Trip = () => {
   // Handle View button
   const handleViewButton = (id) => {
     console.log('trip id ', id)
+    navigate(`/SubTrips/${id}`)
   }
 
   return (
