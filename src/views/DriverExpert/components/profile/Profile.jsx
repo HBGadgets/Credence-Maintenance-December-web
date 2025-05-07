@@ -7,7 +7,7 @@ import { IdCard, Mail, Phone } from 'lucide-react'
 
 function Profile({ filterData }) {
   const isAvailable = Boolean(filterData?.currentVehicleName)
-  const badgeText = isAvailable ? 'Available' : 'Unavailable'
+  const badgeText = isAvailable ? 'Unavailable' : 'Available'
 
   return (
     <>
@@ -51,8 +51,8 @@ function Profile({ filterData }) {
         {/* Badge */}
         <div>
           <span
-            className={`position-relative btn text-white rounded-pill d-flex justify-content-center align-items-center badgeStyle ${
-              isAvailable ? 'btn-success' : 'btn-danger'
+            className={`position-relative btn text-white rounded-pill d-flex justify-content-center align-items-center badgeStyleProfile ${
+              isAvailable ? 'btn-danger' : 'btn-success'
             }`}
           >
             {badgeText}
