@@ -40,9 +40,14 @@ const MaterialAnalysisChart = ({ subTrips }) => {
       <div className="chartitles-title-header">
         <h3 className="chartitles-title">Material Usage Analysis</h3>
         <button onClick={toggleChart} className="toggle-chartitles-btn">
-          {chartType === 'pie' ? 'Switch to Bar Chart' : 'Switch to Pie Chart'}
+          {chartType === 'pie' ? 'Bar Chart' : 'Pie Chart'}
         </button>
       </div>
+
+      {/* Description for the chart */}
+      <p className="chart-description">
+        This chart provides insights into the usage of different materials across your trips.
+      </p>
 
       {data.length > 0 ? (
         <ResponsiveContainer width="100%" height={320}>
