@@ -6,6 +6,7 @@ import AttendanceSummary from './components/attendance/AttendanceSummary'
 import { driverProfile, driverExpenses } from './data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import DriverExpenses from '../components/DriverExpenses'
+import DriverLogbook from './components/logbook/DriverLogbook'
 
 function DriverProfile() {
   const { id } = useParams()
@@ -28,7 +29,7 @@ function DriverProfile() {
       content: <AttendanceSummary filterData={filterData.attendance} id={id} />,
     },
     { label: 'Expenses', content: <DriverExpenses id={id} /> },
-    { label: 'Logbook Details', content: 'Logbook Details tab content' },
+    { label: 'Logbook Details', content: <DriverLogbook id={id} /> },
     { label: 'Trips Details', content: 'Trips Details tab content' },
     { label: 'Salary Slips', content: 'Salary Slips tab content' },
     { label: 'Document Locker', content: 'Document Locker tab content' },

@@ -138,6 +138,8 @@ export const driverExpenses = async (id) => {
     )
 
     return data.map((expenses) => ({
+      id: expenses._id,
+      originalDate: expenses.date,
       date: formatDateToDDMMYYYY(expenses.date),
       description: expenses.description,
       location: expenses.location,
@@ -152,12 +154,36 @@ export const driverExpenses = async (id) => {
   }
 }
 
-export const getDriverBillApi = async (id) => {
+export const getDriverBillApi = async (billImg) => {
   try {
     if (!token) throw new Error('Authentication token not found')
 
-    const { res } = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/driverExpense/bill-img/${id}`,
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/driverExpense/bill-img/${billImg}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    return res.data
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message)
+    throw error
+  }
+}
+
+
+// ---------------------------------------------------------------------------------------------------------- 
+
+// get api for Logbook
+
+export const driverLogbookApi = async (id, month) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}api/dailylogs/get-daily-logs-month-wise?driverId=${id}&month=${month}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -165,9 +191,18 @@ export const getDriverBillApi = async (id) => {
       },
     )
 
-    return res.data
+    return data.map((logbook) => ({
+      id: logbook._id,
+      originalDate: logbook.startDate,
+      startDate: formatDateToDDMMYYYY(logbook.startDate),
+      vehicleName: logbook.vehicleName,
+      logKM: logbook.logKM,
+      gpsKM: logbook.gpsKM,
+      amount: logbook.amount,
+      signatureId: logbook.signatureId,
+    }))
   } catch (error) {
-    alert(error.message)
+    console.error("Error:", error.response?.data || error.message)
     throw error
   }
 }

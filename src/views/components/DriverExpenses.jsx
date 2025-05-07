@@ -4,8 +4,11 @@ import Table from './Table'
 import { driverExpenses, getDriverBillApi } from '../DriverExpert/data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import SmartPagination from './SmartPagination'
-import { toast } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import BillShow from './BillModal/BillShow'
+import SearchInput from './SearchInput'
+import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import { CContainer } from '@coreui/react'
 
 function DriverExpenses({ id }) {
   const [filteredData, setFilteredData] = useState([])
@@ -15,17 +18,75 @@ function DriverExpenses({ id }) {
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
+  // Date range and search
+  const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+
   const { data: driverExpensesData = [], isFetching } = useQuery({
     queryKey: ['DriverExpenses', id],
     queryFn: () => driverExpenses(id),
     staleTime: 1000 * 60 * 30,
   })
 
+  // useEffect(() => {
+  //   if (driverExpensesData) {
+  //     setFilteredData(driverExpensesData)
+  //   }
+  // }, [driverExpensesData])
+
   useEffect(() => {
-    if (driverExpensesData) {
-      setFilteredData(driverExpensesData)
+    let filtered = driverExpensesData
+
+    // Apply search filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
     }
-  }, [driverExpensesData])
+
+    // Filter by date range if available
+    if (dateRange.startDate && dateRange.endDate) {
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.originalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      })
+    }
+
+    // Apply style in payment
+    const styledData = filtered.map((data) => ({
+      ...data,
+      payment: (
+        <span
+          style={{
+            backgroundColor:
+              data.payment === 'upi'
+                ? '#0000FF'
+                : data.payment === 'cash'
+                  ? '#28a745'
+                  : data.payment === 'card'
+                    ? '#f5a623'
+                    : '#0000FF',
+            color: 'white',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            display: 'inline-block',
+            textTransform: 'capitalize',
+          }}
+        >
+          {data.payment}
+        </span>
+      ),
+    }))
+
+    setFilteredData(styledData)
+  }, [searchQuery, dateRange, driverExpensesData])
+
+  console.log('All data drvier expense', driverExpensesData)
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -46,70 +107,93 @@ function DriverExpenses({ id }) {
 
   console.log('Filtered Data:', filteredData)
 
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
+
+  // Handle Date Range Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
+  }
+
+  // handle View
   const handleViewButton = async (id) => {
-    const selectedRow = filteredData.find((item) => item.id === id)
-    if (!selectedRow) return toast.error('Data not found for this ID')
-    if (!selectedRow.billImg) return toast.warn('No bill image available for this entry.')
+    const selectedRow = driverExpensesData.find((item) => item.id === id)
+    if (selectedRow) {
+      console.log('idzaazz', id)
+      console.log('billImg value:', selectedRow.billImg)
 
-    try {
-      const response = await getDriverBillApi(selectedRow.billImg)
-      const { base64Data, contentType } = response
+      try {
+        const response = await getDriverBillApi(selectedRow.billImg)
+        const { base64Data, contentType } = response
 
-      if (base64Data && contentType) {
-        const fileSrc = `data:${contentType};base64,${base64Data}`
-        setPdfBase64(fileSrc)
-        setModalTitle(
-          contentType.startsWith('application/pdf')
-            ? 'Vehicle Bill (PDF)'
-            : contentType.startsWith('image')
-              ? 'Vehicle Bill (Image)'
-              : 'Vehicle Bill (File)',
-        )
-        setShowModal(true)
-      } else {
-        toast.error('Invalid bill image data.')
+        if (base64Data && contentType) {
+          const fileSrc = `data:${contentType};base64,${base64Data}`
+          setPdfBase64(fileSrc)
+          setModalTitle(
+            contentType.startsWith('application/pdf')
+              ? 'Vehicle Bill (PDF)'
+              : contentType.startsWith('image')
+                ? 'Vehicle Bill (Image)'
+                : 'Vehicle Bill (File)',
+          )
+          setShowModal(true)
+        } else {
+          toast.error('Invalid bill image data.')
+        }
+      } catch (error) {
+        console.error('Failed to fetch bill image:', error)
+        toast.error('No bill image found.')
       }
-    } catch (error) {
-      console.error('Failed to fetch bill image:', error)
-      toast.error('No bill image found.')
     }
   }
 
   return (
     <>
-      <Table
-        title="Driver Expenses"
-        columns={columns}
-        filteredData={paginatedData}
-        setFilteredData={setFilteredData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isFetching={isFetching}
-        viewButton={true}
-        handleViewButton={handleViewButton}
-      />
+      <CContainer className="px-2" fluid>
+        <ToastContainer />
 
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(value) => {
-          if (value === -1) {
-            setItemsPerPage(filteredData.length)
-            setCurrentPage(1)
-          } else {
-            setItemsPerPage(value)
-            setCurrentPage(1)
-          }
-        }}
-      />
+        <div className="mb-2 d-flex justify-content-between align-items-center">
+          {/* Left: Date Range Filter */}
+          <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+        </div>
 
-      <BillShow
-        showModal={showModal}
-        setShowModal={setShowModal}
-        pdfBase64={pdfBase64}
-        modalTitle={modalTitle}
-      />
+        <Table
+          title="Driver Expenses"
+          columns={columns}
+          filteredData={paginatedData}
+          setFilteredData={setFilteredData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          isFetching={isFetching}
+          viewButton={true}
+          handleViewButton={handleViewButton}
+        />
+
+        <SmartPagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(value) => {
+            if (value === -1) {
+              setItemsPerPage(filteredData.length)
+              setCurrentPage(1)
+            } else {
+              setItemsPerPage(value)
+              setCurrentPage(1)
+            }
+          }}
+        />
+
+        <BillShow
+          showModal={showModal}
+          setShowModal={setShowModal}
+          pdfBase64={pdfBase64}
+          modalTitle={modalTitle}
+        />
+      </CContainer>
     </>
   )
 }
