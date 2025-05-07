@@ -1,0 +1,48 @@
+/* .budget-chart-container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    margin-bottom: 30px;
+    border: 1px solid #f0f0f0;
+} */
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chartil-title {
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.toggle-chart-button {
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-chart-button:hover {
+    background-color: #375ac2;
+}
+
+@media (max-width: 768px) {
+    .chart-title {
+        font-size: 18px;
+    }
+
+    .toggle-chart-button {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+}

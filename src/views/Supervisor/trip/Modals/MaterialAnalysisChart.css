@@ -1,0 +1,35 @@
+.chartitles-title-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chartitles-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.toggle-chartitles-btn {
+    background-color: #4e73df;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-chartitles-btn:hover {
+    background-color: #375ac2;
+}
+
+.no-data-text {
+    text-align: center;
+    color: #999;
+    padding: 100px 0;
+    font-size: 18px;
+}

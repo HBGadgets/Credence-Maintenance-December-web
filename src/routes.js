@@ -18,6 +18,7 @@ const TyreShowDoc = React.lazy(() => import('./views/Tyre-Management/TyreShowDoc
 
 // Supervisor
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
+const SubTrips = React.lazy(() => import('./views/Supervisor/trip/componets/SubTripMain.jsx'))
 const DriverSalary = React.lazy(() => import('./views/Supervisor/driver-salary/DriverSalary.jsx'))
 const LeaveRequests = React.lazy(() => import('./views/Supervisor/leave-request/LeaveRequests.jsx'))
 const CurrentAttendence = React.lazy(
@@ -86,6 +87,7 @@ const routes = [
   /**SUPERVISOR */
 
   { path: '/Trip', name: 'Trips', element: Trip },
+  { path: '/SubTrips/:id', name: 'Sub Trips', element: SubTrips },
   { path: '/Salary', name: 'Drivers Salary', element: DriverSalary },
   { path: '/Attendence', name: 'Driver Attendence Mark', element: CurrentAttendence },
   { path: '/ComDetails', name: 'Company Details', element: ComDetails },
