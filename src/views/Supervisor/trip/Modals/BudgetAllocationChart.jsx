@@ -32,7 +32,7 @@ const BudgetAllocationChart = ({ subTrips }) => {
     budget: trip.budgetAllocated,
   }))
 
-  console.log('Trips budget', data)
+  const totalBudget = data.reduce((sum, item) => sum + item.budget, 0)
 
   return (
     <div className="budget-chart-container">
@@ -44,6 +44,13 @@ const BudgetAllocationChart = ({ subTrips }) => {
           </button>
         )}
       </div>
+
+      {/* Total Budget Display */}
+      {subTrips.length > 0 && (
+        <div className="total-budget">
+          <strong>Total Budget:</strong> ₹{totalBudget.toLocaleString()}
+        </div>
+      )}
 
       {subTrips.length === 0 ? (
         <div className="text-center text-muted" style={{ padding: '80px 0', fontSize: '18px' }}>
@@ -88,7 +95,7 @@ const BudgetAllocationChart = ({ subTrips }) => {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(name, value) => [`₹${value.toLocaleString()} : ${name}`]}
+                formatter={(value, name) => [`₹${value.toLocaleString()} : ${name}`]}
                 contentStyle={{
                   backgroundColor: '#fff',
                   borderRadius: '10px',

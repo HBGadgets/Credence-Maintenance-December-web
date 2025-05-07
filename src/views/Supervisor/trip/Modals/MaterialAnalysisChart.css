@@ -1,20 +1,35 @@
-/* /* .material-chart-container {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-} */
-
-.chartile-title {
+.chartitles-title-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 16px;
-    font-size: 18px;
+}
+
+.chartitles-title {
+    margin: 0;
+    font-size: 20px;
     font-weight: 600;
-    color: #343a40;
+    color: #333;
+}
+
+.toggle-chartitles-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-chartitles-btn:hover {
+    background-color: #0056b3;
 }
 
 .no-data-text {
     text-align: center;
-    color: #6c757d;
-    margin-top: 40px;
-} 
+    color: #999;
+    padding: 100px 0;
+    font-size: 18px;
+}

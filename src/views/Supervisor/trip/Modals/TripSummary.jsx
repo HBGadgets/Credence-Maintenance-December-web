@@ -18,12 +18,18 @@ const TripSummary = ({ mainTrip, subTrips }) => {
     (mainTrip?.budgetAllocated || 0) +
     (hasSubTrips ? subTrips.reduce((sum, trip) => sum + (trip.budgetAllocated || 0), 0) : 0)
   const totalSpent = mainTrip?.spentAmount || 0
-  const statusCounts = hasSubTrips
-    ? subTrips.reduce((acc, trip) => {
-        acc[trip.status] = (acc[trip.status] || 0) + 1
-        return acc
-      }, {})
-    : {}
+  const statusCounts = {}
+  if (mainTrip?.status) {
+    statusCounts[mainTrip.status] = 1
+  }
+
+  if (hasSubTrips) {
+    subTrips.forEach((trip) => {
+      if (trip.status) {
+        statusCounts[trip.status] = (statusCounts[trip.status] || 0) + 1
+      }
+    })
+  }
 
   return (
     <div className="trip-summary">
