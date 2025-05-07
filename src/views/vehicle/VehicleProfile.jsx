@@ -76,7 +76,7 @@ function VehicleProfile() {
           <div className="action-section-grid mt-4">
             {[
               { title: 'Vehicle Expenses', route: 'VehicleExpenses', icon: <IoCarOutline /> },
-              { title: 'Trip', route: 'VehicleTrips', icon: <IoSpeedometerOutline /> },
+              { title: 'Vehicle Trips', route: 'VehicleTrips', icon: <IoSpeedometerOutline /> },
               { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
             ].map((item, index) => (
               <div key={index} className="action-card" onClick={() => navigate(item.route)}>
