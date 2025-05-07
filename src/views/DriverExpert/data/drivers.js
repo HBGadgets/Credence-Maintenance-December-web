@@ -168,22 +168,17 @@ export const getDriverBillApi = async (billImg) => {
     )
     return res.data
   } catch (error) {
-    console.error("Error:", error.response?.data || error.message)
+    console.error('Error:', error.response?.data || error.message)
     throw error
   }
 }
 
-
-// ---------------------------------------------------------------------------------------------------------- 
-
-// get api for Logbook
-
-export const driverLogbookApi = async (id, month) => {
+export const driverLogbook = async (id, month) => {
   try {
     if (!token) throw new Error('Authentication token not found')
 
     const { data } = await axios.get(
-      `${import.meta.env.VITE_API_URL}api/dailylogs/get-daily-logs-month-wise?driverId=${id}&month=${month}`,
+      `${import.meta.env.VITE_API_URL}/api/dailylogs/get-daily-logs-month-wise?driverId=${id}&month=${month}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -202,7 +197,7 @@ export const driverLogbookApi = async (id, month) => {
       signatureId: logbook.signatureId,
     }))
   } catch (error) {
-    console.error("Error:", error.response?.data || error.message)
+    console.error('Error:', error.response?.data || error.message)
     throw error
   }
 }

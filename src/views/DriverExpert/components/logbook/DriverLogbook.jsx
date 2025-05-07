@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { driverLogbookApi } from '../../data/drivers'
+import { driverLogbook } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import { CContainer } from '@coreui/react'
 import Table from '../../../components/Table'
@@ -10,12 +10,11 @@ const DriverLogbook = ({ id }) => {
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
   const { data: driverLogbookData = [], isFetching } = useQuery({
-    queryKey: ['logbook', id, selectedMonth],
-    queryFn: () => driverLogbookApi(id, selectedMonth),
+    queryKey: ['logbook'],
+    queryFn: () => driverLogbook(id, selectedMonth),
     staleTime: 1000 * 60 * 30,
   })
 
@@ -24,6 +23,11 @@ const DriverLogbook = ({ id }) => {
       setFilteredData(driverLogbookData)
     }
   }, [driverLogbookData])
+
+  useEffect(() => {
+    console.log('OYEEEEEEEEEEEEEEEEEEEEEEEEEEEE🙄🙄🙄')
+    driverLogbook(id, selectedMonth)
+  }, [id, selectedMonth])
 
   console.log('All logbook data ', driverLogbookData)
 
