@@ -35,6 +35,27 @@ const TripMap = ({ mainTrip, subTrips, showSubTrips }) => {
   const [mainEndCoords, setMainEndCoords] = useState(null)
   const [subTripCoords, setSubTripCoords] = useState([])
 
+  // Custom icons for start (green) and end (red) markers
+  const greenIcon = new L.Icon({
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  })
+
+  const redIcon = new L.Icon({
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  })
+
   // Load main trip coordinates
   useEffect(() => {
     const fetchMain = async () => {
@@ -96,10 +117,10 @@ const TripMap = ({ mainTrip, subTrips, showSubTrips }) => {
       {/* Main Trip */}
       {hasMainTrip && (
         <>
-          <Marker position={mainStartCoords}>
+          <Marker position={mainStartCoords} icon={greenIcon}>
             <Popup>Main Trip Start: {mainTrip.startLocation}</Popup>
           </Marker>
-          <Marker position={mainEndCoords}>
+          <Marker position={mainEndCoords} icon={redIcon}>
             <Popup>Main Trip End: {mainTrip.endLocation}</Popup>
           </Marker>
           <Polyline positions={[mainStartCoords, mainEndCoords]} color="blue" />
