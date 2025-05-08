@@ -201,3 +201,42 @@ export const driverLogbook = async (id, month) => {
     throw error
   }
 }
+
+
+export const driverSalary = async (id) => {
+
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/salary/get/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    // console.log("all data salaray", response.data)
+
+
+    return data.map((salary) => ({
+      id: salary._id,
+      driverId: salary.driverId,
+      basicPay: salary.basicPay,
+      overtime: salary.overtime,
+      incentives: salary.incentives,
+      deductions: salary.deductions,
+      netPay: salary.netPay,
+      createdAt: formatDateToDDMMYYYY(salary.createdAt),
+      originalDate: salary.createdAt
+    }))
+
+
+
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message)
+    throw error
+  }
+
+}

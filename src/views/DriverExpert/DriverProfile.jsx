@@ -7,6 +7,7 @@ import { driverProfile, driverExpenses } from './data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import DriverExpenses from '../components/DriverExpenses'
 import DriverLogbook from './components/logbook/DriverLogbook'
+import Salary from './components/salary/Salary'
 
 function DriverProfile() {
   const { id } = useParams()
@@ -31,7 +32,7 @@ function DriverProfile() {
     { label: 'Expenses', content: <DriverExpenses id={id} /> },
     { label: 'Logbook Details', content: <DriverLogbook id={id} /> },
     { label: 'Trips Details', content: 'Trips Details tab content' },
-    { label: 'Salary Slips', content: 'Salary Slips tab content' },
+    { label: 'Salary Slips', content: <Salary id={id} /> },
     { label: 'Document Locker', content: 'Document Locker tab content' },
   ]
 
