@@ -327,7 +327,7 @@ function VehicleList() {
               placeholder="Filter by name..."
             />
           </CCol>
-          <CCol>
+          {/* <CCol>
             <SingleSelectDropdown
               options={modelOptions}
               value={selectedModel}
@@ -344,7 +344,7 @@ function VehicleList() {
               isClearable
               placeholder="Filter by category..."
             />
-          </CCol>
+          </CCol> */}
         </CRow>
 
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />

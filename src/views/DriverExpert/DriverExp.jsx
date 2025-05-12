@@ -8,6 +8,7 @@ import SearchInput from '../components/SearchInput'
 import AddDriverModel from './components/AddDriverModel'
 import UpdateDriverModel from './components/UpdateDriverModel'
 import { filter } from 'lodash'
+import Swal from 'sweetalert2'
 
 function DriversPage() {
   // const [isFetching, setIsFetching] = useState(true)
@@ -69,15 +70,35 @@ function DriversPage() {
   }
 
   const handleDeleteButton = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this driver?')) return
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you really want to delete this driver?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    })
+
+    if (!result.isConfirmed) return
 
     try {
       await deleteDriver(id)
-      queryClient.invalidateQueries(['drivers']) // Refresh the driver list
-      alert('Driver deleted successfully')
+      queryClient.invalidateQueries(['drivers'])
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'Driver deleted successfully.',
+        timer: 2000,
+        showConfirmButton: false,
+      })
     } catch (error) {
-      console.error('Failed to delete driver:', error.response?.data?.message || error.message)
-      alert(`Failed to delete driver: ${error.response?.data?.message || error.message} `)
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to Delete Driver',
+        text: error.response?.data?.message || error.message,
+      })
     }
   }
 

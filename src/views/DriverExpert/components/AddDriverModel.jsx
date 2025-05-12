@@ -17,6 +17,7 @@ import {
 import PropTypes from 'prop-types'
 import { addDriver, fetchDrivers } from '../data/drivers'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import Swal from 'sweetalert2'
 
 function AddDriverModel({ visible, setVisible }) {
   const [formData, setFormData] = useState({
@@ -82,10 +83,17 @@ function AddDriverModel({ visible, setVisible }) {
     mutationFn: (formData) => addDriver(formData),
     onSuccess: (data) => {
       console.log('Driver added:', data)
-      // Close modal, reset form, refetch list, show toast, etc.
       queryClient.invalidateQueries(['drivers'])
       setVisible(false)
       resetForm()
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Driver added successfully!',
+        timer: 2000,
+        showConfirmButton: false,
+      })
     },
     onError: (error) => {
       alert(`Failed to add driver: ${error.response?.data?.message || error.message}`)
