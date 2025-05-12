@@ -104,15 +104,26 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
     let end = selectedEndDate
 
     if (selectedStartDate && !selectedEndDate) {
-      end = selectedStartDate // Set end date to start date if only start date is selected
+      end = new Date(start)
     } else if (selectedEndDate && !selectedStartDate) {
-      start = selectedEndDate // Set start date to end date if only end date is selected
+      start = new Date(end)
+    }
+
+    if (start) {
+      start = new Date(start)
+      start.setHours(0, 1, 1, 0) // Set to 00:01:01
+    }
+
+    if (end) {
+      end = new Date(end)
+      end.setHours(23, 59, 59, 999) // Optionally, set to end of day
     }
 
     console.log('Applying Date Range:', start, end)
     onDateRangeChange(start, end)
     setIsCalendarOpen(false)
   }
+
 
   const handleClear = () => {
     setSelectedStartDate(null)
