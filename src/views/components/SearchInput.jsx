@@ -27,7 +27,7 @@ const SearchInput = ({ searchQuery, setSearchQuery, placeholder = 'Search Here..
       {searchQuery && (
         <CButton
           color="light"
-          variant="ghost"
+          // variant="ghost"
           onClick={() => setSearchQuery('')}
           style={{ border: 'none' }}
         >
