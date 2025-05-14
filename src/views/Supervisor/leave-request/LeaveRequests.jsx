@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
-import { FaCheck, FaTimes } from 'react-icons/fa'
+import { FaArrowUp, FaCheck, FaPrint, FaRegFilePdf, FaTimes } from 'react-icons/fa'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
@@ -8,8 +8,15 @@ import Page404 from '../../pages/page404/Page404'
 import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
 import { useQuery } from '@tanstack/react-query'
 import Swal from 'sweetalert2'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import IconDropdown from '../IconDropdown'
 
 const LeaveRequests = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -125,6 +132,65 @@ const LeaveRequests = () => {
 
   if (error) return <Page404 />
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ actions, status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract inner text from JSX badge
+        }))
+
+        const pdfColumns = columns.filter((col) => col.key !== 'actions') // remove 'actions' column
+
+        exportToPDF({
+          title: 'Leave Requests Report',
+          columns: pdfColumns,
+          data: cleanedData,
+          fileName: 'Leave_Requests_Report',
+        })
+      },
+    },
+
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ actions, status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // Convert badge to plain text
+        }))
+
+        const excelColumns = columns.filter((col) => col.key !== 'actions') // Remove 'actions' column
+
+        exportToExcel({
+          title: 'Leave Requests Report',
+          columns: excelColumns,
+          data: cleanedData,
+          fileName: 'Leave_Requests_Report',
+        })
+      },
+    },
+
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   // Table columns
   const columns = [
     { label: 'Driver Name', key: 'name', sortable: true },
@@ -167,6 +233,10 @@ const LeaveRequests = () => {
         itemsPerPage={itemsPerPage}
         onItemsPerPageChange={setItemsPerPage}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </div>
   )
 }

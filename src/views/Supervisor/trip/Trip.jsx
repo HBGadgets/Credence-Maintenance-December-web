@@ -15,8 +15,16 @@ import { Button } from 'react-bootstrap'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import IconDropdown from '../IconDropdown'
 
 const Trip = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -133,6 +141,61 @@ const Trip = () => {
     navigate(`/SubTrips/${id}`)
   }
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract text if it's a React element
+        }))
+
+        exportToPDF({
+          title: 'Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Vehicle_Trips_Report',
+        })
+      },
+    },
+
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // fallback if styled span
+        }))
+
+        exportToExcel({
+          title: 'Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Vehicle_Trips_Report',
+        })
+      },
+    },
+
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <div>
@@ -184,6 +247,9 @@ const Trip = () => {
             setCurrentPage(1)
           }}
         />
+      </div>
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </>
   )

@@ -197,12 +197,16 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
             </div>
 
             <div className="col-md-6">
-              <Form.Label>Date</Form.Label>
+              <Form.Label>
+                Date <span style={{ color: 'red' }}>*</span>
+              </Form.Label>
               <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} />
             </div>
 
             <div className="col-md-4">
-              <Form.Label>Vehicle Name</Form.Label>
+              <Form.Label>
+                Vehicle Name <span style={{ color: 'red' }}>*</span>
+              </Form.Label>
               <Form.Select
                 name="vehicleId"
                 value={formData.vehicleId}
@@ -219,7 +223,9 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
             </div>
 
             <div className="col-md-4">
-              <Form.Label>Driver Name</Form.Label>
+              <Form.Label>
+                Driver Name <span style={{ color: 'red' }}>*</span>
+              </Form.Label>
               <Form.Select
                 onChange={handleChange}
                 name="driverId"

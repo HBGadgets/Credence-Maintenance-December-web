@@ -6,8 +6,17 @@ import SmartPagination from '../../components/SmartPagination'
 import { useQuery } from '@tanstack/react-query'
 import { VscBlank } from 'react-icons/vsc'
 import Swal from 'sweetalert2'
+import IconDropdown from '../IconDropdown'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { ToastContainer } from 'react-toastify'
 
 const CurrentAttendence = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -66,8 +75,51 @@ const CurrentAttendence = () => {
     { label: 'Email', key: 'email', sortable: true },
   ]
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'Attendance Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Attendance_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () =>
+        exportToExcel({
+          title: 'Attendance Report', // Dynamic title
+          columns: columns,
+          data: filteredData,
+          fileName: 'Attendance_Report', // Dynamic file name
+        }),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
+      <ToastContainer />
+
       <div className="mb-2 d-flex justify-content-end align-items-center">
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
@@ -99,6 +151,10 @@ const CurrentAttendence = () => {
           }
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

@@ -52,13 +52,14 @@ export const handleAddHelper = async (formData, fetchTripData, refetch) => {
 export const handleEditHelper = async (formData, fetchTripData, refetch) => {
     try {
         const updatePayload = {
+            id: formData._id,
             driverId: formData.driverId,
             vehicleId: formData.vehicleId,
             vehicleName: formData.vehicleName,
             startLocation: formData.startLocation,
             endLocation: formData.endLocation,
             materialType: formData.materialType,
-            budgetAllocated: Number(formData.budgetAllocated),
+            budgetAllocated: formData.budgetAllocated,
             date: formData.date,
             status: formData.status,
         }

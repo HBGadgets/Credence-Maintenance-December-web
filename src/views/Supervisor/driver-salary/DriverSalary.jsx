@@ -13,13 +13,20 @@ import {
   postDriverSalaryApi,
 } from '../data/data.js'
 import { toast, ToastContainer } from 'react-toastify'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaArrowUp, FaEdit, FaPrint, FaRegFilePdf, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 import { CButton } from '@coreui/react'
 import SalaryFrom from './componets/SalaryFrom.jsx'
 import { Pencil, Trash2 } from 'lucide-react'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../IconDropdown.js'
+import usePdfExporter from '../../customhooks/usePdfExporter.js'
+import useExcelExporter from '../../customhooks/useExcelExporter.js'
 
 const DriverSalary = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -206,6 +213,56 @@ const DriverSalary = () => {
 
   if (error) return <Page404 />
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        // Exclude 'Actions' column
+        const pdfColumns = columns.filter((col) => col.key !== 'actions')
+        const pdfData = filteredData.map(({ actions, ...rest }) => rest) // remove 'actions' field
+
+        exportToPDF({
+          title: 'Driver Salary Report',
+          columns: pdfColumns,
+          data: pdfData,
+          fileName: 'Driver_Salary_Report',
+        })
+      },
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const excelColumns = columns.filter((col) => col.key !== 'actions')
+        const excelData = filteredData.map(({ actions, ...rest }) => rest)
+
+        exportToExcel({
+          title: 'Driver Salary Report',
+          columns: excelColumns,
+          data: excelData,
+          fileName: 'Driver_Salary_Report',
+        })
+      },
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <div>
       <ToastContainer />
@@ -278,6 +335,10 @@ const DriverSalary = () => {
             setCurrentPage(1)
           }}
         />
+      </div>
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </div>
   )

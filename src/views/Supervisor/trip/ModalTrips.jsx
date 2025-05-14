@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchDrivers } from '../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../../slices/vehicleSlice'
 import { CSpinner } from '@coreui/react'
 import { fetchTripDataHelper, handleAddHelper, handleEditHelper } from './componets/tripHelpers'
+import Select from 'react-select'
+import debounce from 'lodash.debounce'
+import { useQuery } from '@tanstack/react-query'
 
 const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) => {
   const [drivers, setDrivers] = useState([])
@@ -51,18 +54,34 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   // Prefill form with selected trip data when in edit mode
   useEffect(() => {
     if (mode === 'edit' && selectedTrip) {
+      console.log('selectedTrip.date (raw):', selectedTrip.date)
+
+      let formattedDate = ''
+      if (selectedTrip.date) {
+        // Convert DD/MM/YYYY → YYYY-MM-DD
+        const [day, month, year] = selectedTrip.date.split('/')
+        const isoDateString = `${year}-${month}-${day}`
+
+        const parsedDate = new Date(isoDateString)
+        if (!isNaN(parsedDate.getTime())) {
+          formattedDate = parsedDate.toISOString().split('T')[0]
+        } else {
+          console.warn('⚠️ Still invalid after conversion:', isoDateString)
+        }
+      }
+
       setTripData({
-        _id: selectedTrip.id, //include this line
-        date: selectedTrip.date,
-        driverId: selectedTrip.driverId,
-        driverName: selectedTrip.driverName,
-        vehicleId: selectedTrip.vehicleId,
-        vehicleName: selectedTrip.vehicleName,
-        startLocation: selectedTrip.startLocation,
-        endLocation: selectedTrip.endLocation,
-        budgetAllocated: selectedTrip.budgetAllocated,
-        materialType: selectedTrip.materialType,
-        status: selectedTrip.status,
+        _id: selectedTrip.id || '',
+        date: formattedDate,
+        driverId: selectedTrip.driverId || '',
+        driverName: selectedTrip.driverName || '',
+        vehicleId: selectedTrip.vehicleId || '',
+        vehicleName: selectedTrip.vehicleName || '',
+        startLocation: selectedTrip.startLocation || '',
+        endLocation: selectedTrip.endLocation || '',
+        budgetAllocated: selectedTrip.budgetAllocated || '',
+        materialType: selectedTrip.materialType || '',
+        status: selectedTrip.status || '',
       })
     }
   }, [mode, selectedTrip])
@@ -108,7 +127,80 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     }
   }
 
-  const isLoading = vehicleStatus === 'loading' || drivers.length === 0
+  // const isLoading = vehicleStatus === 'loading' || drivers.length === 0
+
+  // City fetch
+  // Fetch all states of India
+  const fetchStates = async () => {
+    const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: 'India' }),
+    })
+    const data = await res.json()
+    return data?.data?.states || []
+  }
+
+  // Fetch all cities in India (parallel)
+  const fetchAllCities = async () => {
+    const states = await fetchStates()
+
+    const cityPromises = states.map((state) =>
+      fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: 'India',
+          state: state.name,
+        }),
+      }).then((res) => res.json()),
+    )
+
+    const citiesResults = await Promise.all(cityPromises)
+    let allCities = []
+
+    citiesResults.forEach((result) => {
+      if (Array.isArray(result?.data)) {
+        allCities.push(...result.data)
+      }
+    })
+
+    return [...new Set(allCities)].sort()
+  }
+
+  const [searchInput, setSearchInput] = useState('')
+  const { data: cities = [], isLoading } = useQuery({
+    queryKey: ['all-cities-india'],
+    queryFn: fetchAllCities,
+    staleTime: 1000 * 60 * 60, // 1 hour
+    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+  })
+
+  // Debounce input handling
+  const [filteredCities, setFilteredCities] = useState([])
+
+  const debouncedFilter = useMemo(
+    () =>
+      debounce((input) => {
+        if (!input) {
+          setFilteredCities(cities)
+        } else {
+          const filtered = cities.filter((city) => city.toLowerCase().includes(input.toLowerCase()))
+          setFilteredCities(filtered)
+        }
+      }, 300),
+    [cities],
+  )
+
+  // Trigger filter when search input changes
+  useEffect(() => {
+    debouncedFilter(searchInput)
+    return () => debouncedFilter.cancel()
+  }, [searchInput, debouncedFilter])
+
+  useEffect(() => {
+    if (cities.length) setFilteredCities(cities)
+  }, [cities])
 
   return (
     <Modal show={true} onHide={onClose} centered size="lg" className="trip-modal">
@@ -163,28 +255,46 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
 
             <div className="col-md-6 mb-3">
               <Form.Group>
-                <Form.Label>Start Location</Form.Label>
-                <Form.Control
-                  type="text"
+                <Form.Label>Start City Location</Form.Label>
+                <Select
                   name="startLocation"
-                  value={tripData.startLocation}
-                  onChange={handleChange}
-                  placeholder="Enter start location"
-                  required
+                  value={
+                    tripData.startLocation
+                      ? { label: tripData.startLocation, value: tripData.startLocation }
+                      : null
+                  }
+                  onInputChange={(val) => setSearchInput(val)}
+                  onChange={(selected) =>
+                    handleChange({
+                      target: { name: 'startLocation', value: selected?.value || '' },
+                    })
+                  }
+                  options={filteredCities.map((city) => ({ label: city, value: city }))}
+                  placeholder={isLoading ? 'Loading cities...' : 'Select start city'}
+                  isClearable
+                  isLoading={isLoading}
                 />
               </Form.Group>
             </div>
 
             <div className="col-md-6 mb-3">
               <Form.Group>
-                <Form.Label>End Location</Form.Label>
-                <Form.Control
-                  type="text"
+                <Form.Label>End City Location</Form.Label>
+                <Select
                   name="endLocation"
-                  value={tripData.endLocation}
-                  onChange={handleChange}
-                  placeholder="Enter end location"
-                  required
+                  value={
+                    tripData.endLocation
+                      ? { label: tripData.endLocation, value: tripData.endLocation }
+                      : null
+                  }
+                  onInputChange={(val) => setSearchInput(val)}
+                  onChange={(selected) =>
+                    handleChange({ target: { name: 'endLocation', value: selected?.value || '' } })
+                  }
+                  options={filteredCities.map((city) => ({ label: city, value: city }))}
+                  placeholder={isLoading ? 'Loading cities...' : 'Select end city'}
+                  isClearable
+                  isLoading={isLoading}
                 />
               </Form.Group>
             </div>
@@ -212,7 +322,6 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   value={tripData.budgetAllocated}
                   onChange={handleChange}
                   placeholder="Enter budget allocated"
-                  required
                 />
               </Form.Group>
             </div>
@@ -226,7 +335,6 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   value={tripData.materialType}
                   onChange={handleChange}
                   placeholder="Enter material type"
-                  required
                 />
               </Form.Group>
             </div>

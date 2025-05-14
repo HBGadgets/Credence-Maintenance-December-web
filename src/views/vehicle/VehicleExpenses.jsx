@@ -8,9 +8,17 @@ import BillShow from '../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import IconDropdown from '../Supervisor/IconDropdown'
 
 const MaintenanceLog = () => {
   const { id } = useParams()
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -154,6 +162,63 @@ const MaintenanceLog = () => {
     }
   }
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ paymentMode, ...rest }) => ({
+          ...rest,
+          paymentMode:
+            typeof paymentMode === 'string' ? paymentMode : paymentMode?.props?.children || '', // Extract text if it's a React element
+        }))
+
+        exportToPDF({
+          title: 'Vehicle Expense Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Vehicle_Expenses_Report',
+        })
+      },
+    },
+
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ paymentMode, ...rest }) => ({
+          ...rest,
+          paymentMode:
+            typeof paymentMode === 'string' ? paymentMode : paymentMode?.props?.children || '', // fallback if styled span
+        }))
+
+        exportToExcel({
+          title: 'Vehicle Expenses Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Vehicle_Expenses_Report',
+        })
+      },
+    },
+
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <ToastContainer />
@@ -193,6 +258,10 @@ const MaintenanceLog = () => {
         pdfBase64={pdfBase64}
         modalTitle={modalTitle}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
