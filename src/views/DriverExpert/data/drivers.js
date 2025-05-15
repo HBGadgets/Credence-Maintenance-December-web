@@ -202,23 +202,17 @@ export const driverLogbook = async (id, month) => {
   }
 }
 
-
 export const driverSalary = async (id) => {
-
   try {
     if (!token) throw new Error('Authentication token not found')
 
-    const { data } = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/salary/get/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/salary/get/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    )
+    })
 
     // console.log("all data salaray", response.data)
-
 
     return data.map((salary) => ({
       id: salary._id,
@@ -229,14 +223,40 @@ export const driverSalary = async (id) => {
       deductions: salary.deductions,
       netPay: salary.netPay,
       createdAt: formatDateToDDMMYYYY(salary.createdAt),
-      originalDate: salary.createdAt
+      originalDate: salary.createdAt,
     }))
-
-
-
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
     throw error
   }
+}
 
+export const driverTripDetails = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/trips/get-trip-by-driver-id/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return data.map((trip) => ({
+      id: trip._id,
+      vehicleName: trip.vehicleName,
+      date: new Date(trip.date).toLocaleDateString('en-GB'),
+      startLocation: trip.startLocation,
+      endLocation: trip.endLocation,
+      budgetAllocated: trip.budgetAllocated,
+      spentAmount: trip.spentAmount,
+      materialType: trip.materialType,
+      status: trip.status,
+    }))
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message)
+    throw error
+  }
 }

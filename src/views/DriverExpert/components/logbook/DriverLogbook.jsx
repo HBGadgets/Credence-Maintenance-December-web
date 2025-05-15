@@ -14,7 +14,7 @@ const DriverLogbook = ({ id }) => {
 
   const { data: driverLogbookData = [], isFetching } = useQuery({
     queryKey: ['logbook'],
-    // queryFn: () => driverLogbook(id, selectedMonth),
+    queryFn: () => driverLogbook(id, selectedMonth),
     staleTime: 1000 * 60 * 30,
   })
 
@@ -29,7 +29,7 @@ const DriverLogbook = ({ id }) => {
     driverLogbook(id, selectedMonth)
   }, [id, selectedMonth])
 
-  console.log('All logbook data ', driverLogbookData)
+  // console.log('All logbook data ', driverLogbookData)
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
