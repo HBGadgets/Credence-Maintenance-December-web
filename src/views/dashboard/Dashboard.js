@@ -177,6 +177,7 @@ const Dashboard = () => {
 
   const queryParams = new URLSearchParams(window.location.search)
   const token = queryParams.get('token')
+  console.log("token", queryParams)
 
   const sendTokenToServerFromURL = async () => {
     try {
@@ -201,6 +202,8 @@ const Dashboard = () => {
   useEffect(() => {
     sendTokenToServerFromURL()
   }, [])
+
+
 
   // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
