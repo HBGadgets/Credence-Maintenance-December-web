@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchDrivers } from '../../DriverExpert/data/drivers'
-import { fetchVehicles } from '../../../slices/vehicleSlice'
+import { fetchVehicles } from '../../vehicle/data/VehicleListData'
+// import { fetchVehicles } from '../../../slices/vehicleSlice'
 import { CSpinner } from '@coreui/react'
 import { fetchTripDataHelper, handleAddHelper, handleEditHelper } from './componets/tripHelpers'
 import Select from 'react-select'
@@ -11,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 
 const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) => {
   const [drivers, setDrivers] = useState([])
+  const [vehicles, setVehicles] = useState([])
   const [tripData, setTripData] = useState({
     _id: '', // optional but helpful
     date: '',
@@ -25,8 +27,8 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     status: '',
   })
 
-  const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
-  const dispatch = useDispatch()
+  // const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
+  // const dispatch = useDispatch()
   const fetchData = fetchTripDataHelper()
 
   // Fetch Drivers
@@ -45,11 +47,24 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   }, [])
 
   // Fetch Vehicles
+  // useEffect(() => {
+  //   if (vehicleStatus === 'idle') {
+  //     dispatch(fetchVehicles())
+  //   }
+  // }, [dispatch, vehicleStatus])
+
   useEffect(() => {
-    if (vehicleStatus === 'idle') {
-      dispatch(fetchVehicles())
+    const loadVehicles = async () => {
+      try {
+        const data = await fetchVehicles()
+        setVehicles(data)
+        console.log('fetch vehicle', data)
+      } catch (error) {
+        console.log('Error fetching vehicle', error)
+      }
     }
-  }, [dispatch, vehicleStatus])
+    loadVehicles()
+  }, [])
 
   // Prefill form with selected trip data when in edit mode
   useEffect(() => {
@@ -96,7 +111,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
       setTripData((prev) => ({
         ...prev,
         vehicleName: value,
-        vehicleId: selectedVehicle?._id || '', // auto-set vehicleId
+        vehicleId: selectedVehicle?.id || '', // auto-set vehicleId
       }))
     } else if (name === 'driverName') {
       const selectedDriver = drivers.find((d) => d.name === value)

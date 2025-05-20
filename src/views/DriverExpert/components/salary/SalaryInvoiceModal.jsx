@@ -8,7 +8,7 @@ const SalaryInvoiceModal = ({ visible, onClose, salaryData }) => {
 
   if (!salaryData) return null
 
-  const { basicPay, overtime, incentives, deductions, netPay, createdAt } = salaryData
+  const { basicPay, overtime, incentives, deductions, netPay, createdAt, originalDate } = salaryData
 
   const handleDownloadPDF = () => {
     const element = printRef.current
@@ -33,10 +33,10 @@ const SalaryInvoiceModal = ({ visible, onClose, salaryData }) => {
 
           <div style={styles.metalog}>
             <p>
-              <strong>Date:</strong> {formatDateToDDMMYYYY(createdAt)}
+              <strong>Date:</strong> {formatDateToDDMMYYYY(originalDate)}
             </p>
             <p>
-              <strong>Slip No:</strong> SL-{new Date(createdAt).getTime()}
+              <strong>Slip No:</strong> SL-{new Date(originalDate).getTime()}
             </p>
           </div>
 

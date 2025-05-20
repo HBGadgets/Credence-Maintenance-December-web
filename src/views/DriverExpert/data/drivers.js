@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 import Cookies from 'js-cookie'
+import { useFormattedTime } from '../../customhooks/useFormattedTime'
 
 
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
-// const token = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+// const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
+const token = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
 export const addDriver = async (data) => {
   try {
@@ -192,14 +193,35 @@ export const driverLogbook = async (id, month) => {
 
     return data.map((logbook) => ({
       id: logbook._id,
-      originalDate: logbook.startDate,
-      startDate: formatDateToDDMMYYYY(logbook.startDate),
+      originalDate: formatDateToDDMMYYYY(logbook.startDate),
       vehicleName: logbook.vehicleName,
+      startDate: useFormattedTime(logbook.startDate),
+      endDate: useFormattedTime(logbook.endDate),
+      duration: logbook.duration,
       logKM: logbook.logKM,
       gpsKM: logbook.gpsKM,
-      amount: logbook.amount,
       signatureId: logbook.signatureId,
     }))
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message)
+    throw error
+  }
+}
+
+export const getDailyLogSign = async (signatureId) => {
+  try {
+
+    if (!token) throw new Error('Authentication token not found')
+
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/dailylogs/get-signature-image/${signatureId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    return res.data
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
     throw error
