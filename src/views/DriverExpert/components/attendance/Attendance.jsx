@@ -25,6 +25,8 @@ function Attendance() {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   })
 
+  console.log('Driver Attendance:', driversAttendance)
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -66,20 +68,18 @@ function Attendance() {
           statusColor="#ef4444"
         />
         <AttendanceCard
-          title="Leave Days"
-          subtitle="Approved time off"
+          title="Approved Leaves"
+          subtitle="Planned leaves"
           count={driversAttendance?.onLeaveCount || 0} // Use real data if available
           status="Leave"
-          subStatus="pending requests (Ye vala lagana hai 🔥🔥🔥🔥🔥)"
+          subStatus="Planned leave rate"
           rate={driversAttendance?.plannedLeavePercentage || 0} // Use dynamic attendance rate
           statusColor="#3b82f6"
         />
         <AttendanceCard
-          title="Iska sochte hai 🦆"
-          subtitle="Current Month"
+          title="Pending Leaves"
+          subtitle="Leave requests"
           count={driversAttendance?.presentCount || 0} // Use real data if available
-          status="Present"
-          rate={driversAttendance?.absentCount || 0} // Use dynamic attendance rate
           statusColor="#22c55e"
         />
       </div>

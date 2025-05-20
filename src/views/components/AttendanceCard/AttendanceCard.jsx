@@ -13,9 +13,11 @@ const AttendanceCard = ({ title, subtitle, count, status, rate, statusColor, sub
         <div className="count-display">{count}</div>
 
         <div className="status-info">
-          <span className="status-badge" style={{ backgroundColor: statusColor }}>
-            {status}
-          </span>
+          {status && (
+            <span className="status-badge" style={{ backgroundColor: statusColor }}>
+              {status}
+            </span>
+          )}
           <span className="attendance-rate">
             {rate} {subStatus}
           </span>
@@ -32,6 +34,7 @@ AttendanceCard.propTypes = {
   status: PropTypes.string,
   rate: PropTypes.number,
   statusColor: PropTypes.string,
+  subStatus: PropTypes.string,
 }
 
 export default AttendanceCard

@@ -81,7 +81,6 @@ function Table({
     if (sortConfig.key === key) {
       return sortConfig.direction === 'asc' ? '▲' : '▼'
     }
-    return '↕'
   }
 
   return (
@@ -102,7 +101,7 @@ function Table({
                     .map((column, index) => (
                       <CTableHeaderCell
                         key={index}
-                        className="text-center"
+                        className="text-center "
                         onClick={() => column.sortable && handleSort(column.key)}
                         style={{ cursor: column.sortable ? 'pointer' : 'default' }}
                       >
