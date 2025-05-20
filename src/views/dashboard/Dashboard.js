@@ -174,21 +174,25 @@ const Dashboard = () => {
   ]
 
   const [token, setToken] = useState('')
-  const hash = window.location.hash
-  const queryString = hash.includes('?') ? hash.split('?')[1] : ''
-  const queryParams = new URLSearchParams(queryString)
-  setToken(queryParams.get('token'))
 
   useEffect(() => {
-    console.log('token', token)
+    const hash = window.location.hash
+    const queryString = hash.includes('?') ? hash.split('?')[1] : ''
+    const queryParams = new URLSearchParams(queryString)
+    const extractedToken = queryParams.get('token')
 
-    const sendTokenToServerFromURL = async () => {
-      if (!token) window.location.href = 'http://104.251.218.94/'
-
-      sessionStorage.setItem('crdnsMaintToken', token) // Store token in localStorage
+    if (!extractedToken) {
+      window.location.href = 'http://104.251.218.94/'
+    } else {
+      setToken(extractedToken)
+      sessionStorage.setItem('crdnsMaintToken', extractedToken)
     }
+  }, [])
 
-    sendTokenToServerFromURL()
+  useEffect(() => {
+    if (token) {
+      console.log('token', token)
+    }
   }, [token])
 
   // For cart new dialog box open and close.
