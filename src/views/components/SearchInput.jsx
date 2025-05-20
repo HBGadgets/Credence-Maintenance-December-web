@@ -1,9 +1,28 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { CInputGroup, CInputGroupText, CFormInput, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch, cilX } from '@coreui/icons'
 
-const SearchInput = ({ searchQuery, setSearchQuery, placeholder = 'Search Here...' }) => {
+const SearchInput = ({
+  searchQuery,
+  setSearchQuery,
+  placeholder = 'Search Here...',
+  debounceDelay = 700,
+}) => {
+  const [inputValue, setInputValue] = useState(searchQuery)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(inputValue)
+    }, debounceDelay)
+
+    return () => clearTimeout(handler)
+  }, [inputValue, debounceDelay, setSearchQuery])
+
+  useEffect(() => {
+    setInputValue(searchQuery)
+  }, [searchQuery])
+
   return (
     <CInputGroup className="w-25">
       {/* Search Icon */}
@@ -15,22 +34,17 @@ const SearchInput = ({ searchQuery, setSearchQuery, placeholder = 'Search Here..
       <CFormInput
         type="text"
         placeholder={placeholder}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
         style={{
-          boxShadow: searchQuery ? '0 0 1px rgba(0, 123, 255, 0.75)' : 'none',
-          borderColor: searchQuery ? '#007bff' : undefined,
+          boxShadow: inputValue ? '0 0 1px rgba(0, 123, 255, 0.75)' : 'none',
+          borderColor: inputValue ? '#007bff' : undefined,
         }}
       />
 
       {/* Clear Button (only when input has text) */}
-      {searchQuery && (
-        <CButton
-          color="light"
-          // variant="ghost"
-          onClick={() => setSearchQuery('')}
-          style={{ border: 'none' }}
-        >
+      {inputValue && (
+        <CButton color="light" onClick={() => setInputValue('')} style={{ border: 'none' }}>
           <CIcon icon={cilX} />
         </CButton>
       )}

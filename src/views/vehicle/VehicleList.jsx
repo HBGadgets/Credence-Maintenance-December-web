@@ -136,281 +136,48 @@
 
 // SLICE ONE CONNECTED CODE
 
-import React, { useEffect, useMemo, useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { fetchVehicles } from '../../slices/vehicleSlice'
-import Table from '../components/Table'
-import { CCol, CRow } from '@coreui/react'
-import SingleSelectDropdown from '../components/SingleSelectDropdown'
-import SearchInput from '../components/SearchInput'
-import { useNavigate } from 'react-router-dom'
-import SmartPagination from '../components/SmartPagination'
-import usePdfExporter from '../customhooks/usePdfExporter'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
-import { PiMicrosoftExcelLogo } from 'react-icons/pi'
-import { HiOutlineLogout } from 'react-icons/hi'
-import IconDropdown from '../Supervisor/IconDropdown'
-import useExcelExporter from '../customhooks/useExcelExporter'
-
-function VehicleList() {
-  const { exportToPDF } = usePdfExporter()
-  const { exportToExcel } = useExcelExporter()
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
-  const { vehicles, status, error } = useSelector((state) => state.vehicle)
-  console.log('vehiclesssssssssssssss', vehicles)
-
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchVehicles())
-    }
-  }, [dispatch, status])
-
-  // Memoized vehicle data for rendering
-  const initialData = useMemo(
-    () =>
-      vehicles.map((item, index) => ({
-        // sn: index + 1,
-        name: item.name || 'Unknown Driver',
-        model: item.model || 'No Model',
-        category: item.category || 'N/A',
-        id: item._id || 'No ID',
-      })),
-    [vehicles],
-  )
-
-  // Search & filter states
-  const [filteredData, setFilteredData] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedName, setSelectedName] = useState(null)
-  const [selectedModel, setSelectedModel] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [isFetching, setIsFetching] = useState(true)
-
-  useEffect(() => {
-    setFilteredData(initialData)
-  }, [initialData])
-
-  // Columns for table
-  const columns = [
-    { label: 'Name', key: 'name', sortable: true },
-    { label: 'Model', key: 'model', sortable: true },
-    { label: 'Category', key: 'category', sortable: true },
-  ]
-
-  const handleViewButton = (id) => {
-    console.log('SSSSSSSSSSSSSSSSSss', id)
-    navigate(`/VehicleProfile/${id}`)
-  }
-
-  // Search handler
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-    const filtered = initialData.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.model.toLowerCase().includes(query.toLowerCase()) ||
-        item.category.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredData(filtered)
-  }
-
-  // Dropdown filter handler
-  useEffect(() => {
-    setIsFetching(true) // Start loading
-    try {
-      let filtered = initialData
-
-      if (selectedName) {
-        filtered = filtered.filter((item) => item.name === selectedName.value)
-      }
-      if (selectedModel) {
-        filtered = filtered.filter((item) => item.model === selectedModel.value)
-      }
-      if (selectedCategory) {
-        filtered = filtered.filter((item) => item.category === selectedCategory.value)
-      }
-
-      setFilteredData(filtered)
-    } catch (error) {
-      console.error('Filtering error:', error)
-    } finally {
-      setTimeout(() => setIsFetching(false), 300) // Optional delay for smoother UX
-    }
-  }, [selectedName, selectedModel, selectedCategory, initialData])
-
-  // Dropdown options
-  const nameOptions = [...new Set(vehicles.map((v) => v.name))].map((name) => ({
-    value: name,
-    label: name,
-  }))
-  const modelOptions = [...new Set(vehicles.map((v) => v.model))].map((model) => ({
-    value: model,
-    label: model,
-  }))
-  const categoryOptions = [...new Set(vehicles.map((v) => v.category))].map((category) => ({
-    value: category,
-    label: category,
-  }))
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-
-  // Dropdown items for export
-  const dropdownItems = [
-    {
-      icon: FaRegFilePdf,
-      label: 'Download PDF',
-      onClick: () =>
-        exportToPDF({
-          title: 'Vehicle Report', // Dynamic title
-          columns: columns,
-          data: filteredData,
-          fileName: 'Vehicle_Report', // Dynamic file name
-        }),
-    },
-    {
-      icon: PiMicrosoftExcelLogo,
-      label: 'Download Excel',
-      onClick: () =>
-        exportToExcel({
-          title: 'Vehicle Report', // Dynamic title
-          columns: columns,
-          data: filteredData,
-          fileName: 'Vehicle_Report', // Dynamic file name
-        }),
-    },
-    {
-      icon: FaPrint,
-      label: 'Print Page',
-      onClick: () => window.print(),
-    },
-    {
-      icon: HiOutlineLogout,
-      label: 'Logout',
-      onClick: () => handleLogout(),
-    },
-    {
-      icon: FaArrowUp,
-      label: 'Scroll To Top',
-      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-    },
-  ]
-
-  // if (status === 'loading')
-  //   return (
-  //     <div
-  //       style={{
-  //         position: 'absolute',
-  //         top: '50%',
-  //         left: '50%',
-  //         transform: 'translate(-50%, -50%)',
-  //       }}
-  //     >
-  //       <Loader />
-  //     </div>
-  //   )
-  if (status === 'failed') return <p>Error: {error}</p>
-
-  return (
-    <>
-      <div className="d-flex justify-content-between mb-3">
-        <CRow>
-          <CCol>
-            <SingleSelectDropdown
-              options={nameOptions}
-              value={selectedName}
-              onChange={setSelectedName}
-              isClearable
-              placeholder="Filter by name..."
-            />
-          </CCol>
-          {/* <CCol>
-            <SingleSelectDropdown
-              options={modelOptions}
-              value={selectedModel}
-              onChange={setSelectedModel}
-              isClearable
-              placeholder="Filter by model..."
-            />
-          </CCol>
-          <CCol>
-            <SingleSelectDropdown
-              options={categoryOptions}
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              isClearable
-              placeholder="Filter by category..."
-            />
-          </CCol> */}
-        </CRow>
-
-        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-      </div>
-
-      <Table
-        title="Vehicle"
-        columns={columns}
-        filteredData={filteredData}
-        setFilteredData={setFilteredData}
-        viewButton={true}
-        handleViewButton={handleViewButton}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isFetching={isFetching}
-      />
-
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        onItemsPerPageChange={setItemsPerPage}
-      />
-
-      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
-        <IconDropdown items={dropdownItems} />
-      </div>
-    </>
-  )
-}
-
-export default VehicleList
-
-// ---------------------------------------------------------------------------------------------
-
 // import React, { useEffect, useMemo, useState } from 'react'
 // import { useSelector, useDispatch } from 'react-redux'
-// import { fetchVehicles } from '../../slices/vehicleSlice' // Import the fixed fetchVehicles action
+// import { fetchVehicles } from '../../slices/vehicleSlice'
 // import Table from '../components/Table'
 // import { CCol, CRow } from '@coreui/react'
 // import SingleSelectDropdown from '../components/SingleSelectDropdown'
 // import SearchInput from '../components/SearchInput'
 // import { useNavigate } from 'react-router-dom'
 // import SmartPagination from '../components/SmartPagination'
-// import Loader from '../../components/Loader/Loader'
+// import usePdfExporter from '../customhooks/usePdfExporter'
+// import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+// import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+// import { HiOutlineLogout } from 'react-icons/hi'
+// import IconDropdown from '../Supervisor/IconDropdown'
+// import useExcelExporter from '../customhooks/useExcelExporter'
 
 // function VehicleList() {
+//   const { exportToPDF } = usePdfExporter()
+//   const { exportToExcel } = useExcelExporter()
 //   const navigate = useNavigate()
 //   const dispatch = useDispatch()
-//   const { vehicles, loading, error } = useSelector((state) => state.vehicle) // 🔹 Extract vehicles, loading, and error
+//   const { vehicles, status, error } = useSelector((state) => state.vehicle)
+//   console.log('vehiclesssssssssssssss', vehicles)
 
 //   useEffect(() => {
-//     dispatch(fetchVehicles()) // Correctly dispatch async thunk
-//   }, [dispatch])
+//     if (status === 'idle') {
+//       dispatch(fetchVehicles())
+//     }
+//   }, [dispatch, status])
 
-//   // 🔹 Ensure vehicles is always an array to prevent .map() errors
-//   const initialData = useMemo(() => {
-//     if (!Array.isArray(vehicles)) return []
-//     return vehicles.map((item, index) => ({
-//       id: item.id || `No ID ${index}`, // Ensure ID exists
-//       name: item.name || 'Unknown Driver',
-//       model: item.model || 'No Model',
-//       category: item.category || 'N/A',
-//     }))
-//   }, [vehicles])
+//   // Memoized vehicle data for rendering
+//   const initialData = useMemo(
+//     () =>
+//       vehicles.map((item, index) => ({
+//         // sn: index + 1,
+//         name: item.name || 'Unknown Driver',
+//         model: item.model || 'No Model',
+//         category: item.category || 'N/A',
+//         id: item._id || 'No ID',
+//       })),
+//     [vehicles],
+//   )
 
 //   // Search & filter states
 //   const [filteredData, setFilteredData] = useState([])
@@ -418,6 +185,7 @@ export default VehicleList
 //   const [selectedName, setSelectedName] = useState(null)
 //   const [selectedModel, setSelectedModel] = useState(null)
 //   const [selectedCategory, setSelectedCategory] = useState(null)
+//   const [isFetching, setIsFetching] = useState(true)
 
 //   useEffect(() => {
 //     setFilteredData(initialData)
@@ -425,14 +193,13 @@ export default VehicleList
 
 //   // Columns for table
 //   const columns = [
-//     { label: 'SN', key: 'sn', sortable: true },
 //     { label: 'Name', key: 'name', sortable: true },
 //     { label: 'Model', key: 'model', sortable: true },
 //     { label: 'Category', key: 'category', sortable: true },
-//     { label: 'View', key: 'view', sortable: false },
 //   ]
 
 //   const handleViewButton = (id) => {
+//     console.log('SSSSSSSSSSSSSSSSSss', id)
 //     navigate(`/VehicleProfile/${id}`)
 //   }
 
@@ -450,53 +217,105 @@ export default VehicleList
 
 //   // Dropdown filter handler
 //   useEffect(() => {
-//     let filtered = initialData
+//     setIsFetching(true) // Start loading
+//     try {
+//       let filtered = initialData
 
-//     if (selectedName) {
-//       filtered = filtered.filter((item) => item.name === selectedName.value)
-//     }
-//     if (selectedModel) {
-//       filtered = filtered.filter((item) => item.model === selectedModel.value)
-//     }
-//     if (selectedCategory) {
-//       filtered = filtered.filter((item) => item.category === selectedCategory.value)
-//     }
+//       if (selectedName) {
+//         filtered = filtered.filter((item) => item.name === selectedName.value)
+//       }
+//       if (selectedModel) {
+//         filtered = filtered.filter((item) => item.model === selectedModel.value)
+//       }
+//       if (selectedCategory) {
+//         filtered = filtered.filter((item) => item.category === selectedCategory.value)
+//       }
 
-//     setFilteredData(filtered)
+//       setFilteredData(filtered)
+//     } catch (error) {
+//       console.error('Filtering error:', error)
+//     } finally {
+//       setTimeout(() => setIsFetching(false), 300) // Optional delay for smoother UX
+//     }
 //   }, [selectedName, selectedModel, selectedCategory, initialData])
 
 //   // Dropdown options
-//   const nameOptions = vehicles?.length
-//     ? [...new Set(vehicles.map((v) => v.name))].map((name) => ({
-//         value: name,
-//         label: name,
-//       }))
-//     : []
-
-//   const modelOptions = vehicles?.length
-//     ? [...new Set(vehicles.map((v) => v.model))].map((model) => ({
-//         value: model,
-//         label: model,
-//       }))
-//     : []
-
-//   const categoryOptions = vehicles?.length
-//     ? [...new Set(vehicles.map((v) => v.category))].map((category) => ({
-//         value: category,
-//         label: category,
-//       }))
-//     : []
+//   const nameOptions = [...new Set(vehicles.map((v) => v.name))].map((name) => ({
+//     value: name,
+//     label: name,
+//   }))
+//   const modelOptions = [...new Set(vehicles.map((v) => v.model))].map((model) => ({
+//     value: model,
+//     label: model,
+//   }))
+//   const categoryOptions = [...new Set(vehicles.map((v) => v.category))].map((category) => ({
+//     value: category,
+//     label: category,
+//   }))
 
 //   // Pagination states
 //   const [currentPage, setCurrentPage] = useState(1)
 //   const [itemsPerPage, setItemsPerPage] = useState(10)
 //   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
+//   // Dropdown items for export
+//   const dropdownItems = [
+//     {
+//       icon: FaRegFilePdf,
+//       label: 'Download PDF',
+//       onClick: () =>
+//         exportToPDF({
+//           title: 'Vehicle Report', // Dynamic title
+//           columns: columns,
+//           data: filteredData,
+//           fileName: 'Vehicle_Report', // Dynamic file name
+//         }),
+//     },
+//     {
+//       icon: PiMicrosoftExcelLogo,
+//       label: 'Download Excel',
+//       onClick: () =>
+//         exportToExcel({
+//           title: 'Vehicle Report', // Dynamic title
+//           columns: columns,
+//           data: filteredData,
+//           fileName: 'Vehicle_Report', // Dynamic file name
+//         }),
+//     },
+//     {
+//       icon: FaPrint,
+//       label: 'Print Page',
+//       onClick: () => window.print(),
+//     },
+//     {
+//       icon: HiOutlineLogout,
+//       label: 'Logout',
+//       onClick: () => handleLogout(),
+//     },
+//     {
+//       icon: FaArrowUp,
+//       label: 'Scroll To Top',
+//       onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+//     },
+//   ]
+
+//   // if (status === 'loading')
+//   //   return (
+//   //     <div
+//   //       style={{
+//   //         position: 'absolute',
+//   //         top: '50%',
+//   //         left: '50%',
+//   //         transform: 'translate(-50%, -50%)',
+//   //       }}
+//   //     >
+//   //       <Loader />
+//   //     </div>
+//   //   )
+//   if (status === 'failed') return <p>Error: {error}</p>
+
 //   return (
 //     <>
-//       {loading && <Loader />} {/* 🔹 Show loader while fetching */}
-//       {error && <div className="alert alert-danger">{error}</div>}{' '}
-//       {/* 🔹 Show error if API fails */}
 //       <div className="d-flex justify-content-between mb-3">
 //         <CRow>
 //           <CCol>
@@ -508,7 +327,7 @@ export default VehicleList
 //               placeholder="Filter by name..."
 //             />
 //           </CCol>
-//           <CCol>
+//           {/* <CCol>
 //             <SingleSelectDropdown
 //               options={modelOptions}
 //               value={selectedModel}
@@ -525,11 +344,12 @@ export default VehicleList
 //               isClearable
 //               placeholder="Filter by category..."
 //             />
-//           </CCol>
+//           </CCol> */}
 //         </CRow>
 
 //         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
 //       </div>
+
 //       <Table
 //         title="Vehicle"
 //         columns={columns}
@@ -539,7 +359,9 @@ export default VehicleList
 //         handleViewButton={handleViewButton}
 //         currentPage={currentPage}
 //         itemsPerPage={itemsPerPage}
+//         isFetching={isFetching}
 //       />
+
 //       <SmartPagination
 //         totalPages={totalPages}
 //         currentPage={currentPage}
@@ -547,8 +369,116 @@ export default VehicleList
 //         itemsPerPage={itemsPerPage}
 //         onItemsPerPageChange={setItemsPerPage}
 //       />
+
+//       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+//         <IconDropdown items={dropdownItems} />
+//       </div>
 //     </>
 //   )
 // }
 
 // export default VehicleList
+
+// ---------------------------------------------------------------------------------------------
+
+// new with fetch api
+
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import Table from '../components/Table'
+import SmartPagination from '../components/SmartPagination'
+import { useEffect, useState } from 'react'
+import { fetchVehicles } from './data/VehicleListData'
+import SearchInput from '../components/SearchInput'
+import { ToastContainer } from 'react-toastify'
+
+const VehicleList = () => {
+  const [filteredData, setFilteredData] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const navigate = useNavigate()
+
+  const { data: vehicles = [], isFetching } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: fetchVehicles,
+    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+  })
+
+  useEffect(() => {
+    let updatedData = [...vehicles] // Start with all vehicles
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      updatedData = updatedData.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
+    }
+
+    setFilteredData(updatedData)
+  }, [vehicles, searchQuery])
+
+  console.log('vehicles', vehicles)
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Table columns
+  const columns = [
+    { label: 'Vehicle', key: 'name', sortable: true },
+    { label: 'Model', key: 'model', sortable: true },
+    { label: 'Category', key: 'category', sortable: true },
+  ]
+
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
+
+  // Handle view
+  const handleViewButton = (id) => {
+    console.log('idsss', id)
+    navigate(`/VehicleProfile/${id}`)
+  }
+
+  console.log('filterdata', filteredData)
+
+  return (
+    <>
+      <ToastContainer />
+
+      <div className="mb-2 d-flex justify-content-end align-items-center">
+        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      </div>
+
+      <Table
+        title="Vehicle"
+        columns={columns}
+        filteredData={filteredData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        viewButton={true}
+        handleViewButton={handleViewButton}
+        isFetching={isFetching}
+      />
+
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setCurrentPage(1)
+          if (value === -1) {
+            setItemsPerPage(filteredData.length)
+          }
+        }}
+      />
+    </>
+  )
+}
+
+export default VehicleList

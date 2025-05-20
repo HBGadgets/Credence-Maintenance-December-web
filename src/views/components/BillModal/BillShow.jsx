@@ -3,12 +3,23 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } 
 import './billshow.css'
 
 const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
+  // Function to check if the base64 is an image
+  const isImage = (base64) => {
+    const imageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp']
+    return imageTypes.some((type) => base64?.startsWith(`data:${type}`))
+  }
+
+  // Function to check if the base64 is a PDF
+  const isPDF = (base64) => {
+    return base64?.startsWith('data:application/pdf')
+  }
+
   return (
     <CModal
       visible={showModal}
       onClose={() => setShowModal(false)}
-      size="lg" // Large size for the modal
-      className="custom-modal" // Custom class for further styling if needed
+      size="lg"
+      className="custom-modal"
     >
       <CModalHeader>
         <CModalTitle>{modalTitle}</CModalTitle>
@@ -16,19 +27,17 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
       <CModalBody className="custom-modal-body">
         {pdfBase64 ? (
           <>
-            {modalTitle.includes('PDF') ? (
-              // Render PDF in iframe with proper height
+            {isPDF(pdfBase64) ? (
               <iframe
                 title="Bill PDF"
                 src={pdfBase64}
                 style={{
                   width: '100%',
-                  height: '500px', // Adjusted height
+                  height: '500px',
                   border: 'none',
                 }}
               />
-            ) : (
-              // Render Image with automatic scaling
+            ) : isImage(pdfBase64) ? (
               <img
                 src={pdfBase64}
                 alt="Bill"
@@ -38,6 +47,8 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
                   border: 'none',
                 }}
               />
+            ) : (
+              <p>Unsupported file format.</p>
             )}
           </>
         ) : (
@@ -45,15 +56,17 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
         )}
       </CModalBody>
       <CModalFooter className="d-flex justify-content-between w-100">
-        <a
-          href={pdfBase64}
-          download="driver_bill"
-          className="btn btn-sm btn-success mb-3"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Download Bill
-        </a>
+        {pdfBase64 && (
+          <a
+            href={pdfBase64}
+            download="driver_bill"
+            className="btn btn-sm btn-success mb-3"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download Bill
+          </a>
+        )}
         <CButton color="secondary" onClick={() => setShowModal(false)}>
           Close
         </CButton>

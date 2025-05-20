@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchVehicles } from '../../../../slices/vehicleSlice'
+// import { fetchVehicles } from '../../../../slices/vehicleSlice'
 import { fetchDrivers } from '../../../DriverExpert/data/drivers'
+import { fetchVehicles } from '../../../vehicle/data/VehicleListData'
 
 const defaultFormData = {
   companyName: '',
@@ -45,9 +46,10 @@ const defaultFormData = {
 const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, mode = 'add' }) => {
   const [formData, setFormData] = useState(defaultFormData)
   const [drivers, setDrivers] = useState([])
+  const [vehicles, setVehicles] = useState([])
 
-  const dispatch = useDispatch()
-  const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
+  // const dispatch = useDispatch()
+  // const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
   console.log('vehiclesssssssssssssss', vehicles)
 
   // Fetch drives
@@ -66,11 +68,24 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
   }, [])
 
   // Fetch vehicle
+  // useEffect(() => {
+  //   if (vehicleStatus === 'idle') {
+  //     dispatch(fetchVehicles())
+  //   }
+  // }, [dispatch, vehicleStatus])
+
   useEffect(() => {
-    if (vehicleStatus === 'idle') {
-      dispatch(fetchVehicles())
+    const loadVehicles = async () => {
+      try {
+        const data = await fetchVehicles()
+        setVehicles(data)
+        console.log('All vehicles', data)
+      } catch (error) {
+        console.error('Error fetching vehicles:', error)
+      }
     }
-  }, [dispatch, vehicleStatus])
+    loadVehicles() // Add parentheses to execute the function
+  }, [])
 
   // Set form data when in edit mode
   useEffect(() => {
@@ -78,7 +93,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
       setFormData({
         ...defaultFormData,
         ...initialData,
-        vehicleName: vehicles.find((vehicle) => vehicle._id === initialData.vehicleId)?.name || '',
+        vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
         driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
       })
     } else {
@@ -215,7 +230,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
               >
                 <option value="">Select Vehicle</option>
                 {vehicles.map((vehicle) => (
-                  <option key={vehicle._id} value={vehicle._id}>
+                  <option key={vehicle.id} value={vehicle.id}>
                     {vehicle.name}
                   </option>
                 ))}
