@@ -174,12 +174,12 @@ const Dashboard = () => {
   ]
 
   const [token, setToken] = useState('')
+  const hash = window.location.hash
+  const queryString = hash.includes('?') ? hash.split('?')[1] : ''
+  const queryParams = new URLSearchParams(queryString)
+  setToken(queryParams.get('token'))
 
   useEffect(() => {
-    const hash = window.location.hash
-    const queryString = hash.includes('?') ? hash.split('?')[1] : ''
-    const queryParams = new URLSearchParams(queryString)
-    setToken(queryParams.get('token'))
     console.log('token', token)
 
     const sendTokenToServerFromURL = async () => {
@@ -189,7 +189,7 @@ const Dashboard = () => {
     }
 
     sendTokenToServerFromURL()
-  }, [])
+  }, [token])
 
   // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
