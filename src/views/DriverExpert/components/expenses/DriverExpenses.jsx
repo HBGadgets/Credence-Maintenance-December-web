@@ -10,6 +10,7 @@ import SearchInput from '../../../components/SearchInput'
 import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { CContainer } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
+import PropTypes from 'prop-types'
 
 function DriverExpenses({ id }) {
   const navigate = useNavigate()
@@ -162,12 +163,6 @@ function DriverExpenses({ id }) {
       <CContainer className="px-2" fluid>
         <ToastContainer />
 
-        <div className="mb-2 d-flex justify-content-between align-items-center">
-          {/* Left: Date Range Filter */}
-          <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-        </div>
-
         <Table
           title="Driver Expenses"
           columns={columns}
@@ -179,21 +174,6 @@ function DriverExpenses({ id }) {
           viewButton={true}
           handleViewButton={handleViewButton}
         />
-
-        {/* <SmartPagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            if (value === -1) {
-              setItemsPerPage(filteredData.length)
-              setCurrentPage(1)
-            } else {
-              setItemsPerPage(value)
-              setCurrentPage(1)
-            }
-          }}
-        /> */}
 
         <BillShow
           showModal={showModal}
@@ -213,6 +193,9 @@ function DriverExpenses({ id }) {
       </CContainer>
     </>
   )
+}
+DriverExpenses.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 }
 
 export default DriverExpenses
