@@ -1,13 +1,13 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react'
-import Table from './Table'
-import { driverExpenses, getDriverBillApi } from '../DriverExpert/data/drivers'
+import Table from '../../../components/Table'
+import { driverExpenses, getDriverBillApi } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
-import SmartPagination from './SmartPagination'
+import SmartPagination from '../../../components/SmartPagination'
 import { toast, ToastContainer } from 'react-toastify'
-import BillShow from './BillModal/BillShow'
-import SearchInput from './SearchInput'
-import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import BillShow from '../../../components/BillModal/BillShow'
+import SearchInput from '../../../components/SearchInput'
+import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { CContainer } from '@coreui/react'
 
 function DriverExpenses({ id }) {

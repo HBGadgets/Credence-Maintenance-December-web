@@ -5,10 +5,10 @@ import Tabs from '../../components/Tabs'
 import AttendanceSummary from './components/attendance/AttendanceSummary'
 import { driverProfile, driverExpenses } from './data/drivers'
 import { useQuery } from '@tanstack/react-query'
-import DriverExpenses from '../components/DriverExpenses'
 import DriverLogbook from './components/logbook/DriverLogbook'
 import Salary from './components/salary/Salary'
 import DriverTrip from './components/trip/DriverTrip'
+import DriverExpenses from './components/expenses/DriverExpenses'
 
 function DriverProfile() {
   const { id } = useParams()
