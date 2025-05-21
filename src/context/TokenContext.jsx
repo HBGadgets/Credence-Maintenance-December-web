@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 
 export const TokenContext = createContext(null)
 
-const FALLBACK_URL = 'http://104.251.218.94/'
+const FALLBACK_URL = `${import.meta.env.VITE_API_CREDENCE_URL}`
 const TOKEN_KEY = 'crdnsMaintToken'
 
 export const TokenProvider = ({ children }) => {
