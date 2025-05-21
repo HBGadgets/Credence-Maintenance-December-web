@@ -1,19 +1,22 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react'
-import Table from './Table'
-import { driverExpenses, getDriverBillApi } from '../DriverExpert/data/drivers'
+import Table from '../../../components/Table'
+import { driverExpenses, getDriverBillApi } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
-import SmartPagination from './SmartPagination'
+import SmartPagination from '../../../components/SmartPagination'
 import { toast, ToastContainer } from 'react-toastify'
-import BillShow from './BillModal/BillShow'
-import SearchInput from './SearchInput'
-import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import BillShow from '../../../components/BillModal/BillShow'
+import SearchInput from '../../../components/SearchInput'
+import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { CContainer } from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
 
 function DriverExpenses({ id }) {
+  const navigate = useNavigate()
+
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
@@ -149,6 +152,11 @@ function DriverExpenses({ id }) {
     }
   }
 
+  // handle navigate
+  const handleViewDetailedReport = (id) => {
+    navigate(`/ExpensesList/${id}`)
+  }
+
   return (
     <>
       <CContainer className="px-2" fluid>
@@ -172,7 +180,7 @@ function DriverExpenses({ id }) {
           handleViewButton={handleViewButton}
         />
 
-        <SmartPagination
+        {/* <SmartPagination
           totalPages={totalPages}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
@@ -185,7 +193,7 @@ function DriverExpenses({ id }) {
               setCurrentPage(1)
             }
           }}
-        />
+        /> */}
 
         <BillShow
           showModal={showModal}
@@ -193,6 +201,15 @@ function DriverExpenses({ id }) {
           pdfBase64={pdfBase64}
           modalTitle={modalTitle}
         />
+
+        <div className="mt-3 text-end">
+          <button
+            onClick={() => handleViewDetailedReport(id)}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
       </CContainer>
     </>
   )

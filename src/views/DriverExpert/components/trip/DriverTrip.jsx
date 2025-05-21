@@ -5,6 +5,7 @@ import { driverTripDetails } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import SmartPagination from '../../../components/SmartPagination'
 import { useNavigate } from 'react-router-dom'
+import { CContainer } from '@coreui/react'
 
 function DriverTrip({ id }) {
   const [filteredData, setFilteredData] = useState([])
@@ -47,29 +48,45 @@ function DriverTrip({ id }) {
     currentPage * itemsPerPage,
   )
 
+  // handle navigate
+  const handleViewDetailedReport = (id) => {
+    navigate(`/TripLogs/${id}`)
+  }
+
   return (
     <>
-      <Table
-        title="Driver Trip"
-        columns={columns}
-        filteredData={filteredData}
-        setFilteredData={setFilteredData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isFetching={isFetching}
-        viewButton={true}
-        handleViewButton={handleViewButton}
-      />
+      <CContainer className="px-2" fluid>
+        <Table
+          title="Driver Trip"
+          columns={columns}
+          filteredData={filteredData}
+          setFilteredData={setFilteredData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          isFetching={isFetching}
+          viewButton={true}
+          handleViewButton={handleViewButton}
+        />
 
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
-          setCurrentPage(1)
-        }}
-      />
+        <SmartPagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value === -1 ? filteredData.length : value)
+            setCurrentPage(1)
+          }}
+        />
+
+        <div className="mt-3 text-end">
+          <button
+            onClick={() => handleViewDetailedReport(id)}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
+      </CContainer>
     </>
   )
 }

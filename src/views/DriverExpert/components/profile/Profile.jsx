@@ -72,7 +72,7 @@ function Profile({ filterData }) {
               </div>
               <div className="lh-md d-flex flex-column">
                 <span className="text-muted small fw-medium">License Number</span>
-                <span className="fw-medium">09876543</span>
+                <span className="fw-medium">{filterData?.licenseNumber}</span>
               </div>
             </div>
 
@@ -84,7 +84,7 @@ function Profile({ filterData }) {
               </div>
               <div className="lh-md d-flex flex-column">
                 <span className="text-muted small fw-medium">Aadhar Number</span>
-                <span className="fw-medium">123456789087</span>
+                <span className="fw-medium">{filterData?.aadharNumber}</span>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ function Profile({ filterData }) {
               </div>
               <div className="lh-md d-flex flex-column">
                 <span className="text-muted small fw-medium">Email</span>
-                <span className="fw-medium">piyush.doe@example.com</span>
+                <span className="fw-medium">{filterData?.email}</span>
               </div>
             </div>
 
@@ -108,7 +108,7 @@ function Profile({ filterData }) {
               </div>
               <div className="lh-md d-flex flex-column">
                 <span className="text-muted small fw-medium">Contact Number</span>
-                <span className="fw-medium">12345678990</span>
+                <span className="fw-medium">{filterData?.contactNumber}</span>
               </div>
             </div>
           </div>

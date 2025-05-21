@@ -28,8 +28,8 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
     licenseNumber: '',
     aadharNumber: '',
     profileImage: null,
-    licenseImage: null,
-    aadharImage: null,
+    // licenseImage: null,
+    // aadharImage: null,
   })
 
   const [errors, setErrors] = useState({})
@@ -45,8 +45,8 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
         licenseNumber: driver.licenseNumber || '',
         aadharNumber: driver.aadharNumber || '',
         profileImage: null,
-        licenseImage: null,
-        aadharImage: null,
+        // licenseImage: null,
+        // aadharImage: null,
       })
     }
   }, [driver])
@@ -118,7 +118,13 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
   }
 
   return (
-    <CModal alignment="center" scrollable visible={visible} onClose={() => setVisible(false)}>
+    <CModal
+      alignment="center"
+      scrollable
+      visible={visible}
+      size="lg"
+      onClose={() => setVisible(false)}
+    >
       <CModalHeader>
         <CModalTitle>Edit Driver</CModalTitle>
       </CModalHeader>
@@ -177,7 +183,7 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
           </CRow>
 
           <CRow className="mb-2">
-            <CCol md={6}>
+            <CCol md={4}>
               <CFormLabel htmlFor="licenseNumber">License Number</CFormLabel>
               <CFormInput
                 type="text"
@@ -187,7 +193,7 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
                 onChange={handleChange}
               />
             </CCol>
-            <CCol md={6}>
+            <CCol md={4}>
               <CFormLabel htmlFor="aadharNumber">Aadhar Number</CFormLabel>
               <CFormInput
                 type="text"
@@ -197,9 +203,7 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
                 onChange={handleChange}
               />
             </CCol>
-          </CRow>
 
-          <CRow className="mb-2">
             <CCol md={4}>
               <CFormLabel htmlFor="profileImage">Profile Image</CFormLabel>
               <CFormInput
@@ -210,6 +214,9 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
                 onChange={handleChange}
               />
             </CCol>
+          </CRow>
+
+          {/* <CRow className="mb-2">
             <CCol md={4}>
               <CFormLabel htmlFor="licenseImage">License Image</CFormLabel>
               <CFormInput
@@ -230,7 +237,7 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
                 onChange={handleChange}
               />
             </CCol>
-          </CRow>
+          </CRow> */}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setVisible(false)}>

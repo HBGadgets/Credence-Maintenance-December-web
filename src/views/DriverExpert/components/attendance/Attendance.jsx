@@ -79,7 +79,7 @@ function Attendance() {
         <AttendanceCard
           title="Pending Leaves"
           subtitle="Leave requests"
-          count={driversAttendance?.presentCount || 0} // Use real data if available
+          count={driversAttendance?.Pending || 0} // Use real data if available
           statusColor="#22c55e"
         />
       </div>

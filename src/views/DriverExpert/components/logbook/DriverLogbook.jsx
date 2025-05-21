@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { driverLogbook, getDailyLogSign } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import { CContainer } from '@coreui/react'
@@ -6,20 +6,28 @@ import Table from '../../../components/Table'
 import SmartPagination from '../../../components/SmartPagination'
 import DateRangePicker from '../../../components/DateRangePicker'
 import BillShow from '../../../components/BillModal/BillShow'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 const DriverLogbook = ({ id }) => {
+  const navigate = useNavigate()
+
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
-  // Use state for modal
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
-  const { data: driverLogbookData = [], isFetching } = useQuery({
-    queryKey: ['logbook'],
+  const {
+    data: driverLogbookData = [],
+    isFetching,
+    isFetched,
+    isError,
+  } = useQuery({
+    queryKey: ['logbook', id, selectedMonth],
     queryFn: () => driverLogbook(id, selectedMonth),
     staleTime: 1000 * 60 * 30,
   })
@@ -30,20 +38,15 @@ const DriverLogbook = ({ id }) => {
     }
   }, [driverLogbookData])
 
-  useEffect(() => {
-    console.log('OYEEEEEEEEEEEEEEEEEEEEEEEEEEEE🙄🙄🙄')
-    driverLogbook(id, selectedMonth)
-  }, [id, selectedMonth])
+  // Memoized paginatedData
+  const paginatedData = useMemo(() => {
+    return filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  }, [filteredData, currentPage, itemsPerPage])
 
-  // console.log('All logbook data ', driverLogbookData)
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-
-  // Pagination: Slice the data for current page
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  )
+  // Memoized totalPages
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredData.length / itemsPerPage)
+  }, [filteredData.length, itemsPerPage])
 
   const columns = [
     { label: 'Date', key: 'originalDate', sortable: true },
@@ -54,10 +57,6 @@ const DriverLogbook = ({ id }) => {
     { label: 'Log KM', key: 'logKM', sortable: true },
     { label: 'GPS KM', key: 'gpsKM', sortable: true },
   ]
-
-  console.log('Filtered Data:', filteredData)
-
-  // handle view button
 
   const handleViewButton = async (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
@@ -75,7 +74,6 @@ const DriverLogbook = ({ id }) => {
 
       if (base64Data && contentType) {
         const fileSrc = `data:${contentType};base64,${base64Data}`
-        console.log('Daily log signature image:', fileSrc)
         setPdfBase64(fileSrc)
 
         if (contentType.startsWith('application/pdf')) {
@@ -96,54 +94,72 @@ const DriverLogbook = ({ id }) => {
     }
   }
 
+  // handle navigate
+  const handleViewDetailedReport = (id) => {
+    navigate(`/LogsDriver/${id}`)
+  }
+
   return (
     <>
       <CContainer className="px-2" fluid>
-        <div className="col-md-2 d-flex align-items-center py-2">
-          <DateRangePicker
-            value={selectedMonth}
-            label={false}
-            onMonthChange={(newMonth) => {
-              if (newMonth !== selectedMonth) {
-                setSelectedMonth(newMonth)
+        <>
+          <div className="col-md-2 d-flex align-items-center py-2">
+            <DateRangePicker
+              value={selectedMonth}
+              label={false}
+              onMonthChange={(newMonth) => {
+                if (newMonth !== selectedMonth) {
+                  setSelectedMonth(newMonth)
+                }
+              }}
+            />
+          </div>
+
+          <Table
+            title="Driver LogBooks"
+            columns={columns}
+            filteredData={paginatedData}
+            setFilteredData={setFilteredData}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            isFetching={isFetching}
+            isFetched={isFetched}
+            isError={isError}
+            viewButton={true}
+            handleViewButton={handleViewButton}
+          />
+
+          <SmartPagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(value) => {
+              if (value === -1) {
+                setItemsPerPage(filteredData.length)
+                setCurrentPage(1)
+              } else {
+                setItemsPerPage(value)
+                setCurrentPage(1)
               }
             }}
           />
-        </div>
-        <Table
-          title="Driver LogBooks"
-          columns={columns}
-          filteredData={paginatedData}
-          setFilteredData={setFilteredData}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={isFetching}
-          viewButton={true}
-          handleViewButton={handleViewButton}
-        />
-
-        <SmartPagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            if (value === -1) {
-              setItemsPerPage(filteredData.length)
-              setCurrentPage(1)
-            } else {
-              setItemsPerPage(value)
-              setCurrentPage(1)
-            }
-          }}
-        />
-
-        {/* Modal Component */}
+        </>
+        {/* Modal for displaying signature */}
         <BillShow
           showModal={showModal}
           setShowModal={setShowModal}
           pdfBase64={pdfBase64}
           modalTitle={modalTitle}
         />
+
+        <div className="mt-3 text-end">
+          <button
+            onClick={() => handleViewDetailedReport(id)}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
       </CContainer>
     </>
   )

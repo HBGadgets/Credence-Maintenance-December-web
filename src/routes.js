@@ -70,6 +70,11 @@ const Attendance = React.lazy(
   () => import('./views/DriverExpert/components/attendance/Attendance.jsx'),
 )
 
+const ExpensesList = React.lazy(() => import('./views/DriverExpert/components/expenses/ExpensesList.jsx'))
+const LogsDriver = React.lazy(() => import('./views/DriverExpert/components/logbook/LogsDriver.jsx'))
+const TripLogs = React.lazy(() => import('./views/DriverExpert/components/trip/TripLogs.jsx'))
+const ViewAllSalary = React.lazy(() => import('./views/DriverExpert/components/salary/ViewAllSalary.jsx'))
+
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
 
@@ -129,6 +134,10 @@ const routes = [
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
   { path: '/DriverProfile/:id', name: 'Driver Profile', element: DriverProfile },
   { path: '/DriverAttendance/:id', name: 'Driver Attendance', element: Attendance },
+  { path: '/ExpensesList/:id', name: 'Driver Expenses', element: ExpensesList },
+  { path: '/LogsDriver/:id', name: 'Logs Driver', element: LogsDriver },
+  { path: '/TripLogs/:id', name: 'Trip Logs', element: TripLogs },
+  { path: '/ViewAllSalary/:id', name: 'Salary', element: ViewAllSalary },
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },

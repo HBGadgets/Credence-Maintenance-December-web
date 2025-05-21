@@ -28,8 +28,8 @@ function AddDriverModel({ visible, setVisible }) {
     licenseNumber: '',
     aadharNumber: '',
     profileImage: null,
-    licenseImage: null,
-    aadharImage: null,
+    // licenseImage: null,
+    // aadharImage: null,
   })
   const [errors, setErrors] = useState({})
   const queryClient = useQueryClient()
@@ -43,8 +43,8 @@ function AddDriverModel({ visible, setVisible }) {
       licenseNumber: '',
       aadharNumber: '',
       profileImage: null,
-      licenseImage: null,
-      aadharImage: null,
+      // licenseImage: null,
+      // aadharImage: null,
     })
     setErrors({})
   }
@@ -128,6 +128,7 @@ function AddDriverModel({ visible, setVisible }) {
       alignment="center"
       scrollable
       visible={visible}
+      size="lg"
       onClose={() => setVisible(false)}
       aria-labelledby="AddDriverModal"
     >
@@ -191,7 +192,7 @@ function AddDriverModel({ visible, setVisible }) {
           </CRow>
 
           <CRow className="mb-2">
-            <CCol md={6}>
+            <CCol md={4}>
               <CFormLabel htmlFor="licenseNumber">License Number</CFormLabel>
               <CFormInput
                 type="text"
@@ -201,7 +202,7 @@ function AddDriverModel({ visible, setVisible }) {
                 onChange={handleChange}
               />
             </CCol>
-            <CCol md={6}>
+            <CCol md={4}>
               <CFormLabel htmlFor="aadharNumber">Aadhar Number</CFormLabel>
               <CFormInput
                 type="text"
@@ -211,9 +212,7 @@ function AddDriverModel({ visible, setVisible }) {
                 onChange={handleChange}
               />
             </CCol>
-          </CRow>
 
-          <CRow className="mb-2">
             <CCol md={4}>
               <CFormLabel htmlFor="profileImage">Profile Image</CFormLabel>
               <CFormInput
@@ -224,7 +223,10 @@ function AddDriverModel({ visible, setVisible }) {
                 onChange={handleChange}
               />
             </CCol>
-            <CCol md={4}>
+          </CRow>
+
+          <CRow className="mb-2">
+            {/* <CCol md={4}>
               <CFormLabel htmlFor="licenseImage">License Image</CFormLabel>
               <CFormInput
                 type="file"
@@ -243,7 +245,7 @@ function AddDriverModel({ visible, setVisible }) {
                 accept="image/*"
                 onChange={handleChange}
               />
-            </CCol>
+            </CCol> */}
           </CRow>
         </CForm>
       </CModalBody>
