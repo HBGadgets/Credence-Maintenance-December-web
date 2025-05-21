@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
+import { TokenProvider } from './context/TokenContext'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -41,9 +42,11 @@ const App = () => {
           </div>
         }
       >
-        <Routes>
-          <Route path="*" name="Home" element={<DefaultLayout />} />
-        </Routes>
+        <TokenProvider>
+          <Routes>
+            <Route path="*" name="Home" element={<DefaultLayout />} />
+          </Routes>
+        </TokenProvider>
       </Suspense>
     </HashRouter>
   )

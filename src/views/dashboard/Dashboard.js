@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import {
   CAvatar,
   CButton,
@@ -42,7 +42,7 @@ import { TbTruckDelivery } from 'react-icons/tb'
 import { IoAlertCircle } from 'react-icons/io5'
 import { FaMapLocationDot } from 'react-icons/fa6'
 import { FaHandshakeSimple } from 'react-icons/fa6'
-
+import { TokenContext } from '../../context/TokenContext'
 import avatar1 from 'src/assets/images/avatars/1.jpg'
 import avatar2 from 'src/assets/images/avatars/2.jpg'
 import avatar3 from 'src/assets/images/avatars/3.jpg'
@@ -50,6 +50,7 @@ import avatar4 from 'src/assets/images/avatars/4.jpg'
 import avatar5 from 'src/assets/images/avatars/5.jpg'
 
 const Dashboard = () => {
+  const token = useContext(TokenContext)
   // Data processing (these should be calculated dynamically based on actual data)
   const activeDrivers = 12
   const inactiveDrivers = 3
@@ -173,27 +174,27 @@ const Dashboard = () => {
     },
   ]
 
-  const [token, setToken] = useState('')
+  // const [token, setToken] = useState('')
 
-  useEffect(() => {
-    const hash = window.location.hash
-    const queryString = hash.includes('?') ? hash.split('?')[1] : ''
-    const queryParams = new URLSearchParams(queryString)
-    const extractedToken = queryParams.get('token')
+  // useEffect(() => {
+  //   const hash = window.location.hash
+  //   const queryString = hash.includes('?') ? hash.split('?')[1] : ''
+  //   const queryParams = new URLSearchParams(queryString)
+  //   const extractedToken = queryParams.get('token')
 
-    if (!extractedToken) {
-      window.location.href = 'http://104.251.218.94/'
-    } else {
-      setToken(extractedToken)
-      sessionStorage.setItem('crdnsMaintToken', extractedToken)
-    }
-  }, [])
+  //   if (!extractedToken) {
+  //     window.location.href = 'http://104.251.218.94/'
+  //   } else {
+  //     setToken(extractedToken)
+  //     sessionStorage.setItem('crdnsMaintToken', extractedToken)
+  //   }
+  // }, [])
 
-  useEffect(() => {
-    if (token) {
-      console.log('token', token)
-    }
-  }, [token])
+  // useEffect(() => {
+  //   if (token) {
+  //     console.log('token', token)
+  //   }
+  // }, [token])
 
   // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
@@ -213,6 +214,9 @@ const Dashboard = () => {
   const handleClickView = () => {
     setShowAllLogs(true)
   }
+  useEffect(() => {
+    console.log('token', token)
+  }, [token])
   return (
     <>
       {token && (
