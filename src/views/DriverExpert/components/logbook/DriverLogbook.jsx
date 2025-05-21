@@ -7,8 +7,11 @@ import SmartPagination from '../../../components/SmartPagination'
 import DateRangePicker from '../../../components/DateRangePicker'
 import BillShow from '../../../components/BillModal/BillShow'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 const DriverLogbook = ({ id }) => {
+  const navigate = useNavigate()
+
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -91,6 +94,11 @@ const DriverLogbook = ({ id }) => {
     }
   }
 
+  // handle navigate
+  const handleViewDetailedReport = (id) => {
+    navigate(`/LogsDriver/${id}`)
+  }
+
   return (
     <>
       <CContainer className="px-2" fluid>
@@ -143,6 +151,15 @@ const DriverLogbook = ({ id }) => {
           pdfBase64={pdfBase64}
           modalTitle={modalTitle}
         />
+
+        <div className="mt-3 text-end">
+          <button
+            onClick={() => handleViewDetailedReport(id)}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
       </CContainer>
     </>
   )

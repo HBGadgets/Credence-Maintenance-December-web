@@ -6,8 +6,11 @@ import { useQuery } from '@tanstack/react-query'
 import SalaryInvoiceModal from './SalaryInvoiceModal'
 import { CContainer } from '@coreui/react'
 import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
+import { useNavigate } from 'react-router-dom'
 
 const Salary = ({ id }) => {
+  const navigate = useNavigate()
+
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -76,6 +79,11 @@ const Salary = ({ id }) => {
     setDateRange({ startDate, endDate })
   }
 
+  // handle navigate
+  const handleViewDetailedReport = (id) => {
+    navigate(`/ViewAllSalary/${id}`)
+  }
+
   return (
     <>
       <CContainer className="px-2" fluid>
@@ -119,6 +127,15 @@ const Salary = ({ id }) => {
           onClose={() => setShowInvoiceModal(false)}
           salaryData={selectedSalary}
         />
+
+        <div className="mt-3 text-end">
+          <button
+            onClick={() => handleViewDetailedReport(id)}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
       </CContainer>
     </>
   )

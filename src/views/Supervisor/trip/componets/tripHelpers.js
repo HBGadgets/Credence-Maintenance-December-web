@@ -1,5 +1,4 @@
 import Swal from 'sweetalert2'
-import { toast } from 'react-toastify'
 import { deleteTripApi, getTripListApi, patchTripApi, postTripApi } from '../../data/data'
 
 // Fetch Trips
@@ -43,7 +42,6 @@ export const handleAddHelper = async (formData, fetchTripData, refetch) => {
         })
     } catch (err) {
         console.error('Add Trip Failed:', err.message)
-        toast.error('Trip Error on add trip!')
     }
 }
 
@@ -80,7 +78,6 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             confirmButtonText: 'OK',
         })
     } catch (err) {
-        toast.error('Trip Error on update trip!')
         console.error('Trip update failed:', err.message)
     }
 }
@@ -104,10 +101,8 @@ export const handleDeleteHelper = async (tripId, fetchTripData, fieldName = 'Tri
             await deleteTripApi(tripId)
             await fetchTripData()
             if (typeof refetch === 'function') await refetch()
-            toast.success('Trip deleted successfully!')
             Swal.fire('Deleted!', `${fieldName} has been deleted.`, 'success')
         } catch (err) {
-            toast.error('Trip Error occurred!')
             console.error('Delete failed:', err.message)
         }
     }

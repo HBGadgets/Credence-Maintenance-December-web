@@ -85,12 +85,20 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         }
       }
 
+      // Find driver and vehicle by their names
+      const driver = drivers.find((d) => d.name === selectedTrip.driverName)
+      const vehicle = vehicles.find((v) => v.name === selectedTrip.vehicleName)
+      console.log('drivers', driver)
+      console.log('vehicles', vehicle)
+
       setTripData({
         _id: selectedTrip.id || '',
         date: formattedDate,
-        driverId: selectedTrip.driverId || '',
+        // driverId: selectedTrip.driverId || '',
+        driverId: driver?.id || '',
         driverName: selectedTrip.driverName || '',
-        vehicleId: selectedTrip.vehicleId || '',
+        // vehicleId: selectedTrip.vehicleId || '',
+        vehicleId: vehicle?.id || '', // Use found vehicle's ID
         vehicleName: selectedTrip.vehicleName || '',
         startLocation: selectedTrip.startLocation || '',
         endLocation: selectedTrip.endLocation || '',
@@ -99,7 +107,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         status: selectedTrip.status || '',
       })
     }
-  }, [mode, selectedTrip])
+  }, [mode, selectedTrip, drivers, vehicles])
 
   // Handle input changes
   const handleChange = (e) => {
