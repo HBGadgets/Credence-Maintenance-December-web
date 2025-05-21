@@ -103,18 +103,6 @@ const DriverLogbook = ({ id }) => {
     <>
       <CContainer className="px-2" fluid>
         <>
-          <div className="col-md-2 d-flex align-items-center py-2">
-            <DateRangePicker
-              value={selectedMonth}
-              label={false}
-              onMonthChange={(newMonth) => {
-                if (newMonth !== selectedMonth) {
-                  setSelectedMonth(newMonth)
-                }
-              }}
-            />
-          </div>
-
           <Table
             title="Driver LogBooks"
             columns={columns}

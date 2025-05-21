@@ -62,7 +62,6 @@ const BudgetAllocation = React.lazy(
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
 
-
 // DriverExperts
 const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.jsx'))
 const DriverProfile = React.lazy(() => import('./views/DriverExpert/DriverProfile.jsx'))
@@ -70,10 +69,16 @@ const Attendance = React.lazy(
   () => import('./views/DriverExpert/components/attendance/Attendance.jsx'),
 )
 
-const ExpensesList = React.lazy(() => import('./views/DriverExpert/components/expenses/ExpensesList.jsx'))
-const LogsDriver = React.lazy(() => import('./views/DriverExpert/components/logbook/LogsDriver.jsx'))
+const ExpensesList = React.lazy(
+  () => import('./views/DriverExpert/components/expenses/ExpensesList.jsx'),
+)
+const LogsDriver = React.lazy(
+  () => import('./views/DriverExpert/components/logbook/LogsDriver.jsx'),
+)
 const TripLogs = React.lazy(() => import('./views/DriverExpert/components/trip/TripLogs.jsx'))
-const ViewAllSalary = React.lazy(() => import('./views/DriverExpert/components/salary/ViewAllSalary.jsx'))
+const ViewAllSalary = React.lazy(
+  () => import('./views/DriverExpert/components/salary/ViewAllSalary.jsx'),
+)
 
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
@@ -86,11 +91,14 @@ const routes = [
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vehicles', element: Vehicle },
   { path: 'VehicleProfile/:id', name: 'VehicleProfile', element: VehicleProfile },
-  { path: 'VehicleProfile/:id/VehicleExpenses', name: 'Vehicle Expenses', element: VehicleExpenses },
+  {
+    path: 'VehicleProfile/:id/VehicleExpenses',
+    name: 'Vehicle Expenses',
+    element: VehicleExpenses,
+  },
   { path: 'VehicleProfile/:id/VehicleTrips', name: 'Vehicle Trips', element: VehicleTrips },
   { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
   { path: 'VehicleProfile/:id/ManageTyre', name: 'Tyres System', element: ManageTyre },
-
 
   /**SUPERVISOR */
 
@@ -129,7 +137,6 @@ const routes = [
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
   { path: '/ChatBot', name: 'Chat Bot', element: ChatBot },
 
-
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
   { path: '/DriverProfile/:id', name: 'Driver Profile', element: DriverProfile },
@@ -141,8 +148,6 @@ const routes = [
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
-
-
 ]
 
 export default routes
