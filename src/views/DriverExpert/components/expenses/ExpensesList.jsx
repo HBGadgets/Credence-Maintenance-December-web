@@ -145,11 +145,6 @@ const ExpensesList = () => {
     }
   }
 
-  // handle navigate
-  const handleViewDetailedReport = (id) => {
-    navigate(`/ExpensesList/${id}`)
-  }
-
   return (
     <>
       <CContainer className="px-2" fluid>

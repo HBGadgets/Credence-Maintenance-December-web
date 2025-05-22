@@ -117,7 +117,7 @@ const DriverLogbook = ({ id }) => {
             handleViewButton={handleViewButton}
           />
 
-          <SmartPagination
+          {/* <SmartPagination
             totalPages={totalPages}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
@@ -130,7 +130,7 @@ const DriverLogbook = ({ id }) => {
                 setCurrentPage(1)
               }
             }}
-          />
+          /> */}
         </>
         {/* Modal for displaying signature */}
         <BillShow

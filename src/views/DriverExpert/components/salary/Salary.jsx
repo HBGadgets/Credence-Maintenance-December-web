@@ -106,7 +106,7 @@ const Salary = ({ id }) => {
             handleViewButton={handleViewButton}
           />
 
-          <SmartPagination
+          {/* <SmartPagination
             totalPages={totalPages}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
@@ -119,7 +119,7 @@ const Salary = ({ id }) => {
                 setCurrentPage(1)
               }
             }}
-          />
+          /> */}
         </>
 
         <SalaryInvoiceModal

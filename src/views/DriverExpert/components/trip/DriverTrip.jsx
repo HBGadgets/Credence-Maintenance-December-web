@@ -68,7 +68,7 @@ function DriverTrip({ id }) {
           handleViewButton={handleViewButton}
         />
 
-        <SmartPagination
+        {/* <SmartPagination
           totalPages={totalPages}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
@@ -76,7 +76,7 @@ function DriverTrip({ id }) {
             setItemsPerPage(value === -1 ? filteredData.length : value)
             setCurrentPage(1)
           }}
-        />
+        /> */}
 
         <div className="mt-3 text-end">
           <button

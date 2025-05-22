@@ -7,12 +7,15 @@ import { CContainer } from '@coreui/react'
 import { driverLogbook, getDailyLogSign } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
+import SearchInput from '../../../components/SearchInput'
 
 const LogsDriver = () => {
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [searchQuery, setSearchQuery] = useState('')
+
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
@@ -29,10 +32,25 @@ const LogsDriver = () => {
   })
 
   useEffect(() => {
-    if (driverLogbookData && JSON.stringify(driverLogbookData) !== JSON.stringify(filteredData)) {
-      setFilteredData(driverLogbookData)
+    let filtered = [...driverLogbookData]
+
+    // Apply search filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            value && typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
     }
-  }, [driverLogbookData])
+
+    setFilteredData(filtered)
+  }, [driverLogbookData, searchQuery])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
 
   // Memoized paginatedData
   const paginatedData = useMemo(() => {
@@ -90,22 +108,28 @@ const LogsDriver = () => {
     }
   }
 
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
   return (
     <>
       <CContainer className="px-2" fluid>
         <>
-          <div className="col-md-2 d-flex align-items-center py-2">
-            <DateRangePicker
-              value={selectedMonth}
-              label={false}
-              onMonthChange={(newMonth) => {
-                if (newMonth !== selectedMonth) {
-                  setSelectedMonth(newMonth)
-                }
-              }}
-            />
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="mb-2 d-flex justify-content-between align-items-center">
+              <DateRangePicker
+                value={selectedMonth}
+                label={false}
+                onMonthChange={(newMonth) => {
+                  if (newMonth !== selectedMonth) {
+                    setSelectedMonth(newMonth)
+                  }
+                }}
+              />
+            </div>
+            <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
           </div>
-
           <Table
             title="Driver LogBooks"
             columns={columns}
