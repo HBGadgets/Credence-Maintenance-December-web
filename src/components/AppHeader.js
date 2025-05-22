@@ -63,10 +63,14 @@ const AppHeader = () => {
   //   return segments.length ? segments[segments.length - 1] : 'Dashboard'
   // }
 
-
   const currentPathname = useLocation().pathname
   const currentRouteName = getRouteName(currentPathname, routes)
 
+  const handleBackToCredence = () => {
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
 
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
@@ -188,9 +192,13 @@ const AppHeader = () => {
                 <Headset /> Help & Support
               </CDropdownItem> */}
               <CNavItem>
-                <CDropdownItem className="d-flex align-items-center gap-4" type="button">
+                <CDropdownItem
+                  className="d-flex align-items-center gap-4"
+                  type="button"
+                  onClick={handleBackToCredence}
+                >
                   {' '}
-                  <LogOut /> Logout
+                  <LogOut /> Credence
                 </CDropdownItem>
               </CNavItem>
             </CDropdownMenu>
