@@ -87,10 +87,9 @@ const Salary = ({ id }) => {
   return (
     <>
       <CContainer className="px-2" fluid>
-        <div className="mb-2 d-flex justify-content-between align-items-center">
-          {/* Left: Date Range Filter */}
+        {/* <div className="mb-2 d-flex justify-content-between align-items-center">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-        </div>
+        </div> */}
         <>
           <Table
             title="Driver Salary"
