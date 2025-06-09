@@ -8,6 +8,7 @@ import { driverLogbook, getDailyLogSign } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import SearchInput from '../../../components/SearchInput'
+import { toast, ToastContainer } from 'react-toastify'
 
 const LogsDriver = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -114,6 +115,7 @@ const LogsDriver = () => {
   }
   return (
     <>
+      <ToastContainer />
       <CContainer className="px-2" fluid>
         <>
           <div className="d-flex justify-content-between align-items-center mb-3">

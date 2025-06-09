@@ -6,7 +6,7 @@ import Table from '../../../components/Table'
 import SmartPagination from '../../../components/SmartPagination'
 import DateRangePicker from '../../../components/DateRangePicker'
 import BillShow from '../../../components/BillModal/BillShow'
-import { toast } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 
 const DriverLogbook = ({ id }) => {
@@ -101,6 +101,8 @@ const DriverLogbook = ({ id }) => {
 
   return (
     <>
+      <ToastContainer />
+
       <CContainer className="px-2" fluid>
         <>
           <Table
