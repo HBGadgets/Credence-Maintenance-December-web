@@ -7,6 +7,7 @@ import SalaryInvoiceModal from './SalaryInvoiceModal'
 import { CContainer } from '@coreui/react'
 import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
 
 const Salary = ({ id }) => {
   const navigate = useNavigate()
@@ -86,6 +87,8 @@ const Salary = ({ id }) => {
 
   return (
     <>
+      <ToastContainer />
+
       <CContainer className="px-2" fluid>
         {/* <div className="mb-2 d-flex justify-content-between align-items-center">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />

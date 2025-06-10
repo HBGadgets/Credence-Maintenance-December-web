@@ -8,6 +8,7 @@ import { CContainer } from '@coreui/react'
 import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { useNavigate, useParams } from 'react-router-dom'
 import SearchInput from '../../../components/SearchInput'
+import { ToastContainer } from 'react-toastify'
 
 const ViewAllSalary = () => {
   const navigate = useNavigate()
@@ -106,6 +107,8 @@ const ViewAllSalary = () => {
 
   return (
     <>
+      <ToastContainer />
+
       <CContainer className="px-2" fluid>
         <div className="mb-2 d-flex justify-content-between align-items-center">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />

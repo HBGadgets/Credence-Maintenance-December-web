@@ -9,6 +9,7 @@ import DriverLogbook from './components/logbook/DriverLogbook'
 import Salary from './components/salary/Salary'
 import DriverTrip from './components/trip/DriverTrip'
 import DriverExpenses from './components/expenses/DriverExpenses'
+import { ToastContainer } from 'react-toastify'
 
 function DriverProfile() {
   const { id } = useParams()
@@ -39,6 +40,8 @@ function DriverProfile() {
 
   return (
     <div>
+      <ToastContainer />
+
       <Profile id={id} filterData={filterData.driver} isFetching={isFetching} />
       <div className="mt-4">
         <Tabs tabs={tabData} />
