@@ -7,7 +7,7 @@ import { CButton, CContainer } from '@coreui/react'
 import './VehicleProfile.css'
 import { IoCarOutline, IoSpeedometerOutline } from 'react-icons/io5'
 import { TbCategory } from 'react-icons/tb'
-import { GiCarWheel } from 'react-icons/gi'
+import { GiCarWheel, GiPathDistance } from 'react-icons/gi'
 
 function VehicleProfile() {
   const navigate = useNavigate()
@@ -77,7 +77,7 @@ function VehicleProfile() {
           <div className="action-section-grid mt-4">
             {[
               { title: 'Vehicle Expenses', route: 'VehicleExpenses', icon: <IoCarOutline /> },
-              { title: 'Vehicle Trips', route: 'VehicleTrips', icon: <IoSpeedometerOutline /> },
+              { title: 'Vehicle Trips', route: 'VehicleTrips', icon: <GiPathDistance /> },
               { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
               { title: 'Tyres System', route: 'ManageTyre', icon: <GiCarWheel /> },
             ].map((item, index) => (
