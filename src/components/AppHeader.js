@@ -1,5 +1,5 @@
 // src/AppHeader.js
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useContext } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -30,11 +30,17 @@ import { User, Headset, LogOut } from 'lucide-react'
 import '../index.css'
 import './header.css'
 import routes from '../routes'
+import { TokenContext } from '../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+
 
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes()
   const [view, setView] = useState(false)
+
+  const token = useContext(TokenContext)
+  const [username, setUsername] = useState('User')
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -46,6 +52,17 @@ const AppHeader = () => {
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
   }, [])
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        setUsername(decoded?.username || decoded.name || 'User') // Adjust based on your token structure
+      } catch (error) {
+        console.error('Failed to decode token:', error)
+      }
+    }
+  }, [token])
 
   const handleView = () => {
     setView(!view)
@@ -108,7 +125,7 @@ const AppHeader = () => {
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
               <img
-                src="https://api.dicebear.com/9.x/initials/svg?seed=User Name"
+                src={`https://api.dicebear.com/9.x/initials/svg?seed=${username}`}
                 alt="avatar"
                 className="rounded-circle"
                 style={{ width: '30px', height: '30px' }}
@@ -123,18 +140,19 @@ const AppHeader = () => {
                   as={NavLink}
                 >
                   {' '}
-                  <User /> User Name
+                  <User />
+                  <span>{username}</span>
                 </CDropdownItem>
               </CNavItem>
               {/* <CDropdownItem
-                className="d-flex align-items-center gap-4"
-                type="button"
-                to="/HelpAndSupport"
-                as={NavLink}
-              >
-                {' '}
-                <Headset /> Help & Support
-              </CDropdownItem> */}
+                  className="d-flex align-items-center gap-4"
+                  type="button"
+                  to="/HelpAndSupport"
+                  as={NavLink}
+                >
+                  {' '}
+                  <Headset /> Help & Support
+                </CDropdownItem> */}
               <CNavItem>
                 <CDropdownItem
                   className="d-flex align-items-center gap-4"
