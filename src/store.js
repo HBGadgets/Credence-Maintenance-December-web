@@ -19,7 +19,7 @@
 
 
 
-import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { configureStore, combineReducers, createStore } from "@reduxjs/toolkit";
 import vehicleReducer from "./slices/vehicleSlice";
 
 // Legacy reducer
@@ -44,9 +44,12 @@ const rootReducer = combineReducers({
 });
 
 // Configure store
-const store = configureStore({
-  reducer: rootReducer,
-});
+// const store = configureStore({
+//   reducer: rootReducer,
+// });
+
+const store = createStore(changeState)
+
 
 export default store;
 
