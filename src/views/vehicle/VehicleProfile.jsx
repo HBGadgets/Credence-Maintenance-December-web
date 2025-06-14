@@ -8,6 +8,9 @@ import './VehicleProfile.css'
 import { IoCarOutline, IoSpeedometerOutline } from 'react-icons/io5'
 import { TbCategory } from 'react-icons/tb'
 import { GiCarWheel, GiPathDistance } from 'react-icons/gi'
+import { BsFuelPumpDiesel } from 'react-icons/bs'
+import ServiceInfo from '../components/ServiceInfo'
+import { MdOutlineMiscellaneousServices } from 'react-icons/md'
 
 function VehicleProfile() {
   const navigate = useNavigate()
@@ -29,6 +32,12 @@ function VehicleProfile() {
   if (isError) {
     return <p>Error: {error || 'An unknown error occurred'}</p>
   }
+
+  const serviceData = [
+    { label: 'Current Odometer', value: '1000km', highlight: false },
+    { label: 'Previous Km service', value: '100km', highlight: false },
+    { label: 'Next Km service', value: '2000km', highlight: false },
+  ]
 
   return (
     <CContainer fluid className="py-2">
@@ -63,6 +72,10 @@ function VehicleProfile() {
             />
           </div>
 
+          {/* <div className="mt-4">
+            <ServiceInfo title="Service Overview" data={serviceData} />
+          </div> */}
+
           {/* 🔧 Action Section */}
 
           {/* First code */}
@@ -86,6 +99,14 @@ function VehicleProfile() {
               { title: 'Vehicle Trips', route: 'VehicleTrips', icon: <GiPathDistance /> },
               { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
               { title: 'Tyres System', route: 'ManageTyre', icon: <GiCarWheel /> },
+              { title: 'Fuel System', route: 'Fuelsystem', icon: <BsFuelPumpDiesel /> },
+              {
+                title: 'Service Checkup List',
+                route: 'ServiceList',
+                icon: <MdOutlineMiscellaneousServices />,
+              },
+
+              // Add more items here if needed
             ].map((item, index) => (
               <div key={index} className="action-card" onClick={() => navigate(item.route)}>
                 <div className="card-icon">{item.icon}</div>
