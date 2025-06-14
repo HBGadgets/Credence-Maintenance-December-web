@@ -286,3 +286,81 @@ export const driverTripDetails = async (id) => {
     throw error
   }
 }
+ //------------------------------------driver document locker-------------------------------------
+ 
+export const getDocuments = async (id) => {
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-all/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getDocumentImage = async (id) => {
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-image-by-id/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const uploadDocuments = async (driverId, documentData) => {
+  if (!driverId || !documentData || typeof documentData !== "object") {
+    console.error("Invalid parameters: driver ID or document data is missing.");
+    throw new Error("Invalid parameters: driver ID or document data is missing.");
+  }
+
+  const documentType = Object.keys(documentData)[0]; // Get the document type (e.g., "Aadhar Card")
+console.log("this is document data",documentData);
+
+  const formData = new FormData();
+  formData.append("driverId", driverId);
+  formData.append("documentName", documentData.documentName);
+formData.append("document",documentData.document)
+  console.log("Uploading Document:", documentType);
+
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/document-locker/upload-document`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading document:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
+export const editDocument = async (id, documentData) => {
+  try {
+    const response = await axios.patch(`${import.meta.env.VITE_API_URL}/api/document-locker/update/${id}`, documentData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const deleteDocumentAPI = async (id) => {
+  try {
+    const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/document-locker/delete/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};

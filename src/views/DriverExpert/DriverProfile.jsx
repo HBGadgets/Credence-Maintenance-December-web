@@ -10,6 +10,7 @@ import Salary from './components/salary/Salary'
 import DriverTrip from './components/trip/DriverTrip'
 import DriverExpenses from './components/expenses/DriverExpenses'
 import { ToastContainer } from 'react-toastify'
+import DocumentLocker from './components/documents/DocumentLocker'
 
 function DriverProfile() {
   const { id } = useParams()
@@ -35,7 +36,7 @@ function DriverProfile() {
     { label: 'Logbook Details', content: <DriverLogbook id={id} /> },
     { label: 'Trips Details', content: <DriverTrip id={id} /> },
     { label: 'Salary Slips', content: <Salary id={id} /> },
-    { label: 'Document Locker', content: 'Document Locker tab content' },
+    { label: 'Document Locker', content: <DocumentLocker id={id}/> },
   ]
 
   return (
