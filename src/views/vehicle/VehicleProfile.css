@@ -104,10 +104,10 @@
 /* Second code  */
 
 .action-section-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* 4 cards per row */
+  gap: 1rem;
 }
 
 .action-card {

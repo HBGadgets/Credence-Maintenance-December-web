@@ -8,6 +8,8 @@ const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.j
 const VehicleExpenses = React.lazy(() => import('./views/vehicle/VehicleExpenses.jsx'))
 const VehicleTrips = React.lazy(() => import('./views/vehicle/VehicleTrips.jsx'))
 const ManageTyre = React.lazy(() => import('./views/vehicle/TyreSystem/ManageTyre.jsx'))
+const Fuelsystem = React.lazy(() => import('./views/vehicle/FuelSystem/Fuelsystem.jsx'))
+const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/Servicelist.jsx'))
 
 // import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
 // import VehicleTripModal from './views/vehicle/modals/VehicleTripModal.jsx'
@@ -99,6 +101,8 @@ const routes = [
   { path: 'VehicleProfile/:id/VehicleTrips', name: 'Vehicle Trips', element: VehicleTrips },
   { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
   { path: 'VehicleProfile/:id/ManageTyre', name: 'Tyres System', element: ManageTyre },
+  { path: 'VehicleProfile/:id/Fuelsystem', name: 'Fuel System', element: Fuelsystem },
+  { path: 'VehicleProfile/:id/Servicelist', name: 'Service List', element: Servicelist },
 
   /**SUPERVISOR */
 
