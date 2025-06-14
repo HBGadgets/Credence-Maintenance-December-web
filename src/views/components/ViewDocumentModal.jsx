@@ -1,227 +1,233 @@
-// import React from 'react'
-// import { CModal, CModalHeader, CModalBody, CModalFooter, CButton } from '@coreui/react'
-// import CIcon from '@coreui/icons-react'
-// import { cilCloudDownload, cilPencil, cilTrash } from '@coreui/icons'
-
-// const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDownload }) => {
-//   console.log('docxxxxxx', document)
-
-//   // Function to format date
-//   const formatDate = (dateString) => {
-//     if (!dateString) return 'N/A' // Handle missing dates
-//     const date = new Date(dateString)
-//     return new Intl.DateTimeFormat('en-GB', {
-//       day: '2-digit',
-//       month: '2-digit',
-//       year: '2-digit',
-//     }).format(date)
-//   }
-
-//   return (
-//     <CModal
-//       visible={visible}
-//       onClose={onClose}
-//       size="xl"
-//       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-//       // backdrop="static"
-//       centered
-//     >
-//       <CModalHeader className="d-flex flex-column align-items-center">
-//         {/* Centered Heading */}
-//         <h5 className="mb-2 text-center">{document?.name || 'Document'}</h5>
-
-//         {/* Date Details - Centered */}
-//         <div className="d-flex gap-2 align-items-center">
-//           <h5>Issue Date: {formatDate(document?.image?.issueDate)}</h5>
-//           <h5>Expiry Date: {formatDate(document?.image?.expiryDate)}</h5>
-//         </div>
-//       </CModalHeader>
-
-//       <div
-//         style={{
-//           width: '7rem',
-//           borderRadius: '0.5rem',
-//           padding: '0.25rem',
-//           display: 'flex',
-//           justifyContent: 'space-around',
-//           alignItems: 'center',
-//           margin: '0 auto',
-//           marginTop: '10px',
-//           border: '1px solid rgba(10, 10, 10, 0.21)',
-//           boxShadow: '2px 2px 2px rgba(10, 10, 10, 0.2)',
-//         }}
-//       >
-//         <CIcon
-//           icon={cilCloudDownload}
-//           size="lg"
-//           className="text-success"
-//           onClick={() => onDownload(document)}
-//         />
-//         <CIcon
-//           icon={cilPencil}
-//           size="lg"
-//           className="text-warning"
-//           onClick={() => onEdit(document)}
-//         />
-//         <CIcon
-//           icon={cilTrash}
-//           size="lg"
-//           className="text-danger"
-//           onClick={() => onDelete(document)}
-//         />
-//       </div>
-//       <CModalBody className="text-center">
-//         {document?.image ? (
-//           <img src={document?.image.imageBase64} alt={document.file?.filename} width="100%" />
-//         ) : (
-//           <p>Unsupported file type</p>
-//         )}
-//       </CModalBody>
-//       <CModalFooter>
-//         <CButton color="secondary" onClick={onClose}>
-//           Close
-//         </CButton>
-//       </CModalFooter>
-//     </CModal>
-//   )
-// }
-
-// export default ViewDocumentModal
-
 import React from 'react'
-import { CModal, CModalHeader, CModalBody, CModalFooter, CButton } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilCloudDownload, cilPencil, cilTrash } from '@coreui/icons'
+import {
+  CModal,
+  CModalHeader,
+  CModalBody,
+  CModalFooter,
+  CModalTitle,
+  CButton,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+} from '@coreui/react'
+import {
+  FaEye,
+  FaDownload,
+  FaEdit,
+  FaTrash,
+  FaTimes,
+  FaFileImage,
+  FaFilePdf,
+  FaFile,
+} from 'react-icons/fa'
 
 const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDownload }) => {
-  console.log('Document Data:', document)
+  if (!document) {
+    return null
+  }
+console.log("this is document", document);
 
-  // Format date function
-  const formatDate = (dateString) => {
+  const getFileIcon = () => {
+    // Since the document prop doesn't include fileName, we'll infer the type from the image data
+    if (document.image?.imageBase64) {
+      // Assuming imageBase64 is an image (e.g., JPEG, PNG)
+      return <FaFileImage className="text-primary" size={20} />
+    }
+    // If no imageBase64, assume it's a generic file (could be PDF or other)
+    return <FaFile className="text-muted" size={20} />
+  }
+
+  const formatDate = dateString => {
     if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit',
-    }).format(date)
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    } catch {
+      return dateString
+    }
+  }
+
+  const formatFileSize = bytes => {
+    if (!bytes) return 'Unknown size'
+    const kb = bytes / 1024
+    const mb = kb / 1024
+    return mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb.toFixed(2)} KB`
   }
 
   return (
-    <CModal
-      visible={visible}
-      onClose={onClose}
-      size="xl"
-      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      centered
-    >
-      {/* Header */}
-      <CModalHeader className="d-flex flex-column align-items-center">
-        <h4 className="mb-2 fw-bold">{document?.name || 'Document'}</h4>
+    <CModal visible={visible} onClose={onClose} size="xl" backdrop="static" keyboard={false}>
+      <CModalHeader className="bg-primary text-white">
+        <CModalTitle>
+          <FaEye className="me-2" />
+          View Document
+        </CModalTitle>
       </CModalHeader>
-
-      {/* Document Details */}
       <CModalBody>
-        {/* Date & Icons Container - Responsive */}
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start">
-          {/* Left-Aligned Date Details */}
-          <div className="text-start">
-            <p className="mb-1">
-              <strong>Issue Date:</strong> {formatDate(document?.image?.issueDate)}
-            </p>
-            <p className="mb-3">
-              <strong>Expiry Date:</strong> {formatDate(document?.image?.expiryDate)}
-            </p>
-          </div>
+        <CRow>
+          {/* Document Preview Section */}
+          <CCol lg={8}>
+            <CCard className="h-100">
+              <CCardBody className="p-0">
+                <div
+                  className="document-preview-container"
+                  style={{
+                    minHeight: '400px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#f8f9fa',
+                    position: 'relative',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {document?.image?.imageBase64 ? (
+                    <img
+                      src={document?.image?.imageBase64}
+                      alt={document?.name || 'Document'}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center">
+                      {getFileIcon()}
+                      <div className="mt-3">
+                        <h6 className="text-muted">No preview available</h6>
+                        <p className="text-muted small">
+                          Document may be in a format that cannot be previewed
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
 
-          {/* Icons Row - Positioned Responsively */}
-          <div
-            className="d-flex gap-3 align-items-center justify-content-md-end justify-content-start mt-3 mt-md-0"
-            style={{
-              borderRadius: '0.5rem',
-              padding: '0.5rem',
-              border: '1px solid rgba(10, 10, 10, 0.21)',
-              boxShadow: '2px 2px 2px rgba(10, 10, 10, 0.2)',
-            }}
-          >
-            <CIcon
-              icon={cilCloudDownload}
-              size="lg"
-              className="text-success cursor-pointer"
-              onClick={() => onDownload(document)}
-              style={{
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.2)'
-                e.target.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.2)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)'
-                e.target.style.boxShadow = 'none'
-              }}
-            />
+          {/* Document Information Section */}
+          <CCol lg={4}>
+            <CCard className="h-100">
+              <CCardBody>
+                <h6 className="fw-bold mb-3 text-primary">Document Information</h6>
 
-            <CIcon
-              icon={cilPencil}
-              size="lg"
-              className="text-warning cursor-pointer"
-              onClick={() => onEdit(document)}
-              style={{
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.2)'
-                e.target.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.2)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)'
-                e.target.style.boxShadow = 'none'
-              }}
-            />
+                <div className="mb-3">
+                  <small className="text-muted text-uppercase fw-semibold">Name</small>
+                  <div className="fw-medium">{document?.name || 'Unknown Document'}</div>
+                </div>
 
-            <CIcon
-              icon={cilTrash}
-              size="lg"
-              className="text-danger cursor-pointer"
-              onClick={() => onDelete(document)}
-              style={{
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.2)'
-                e.target.style.boxShadow = '2px 2px 5px rgba(0, 0, 0, 0.2)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)'
-                e.target.style.boxShadow = 'none'
-              }}
-            />
-          </div>
-        </div>
-        <hr />
+                {/* File Name and Icon (not available in current data, but added for future compatibility) */}
+                  <div className="mb-3">
+                  <small className="text-muted text-uppercase fw-semibold">File Name</small>
+                  <div className="fw-medium d-flex align-items-center">
+                    {getFileIcon()}
+                    <span className="ms-2">
+                      {document?.fileName || `${document?.name || 'document'}.jpg`}
+                    </span>
+                  </div>
+                </div>
 
-        {/* Document Image */}
-        {document?.image?.imageBase64 ? (
-          <div className="text-center mt-3">
-            <img
-              src={document.image.imageBase64}
-              alt={document.file?.filename || 'Document'}
-              className="img-fluid rounded border"
-              style={{ maxHeight: '300px', width: '100%', objectFit: 'contain' }}
-            />
-          </div>
-        ) : (
-          <p className="text-center text-muted mt-3">No image available</p>
-        )}
+
+                <div className="mb-3">
+                  <small className="text-muted text-uppercase fw-semibold">Issue Date</small>
+                  <div className="fw-medium">{formatDate(document?.image?.issueDate)}</div>
+                </div>
+
+                <div className="mb-3">
+                  <small className="text-muted text-uppercase fw-semibold">Expiry Date</small>
+                  <div className="fw-medium">{formatDate(document?.image?.expiryDate)}</div>
+                </div>
+
+
+                {/* Action Buttons */}
+                <div className="mt-4">
+                  <div className="d-grid gap-2">
+                    {onDownload && (
+                      <CButton
+                        color="success"
+                        variant="outline"
+                        onClick={() => onDownload(document)}
+                        className="d-flex align-items-center justify-content-center"
+                      >
+                        <FaDownload className="me-2" />
+                        Download
+                      </CButton>
+                    )}
+                    {onEdit && (
+                      <CButton
+                        color="primary"
+                        variant="outline"
+                        onClick={() => onEdit(document)}
+                        className="d-flex align-items-center justify-content-center"
+                      >
+                        <FaEdit className="me-2" />
+                        Edit
+                      </CButton>
+                    )}
+                    {onDelete && (
+                      <CButton
+                        color="danger"
+                        variant="outline"
+                        onClick={() => onDelete(document)}
+                        className="d-flex align-items-center justify-content-center"
+                      >
+                        <FaTrash className="me-2" />
+                        Delete
+                      </CButton>
+                    )}
+                  </div>
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
       </CModalBody>
-
-      {/* Actions */}
-      <CModalFooter>
-        <CButton color="secondary" onClick={onClose}>
+      <CModalFooter className="bg-light">
+        <CButton
+          color="secondary"
+          onClick={onClose}
+          className="d-flex align-items-center justify-content-center"
+        >
+          <FaTimes className="me-2" />
           Close
         </CButton>
       </CModalFooter>
+      <style>{`
+        .document-preview-container {
+          border-radius: 8px;
+        }
+        .modal-header.bg-primary {
+          background: linear-gradient(135deg, #0a2d63, #1e4d8f);
+        }
+        .btn-outline-success, .btn-outline-primary, .btn-outline-danger {
+          transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-outline-success:hover {
+          background-color: #28a745;
+          color: white;
+        }
+        .btn-outline-primary:hover {
+          background-color: #0a2d63;
+          color: white;
+        }
+        .btn-outline-danger:hover {
+          background-color: #dc3545;
+          color: white;
+        }
+        .btn-secondary {
+          transition: background-color 0.2s ease;
+        }
+        .btn-secondary:hover {
+          background-color: #5c636a;
+        }
+      `}</style>
     </CModal>
   )
 }

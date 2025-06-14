@@ -11,9 +11,14 @@ import { GiCarWheel, GiPathDistance } from 'react-icons/gi'
 
 function VehicleProfile() {
   const navigate = useNavigate()
-  const { vehicles, status, error } = useVehicleProfileData()
 
-  if (status === 'loading') {
+  const { data, isLoading, isError, error } = useVehicleProfileData()
+
+  const { vehicleDocument, device } = data || {}
+
+  console.log("data coming", vehicleDocument)
+
+  if (isLoading) {
     return (
       <div className="center-screen">
         <Loader />
@@ -21,13 +26,13 @@ function VehicleProfile() {
     )
   }
 
-  if (status === 'failed') {
+  if (isError) {
     return <p>Error: {error || 'An unknown error occurred'}</p>
   }
 
   return (
     <CContainer fluid className="py-2">
-      {!vehicles ? (
+      {!vehicleDocument ? (
         <div className="center-screen">
           <Loader />
         </div>
@@ -39,10 +44,10 @@ function VehicleProfile() {
               <IoCarOutline />
             </div>
             <div className="heading-content">
-              <h2 className="vehicle-title">{vehicles.device?.name || 'Vehicle Name'}</h2>
+              <h2 className="vehicle-title">{device?.name || 'Vehicle Name'}</h2>
               <p className="vehicle-subtitle">
-                Model: <strong>{vehicles.device?.model || 'N/A'}</strong> | Category:{' '}
-                <strong>{vehicles.device?.category || 'N/A'}</strong>
+                Model: <strong>{device?.model || 'N/A'}</strong> | Category:{' '}
+                <strong>{device?.category || 'N/A'}</strong>
               </p>
             </div>
           </div>
@@ -50,10 +55,11 @@ function VehicleProfile() {
           {/* 📄 Vehicle Documents */}
           <div className="custom-doc mt-4">
             <VehicleDocument
-              Insurance={vehicles.vehicleDocument?.Insurance}
-              fitnessCertificate={vehicles.vehicleDocument?.fitnessCertificate}
-              rc={vehicles.vehicleDocument?.rc}
-              puc={vehicles.vehicleDocument?.puc}
+              Insurance={vehicleDocument?.Insurance}
+              fitnessCertificate={vehicleDocument?.fitnessCertificate}
+              rc={vehicleDocument?.rc}
+              puc={vehicleDocument?.puc}
+              id={data.id}
             />
           </div>
 

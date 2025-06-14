@@ -43,44 +43,85 @@ export const fetchVehicles = async () => {
 // Vehicle Profile Section
 
 
+// export const useVehicleProfileData = () => {
+//     const { id } = useParams();
+//     const [vehicles, setVehicles] = useState([]);
+//     const [selectedVehicle, setSelectedVehicle] = useState(null);
+//     const [filteredLogs, setFilteredLogs] = useState([]);
+
+//     useEffect(() => {
+//         const fetchVehicles = async () => {
+//             try {
+//                 const response = await axios.get(
+//                     `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
+//                     {
+//                         headers: {
+//                             Authorization: `Bearer ${TOKEN}`,
+//                         },
+//                     }
+//                 );
+
+//                 console.log('Pavannnnnnnnnnnnnnnnnnnnnn:', response.data);
+
+//                 const vehicleList = response.data ? response.data
+//                     : response.data.vehicles
+//                         ? [response.data.vehicles]
+//                         : [];
+
+//                 setVehicles(vehicleList);
+//                 setSelectedVehicle(vehicleList || null);
+//                 setFilteredLogs(vehicleList?.maintenanceLogs || []);
+//             } catch (error) {
+//                 console.error('Error fetching vehicles:', error);
+//             }
+//         };
+
+//         fetchVehicles();
+//     }, [id]);
+
+//     return { vehicles, selectedVehicle, filteredLogs };
+// };
+
+// hooks/useVehicleProfileData.js
+import { useQuery } from '@tanstack/react-query'
+
+
 export const useVehicleProfileData = () => {
-    const { id } = useParams();
-    const [vehicles, setVehicles] = useState([]);
-    const [selectedVehicle, setSelectedVehicle] = useState(null);
-    const [filteredLogs, setFilteredLogs] = useState([]);
+  const { id } = useParams()
 
-    useEffect(() => {
-        const fetchVehicles = async () => {
-            try {
-                const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${TOKEN}`,
-                        },
-                    }
-                );
+  return useQuery({
+    queryKey: ['vehicles', id],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${TOKEN}`,
+          },
+        }
+      )
 
-                console.log('Pavannnnnnnnnnnnnnnnnnnnnn:', response.data);
+      const data = response.data
+      console.log("this is response ", data)
 
-                const vehicleList = response.data ? response.data
-                    : response.data.vehicles
-                        ? [response.data.vehicles]
-                        : [];
+      if (!data || !data.vehicleDocument || !data.device) {
+        throw new Error('Invalid vehicle data structure')
+      }
 
-                setVehicles(vehicleList);
-                setSelectedVehicle(vehicleList || null);
-                setFilteredLogs(vehicleList?.maintenanceLogs || []);
-            } catch (error) {
-                console.error('Error fetching vehicles:', error);
-            }
-        };
+      const vehicleDocument = data.vehicleDocument
+      const device = data.device
+      console.log("vehicleDocument:", vehicleDocument)
+      console.log("device:", device)
 
-        fetchVehicles();
-    }, [id]);
-
-    return { vehicles, selectedVehicle, filteredLogs };
-};
+      return {
+        vehicleDocument,
+        device,
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!id, // Ensure query runs only if id exists
+  })
+}
 
 // -----------------------------------------------------------------------------------------------------
 
@@ -114,6 +155,32 @@ export const useVehicleProfileData = () => {
 // };
 
 // Get API Document
+
+export const getAllDocuments = async (id) => {
+    try {
+        const token = TOKEN // Replace with actual token source if needed
+
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        )
+console.log("api response",response.data);
+
+        // This returns exactly what backend sends — no transformation
+        return response.data
+    } catch (error) {
+        console.error('Error fetching document flags:', error)
+        return {}
+    }
+}
+
+
+
+
 export const getDocuments = async (id, field) => {
     try {
         const response = await fetch(
