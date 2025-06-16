@@ -12,7 +12,7 @@ import FuelRecords from './components/Fueltable'
 
 const Fuelsystem = () => {
   const { id } = useParams()
-  console.log(id)
+  console.log('idzx', id)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
   return (
