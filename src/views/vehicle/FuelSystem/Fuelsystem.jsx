@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import FuelCards from './components/Fuelcards'
 import { ImMeter } from 'react-icons/im'
 import { BiTrip } from 'react-icons/bi'
 import { LucideDroplets } from 'lucide-react'
@@ -9,6 +8,7 @@ import DateRangePicker from '../../components/DateRangePicker'
 import FuelAnalayis from './components/Fuelanalayis'
 import { Card } from 'react-bootstrap'
 import FuelRecords from './components/Fueltable'
+import FuelCards from './components/FuelCards'
 
 const Fuelsystem = () => {
   const { id } = useParams()
