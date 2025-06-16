@@ -5,9 +5,9 @@ import { BiTrip } from 'react-icons/bi'
 import { LucideDroplets } from 'lucide-react'
 import { RiMoneyRupeeCircleLine } from 'react-icons/ri'
 import DateRangePicker from '../../components/DateRangePicker'
-import FuelAnalayis from './components/Fuelanalayis'
+import FuelAnalayis from './components/FuelAnalayis'
 import { Card } from 'react-bootstrap'
-import FuelRecords from './components/Fueltable'
+import FuelRecords from './components/FuelTable'
 import FuelCards from './components/FuelCards'
 
 const Fuelsystem = () => {
