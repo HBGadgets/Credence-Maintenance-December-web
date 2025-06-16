@@ -97,7 +97,7 @@ const DriverExpensesBill = () => {
   const columns = [
     { label: 'Service Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
+    // { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
     { label: 'Location', key: 'location', sortable: true },
     { label: 'Description', key: 'description', sortable: true },

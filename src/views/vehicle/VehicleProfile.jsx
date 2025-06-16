@@ -1,8 +1,8 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useVehicleProfileData } from './data/VehicleListData'
-import Loader from '../../components/Loader/Loader'
 import VehicleDocument from './VehicleDocument'
+import LoaderBus from '../../components/Loader3/LoaderBus'
 import { CButton, CContainer } from '@coreui/react'
 import './VehicleProfile.css'
 import { IoCarOutline, IoSpeedometerOutline } from 'react-icons/io5'
@@ -19,12 +19,12 @@ function VehicleProfile() {
 
   const { vehicleDocument, device } = data || {}
 
-  console.log("data coming", vehicleDocument)
+  console.log('data coming', vehicleDocument)
 
   if (isLoading) {
     return (
       <div className="center-screen">
-        <Loader />
+        <LoaderBus />
       </div>
     )
   }

@@ -39,7 +39,7 @@ import TripStatusChart from '../Modals/TripStatusChart'
 import BudgetAllocationChart from '../Modals/BudgetAllocationChart'
 import MaterialAnalysisChart from '../Modals/MaterialAnalysisChart'
 import SubTripTable from '../Modals/SubTripTable'
-import Loader from '../../../../components/Loader/Loader'
+import LoaderBus from '../../../../components/Loader3/LoaderBus'
 import { getSubTripsApi } from '../../data/data'
 
 const SubTripMain = () => {
@@ -56,7 +56,7 @@ const SubTripMain = () => {
     return (
       <div className="text-center py-5">
         {' '}
-        <Loader />{' '}
+        <LoaderBus />{' '}
       </div>
     )
   if (isError) return <div className="text-danger text-center py-5">Error loading SubTrip data</div>
