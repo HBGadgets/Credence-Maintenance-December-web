@@ -57,6 +57,83 @@ export const getDriverBillImageApi = async (billImgId) => {
     }
 }
 
+// Post for all Driver expense
+export const postDriverExpenseApi = async (driverexpenseData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/driverExpense/create`,
+            driverexpenseData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        )
+
+        if (response.status === 201 || response.status === 200) {
+            console.log('Driver Expense Created Successfully:', response.data)
+            return response.data
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`)
+        }
+    } catch (error) {
+        console.error('API Error:', error.response?.data?.message || error.message)
+
+        // Properly throw the error to be caught in parent function
+        const err = new Error(
+            error.response?.data?.message || 'Failed to create expense'
+        )
+        err.response = error.response // Attach the original response if needed
+        throw err
+    }
+}
+
+
+// Patch for all Driver
+
+export const patchDriverExpenseApi = async (id, data) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data: response } = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/driverExpense/update/${id}`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        )
+
+        return response
+    } catch (error) {
+        console.error('Update driver failed:', error, error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+// Delete driver expense
+
+export const deleteDriverExpenseApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/driverExpense/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log("error", data.message)
+    } catch (error) {
+        throw error
+    }
+}
 
 
 // ------------------------------------------------------------------------------------------------------------------

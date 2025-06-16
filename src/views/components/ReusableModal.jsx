@@ -26,7 +26,17 @@ const ReusableModal = ({
     if (show) {
       if (initialData) {
         const prefilledData = fields.reduce((acc, field) => {
-          acc[field.name] = initialData[field.name] || ''
+          const value = initialData[field.name]
+
+          if (field.type === 'select') {
+            acc[field.name] = field.options?.find((opt) => opt.value === value) || null
+          } else if (field.type === 'multiselect') {
+            acc[field.name] =
+              field.options?.filter((opt) => (value || []).includes(opt.value)) || []
+          } else {
+            acc[field.name] = value || ''
+          }
+
           return acc
         }, {})
         setFormData(prefilledData)
