@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 
 // Smooth easing function
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
+console.log('object', easeOutCubic)
 
 const FuelCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
   const [animatedValue, setAnimatedValue] = useState(0)
