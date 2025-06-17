@@ -361,6 +361,7 @@ const VehicleExpensesBill = () => {
         deleteVehicleExpense(id)
       }
     })
+    console.log('id', id)
   }
 
   // handle submit
