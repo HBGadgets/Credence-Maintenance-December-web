@@ -148,6 +148,8 @@ export const driverExpenses = async (id) => {
       date: formatDateToDDMMYYYY(expenses.date),
       description: expenses.description,
       location: expenses.location,
+      lat: expenses.lat || 'No latitude',
+      long: expenses.long || 'No longitude',
       shopName: expenses.shopName,
       amount: expenses.amount,
       payment: expenses.paymentMode,
@@ -286,8 +288,8 @@ export const driverTripDetails = async (id) => {
     throw error
   }
 }
- //------------------------------------driver document locker-------------------------------------
- 
+//------------------------------------driver document locker-------------------------------------
+
 export const getDocuments = async (id) => {
   try {
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-all/${id}`, {
@@ -317,12 +319,12 @@ export const uploadDocuments = async (driverId, documentData) => {
   }
 
   const documentType = Object.keys(documentData)[0]; // Get the document type (e.g., "Aadhar Card")
-console.log("this is document data",documentData);
+  console.log("this is document data", documentData);
 
   const formData = new FormData();
   formData.append("driverId", driverId);
   formData.append("documentName", documentData.documentName);
-formData.append("document",documentData.document)
+  formData.append("document", documentData.document)
   console.log("Uploading Document:", documentType);
 
   try {

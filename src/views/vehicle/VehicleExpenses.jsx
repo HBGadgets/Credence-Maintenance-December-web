@@ -45,26 +45,23 @@ const MaintenanceLog = () => {
     // Apply search filter
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase()
-      filtered = filtered.filter(item =>
+      filtered = filtered.filter((item) =>
         Object.values(item).some(
-          value => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery)
-        )
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
       )
     }
 
     // Apply date range filter
     if (dateRange.startDate && dateRange.endDate) {
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         const itemDate = new Date(item.originalDate)
-        return (
-          itemDate >= new Date(dateRange.startDate) &&
-          itemDate <= new Date(dateRange.endDate)
-        )
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
       })
     }
 
     // Style paymentMode column
-    return filtered.map(data => ({
+    return filtered.map((data) => ({
       ...data,
       paymentMode: (
         <span
@@ -73,10 +70,10 @@ const MaintenanceLog = () => {
               data.paymentMode === 'upi'
                 ? '#0000FF'
                 : data.paymentMode === 'cash'
-                ? '#28a745'
-                : data.paymentMode === 'card'
-                ? '#f5a623'
-                : '#0000FF',
+                  ? '#28a745'
+                  : data.paymentMode === 'card'
+                    ? '#f5a623'
+                    : '#0000FF',
             color: 'white',
             padding: '4px 10px',
             borderRadius: '20px',
@@ -89,11 +86,19 @@ const MaintenanceLog = () => {
           {data.paymentMode}
         </span>
       ),
+
+      coordinate:
+        data.lat !== 'No latitude' && data.long !== 'No Longitude'
+          ? `${data.lat}, ${data.long}`
+          : 'No coordinates',
     }))
   }, [vehicleMaintanceLog, searchQuery, dateRange])
 
   // Memoized total pages
-  const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage])
+  const totalPages = useMemo(
+    () => Math.ceil(filteredData.length / itemsPerPage),
+    [filteredData, itemsPerPage],
+  )
 
   // Memoized table columns
   const columns = useMemo(
@@ -103,14 +108,16 @@ const MaintenanceLog = () => {
       { label: 'Shop Name', key: 'shopName', sortable: true },
       { label: 'Expense Type', key: 'expenseType', sortable: true },
       { label: 'Description', key: 'description', sortable: true },
+      { label: 'Location', key: 'location', sortable: true },
+      { label: 'Co-ordinate', key: 'coordinate', sortable: true },
       { label: 'Amount', key: 'amount', sortable: true },
       { label: 'Payment Mode', key: 'paymentMode', sortable: false },
     ],
-    []
+    [],
   )
 
   // Handlers
-  const handleSearch = useCallback(query => {
+  const handleSearch = useCallback((query) => {
     setSearchQuery(query)
   }, [])
 
@@ -119,8 +126,8 @@ const MaintenanceLog = () => {
   }, [])
 
   const handleViewButton = useCallback(
-    async id => {
-      const selectedRow = filteredData.find(item => item.id === id)
+    async (id) => {
+      const selectedRow = filteredData.find((item) => item.id === id)
       if (!selectedRow) {
         toast.error('Data not found for this ID')
         return
@@ -156,19 +163,19 @@ const MaintenanceLog = () => {
         toast.error('No bill image found.')
       }
     },
-    [filteredData]
+    [filteredData],
   )
 
-  const handlePageChange = useCallback(page => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page)
   }, [])
 
   const handleItemsPerPageChange = useCallback(
-    value => {
+    (value) => {
       setItemsPerPage(value === -1 ? filteredData.length : value)
       setCurrentPage(1)
     },
-    [filteredData.length]
+    [filteredData.length],
   )
 
   // Memoized dropdown items for export
@@ -214,7 +221,7 @@ const MaintenanceLog = () => {
         onClick: () => window.print(),
       },
     ],
-    [filteredData, columns, exportToPDF, exportToExcel]
+    [filteredData, columns, exportToPDF, exportToExcel],
   )
 
   return (

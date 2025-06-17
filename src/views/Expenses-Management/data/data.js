@@ -29,6 +29,8 @@ export const getAllDriverExpesesListApi = async () => {
         currentVehicleName: driverExpenseList.driverId?.currentVehicleName || "N/A",
         shopName: driverExpenseList.shopName || "Unknown",
         location: driverExpenseList.location || "Unknown",
+        lat: driverExpenseList.lat || 'No latitude',
+        long: driverExpenseList.long || 'No longitude',
         description: driverExpenseList.description || "No description",
         amount: driverExpenseList.amount || 0,
         paymentMode: driverExpenseList.paymentMode || "Unknown",
@@ -162,6 +164,9 @@ export const getAllVehicleExpesesListApi = async () => {
         shopName: vehicleExpenseList.vendor || "Unknown",
         expenseType: vehicleExpenseList.expenseType || "Unknown",
         description: vehicleExpenseList.description || "No description",
+        location: vehicleExpenseList.location || 'No location',
+        lat: vehicleExpenseList.lat || 'No latitude',
+        long: vehicleExpenseList.long || 'No Longitude',
         amount: vehicleExpenseList.amount || 0,
         paymentMode: vehicleExpenseList.paymentMode || "Unknown",
         billImg: vehicleExpenseList.billImg || "No Bill",
@@ -187,6 +192,86 @@ export const getVehicleBillImageApi = async (billImgId) => {
         throw error
     }
 }
+
+
+// Post for all Vehicle expense
+export const postVehicleExpenseApi = async (vehicleexpenseData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/create`,
+            vehicleexpenseData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        )
+
+        if (response.status === 201 || response.status === 200) {
+            console.log('Vehicle Expense Created Successfully:', response.data)
+            return response.data
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`)
+        }
+    } catch (error) {
+        console.error('API Error:', error.response?.data?.message || error.message)
+
+        // Properly throw the error to be caught in parent function
+        const err = new Error(
+            error.response?.data?.message || 'Failed to create expense'
+        )
+        err.response = error.response // Attach the original response if needed
+        throw err
+    }
+}
+
+// Patch for all Driver
+
+export const patchVehicleExpenseApi = async (id, data) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data: response } = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/update/${id}`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        )
+
+        return response
+    } catch (error) {
+        console.error('Update vehicle expense failed:', error, error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+// Delete driver expense
+
+export const deleteVehicleExpenseApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log("error", data.message)
+    } catch (error) {
+        throw error
+    }
+}
+
+
 
 // ------------------------------------------------------------------------------------------------------------------------------- 
 
