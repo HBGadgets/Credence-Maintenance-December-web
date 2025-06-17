@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import SmartPagination from '../../components/SmartPagination.jsx'
-import Loader from '../../../components/Loader/Loader.jsx'
 import Page404 from '../../pages/page404/Page404.js'
 import SearchInput from '../../components/SearchInput.jsx'
 import Table from '../../components/Table'
