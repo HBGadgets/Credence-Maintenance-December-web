@@ -21,6 +21,7 @@ const TableSubTrip = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [isFetching, setIsFetching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
 
   // from state
   const [showModalFrom, setShowModalFrom] = useState(false)
@@ -34,11 +35,36 @@ const TableSubTrip = () => {
     enabled: !!id,
   })
 
+  // Filtering effect
   useEffect(() => {
     if (subtripData.subTrips) {
-      setFilteredData(subtripData.subTrips)
+      let filtered = [...subtripData.subTrips]
+
+      // Filter by date range if available
+      if (dateRange.startDate && dateRange.endDate) {
+        filtered = filtered.filter((item) => {
+          const itemDate = new Date(item.orginalDate)
+          return (
+            itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+          )
+        })
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        filtered = filtered.filter(
+          (subtrip) =>
+            subtrip.companyName?.toLowerCase().includes(query) ||
+            subtrip.startLocation?.toLowerCase().includes(query) ||
+            subtrip.endLocation?.toLowerCase().includes(query) ||
+            subtrip.materialType?.toLowerCase().includes(query) ||
+            subtrip.status?.toLowerCase().includes(query),
+        )
+      }
+
+      setFilteredData(filtered)
     }
-  }, [subtripData])
+  }, [subtripData, dateRange, searchQuery])
 
   // ADD Subtrip
   const { mutate: createSubtrip, isPending: isSubmitting } = useMutation({
@@ -263,14 +289,13 @@ const TableSubTrip = () => {
     }
   }
 
-  // handle date
-  const handleDateRangeChange = (id) => {
-    console.log('date', id)
+  // Date range handler
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
   }
-
-  // handle search
-  const handleSearch = (id) => {
-    console.log('search', id)
+  // Search handler
+  const handleSearch = (query) => {
+    setSearchQuery(query)
   }
 
   return (
