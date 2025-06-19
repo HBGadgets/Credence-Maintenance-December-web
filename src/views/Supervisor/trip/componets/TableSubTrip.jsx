@@ -123,17 +123,18 @@ const TableSubTrip = () => {
             placeholder: 'Enter Material Type',
           },
         ]
-      : []),
-
-    {
-      name: 'status',
-      label: 'Status',
-      type: 'select',
-      options: [
-        { value: 'completed', label: 'Completed Subtrip' },
-        { value: 'cancelled', label: 'Cancelled Subtrip' },
-      ],
-    },
+      : [
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+              { value: '', label: 'Select status', disabled: true },
+              { value: 'completed', label: 'Completed Subtrip' },
+              { value: 'cancelled', label: 'Cancelled Subtrip' },
+            ],
+          },
+        ]),
   ]
 
   // Columns for reusable Table component
