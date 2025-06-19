@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CModal,
   CModalBody,
@@ -18,7 +18,9 @@ import { FaUpload, FaFile, FaTimes } from 'react-icons/fa';
 
 const DocumentUploadModal = ({ 
   visible, 
+  selectedDocument,
   onClose, 
+  onEdit,
   onSubmit, 
   loadingSubmit = false
 }) => {
@@ -26,6 +28,29 @@ const DocumentUploadModal = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [error, setError] = useState('');
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (visible === "Edit" && selectedDocument) {
+      setDocumentName(selectedDocument.documentName || '');
+      // If selectedDocument has a URL or file reference, set preview
+      if (selectedDocument.documentUrl) {
+        setPreviewUrl(selectedDocument.documentUrl);
+      }
+    } else {
+      // Reset form when not editing
+      setDocumentName('');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setError('');
+    }
+  }, [visible, selectedDocument]);
+
+  // Safeguard console logs
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Visible:', visible);
+    console.log('Selected Document ID:', selectedDocument?.id || 'None');
+  }
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -68,7 +93,7 @@ const DocumentUploadModal = ({
       return;
     }
 
-    if (!selectedFile) {
+    if (!selectedFile && visible !== "Edit") {
       setError('Please select a file to upload');
       return;
     }
@@ -79,13 +104,22 @@ const DocumentUploadModal = ({
     // Prepare document data
     const documentData = {
       documentName: documentName.trim(),
-      document: selectedFile
+      document: selectedFile // May be null when editing if no new file is selected
     };
+
+    // Add document ID when editing
+    if (visible === "Edit") {
+      documentData.id = selectedDocument?.id;
+    }
 
     console.log('Submitting document data:', documentData);
 
-    // Call the parent submit handler
-    onSubmit(documentData);
+    // Call appropriate handler based on visible state
+    if (visible === "Edit") {
+      onEdit(documentData);
+    } else {
+      onSubmit(documentData);
+    }
   };
 
   const handleClose = () => {
@@ -114,7 +148,7 @@ const DocumentUploadModal = ({
       <CModalHeader>
         <CModalTitle>
           <FaUpload className="me-2" />
-          Upload Document
+          {visible === "Edit" ? "Update Document" : "Upload Document"}
         </CModalTitle>
       </CModalHeader>
 
@@ -148,10 +182,10 @@ const DocumentUploadModal = ({
           <CRow className="mb-3">
             <CCol>
               <CFormLabel htmlFor="documentFile">
-                Select File <span className="text-danger">*</span>
+                Select File {visible !== "Edit" && <span className="text-danger">*</span>}
               </CFormLabel>
               
-              {!selectedFile ? (
+              {!selectedFile && !previewUrl ? (
                 <div className="upload-area">
                   <input
                     type="file"
@@ -199,9 +233,14 @@ const DocumentUploadModal = ({
                       <div className="d-flex align-items-center">
                         <FaFile className="me-2 text-primary" size={20} />
                         <div>
-                          <div className="fw-semibold">{selectedFile.name}</div>
+                          <div className="fw-semibold">
+                            {selectedFile ? selectedFile.name : 'Existing Document'}
+                          </div>
                           <small className="text-muted">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                            {selectedFile ? 
+                              `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 
+                              'Current file'
+                            }
                           </small>
                         </div>
                       </div>
@@ -254,17 +293,17 @@ const DocumentUploadModal = ({
         <CButton
           color="primary"
           onClick={handleSubmit}
-          disabled={loadingSubmit || !documentName.trim() || !selectedFile}
+          disabled={loadingSubmit || !documentName.trim() || (!selectedFile && visible !== "Edit")}
         >
           {loadingSubmit ? (
             <>
               <CSpinner size="sm" className="me-2" />
-              Uploading...
+              {visible === "Edit" ? "Updating..." : "Uploading..."}
             </>
           ) : (
             <>
               <FaUpload className="me-2" />
-              Upload Document
+              {visible === "Edit" ? "Update Document" : "Upload Document"}
             </>
           )}
         </CButton>

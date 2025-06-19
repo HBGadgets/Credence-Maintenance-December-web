@@ -42,8 +42,7 @@ const DocumentViewModal = ({
      const { data: imageData, isLoading: imageLoading, error: imageError } = useQuery({
           queryKey: ['documentImage', document.id],
           queryFn: () => getDocumentImage(document.id),
-          enabled: visible && !!document.id,
-          staleTime: 5 * 60 * 1000,
+          enabled: visible && !!document.id
      });
 
      // Create a URL for the Blob and clean it up

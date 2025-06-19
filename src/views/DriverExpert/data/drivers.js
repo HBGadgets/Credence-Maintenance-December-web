@@ -343,14 +343,29 @@ formData.append("document",documentData.document)
   }
 };
 
-export const editDocument = async (id, documentData) => {
+export const editDocument = async (documentId, documentData) => {
   try {
-    const response = await axios.patch(`${import.meta.env.VITE_API_URL}/api/document-locker/update/${id}`, documentData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const formData = new FormData();
+    if (documentData.documentName) {
+      formData.append('documentName', documentData.documentName);
+    }
+    if (documentData.document) {
+      formData.append('document', documentData.document); // File field matches backend expectation
+    }
+
+    const response = await axios.patch(
+      `${import.meta.env.VITE_API_URL}/api/document-locker/update/${documentId}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message;
+    throw error.response?.data || { message: error.message };
   }
 };
 

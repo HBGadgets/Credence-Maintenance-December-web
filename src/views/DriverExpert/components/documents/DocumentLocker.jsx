@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CCard,
   CCardBody,
@@ -12,24 +12,49 @@ import { FaRegFolderClosed, FaUpload } from 'react-icons/fa6';
 import DocumentUploadModal from './components/DocumentUploadModal';
 import DocumentViewModal from './components/DocumentViewModal';
 import Swal from 'sweetalert2';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDocuments, deleteDocumentAPI, uploadDocuments, getDocumentImage } from '../../data/drivers';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDocuments, deleteDocumentAPI, uploadDocuments, getDocumentImage, editDocument } from '../../data/drivers';
 
 const DocumentLocker = ({ id }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingDocs, setLoadingDocs] = useState({});
   const [modalType, setModalType] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [error, setError] = useState('');
 
   const queryClient = useQueryClient();
 
-  const { data: documentsData, isLoading: loading, error } = useQuery({
+  // Show Swal alert when error changes
+  useEffect(() => {
+    if (error) {
+      Swal.fire('Error', error, 'error');
+      setError(''); // Clear error after displaying
+    }
+  }, [error]);
+
+  const { data: documentsData, isLoading: loading, error: queryError } = useQuery({
     queryKey: ['documents', id],
     queryFn: () => getDocuments(id),
     enabled: !!id,
     onError: (error) => {
       console.error('Error fetching documents:', error);
-      Swal.fire('Error', 'Failed to fetch documents.', 'error');
+      setError('Failed to fetch documents.');
+    },
+  });
+
+  // React Query mutation for updating document
+  const updateDocumentMutation = useMutation({
+    mutationFn: ({ documentId, documentData }) => editDocument(documentId, documentData),
+    onSuccess: (data) => {
+      console.log('Document updated successfully:', data);
+      queryClient.invalidateQueries({ queryKey: ['documents', id] });
+      setModalType(null); // Close modal
+      setSelectedDocument(null); // Clear selected document
+      Swal.fire('Success', data.message || 'Document updated successfully!', 'success');
+    },
+    onError: (error) => {
+      console.error('Error updating document:', error);
+      setError(error.message || 'Failed to update document');
     },
   });
 
@@ -49,7 +74,7 @@ const DocumentLocker = ({ id }) => {
     try {
       const formattedData = {
         documentName: documentData.documentName,
-        document: documentData.document
+        document: documentData.document,
       };
       await uploadDocuments(id, formattedData);
       Swal.fire('Uploaded', 'Document uploaded successfully!', 'success');
@@ -57,7 +82,7 @@ const DocumentLocker = ({ id }) => {
       setModalType(null);
     } catch (error) {
       console.error('Error uploading document:', error);
-      Swal.fire('Error', 'Document upload failed.', 'error');
+      setError(error.message || 'Document upload failed');
     } finally {
       setLoadingSubmit(false);
     }
@@ -65,7 +90,7 @@ const DocumentLocker = ({ id }) => {
 
   const handleDelete = async (doc) => {
     if (!doc || !doc.id) {
-      Swal.fire('Error', 'Invalid document structure.', 'error');
+      setError('Invalid document structure.');
       console.error('Invalid document structure', doc);
       return;
     }
@@ -91,14 +116,14 @@ const DocumentLocker = ({ id }) => {
         Swal.fire('Deleted!', `${fieldName} was successfully deleted.`, 'success');
       } catch (error) {
         console.error('Error deleting document:', error.response?.data || error.message);
-        Swal.fire('Error', `Failed to delete ${fieldName}.`, 'error');
+        setError(`Failed to delete ${fieldName}.`);
       }
     }
   };
 
   const handleDownload = async (doc) => {
     if (!doc || !doc.id) {
-      Swal.fire('Error', 'Invalid document structure.', 'error');
+      setError('Invalid document structure.');
       console.error('Invalid document structure', doc);
       return;
     }
@@ -109,7 +134,7 @@ const DocumentLocker = ({ id }) => {
       const contentType = response?.document?.image?.contentType || 'image/jpeg';
 
       if (!base64String) {
-        Swal.fire('Error', 'No image data found for document.', 'error');
+        setError('No image data found for document.');
         console.error('No image data found for document', doc);
         return;
       }
@@ -122,18 +147,51 @@ const DocumentLocker = ({ id }) => {
       document.body.removeChild(link);
       Swal.fire('Downloaded!', 'Document downloaded successfully.', 'success');
     } catch (error) {
-      Swal.fire('Error', 'Failed to download document.', 'error');
+      setError('Failed to download document.');
       console.error('Error downloading document:', error);
     }
   };
 
   const handleEdit = (doc) => {
-    Swal.fire('Coming Soon', 'Edit functionality will be available soon!', 'info');
+    setSelectedDocument({
+      id: doc.value?._id || doc.id, // Ensure correct ID
+      documentName: doc.name || doc.displayName,
+      documentUrl: doc.documentUrl || null,
+    });
+    console.log('Set selected document:', doc);
+    setModalType('Edit');
+  };
+
+  const handleupdate = (documentData) => {
+    console.log('Handle edit function executed');
+    console.log('Document data:', documentData);
+
+    if (!documentData.id) {
+      setError('Document ID is missing');
+      return;
+    }
+
+    setLoadingSubmit(true);
+    updateDocumentMutation.mutate(
+      {
+        documentId: documentData.id,
+        documentData: {
+          documentName: documentData.documentName,
+          document: documentData.document || null, // Handle optional file
+        },
+      },
+      {
+        onSettled: () => {
+          setLoadingSubmit(false); // Reset loading state
+        },
+      }
+    );
   };
 
   const openUploadModal = () => {
     setSelectedDocument(null);
     setModalType('upload');
+    setError('');
   };
 
   const handleDocumentClick = (field) => {
@@ -152,11 +210,11 @@ const DocumentLocker = ({ id }) => {
         });
         setModalType('view');
       } else {
-        Swal.fire('Error', `No document data found for ${field}.`, 'error');
+        setError(`No document data found for ${field}.`);
         console.error(`No document data found for ${field}.`);
       }
     } catch (error) {
-      Swal.fire('Error', 'Error retrieving document.', 'error');
+      setError('Error retrieving document.');
       console.error('Error processing document:', error);
     } finally {
       setLoadingDocs((prev) => ({ ...prev, [field]: false }));
@@ -166,6 +224,7 @@ const DocumentLocker = ({ id }) => {
   const handleCloseModal = () => {
     setModalType(null);
     setSelectedDocument(null);
+    setError('');
   };
 
   const hasDocuments = documentsList.length > 0;
@@ -246,12 +305,14 @@ const DocumentLocker = ({ id }) => {
         `}
       </style>
 
-      {modalType === 'upload' && (
+      {modalType && (
         <DocumentUploadModal
-          visible={modalType === 'upload'}
+          visible={modalType}
           onClose={handleCloseModal}
+          selectedDocument={selectedDocument}
+          onEdit={handleupdate}
           onSubmit={handleUploadDocument}
-          loadingSubmit={loadingSubmit}
+          loadingSubmit={loadingSubmit || updateDocumentMutation.isPending}
         />
       )}
 
