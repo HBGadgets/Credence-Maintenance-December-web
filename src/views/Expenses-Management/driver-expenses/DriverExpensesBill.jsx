@@ -38,8 +38,9 @@ const DriverExpensesBill = () => {
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
-  const [showModalFrom, setShowModalFrom] = useState(false)
 
+  // from field
+  const [showModalFrom, setShowModalFrom] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [submitEdit, setSubmitEdit] = useState(false)
@@ -165,21 +166,26 @@ const DriverExpensesBill = () => {
   // In field data
 
   const field = [
-    {
-      name: 'driverId',
-      label: 'Driver Name',
-      type: 'select',
-      placeholder: 'Enter Driver name',
-      options:
-        drivers?.map((drv) => ({
-          label: drv.name,
-          value: drv.id,
-        })) || [],
-      required: true,
-      onChange: (e) => {
-        setSelectedDriverId(e.target.value)
-      },
-    },
+    ...(!editMode
+      ? [
+          {
+            name: 'driverId',
+            label: 'Driver Name',
+            type: 'select',
+            placeholder: 'Enter Driver name',
+            options:
+              drivers?.map((drv) => ({
+                label: drv.name,
+                value: drv.id,
+              })) || [],
+            required: true,
+            onChange: (e) => {
+              setSelectedDriverId(e.target.value)
+            },
+          },
+        ]
+      : []),
+
     {
       name: 'date',
       label: 'Date',

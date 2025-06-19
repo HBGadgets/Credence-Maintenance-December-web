@@ -349,6 +349,7 @@ export const getSubTripsApi = async (id) => {
             companyName: sub.companyName || "",
             materialType: sub.materialType || "",
             date: formatDateToDDMMYYYY(sub.date),
+            orginalDate: sub.date,
             budgetAllocated: sub.budgetAllocated,
             status: sub.status,
         })),
@@ -356,41 +357,87 @@ export const getSubTripsApi = async (id) => {
 };
 
 
-// {
-//     "trips": {
-//         "_id": "67f5052f472f6703efa90f5b",
-//             "driverId": {
-//             "name": "Piyush Harde"
-//         },
-//         "vehicleName": "MH49BB9711",
-//             "supervisorId": "679b26e9ce1903ac227a4449",
-//                 "startLocation": "Nagpur",
-//                     "endLocation": "Kolkata",
-//                         "date": "2025-04-10T00:00:00.000Z",
-//                             "budgetAllocated": 5000,
-//                                 "spentAmount": 52800,
-//                                     "status": "in-progress",
-//                                         "updatedAt": "2025-04-26T14:45:53.424Z",
-//                                             "materialType": "Food , metal"
-//     },
-//     "subtrip": [
-//         {
-//             "_id": "680726bed8ff83a2df47ff19",
-//             "startLocation": "Delhi",
-//             "endLocation": "Mumbai",
-//             "date": "2025-04-21T10:30:00.000Z",
-//             "budgetAllocated": 15000,
-//             "status": "in-progress",
-//             "createdAt": "2025-04-22T10:48:54.959Z",
-//             "updatedAt": "2025-04-22T10:48:54.959Z"
-//         },
-//         {
-//             "_id": "68073ae30fae84dedd3fd022",
-//             "startLocation": "Mumbai",
-//             "endLocation": "Pune",
-//             "date": "2025-04-21T10:30:00.000Z",
-//             "budgetAllocated": 15000,
-//             "status": "in-progress",
-//             "createdAt": "2025-04-22T12:14:51.924Z",
-//             "updatedAt": "2025-04-22T12:14:51.924Z"
-//         },
+// -------------------------------------------------------------------- 
+
+// Post Subtrip
+
+export const postSubtripApi = async (id, subtripData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/subtrip/create?tripId=${id}`,
+            subtripData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        )
+
+        if (response.status === 201 || response.status === 200) {
+            console.log('Sub trips Created Successfully:', response.data)
+            return response.data
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`)
+        }
+    } catch (error) {
+        console.error('API Error:', error.response?.data?.message || error.message)
+
+        // Properly throw the error to be caught in parent function
+        const err = new Error(
+            error.response?.data?.message || 'Failed to create subtrip'
+        )
+        err.response = error.response // Attach the original response if needed
+        throw err
+    }
+}
+
+
+
+// PATCH subtrip
+
+export const patchSubtripApi = async (id, data) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data: response } = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/subtrip/update/${id}`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            },
+        )
+
+        return response
+    } catch (error) {
+        console.error('Update subtrip failed:', error, error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+
+// Delete driver expense
+
+export const deleteSubtripApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/subtrip/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log("error", data.message)
+    } catch (error) {
+        throw error
+    }
+}
+
+

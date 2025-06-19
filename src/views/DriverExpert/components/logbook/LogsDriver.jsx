@@ -4,13 +4,23 @@ import SmartPagination from '../../../components/SmartPagination'
 import Table from '../../../components/Table'
 import DateRangePicker from '../../../components/DateRangePicker'
 import { CContainer } from '@coreui/react'
-import { driverLogbook, getDailyLogSign } from '../../data/drivers'
-import { useQuery } from '@tanstack/react-query'
+import {
+  deleteDailyLogApi,
+  driverLogbook,
+  getDailyLogSign,
+  patchDailyLogApi,
+  postDailyLogApi,
+} from '../../data/drivers'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import SearchInput from '../../../components/SearchInput'
 import { toast, ToastContainer } from 'react-toastify'
+import AddButton from '../../../components/AddButton'
+import ReusableModal from '../../../components/ReusableModal'
+import Swal from 'sweetalert2'
 
 const LogsDriver = () => {
+  const queryClient = useQueryClient()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -21,6 +31,14 @@ const LogsDriver = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
   const { id } = useParams()
+
+  // from state
+  const [showModalFrom, setShowModalFrom] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [submitEdit, setSubmitEdit] = useState(false)
+
+  // fetch api
   const {
     data: driverLogbookData = [],
     isFetching,
@@ -30,6 +48,44 @@ const LogsDriver = () => {
     queryKey: ['logbook', id, selectedMonth],
     queryFn: () => driverLogbook(id, selectedMonth),
     staleTime: 1000 * 60 * 30,
+  })
+
+  // POST Daily Log
+  const { mutate: createDailyLog, isPending: isSubmitting } = useMutation({
+    mutationFn: (formData) => postDailyLogApi(id, formData), // Expect only formData
+    onSuccess: () => {
+      toast.success('Daily log created successfully')
+      queryClient.invalidateQueries(['logbook', id, selectedMonth])
+      setShowModalFrom(false)
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create daily log')
+    },
+  })
+
+  // PATCH Daily Log
+  const { mutate: updateDailyLog, isPending: isUpdating } = useMutation({
+    mutationFn: ({ logId, data }) => patchDailyLogApi(logId, data),
+    onSuccess: () => {
+      toast.success('Daily log updated successfully')
+      queryClient.invalidateQueries(['logbook', id, selectedMonth])
+      setShowModalFrom(false)
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update daily log')
+    },
+  })
+
+  // DELETE Daily Log
+  const { mutate: deleteDailyLog } = useMutation({
+    mutationFn: deleteDailyLogApi,
+    onSuccess: () => {
+      toast.success('Daily log deleted successfully')
+      queryClient.invalidateQueries(['logbook', id, selectedMonth])
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete daily log')
+    },
   })
 
   useEffect(() => {
@@ -53,6 +109,38 @@ const LogsDriver = () => {
     setCurrentPage(1)
   }, [searchQuery])
 
+  // fildes
+
+  const field = [
+    {
+      name: 'startDate',
+      label: 'Start Date',
+      type: 'datetime-local',
+      placeholder: 'Enter Date',
+      required: true,
+    },
+    {
+      name: 'endDate',
+      label: 'End Date',
+      type: 'datetime-local',
+      placeholder: 'Enter Date',
+      required: true,
+    },
+    {
+      name: 'logKM',
+      label: 'Daily Logs KM',
+      type: 'number',
+      placeholder: 'Enter Log KM',
+      required: true,
+    },
+    {
+      name: 'signature',
+      label: 'Signature Image',
+      type: 'file',
+      accept: 'image/*',
+    },
+  ]
+
   // Memoized paginatedData
   const paginatedData = useMemo(() => {
     return filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -73,6 +161,7 @@ const LogsDriver = () => {
     { label: 'GPS KM', key: 'gpsKM', sortable: true },
   ]
 
+  // handle view
   const handleViewButton = async (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
     if (!selectedRow) {
@@ -109,6 +198,88 @@ const LogsDriver = () => {
     }
   }
 
+  // handle edit
+  const handleEditButton = (logId) => {
+    const logToEdit = filteredData.find((item) => item.id === logId)
+
+    if (logToEdit) {
+      const formatForDatetimeLocal = (dateString) => {
+        if (!dateString) return '' // Handle missing value gracefully
+        const date = new Date(dateString)
+        return isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 16)
+      }
+
+      console.log('Original Log Data:', logToEdit)
+
+      const transformedLog = {
+        ...logToEdit,
+        startDate: formatForDatetimeLocal(logToEdit.orignalstartDate),
+        endDate: formatForDatetimeLocal(logToEdit.orginalendDate),
+      }
+
+      console.log('Transformed Log:', transformedLog)
+
+      setEditMode(true)
+      setEditingUser(transformedLog)
+      setShowModalFrom(true)
+    } else {
+      toast.error('Entry not found')
+    }
+  }
+
+  // handle delete
+  const handleDeleteButton = (logId) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this daily log?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteDailyLog(logId)
+      }
+    })
+  }
+  // handle submit
+  const handleFormSubmit = (formData) => {
+    console.log('Form Data:', formData) // Debug
+    const data = new FormData()
+    Object.entries(formData).forEach(([key, value]) => {
+      console.log(`${key}:`, value) // Debug individual fields
+      data.append(key, value)
+    })
+
+    if (editMode && editingUser?.id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to update this log entry?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          updateDailyLog({ logId: editingUser.id, data })
+        }
+      })
+    } else {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to create this log entry?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, create it!',
+        cancelButtonText: 'Cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          createDailyLog(data)
+        }
+      })
+    }
+  }
+
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -118,8 +289,8 @@ const LogsDriver = () => {
       <ToastContainer />
       <CContainer className="px-2" fluid>
         <>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div className="mb-2 d-flex justify-content-between align-items-center">
+          <div className="mb-3 d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
               <DateRangePicker
                 value={selectedMonth}
                 label={false}
@@ -130,8 +301,37 @@ const LogsDriver = () => {
                 }}
               />
             </div>
-            <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+            <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+              <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+
+              <AddButton
+                label="Add Dailylog"
+                // icon={<FaPlus />}
+                onClick={() => {
+                  setEditMode(false)
+                  setSubmitEdit(false)
+                  setEditingUser(null)
+                  setShowModalFrom(true)
+                }}
+              />
+            </div>
           </div>
+
+          <ReusableModal
+            show={showModalFrom}
+            initialData={editMode ? editingUser : null}
+            onClose={() => {
+              setShowModalFrom(false)
+              setEditMode(false)
+              setEditingUser(null)
+            }}
+            onSubmit={handleFormSubmit}
+            title={editMode ? 'Edit LogBook' : 'Add LogBook'}
+            size="xl"
+            fields={field}
+            isSubmitting={isSubmitting || isUpdating}
+          />
+
           <Table
             title="Driver LogBooks"
             columns={columns}
@@ -144,6 +344,10 @@ const LogsDriver = () => {
             isError={isError}
             viewButton={true}
             handleViewButton={handleViewButton}
+            editButton={true}
+            handleEditButton={handleEditButton}
+            deleteButton={true}
+            handleDeleteButton={handleDeleteButton}
           />
 
           <SmartPagination

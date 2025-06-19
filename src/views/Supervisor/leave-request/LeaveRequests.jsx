@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import { FaArrowUp, FaCheck, FaPrint, FaRegFilePdf, FaTimes } from 'react-icons/fa'
 import SearchInput from '../../components/SearchInput'
@@ -6,7 +6,7 @@ import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import Page404 from '../../pages/page404/Page404'
 import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Swal from 'sweetalert2'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
@@ -15,13 +15,13 @@ import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../IconDropdown'
 
 const LeaveRequests = () => {
+  const queryClient = useQueryClient()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
-  const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const [updatingId, setUpdatingId] = useState(null) // Track which item is being updated
 
   // Format date to "dd/mm/yyyy"
   const formatDate = (dateString) => {
@@ -40,53 +40,6 @@ const LeaveRequests = () => {
     return <span className={badgeClass}>{status}</span>
   }
 
-  // Function to update status and update UI
-  const updateStatusInUI = (id, newStatus) => {
-    setFilteredData((prevData) =>
-      prevData.map((item) =>
-        item._id === id ? { ...item, status: getStatusBadge(newStatus) } : item,
-      ),
-    )
-  }
-
-  // Approve function (removes request from table after update)
-  const handleApprove = async (id) => {
-    try {
-      await updateLeaveRequestStatus(id, 'Approved')
-      Swal.fire('Success!', 'Leave Approved Successfully.', 'success')
-
-      // Remove approved request from table
-      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
-    } catch (error) {
-      toast.error('Failed to approve leave request!')
-    }
-  }
-
-  // Reject function (removes request from table after update)
-  const handleReject = async (id) => {
-    try {
-      await updateLeaveRequestStatus(id, 'Rejected')
-      Swal.fire('Error', 'Leave Reject Successfully.', 'error')
-
-      // Remove rejected request from table
-      setFilteredData((prevData) => prevData.filter((item) => item._id !== id))
-    } catch (error) {
-      toast.error('Failed to reject leave request!')
-    }
-  }
-
-  // Render action buttons (centered)
-  const renderActionButtons = (id) => (
-    <div className="d-flex justify-content-center gap-2">
-      <button className="btn btn-sm btn-success" onClick={() => handleApprove(id)}>
-        <FaCheck />
-      </button>
-      <button className="btn btn-sm btn-danger" onClick={() => handleReject(id)}>
-        <FaTimes />
-      </button>
-    </div>
-  )
-
   // Fetch driver leave requests with useQuery
   const {
     data: responseData = [],
@@ -98,36 +51,109 @@ const LeaveRequests = () => {
     staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
   })
 
-  // Format and set data
-  React.useEffect(() => {
-    if (responseData.length > 0) {
-      const formattedData = responseData.map((item) => ({
+  // Approve function
+  const handleApprove = async (id) => {
+    setUpdatingId(id)
+    try {
+      await updateLeaveRequestStatus(id, 'Approved')
+      Swal.fire({
+        title: 'Success!',
+        text: 'Leave Approved Successfully.',
+        icon: 'success',
+        confirmButtonText: 'OK',
+      })
+      // Invalidate query to refetch data
+      queryClient.invalidateQueries(['driverleaveRequests'])
+    } catch (error) {
+      toast.error('Failed to approve leave request!')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  // Reject function
+  const handleReject = async (id) => {
+    setUpdatingId(id)
+    try {
+      await updateLeaveRequestStatus(id, 'Rejected')
+      Swal.fire({
+        title: 'Rejected!',
+        text: 'Leave Rejected Successfully.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      })
+      // Invalidate query to refetch data
+      queryClient.invalidateQueries(['driverleaveRequests'])
+    } catch (error) {
+      toast.error('Failed to reject leave request!')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  // Process and format data for display
+  const displayData = useMemo(() => {
+    return responseData
+      .filter((item) => {
+        if (!searchQuery) return true
+        const driverName = item.driverId?.name || 'Unknown'
+        return driverName.toLowerCase().includes(searchQuery.toLowerCase())
+      })
+      .map((item) => ({
         _id: item._id,
         name: item.driverId?.name || 'Unknown',
         startDate: formatDate(item.startDate),
         endDate: formatDate(item.endDate),
         description: item.description || '',
-        status: getStatusBadge(item.status || 'Pending'),
-        actions: renderActionButtons(item._id),
+        status: item.status, // Keep raw status for badge generation
+        statusBadge: getStatusBadge(item.status || 'Pending'),
+        actions: (
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              className="btn btn-sm btn-success"
+              onClick={() => handleApprove(item._id)}
+              disabled={item.status !== 'Pending' || updatingId === item._id}
+            >
+              {updatingId === item._id ? (
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              ) : (
+                <FaCheck />
+              )}
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => handleReject(item._id)}
+              disabled={item.status !== 'Pending' || updatingId === item._id}
+            >
+              {updatingId === item._id ? (
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              ) : (
+                <FaTimes />
+              )}
+            </button>
+          </div>
+        ),
       }))
+  }, [responseData, searchQuery, updatingId])
 
-      setFilteredData(formattedData)
-    }
-  }, [responseData])
+  const totalPages = Math.ceil(displayData.length / itemsPerPage)
 
   // Handle search
   const handleSearch = (query) => {
     setSearchQuery(query)
+  }
 
-    if (!query) {
-      setFilteredData(responseData)
-      return
-    }
-
-    const filtered = responseData.filter((item) =>
-      item.name.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredData(filtered)
+  const handleLogout = () => {
+    // Implement your logout logic here
+    console.log('Logout clicked')
   }
 
   if (error) return <Page404 />
@@ -138,12 +164,18 @@ const LeaveRequests = () => {
       icon: FaRegFilePdf,
       label: 'Download PDF',
       onClick: () => {
-        const cleanedData = filteredData.map(({ actions, status, ...rest }) => ({
+        const cleanedData = displayData.map(({ actions, statusBadge, ...rest }) => ({
           ...rest,
-          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract inner text from JSX badge
+          status: rest.status, // Use the raw status for export
         }))
 
-        const pdfColumns = columns.filter((col) => col.key !== 'actions') // remove 'actions' column
+        const pdfColumns = [
+          { label: 'Driver Name', key: 'name' },
+          { label: 'Start Date', key: 'startDate' },
+          { label: 'End Date', key: 'endDate' },
+          { label: 'Description', key: 'description' },
+          { label: 'Status', key: 'status' },
+        ]
 
         exportToPDF({
           title: 'Leave Requests Report',
@@ -153,17 +185,22 @@ const LeaveRequests = () => {
         })
       },
     },
-
     {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
       onClick: () => {
-        const cleanedData = filteredData.map(({ actions, status, ...rest }) => ({
+        const cleanedData = displayData.map(({ actions, statusBadge, ...rest }) => ({
           ...rest,
-          status: typeof status === 'string' ? status : status?.props?.children || '', // Convert badge to plain text
+          status: rest.status, // Use the raw status for export
         }))
 
-        const excelColumns = columns.filter((col) => col.key !== 'actions') // Remove 'actions' column
+        const excelColumns = [
+          { label: 'Driver Name', key: 'name' },
+          { label: 'Start Date', key: 'startDate' },
+          { label: 'End Date', key: 'endDate' },
+          { label: 'Description', key: 'description' },
+          { label: 'Status', key: 'status' },
+        ]
 
         exportToExcel({
           title: 'Leave Requests Report',
@@ -173,7 +210,6 @@ const LeaveRequests = () => {
         })
       },
     },
-
     {
       icon: FaPrint,
       label: 'Print Page',
@@ -197,7 +233,7 @@ const LeaveRequests = () => {
     { label: 'Start Date', key: 'startDate', sortable: true },
     { label: 'End Date', key: 'endDate', sortable: true },
     { label: 'Description', key: 'description', sortable: true },
-    { label: 'Status', key: 'status', sortable: false },
+    { label: 'Status', key: 'statusBadge', sortable: false },
     { label: 'Actions', key: 'actions' },
   ]
 
@@ -212,16 +248,15 @@ const LeaveRequests = () => {
       <Table
         title="Driver Leave Requests"
         columns={columns}
-        filteredData={filteredData}
-        setFilteredData={setFilteredData}
+        filteredData={displayData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
         errorMessage={
           error
-            ? 'Error fetching driver expenses. Please try again later.'
-            : filteredData.length === 0 && !isFetching
-              ? 'No driver expense records found for the selected period.'
+            ? 'Error fetching driver leave requests. Please try again later.'
+            : displayData.length === 0 && !isFetching
+              ? 'No leave requests found.'
               : ''
         }
       />

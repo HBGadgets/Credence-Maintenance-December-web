@@ -33,6 +33,7 @@ const SelectedCompDetails = React.lazy(
 const BranchDetails = React.lazy(
   () => import('./views/Supervisor/company-details/BranchDetails.js'),
 )
+const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
 // Expenses Management
 
@@ -107,6 +108,7 @@ const routes = [
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
   { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },
   { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
+  { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
 
   /**EXPENSES MANAGEMENT */
 

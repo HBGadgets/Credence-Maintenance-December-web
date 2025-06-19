@@ -209,6 +209,7 @@ const VehicleExpensesBill = () => {
         { value: 'tireWheel', label: 'Tire & Wheel Service.' },
         { value: 'fuel', label: 'Fuels and Gas Service.' },
         { value: 'battery', label: 'Battery & Electrical.' },
+        { value: 'newPartService', label: 'Part Changes Or New Parts Buys for vehicle' },
         {
           value: 'other',
           label: 'Major mechanical issues or part replacements or Service Requriment(Other).',

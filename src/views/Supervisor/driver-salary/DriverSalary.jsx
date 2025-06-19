@@ -102,7 +102,7 @@ const DriverSalary = () => {
   const transformedData = useMemo(
     () =>
       salaryData?.map((item) => ({
-        date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : 'N/A',
+        date: item.date ? new Date(item.date).toLocaleDateString('en-GB') : 'N/A',
         driverName: item.driverId?.name || 'N/A',
         basicPay: item.basicPay,
         overtime: item.overtime,
