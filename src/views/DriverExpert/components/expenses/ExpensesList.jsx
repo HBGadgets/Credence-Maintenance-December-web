@@ -77,6 +77,11 @@ const ExpensesList = () => {
           {data.payment}
         </span>
       ),
+
+      coordinate:
+        data.lat !== 'No latitude' && data.long !== 'No Longitude'
+          ? `${data.lat}, ${data.long}`
+          : 'No coordinates',
     }))
 
     setFilteredData(styledData)
@@ -96,6 +101,7 @@ const ExpensesList = () => {
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Location', key: 'location', sortable: true },
+    { label: 'Co-ordinate', key: 'coordinate', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Payment Mode', key: 'payment', sortable: true },

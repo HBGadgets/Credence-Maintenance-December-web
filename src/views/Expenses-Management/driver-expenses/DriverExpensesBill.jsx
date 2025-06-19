@@ -4,17 +4,28 @@ import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import BillShow from '../../components/BillModal/BillShow'
-import { useQuery } from '@tanstack/react-query'
-import { getAllDriverExpesesListApi, getDriverBillImageApi } from '../data/data'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  deleteDriverExpenseApi,
+  getAllDriverExpesesListApi,
+  getDriverBillImageApi,
+  patchDriverExpenseApi,
+  postDriverExpenseApi,
+} from '../data/data'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
-import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../../Supervisor/IconDropdown'
+import AddButton from '../../components/AddButton'
+import { FaPlus } from 'react-icons/fa'
+import ReusableModal from '../../components/ReusableModal'
+import { fetchDrivers } from '../../DriverExpert/data/drivers'
+import Swal from 'sweetalert2'
 
 const DriverExpensesBill = () => {
+  const queryClient = useQueryClient()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
@@ -28,11 +39,69 @@ const DriverExpensesBill = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
+  // from field
+  const [showModalFrom, setShowModalFrom] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [submitEdit, setSubmitEdit] = useState(false)
+
+  //  select driver inpt box
+  const [selectedDriverId, setSelectedDriverId] = useState(null)
+
   // Fetch Data
   const { data: driverExpenseList = [], isFetching } = useQuery({
     queryKey: ['driverExpenseList'],
     queryFn: getAllDriverExpesesListApi,
     staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  })
+
+  // Fetch drivers name
+  const { data: drivers = [], isLoading } = useQuery({
+    queryKey: ['drivers'],
+    queryFn: fetchDrivers,
+    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+  })
+  console.log('drivers list', drivers)
+
+  // Post driver expense
+  const { mutate: addDriverExpense, isLoading: isSubmitting } = useMutation({
+    mutationFn: postDriverExpenseApi,
+    onSuccess: (data) => {
+      toast.success('Driver expense added successfully!')
+      setShowModalFrom(false)
+      queryClient.invalidateQueries(['driverExpenseList']) // Refresh the list
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to add driver expense')
+    },
+  })
+
+  // Patch driver expense
+  const { mutate: updateDriverExpense, isLoading: isUpdating } = useMutation({
+    mutationFn: ({ id, formData }) => patchDriverExpenseApi(id, formData),
+    onSuccess: () => {
+      toast.success('Driver expense updated successfully!')
+      setShowModalFrom(false)
+      setEditMode(false)
+      setEditingUser(null)
+      queryClient.invalidateQueries(['driverExpenseList'])
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update driver expense')
+    },
+  })
+
+  // Delete driver expense
+  const { mutate: deleteDriverExpense } = useMutation({
+    mutationFn: deleteDriverExpenseApi,
+    onSuccess: () => {
+      toast.success('Driver expense deleted successfully!')
+      queryClient.invalidateQueries(['driverExpenseList'])
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete driver expense')
+    },
   })
 
   useEffect(() => {
@@ -82,12 +151,75 @@ const DriverExpensesBill = () => {
           {data.paymentMode}
         </span>
       ),
+
+      coordinate:
+        data.lat !== 'No latitude' && data.long !== 'No Longitude'
+          ? `${data.lat}, ${data.long}`
+          : 'No coordinates',
     }))
 
     setFilteredData(styledData)
   }, [searchQuery, driverExpenseList, dateRange])
 
   console.log('All Driver Expenses Data: ', filteredData)
+
+  // In field data
+
+  const field = [
+    ...(!editMode
+      ? [
+          {
+            name: 'driverId',
+            label: 'Driver Name',
+            type: 'select',
+            placeholder: 'Enter Driver name',
+            options:
+              drivers?.map((drv) => ({
+                label: drv.name,
+                value: drv.id,
+              })) || [],
+            required: true,
+            onChange: (e) => {
+              setSelectedDriverId(e.target.value)
+            },
+          },
+        ]
+      : []),
+
+    {
+      name: 'date',
+      label: 'Date',
+      type: 'date',
+      placeholder: 'Enter Date',
+      required: true,
+    },
+    {
+      name: 'shopName',
+      label: 'Shop Name',
+      type: 'text',
+      placeholder: 'Enter Shop Name',
+    },
+    { name: 'location', label: 'Location', type: 'text', placeholder: 'Enter Location' },
+    { name: 'description', label: 'Description', type: 'text', placeholder: 'Enter Description' },
+    { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Enter Amount' },
+    {
+      name: 'paymentMode',
+      label: 'Payment Mode',
+      type: 'select',
+      options: [
+        { value: 'upi', label: 'UPI' },
+        { value: 'cash', label: 'CASH' },
+        { value: 'card', label: 'CARD' },
+      ],
+    },
+    {
+      name: 'billImg',
+      label: 'Bill Image',
+      type: 'file',
+      required: true,
+      accept: 'image/*',
+    },
+  ]
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
@@ -97,9 +229,10 @@ const DriverExpensesBill = () => {
   const columns = [
     { label: 'Service Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
+    // { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
     { label: 'Location', key: 'location', sortable: true },
+    { label: 'Co-ordinate', key: 'coordinate', sortable: true },
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Amount', key: 'amount', sortable: true },
     { label: 'Payment Mode', key: 'paymentMode', sortable: false },
@@ -154,6 +287,76 @@ const DriverExpensesBill = () => {
     }
   }
 
+  // handle edit
+  const handleEditButton = (id) => {
+    const record = filteredData.find((item) => item.id === id)
+    if (record) {
+      // find the correct driver ID by matching the driver name from the drivers list
+      const driver = drivers.find((d) => d.name === record.driverName)
+
+      setEditMode(true)
+      setEditingUser({
+        ...record,
+        driverId: driver?.id || '', // use driver ID, fallback to empty string
+        date: new Date(record.originalDate).toISOString().split('T')[0], // convert to yyyy-mm-dd
+        paymentMode:
+          typeof record.paymentMode === 'string'
+            ? record.paymentMode
+            : record.paymentMode?.props?.children?.toLowerCase(),
+      })
+
+      setShowModalFrom(true)
+    }
+  }
+
+  // handle delete
+  const handleDeleteButton = (id) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'This action cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteDriverExpense(id)
+      }
+    })
+  }
+
+  // handle submit
+
+  const handleFormSubmit = (formData) => {
+    if (editMode && editingUser?.id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to update this driver expense?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Update it',
+        cancelButtonText: 'Cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          updateDriverExpense({ id: editingUser.id, formData })
+        }
+      })
+    } else {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to add this driver expense?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Add it',
+        cancelButtonText: 'Cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          addDriverExpense(formData)
+        }
+      })
+    }
+  }
+
   // Dropdown items for export
   const dropdownItems = [
     {
@@ -199,11 +402,7 @@ const DriverExpensesBill = () => {
       label: 'Print Page',
       onClick: () => window.print(),
     },
-    {
-      icon: HiOutlineLogout,
-      label: 'Logout',
-      onClick: () => handleLogout(),
-    },
+
     {
       icon: FaArrowUp,
       label: 'Scroll To Top',
@@ -215,11 +414,40 @@ const DriverExpensesBill = () => {
     <>
       <ToastContainer />
 
-      <div className="mb-2 d-flex justify-content-between align-items-center">
-        {/* Left: Date Range Filter */}
-        <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+        </div>
+        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+
+          <AddButton
+            label="Add Driver Expense"
+            // icon={<FaPlus />}
+            onClick={() => {
+              setEditMode(false)
+              setSubmitEdit(false)
+              setEditingUser(null)
+              setShowModalFrom(true)
+            }}
+          />
+        </div>
       </div>
+
+      <ReusableModal
+        show={showModalFrom}
+        initialData={editMode ? editingUser : null}
+        onClose={() => {
+          setShowModalFrom(false)
+          setEditMode(false)
+          setEditingUser(null)
+        }}
+        onSubmit={handleFormSubmit}
+        title={editMode ? 'Edit Driver Expense' : 'Add New Driver Expense'}
+        size="xl"
+        fields={field}
+        isSubmitting={isSubmitting || isUpdating}
+      />
 
       <Table
         title="All Drivers Expenses List"
@@ -228,9 +456,13 @@ const DriverExpensesBill = () => {
         setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        isFetching={isFetching}
         viewButton={true}
         handleViewButton={handleViewButton}
-        isFetching={isFetching}
+        editButton={true}
+        handleEditButton={handleEditButton}
+        deleteButton={true}
+        handleDeleteButton={handleDeleteButton}
       />
 
       <SmartPagination

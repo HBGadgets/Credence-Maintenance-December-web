@@ -11,8 +11,7 @@ const ManageTyre = React.lazy(() => import('./views/vehicle/TyreSystem/ManageTyr
 const Fuelsystem = React.lazy(() => import('./views/vehicle/FuelSystem/Fuelsystem.jsx'))
 const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/Servicelist.jsx'))
 
-// import VehicleMaintenanceLogModal from './views/vehicle/modals/VehicleMaintenanceLogModal.jsx'
-// import VehicleTripModal from './views/vehicle/modals/VehicleTripModal.jsx'
+
 
 // Tyre Management
 const TyreInventory = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
@@ -34,23 +33,18 @@ const SelectedCompDetails = React.lazy(
 const BranchDetails = React.lazy(
   () => import('./views/Supervisor/company-details/BranchDetails.js'),
 )
+const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
 // Expenses Management
-const PurchaseParts = React.lazy(
-  () => import('./views/Expenses-Management/purchase-parts/PurchacePartsBill.js'),
-)
+
 const DriverExpenses = React.lazy(
   () => import('./views/Expenses-Management/driver-expenses/DriverExpensesBill.jsx'),
 )
 const VehicleExpensesBill = React.lazy(
   () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.jsx'),
 )
-const Bills = React.lazy(() => import('./views/Expenses-Management/bill-expenses/Bills.js'))
-const Invoice = React.lazy(() => import('./views/Expenses-Management/accounts/Invoice.js'))
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
-// const ShowDriverExpenseDoc = React.lazy(
-//   () => import('./views/Expenses-Management/driver-expenses/showDoc.js'),
-// )
+
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -114,20 +108,13 @@ const routes = [
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
   { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },
   { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
+  { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
 
   /**EXPENSES MANAGEMENT */
 
-  { path: '/PurchacePartsBill', name: 'Purchase Parts', element: PurchaseParts },
   { path: '/DriverExpenseBill', name: 'All Drivers Expenses', element: DriverExpenses },
   { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
-  { path: '/Bills', name: 'Bills', element: Bills },
-  { path: '/Invoice', name: 'Invoice', element: Invoice },
   { path: '/LR', name: 'Lorry Recipt', element: LR },
-  // {
-  //   path: '/DriverExpenseBill/:id/documents',
-  //   name: 'Show Driver Expense Documents',
-  //   element: ShowDriverExpenseDoc,
-  // },
 
   /*Tyre Management*/
   { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },

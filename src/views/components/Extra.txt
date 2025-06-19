@@ -1,0 +1,67 @@
+import React, { useState } from 'react'
+import AddButton from '../Components/AddButton'
+import { FaPlus } from 'react-icons/fa'
+import ReusableModal from '../Components/ReusableModal'
+
+const Users = () => {
+  const [showModal, setShowModal] = useState(false)
+
+  const fieldDefinitions = [
+    { name: 'username', label: 'UserName', type: 'text', placeholder: 'Enter username name' },
+    { name: 'password', label: 'Password', type: 'password', placeholder: 'Enter password' },
+    { name: 'email', label: 'Email', type: 'email', placeholder: 'Enter email' },
+  { name: 'profileImage', label: 'Upload Profile', type: 'file', required: true, accept: 'image/*' },
+
+    {
+      name: 'tags',
+      label: 'Tags',
+      type: 'multiselect',
+      options: [
+        { value: 'frontend', label: 'Frontend' },
+        { value: 'backend', label: 'Backend' },
+        { value: 'fullstack', label: 'Fullstack' },
+      ],
+    },
+
+    {
+      name: 'gender',
+      label: 'Gender',
+      type: 'select',
+      options: [
+        { label: 'Male', value: 'male' },
+        { label: 'Female', value: 'female' },
+      ],
+    },
+  ]
+
+  const handleFormSubmit = (data) => {
+    console.log('Form Submitted:', data)
+    // handle your submission logic here (API call, etc.)
+  }
+
+  return (
+    <div>
+      userssssssssssssss
+      {/* <AddButton onClick={() => console.log('Clicked')} /> */}
+      <AddButton
+        label="Add"
+        icon={<FaPlus />}
+        // variant="success"
+        // size="sm"
+        // className="my-2 shadow"
+        onClick={() => setShowModal(true)}
+      />
+      {/* <AddButton label="Add Admin" onClick={() => setShowModal(true)} /> */}
+      <ReusableModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleFormSubmit}
+        title="Add New User"
+        size="xl" // or 'lg', 'sm'
+        fields={fieldDefinitions}
+      />
+    </div>
+  )
+}
+
+export default Users

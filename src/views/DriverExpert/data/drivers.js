@@ -63,7 +63,7 @@ export const deleteDriver = async (id) => {
       },
     )
 
-    return alert(data.message)
+    return console.log(data.message)
   } catch (error) {
     throw error
   }
@@ -148,6 +148,8 @@ export const driverExpenses = async (id) => {
       date: formatDateToDDMMYYYY(expenses.date),
       description: expenses.description,
       location: expenses.location,
+      lat: expenses.lat || 'No latitude',
+      long: expenses.long || 'No longitude',
       shopName: expenses.shopName,
       amount: expenses.amount,
       payment: expenses.paymentMode,
@@ -196,6 +198,8 @@ export const driverLogbook = async (id, month) => {
       originalDate: formatDateToDDMMYYYY(logbook.startDate),
       vehicleName: logbook.vehicleName,
       startDate: useFormattedTime(logbook.startDate),
+      orignalstartDate: logbook.startDate,
+      orginalendDate: logbook.endDate,
       endDate: useFormattedTime(logbook.endDate),
       duration: logbook.duration,
       logKM: logbook.logKM,
@@ -228,6 +232,91 @@ export const getDailyLogSign = async (signatureId) => {
   }
 }
 
+
+// Post Subtrip
+
+export const postDailyLogApi = async (id, dailylogData) => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/dailylogs/create/${id}`,
+      dailylogData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+
+    if (response.status === 201 || response.status === 200) {
+      console.log('Daily Log Created Successfully:', response.data)
+      return response.data
+    } else {
+      throw new Error(`Unexpected response status: ${response.status}`)
+    }
+  } catch (error) {
+    console.error('API Error:', error.response?.data?.message || error.message)
+
+    // Properly throw the error to be caught in parent function
+    const err = new Error(
+      error.response?.data?.message || 'Failed to create daily log'
+    )
+    err.response = error.response // Attach the original response if needed
+    throw err
+  }
+}
+
+
+// PATCH subtrip
+
+export const patchDailyLogApi = async (id, data) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data: response } = await axios.patch(
+      `${import.meta.env.VITE_API_URL}/api/dailylogs/update/${id}`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    return response
+  } catch (error) {
+    console.error('Update daily logs failed:', error, error.response?.data?.message || error.message)
+    throw error
+  }
+}
+
+
+// Delete driver expense
+
+export const deleteDailyLogApi = async (id) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.delete(
+      `${import.meta.env.VITE_API_URL}/api/dailylogs/delete/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    return console.log("done", data.message)
+  } catch (error) {
+    throw error
+  }
+}
+
+// ------------------------------------------------------------------------------------ 
+
+
+
 export const driverSalary = async (id) => {
   try {
     if (!token) throw new Error('Authentication token not found')
@@ -248,8 +337,9 @@ export const driverSalary = async (id) => {
       incentives: salary.incentives,
       deductions: salary.deductions,
       netPay: salary.netPay,
-      createdAt: formatDateToDDMMYYYY(salary.createdAt),
-      originalDate: salary.createdAt,
+      createdAt: salary.createdAt,
+      date: formatDateToDDMMYYYY(salary.date),
+      originalDate: salary.date,
     }))
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
@@ -286,8 +376,8 @@ export const driverTripDetails = async (id) => {
     throw error
   }
 }
- //------------------------------------driver document locker-------------------------------------
- 
+//------------------------------------driver document locker-------------------------------------
+
 export const getDocuments = async (id) => {
   try {
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-all/${id}`, {
@@ -317,12 +407,12 @@ export const uploadDocuments = async (driverId, documentData) => {
   }
 
   const documentType = Object.keys(documentData)[0]; // Get the document type (e.g., "Aadhar Card")
-console.log("this is document data",documentData);
+  console.log("this is document data", documentData);
 
   const formData = new FormData();
   formData.append("driverId", driverId);
   formData.append("documentName", documentData.documentName);
-formData.append("document",documentData.document)
+  formData.append("document", documentData.document)
   console.log("Uploading Document:", documentType);
 
   try {

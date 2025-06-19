@@ -24,6 +24,7 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
 
   const initialFormData = {
     driverId: '',
+    date: '',
     basicPay: '',
     overtime: '',
     incentives: '',
@@ -48,6 +49,7 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
       if (initialData) {
         const formattedData = {
           driverId: initialData.driverId?._id || initialData.driverId,
+          date: initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : '',
           basicPay: initialData.basicPay?.toString() || '',
           overtime: initialData.overtime?.toString() || '',
           incentives: initialData.incentives?.toString() || '',
@@ -121,6 +123,11 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
                   </option>
                 ))}
               </CFormSelect>
+            </div>
+
+            <div className="mb-3">
+              <CFormLabel>Date</CFormLabel>
+              <CFormInput type="date" name="date" value={formData.date} onChange={handleChange} />
             </div>
 
             {/* Rest of the form inputs */}

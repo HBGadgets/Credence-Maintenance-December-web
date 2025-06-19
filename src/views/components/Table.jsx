@@ -165,7 +165,7 @@ function Table({
                         .filter((col) => !col.hidden)
                         .map((column) => (
                           <CTableDataCell key={column.key} className="text-center">
-                            {row[column.key]}
+                            {column.render ? column.render(row) : row[column.key]}
                           </CTableDataCell>
                         ))}
 

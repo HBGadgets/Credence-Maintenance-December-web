@@ -1,32 +1,3 @@
-// import React from 'react'
-// import { useParams } from 'react-router-dom'
-// import { useQuery } from '@tanstack/react-query'
-// import { getSubTripsApi } from '../../data/data'
-
-// const SubTripMain = () => {
-//   const { id } = useParams()
-
-//   const { data, isLoading, isError } = useQuery({
-//     queryKey: ['subTrip', id],
-//     queryFn: () => getSubTripsApi(id),
-//     enabled: !!id,
-//   })
-
-//   if (isLoading) return <div>Loading SubTrip data...</div>
-//   if (isError) return <div>Error loading SubTrip data</div>
-
-//   return (
-//     <div>
-//       <h4>SubTrip Details for Trip ID: {id}</h4>
-//       <pre>{JSON.stringify(data, null, 2)}</pre>
-
-//       {/* Correct usage of the fetched data */}
-//     </div>
-//   )
-// }
-
-// export default SubTripMain
-
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -39,7 +10,7 @@ import TripStatusChart from '../Modals/TripStatusChart'
 import BudgetAllocationChart from '../Modals/BudgetAllocationChart'
 import MaterialAnalysisChart from '../Modals/MaterialAnalysisChart'
 import SubTripTable from '../Modals/SubTripTable'
-import Loader from '../../../../components/Loader/Loader'
+import LoaderBus from '../../../../components/Loader3/LoaderBus'
 import { getSubTripsApi } from '../../data/data'
 
 const SubTripMain = () => {
@@ -56,7 +27,7 @@ const SubTripMain = () => {
     return (
       <div className="text-center py-5">
         {' '}
-        <Loader />{' '}
+        <LoaderBus />{' '}
       </div>
     )
   if (isError) return <div className="text-danger text-center py-5">Error loading SubTrip data</div>
@@ -134,7 +105,7 @@ const SubTripMain = () => {
       <div className="card shadow-sm">
         <div className="card-body">
           {/* <h5 className="card-title mb-3">Subtrips</h5> */}
-          <SubTripTable subTrips={subTrips} />
+          <SubTripTable subTrips={subTrips} id={id} />
         </div>
       </div>
     </div>

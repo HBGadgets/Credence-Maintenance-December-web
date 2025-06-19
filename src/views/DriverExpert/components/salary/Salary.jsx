@@ -58,7 +58,7 @@ const Salary = ({ id }) => {
   )
 
   const columns = [
-    { label: 'Date', key: 'createdAt', sortable: true },
+    { label: 'Date', key: 'date', sortable: true },
     { label: 'Basic Pay', key: 'basicPay', sortable: true },
     { label: 'Overtime Pay', key: 'overtime', sortable: true },
     { label: 'Incentives', key: 'incentives', sortable: true },

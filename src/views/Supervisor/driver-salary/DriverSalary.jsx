@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import SmartPagination from '../../components/SmartPagination.jsx'
-import Loader from '../../../components/Loader/Loader.jsx'
 import Page404 from '../../pages/page404/Page404.js'
 import SearchInput from '../../components/SearchInput.jsx'
 import Table from '../../components/Table'
@@ -103,7 +102,7 @@ const DriverSalary = () => {
   const transformedData = useMemo(
     () =>
       salaryData?.map((item) => ({
-        date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : 'N/A',
+        date: item.date ? new Date(item.date).toLocaleDateString('en-GB') : 'N/A',
         driverName: item.driverId?.name || 'N/A',
         basicPay: item.basicPay,
         overtime: item.overtime,

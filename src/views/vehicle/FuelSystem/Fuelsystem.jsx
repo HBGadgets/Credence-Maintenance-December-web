@@ -1,18 +1,18 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import FuelCards from './components/Fuelcards'
 import { ImMeter } from 'react-icons/im'
 import { BiTrip } from 'react-icons/bi'
 import { LucideDroplets } from 'lucide-react'
 import { RiMoneyRupeeCircleLine } from 'react-icons/ri'
 import DateRangePicker from '../../components/DateRangePicker'
-import FuelAnalayis from './components/Fuelanalayis'
+import FuelAnalayis from './components/FuelAnalayis'
 import { Card } from 'react-bootstrap'
-import FuelRecords from './components/Fueltable'
+import FuelRecords from './components/FuelTable'
+import FuelCards from './components/FuelCards'
 
 const Fuelsystem = () => {
   const { id } = useParams()
-  console.log(id)
+  console.log('idzx', id)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
   return (

@@ -42,117 +42,50 @@ export const fetchVehicles = async () => {
 // -----------------------------------------------------------------------------------------------------
 // Vehicle Profile Section
 
-
-// export const useVehicleProfileData = () => {
-//     const { id } = useParams();
-//     const [vehicles, setVehicles] = useState([]);
-//     const [selectedVehicle, setSelectedVehicle] = useState(null);
-//     const [filteredLogs, setFilteredLogs] = useState([]);
-
-//     useEffect(() => {
-//         const fetchVehicles = async () => {
-//             try {
-//                 const response = await axios.get(
-//                     `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
-//                     {
-//                         headers: {
-//                             Authorization: `Bearer ${TOKEN}`,
-//                         },
-//                     }
-//                 );
-
-//                 console.log('Pavannnnnnnnnnnnnnnnnnnnnn:', response.data);
-
-//                 const vehicleList = response.data ? response.data
-//                     : response.data.vehicles
-//                         ? [response.data.vehicles]
-//                         : [];
-
-//                 setVehicles(vehicleList);
-//                 setSelectedVehicle(vehicleList || null);
-//                 setFilteredLogs(vehicleList?.maintenanceLogs || []);
-//             } catch (error) {
-//                 console.error('Error fetching vehicles:', error);
-//             }
-//         };
-
-//         fetchVehicles();
-//     }, [id]);
-
-//     return { vehicles, selectedVehicle, filteredLogs };
-// };
-
-// hooks/useVehicleProfileData.js
 import { useQuery } from '@tanstack/react-query'
 
 
 export const useVehicleProfileData = () => {
-  const { id } = useParams()
+    const { id } = useParams()
 
-  return useQuery({
-    queryKey: ['vehicles', id],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${TOKEN}`,
-          },
-        }
-      )
+    return useQuery({
+        queryKey: ['vehicles', id],
+        queryFn: async () => {
+            const response = await axios.get(
+                `${import.meta.env.VITE_API_URL}/api/vehicle/get/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                    },
+                }
+            )
 
-      const data = response.data
-      console.log("this is response ", data)
+            const data = response.data
+            console.log("this is response ", data)
 
-      if (!data || !data.vehicleDocument || !data.device) {
-        throw new Error('Invalid vehicle data structure')
-      }
+            if (!data || !data.vehicleDocument || !data.device) {
+                throw new Error('Invalid vehicle data structure')
+            }
 
-      const vehicleDocument = data.vehicleDocument
-      const device = data.device
-      console.log("vehicleDocument:", vehicleDocument)
-      console.log("device:", device)
+            const vehicleDocument = data.vehicleDocument
+            const device = data.device
+            console.log("vehicleDocument:", vehicleDocument)
+            console.log("device:", device)
 
-      return {
-        vehicleDocument,
-        device,
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!id, // Ensure query runs only if id exists
-  })
+            return {
+                vehicleDocument,
+                device,
+            }
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        enabled: !!id, // Ensure query runs only if id exists
+    })
 }
 
 // -----------------------------------------------------------------------------------------------------
 
 
 // Vehcile Document locker
-
-// Get API Document
-
-// export const getDocuments = async (id, field) => {
-//     try {
-//         const response = await fetch(
-//             `${import.meta.env.VITE_API_URL}/api/vehicle-documents/get?vehicleId=${id}&field=${field}`,
-//             {
-//                 headers: {
-//                     Authorization: `Bearer ${TOKEN}`,
-//                 },
-//             }
-//         );
-//         const data = await response.json();
-//         console.log("data for images ex and is", data)
-
-//         if (data.vehicleDocument?.documents?.[field]?.image?.base64Data) {
-//             return data.vehicleDocument.documents[field].image.base64Data;
-//         }
-
-//         return null;
-//     } catch (error) {
-//         console.error("Error fetching vehicle document:", error);
-//         return null;
-//     }
-// };
 
 // Get API Document
 
@@ -168,7 +101,7 @@ export const getAllDocuments = async (id) => {
                 },
             }
         )
-console.log("api response",response.data);
+        console.log("api response", response.data);
 
         // This returns exactly what backend sends — no transformation
         return response.data
@@ -348,6 +281,9 @@ export const maintenanceLogApi = async (id) => {
         shopName: vehiclelogs.vendor,
         expenseType: vehiclelogs.expenseType,
         description: vehiclelogs.description,
+        location: vehiclelogs.location || "Unknown",
+        lat: vehiclelogs.lat || 'No latitude',
+        long: vehiclelogs.long || 'No longitude',
         amount: vehiclelogs.amount,
         paymentMode: vehiclelogs.paymentMode,
         billImg: vehiclelogs.billImg,

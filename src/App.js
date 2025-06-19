@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import { TokenProvider } from './context/TokenContext'
+import LoaderBus from './components/Loader3/LoaderBus'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -38,7 +39,8 @@ const App = () => {
       <Suspense
         fallback={
           <div className="pt-3 text-center">
-            <CSpinner color="primary" variant="grow" />
+            {/* <CSpinner color="primary" variant="grow" /> */}
+            <LoaderBus />
           </div>
         }
       >

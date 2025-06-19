@@ -8,13 +8,13 @@ const SalaryInvoiceModal = ({ visible, onClose, salaryData }) => {
 
   if (!salaryData) return null
 
-  const { basicPay, overtime, incentives, deductions, netPay, createdAt, originalDate } = salaryData
+  const { basicPay, overtime, incentives, deductions, netPay, date, originalDate } = salaryData
 
   const handleDownloadPDF = () => {
     const element = printRef.current
     const opt = {
       margin: 0.5,
-      filename: `SalarySlip_${formatDateToDDMMYYYY(createdAt)}.pdf`,
+      filename: `SalarySlip_${formatDateToDDMMYYYY(date)}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },

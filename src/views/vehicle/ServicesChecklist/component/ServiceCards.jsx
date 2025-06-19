@@ -2,18 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Card } from 'react-bootstrap'
 import PropTypes from 'prop-types'
 
-// Smooth easing function
+// Easing for smooth acceleration and deceleration
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
-console.log('object', easeOutCubic)
 
-const FuelCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
+const ServiceCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
   const [animatedValue, setAnimatedValue] = useState(0)
 
   useEffect(() => {
     const end = parseFloat(value)
     if (isNaN(end)) return
 
-    const duration = 1500 // 1.5 seconds
+    const duration = 1500 // animation time in ms
     const startTime = performance.now()
 
     const animate = (currentTime) => {
@@ -42,7 +41,9 @@ const FuelCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
   return (
     <Card className="p-3 shadow-sm rounded border">
       <div className="d-flex justify-content-between align-items-start">
-        <span className="text-muted">{title}</span>
+        <span className="text-muted">
+          <b>{title}</b>
+        </span>
         {Icon && <Icon size={18} style={{ color: iconColor }} />}
       </div>
       <h4 className="my-2">
@@ -57,7 +58,7 @@ const FuelCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
   )
 }
 
-FuelCards.propTypes = {
+ServiceCards.propTypes = {
   title: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   unit: PropTypes.string,
@@ -66,11 +67,11 @@ FuelCards.propTypes = {
   iconColor: PropTypes.string,
 }
 
-FuelCards.defaultProps = {
+ServiceCards.defaultProps = {
   unit: '',
   range: null,
   icon: null,
   iconColor: '#198754',
 }
 
-export default FuelCards
+export default ServiceCards
