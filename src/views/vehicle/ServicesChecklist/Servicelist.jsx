@@ -21,7 +21,24 @@ const ServiceList = () => {
   // Add button section
   const fields = [
     { name: 'date', label: 'Date', type: 'date' },
-    { name: 'serviceType', label: 'Service Type', type: 'text', placeholder: 'Service Type' },
+    {
+      name: 'serviceType',
+      label: 'Services Type',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'engineOil', label: 'Engine Oil Change & Filters.' },
+        { value: 'brakeMaintenance', label: 'Brake Maintenance.' },
+        { value: 'tireWheel', label: 'Tire & Wheel Service.' },
+        { value: 'fuel', label: 'Fuels and Gas Service.' },
+        { value: 'battery', label: 'Battery & Electrical.' },
+        { value: 'newPartService', label: 'Part Changes Or New Parts Buys for vehicle' },
+        {
+          value: 'other',
+          label: 'Major mechanical issues or part replacements or Service Requriment(Other).',
+        },
+      ],
+    },
     { name: 'description', label: 'Description', type: 'text', placeholder: 'Description' },
     { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
     {
