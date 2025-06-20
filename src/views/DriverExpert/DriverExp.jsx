@@ -98,12 +98,14 @@ function DriversPage() {
       label: 'Driver Name',
       type: 'text',
       Placeholder: 'Enter Driver Name',
+      required: true,
     },
     {
       name: 'contactNumber',
       label: 'Contact Number',
       type: 'number',
       Placeholder: 'Enter Driver Contact Number',
+      required: true,
     },
     {
       name: 'email',
@@ -116,19 +118,26 @@ function DriversPage() {
       label: 'Password',
       type: 'password',
       Placeholder: 'Enter Password',
+      required: true,
     },
-    {
-      name: 'licenseNumber',
-      label: 'License Number',
-      type: 'text',
-      Placeholder: 'Enter Driver License Number',
-    },
-    {
-      name: 'aadharNumber',
-      label: 'Aadhar Number',
-      type: 'text',
-      Placeholder: 'Enter Driver Aadhar Number',
-    },
+
+    // not show in edit from
+    ...(!editMode
+      ? [
+          {
+            name: 'licenseNumber',
+            label: 'License Number',
+            type: 'text',
+            Placeholder: 'Enter Driver License Number',
+          },
+          {
+            name: 'aadharNumber',
+            label: 'Aadhar Number',
+            type: 'text',
+            Placeholder: 'Enter Driver Aadhar Number',
+          },
+        ]
+      : []),
   ]
 
   // Table columns

@@ -40,7 +40,7 @@ function VehicleProfile() {
   ]
 
   return (
-    <CContainer fluid className="py-2">
+    <CContainer fluid className="py-2 mb-5">
       {!vehicleDocument ? (
         <div className="center-screen">
           <Loader />

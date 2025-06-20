@@ -1,7 +1,6 @@
 import axios from 'axios'
-import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 import Cookies from 'js-cookie'
-import { useFormattedTime } from '../../customhooks/useFormattedTime'
+import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 
 
 // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
@@ -145,7 +144,7 @@ export const driverExpenses = async (id) => {
     return data.map((expenses) => ({
       id: expenses._id,
       originalDate: expenses.date,
-      date: formatDateToDDMMYYYY(expenses.date),
+      date: useSplitTimeDate(expenses.date),
       description: expenses.description,
       location: expenses.location,
       lat: expenses.lat || 'No latitude',
@@ -195,12 +194,12 @@ export const driverLogbook = async (id, month) => {
 
     return data.map((logbook) => ({
       id: logbook._id,
-      originalDate: formatDateToDDMMYYYY(logbook.startDate),
+      originalDate: useSplitTimeDate(logbook.startDate),
       vehicleName: logbook.vehicleName,
-      startDate: useFormattedTime(logbook.startDate),
+      startDate: useSplitTimeDate(logbook.startDate),
       orignalstartDate: logbook.startDate,
       orginalendDate: logbook.endDate,
-      endDate: useFormattedTime(logbook.endDate),
+      endDate: useSplitTimeDate(logbook.endDate),
       duration: logbook.duration,
       logKM: logbook.logKM,
       gpsKM: logbook.gpsKM,
@@ -338,7 +337,7 @@ export const driverSalary = async (id) => {
       deductions: salary.deductions,
       netPay: salary.netPay,
       createdAt: salary.createdAt,
-      date: formatDateToDDMMYYYY(salary.date),
+      date: useSplitTimeDate(salary.date),
       originalDate: salary.date,
     }))
   } catch (error) {

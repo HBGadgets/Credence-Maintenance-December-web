@@ -174,6 +174,7 @@ const VehicleExpensesBill = () => {
             label: 'Driver Name',
             type: 'select',
             placeholder: 'Enter Driver name',
+            required: true,
             options:
               drivers?.map((drv) => ({
                 label: drv.name,
@@ -198,11 +199,13 @@ const VehicleExpensesBill = () => {
       label: 'Shop Name',
       type: 'text',
       placeholder: 'Enter Shop Name',
+      required: true,
     },
     {
       name: 'expenseType',
       label: 'Expense Type',
       type: 'select',
+      required: true,
       options: [
         { value: 'engineOil', label: 'Engine Oil Change & Filters.' },
         { value: 'brakeMaintenance', label: 'Brake Maintenance.' },
@@ -227,17 +230,20 @@ const VehicleExpensesBill = () => {
       label: 'Location',
       type: 'text',
       placeholder: 'Enter Location',
+      required: true,
     },
     {
       name: 'amount',
       label: 'Amount',
       type: 'number',
       placeholder: 'Enter Amount',
+      required: true,
     },
     {
       name: 'paymentMode',
       label: 'Payment Mode',
       type: 'select',
+      required: true,
       options: [
         { value: 'upi', label: 'UPI' },
         { value: 'cash', label: 'CASH' },
@@ -248,7 +254,6 @@ const VehicleExpensesBill = () => {
       name: 'billImg',
       label: 'Bill Image',
       type: 'file',
-      required: true,
       accept: 'image/*',
     },
   ]
@@ -367,12 +372,10 @@ const VehicleExpensesBill = () => {
 
   // handle submit
   const handleFormSubmit = (formData) => {
-    // Inject driverId manually in edit mode if missing
-    if (editMode && editingUser?.driverId && !formData.driverId) {
-      formData.driverId = editingUser.driverId
-    }
-
     if (editMode && editingUser?.id) {
+      // ✅ Ensure driverId is always present in payload during edit
+      formData.driverId = editingUser.driverId
+
       Swal.fire({
         title: 'Are you sure?',
         text: 'Do you want to update this driver expense?',

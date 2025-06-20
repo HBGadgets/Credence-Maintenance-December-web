@@ -13,7 +13,7 @@ import {
   CTableDataCell,
   CTableRow,
 } from '@coreui/react'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'
 
 const skeletonStyles = `
   @keyframes pulse {
@@ -35,9 +35,9 @@ function Table({
   setFilteredData,
   columns,
   viewButton,
-  viewButtonLabel = 'View', // <-- Default value added here
-  viewButtonIcon = <Eye size={16} />, // NEW icon replace
-  viewButtonColor = 'rgb(10, 45, 99)', // NEW color replace
+  viewButtonLabel = 'View',
+  viewButtonIcon = <Eye size={16} />,
+  viewButtonColor = 'rgb(10, 45, 99)',
   handleViewButton,
   editButton,
   handleEditButton,
@@ -49,6 +49,7 @@ function Table({
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
+  const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null) // 👈 New
 
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage)
@@ -101,7 +102,7 @@ function Table({
                     .map((column, index) => (
                       <CTableHeaderCell
                         key={index}
-                        className="text-center "
+                        className="text-center"
                         onClick={() => column.sortable && handleSort(column.key)}
                         style={{ cursor: column.sortable ? 'pointer' : 'default' }}
                       >
@@ -165,10 +166,38 @@ function Table({
                         .filter((col) => !col.hidden)
                         .map((column) => (
                           <CTableDataCell key={column.key} className="text-center">
-                            {column.render ? column.render(row) : row[column.key]}
+                            {column.key === 'password' ? (
+                              <div className="d-flex align-items-center justify-content-center gap-2">
+                                <span>
+                                  {visiblePasswordRowId === row.id ? row.password : '••••••••'}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    setVisiblePasswordRowId(
+                                      visiblePasswordRowId === row.id ? null : row.id,
+                                    )
+                                  }
+                                  className="btn btn-sm btn-link p-0"
+                                  title={
+                                    visiblePasswordRowId === row.id
+                                      ? 'Show password'
+                                      : 'Hide password'
+                                  }
+                                >
+                                  {visiblePasswordRowId === row.id ? (
+                                    <Eye size={18} />
+                                  ) : (
+                                    <EyeOff size={18} />
+                                  )}
+                                </button>
+                              </div>
+                            ) : column.render ? (
+                              column.render(row)
+                            ) : (
+                              row[column.key]
+                            )}
                           </CTableDataCell>
                         ))}
-
                       {(editButton || deleteButton || viewButton) && (
                         <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
                           {editButton && (
@@ -231,9 +260,9 @@ Table.propTypes = {
   columns: PropTypes.array,
   setFilteredData: PropTypes.func,
   viewButton: PropTypes.bool,
-  viewButtonLabel: PropTypes.string, // <-- Add this line view button label customization
-  viewButtonIcon: PropTypes.node, // <-- Add this line for icon customization
-  viewButtonColor: PropTypes.string, // <-- Add this line for color customization
+  viewButtonLabel: PropTypes.string,
+  viewButtonIcon: PropTypes.node,
+  viewButtonColor: PropTypes.string,
   handleViewButton: PropTypes.func,
   editButton: PropTypes.bool,
   handleEditButton: PropTypes.func,

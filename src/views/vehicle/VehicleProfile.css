@@ -105,7 +105,7 @@
 
 .action-section-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   /* 4 cards per row */
   gap: 1rem;
 }

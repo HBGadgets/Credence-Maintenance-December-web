@@ -198,10 +198,23 @@ const DriverExpensesBill = () => {
       label: 'Shop Name',
       type: 'text',
       placeholder: 'Enter Shop Name',
+      required: true,
     },
-    { name: 'location', label: 'Location', type: 'text', placeholder: 'Enter Location' },
+    {
+      name: 'location',
+      label: 'Location',
+      type: 'text',
+      placeholder: 'Enter Location',
+      required: true,
+    },
     { name: 'description', label: 'Description', type: 'text', placeholder: 'Enter Description' },
-    { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Enter Amount' },
+    {
+      name: 'amount',
+      label: 'Amount',
+      type: 'number',
+      placeholder: 'Enter Amount',
+      required: true,
+    },
     {
       name: 'paymentMode',
       label: 'Payment Mode',
@@ -211,12 +224,12 @@ const DriverExpensesBill = () => {
         { value: 'cash', label: 'CASH' },
         { value: 'card', label: 'CARD' },
       ],
+      required: true,
     },
     {
       name: 'billImg',
       label: 'Bill Image',
       type: 'file',
-      required: true,
       accept: 'image/*',
     },
   ]
@@ -329,6 +342,11 @@ const DriverExpensesBill = () => {
 
   const handleFormSubmit = (formData) => {
     if (editMode && editingUser?.id) {
+      // ✅ Ensure driverId is injected from editingUser
+      if (!formData.driverId) {
+        formData.driverId = editingUser.driverId
+      }
+
       Swal.fire({
         title: 'Are you sure?',
         text: 'Do you want to update this driver expense?',

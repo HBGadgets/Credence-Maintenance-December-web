@@ -13,9 +13,7 @@ const TyreAssignModal = ({
     brandName: '',
     status: '',
     installationDate: '',
-    purchaseDate: '',
     shopName: '',
-    vendorName: '',
     location: '',
     tyreSize: '',
     billImage: null,
@@ -93,31 +91,11 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Purchase Date</Form.Label>
-            <Form.Control
-              type="date"
-              name="purchaseDate"
-              value={formData.purchaseDate}
-              onChange={handleChange}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-2">
             <Form.Label>Shop Name</Form.Label>
             <Form.Control
               type="text"
               name="shopName"
               value={formData.shopName}
-              onChange={handleChange}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-2">
-            <Form.Label>Vendor Name</Form.Label>
-            <Form.Control
-              type="text"
-              name="vendorName"
-              value={formData.vendorName}
               onChange={handleChange}
             />
           </Form.Group>

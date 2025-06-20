@@ -13,35 +13,50 @@ import {
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend)
 
-const FuelAnalayis = () => {
-  const [selectedTrend, setSelectedTrend] = useState('efficiency')
+const FuelAnalayis = ({ records = [] }) => {
+  const [selectedTrend, setSelectedTrend] = useState('consumption')
 
-  const trendLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+  // Sort records by date (ascending)
+  const sortedRecords = [...records].sort((a, b) => {
+    const [dayA, monthA, yearA] = a.date.split('-')
+    const [dayB, monthB, yearB] = b.date.split('-')
+    const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+    const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+    return dateA - dateB
+  })
 
-  const trendData = {
-    efficiency: [8.1, 8.3, 8.0, 8.2],
-    consumption: [290, 310, 280, 300],
-    expenses: [3700, 3800, 3600, 3900],
+  const labels = sortedRecords.map((rec) => rec.date)
+  const consumptionData = sortedRecords.map((rec) => rec.dailyFuelConsumption || 0)
+  const expenseData = sortedRecords.map(
+    (rec) => rec.fuelExpenses?.reduce((sum, f) => sum + f.amount, 0) || 0,
+  )
+  const distanceData = sortedRecords.map((rec) => rec.distance || 0)
+
+  const getLabel = () => {
+    if (selectedTrend === 'consumption') return 'Fuel Consumption (L)'
+    if (selectedTrend === 'expenses') return 'Fuel Expenses (₹)'
+    if (selectedTrend === 'distance') return 'Distance Travelled (KM)'
+  }
+
+  const getColor = () => {
+    if (selectedTrend === 'consumption') return '#0d6efd'
+    if (selectedTrend === 'expenses') return '#dc3545'
+    if (selectedTrend === 'distance') return '#20c997'
   }
 
   const chartConfig = {
-    labels: trendLabels,
+    labels,
     datasets: [
       {
-        label:
-          selectedTrend === 'efficiency'
-            ? 'Fuel Efficiency (km/L)'
-            : selectedTrend === 'consumption'
-              ? 'Fuel Consumption (L)'
-              : 'Fuel Expenses (₹)',
-        data: trendData[selectedTrend],
+        label: getLabel(),
+        data:
+          selectedTrend === 'consumption'
+            ? consumptionData
+            : selectedTrend === 'expenses'
+              ? expenseData
+              : distanceData,
         fill: false,
-        borderColor:
-          selectedTrend === 'efficiency'
-            ? '#0d6efd'
-            : selectedTrend === 'consumption'
-              ? '#fd7e14'
-              : '#dc3545',
+        borderColor: getColor(),
         tension: 0.3,
         pointBackgroundColor: 'white',
         pointBorderColor: '#000',
@@ -56,31 +71,35 @@ const FuelAnalayis = () => {
       legend: {
         position: 'top',
         labels: {
-          font: {
-            size: 12,
-          },
+          font: { size: 12 },
         },
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
       },
     },
     layout: {
-      padding: {
-        top: 10,
-        bottom: 10,
-      },
+      padding: { top: 10, bottom: 10 },
     },
     scales: {
       y: {
-        ticks: {
-          font: {
-            size: 12,
-          },
+        ticks: { font: { size: 12 } },
+        title: {
+          display: true,
+          text:
+            selectedTrend === 'consumption'
+              ? 'Liters'
+              : selectedTrend === 'expenses'
+                ? 'Rupees'
+                : 'Kilometers',
         },
       },
       x: {
-        ticks: {
-          font: {
-            size: 12,
-          },
+        ticks: { font: { size: 12 } },
+        title: {
+          display: true,
+          text: 'Date',
         },
       },
     },
@@ -90,7 +109,7 @@ const FuelAnalayis = () => {
     <div className="mt-4 p-3 border rounded bg-light shadow-sm">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">
-          Monthly Analytics{' '}
+          Daily Analytics{' '}
           <small className="text-muted">
             for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
           </small>
@@ -98,27 +117,26 @@ const FuelAnalayis = () => {
 
         <ButtonGroup>
           <Button
-            variant={selectedTrend === 'efficiency' ? 'primary' : 'outline-primary'}
-            onClick={() => setSelectedTrend('efficiency')}
-          >
-            Fuel Efficiency Trend
-          </Button>
-          <Button
-            variant={selectedTrend === 'consumption' ? 'warning' : 'outline-warning'}
+            variant={selectedTrend === 'consumption' ? 'primary' : 'outline-primary'}
             onClick={() => setSelectedTrend('consumption')}
           >
-            Fuel Consumption Trend
+            Fuel Consumption
           </Button>
           <Button
             variant={selectedTrend === 'expenses' ? 'danger' : 'outline-danger'}
             onClick={() => setSelectedTrend('expenses')}
           >
-            Fuel Expenses Trend
+            Fuel Expenses
+          </Button>
+          <Button
+            variant={selectedTrend === 'distance' ? 'success' : 'outline-success'}
+            onClick={() => setSelectedTrend('distance')}
+          >
+            Daily KM Travel
           </Button>
         </ButtonGroup>
       </div>
 
-      {/* Chart container with fixed height */}
       <div style={{ height: '250px' }}>
         <Line data={chartConfig} options={options} />
       </div>

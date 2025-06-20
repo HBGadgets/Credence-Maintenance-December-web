@@ -61,7 +61,7 @@ const Dashboard = () => {
   const goodConditionVehicles = 6
   const presentDrivers = 10
   const absentDrivers = 5
-  const currentLocation = 8
+  const driverLocation = 8
   const roadSide = 5
   const expiringInsurances = [
     { name: 'Vehicle A', insuranceExpiryDate: '2024-12-30' },
@@ -351,15 +351,15 @@ const Dashboard = () => {
               <CCol xs="12" sm="6" lg="3">
                 <CCard
                   className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Vehicle Location')}
+                  onClick={() => openModal('Driver Attendance Location')}
                 >
                   <CCardHeader className="d-flex align-items-center justify-content-between">
                     <FaMapLocationDot style={{ fontSize: '23px' }} />
-                    <span className="font-weight-bold">Vehicle Location</span>
+                    <span className="font-weight-bold">Drivers Attendance Location</span>
                   </CCardHeader>
                   <CCardBody>
-                    <h5 className="mb-2 text-primary">Current Location: {currentLocation} </h5>
-                    <p className="text-muted">Real-time location of all live vehicles</p>
+                    <h5 className="mb-2 text-primary">Drivers Location: {driverLocation} </h5>
+                    <p className="text-muted">Present location of all Active Drivers</p>
                   </CCardBody>
                 </CCard>
               </CCol>
