@@ -4,10 +4,9 @@ import { useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import TyreAssignModal from './TyreAssignModal'
 import { deleteTyreSystemApi } from '../../data/VehicleListData'
-import { useSplitTimeDate } from '../../../customhooks/useSplitTimeDate'
-import wheelImg from '../../../../assets/tyre/wheel.svg'
+// import wheelImg from '../../../../assets/tyre/wheel.svg'
 
-const ManageTyre = ({ tyreImagePath = wheelImg, attachedTyres = [], id, refetchData }) => {
+const ManageTyre = ({ tyreImagePath = './tyre1.png', attachedTyres = [], id, refetchData }) => {
   const category = attachedTyres[0]?.category || 'unknown'
 
   const { id: vehicleId } = useParams()
