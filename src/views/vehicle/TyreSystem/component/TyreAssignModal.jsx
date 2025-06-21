@@ -1,19 +1,26 @@
-import React, { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import React, { useEffect, useState } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
+import { postTyreSystemApi, updateDriver } from '../../data/VehicleListData'
+import Swal from 'sweetalert2'
 
 const TyreAssignModal = ({
   show,
   onClose,
   onAssign,
+  vehicleId,
   tyreLabel,
+  refetchData = () => {}, // Function to refetch data in parent component
+  initialData = null, // Initial data to pre-fill the form, if any
   size = 'lg', // You can pass 'sm', 'lg', or 'xl' from parent
 }) => {
   const [formData, setFormData] = useState({
     serialNo: '',
     brandName: '',
-    status: '',
+    category: '',
+    tyreStatus: '',
     installationDate: '',
-    shopName: '',
+    vendorName: '',
     location: '',
     tyreSize: '',
     billImage: null,
@@ -21,6 +28,7 @@ const TyreAssignModal = ({
     paymentMode: '',
   })
 
+  // handle form change
   const handleChange = (e) => {
     const { name, value, files } = e.target
     if (name === 'billImage') {
@@ -30,9 +38,130 @@ const TyreAssignModal = ({
     }
   }
 
-  const handleSubmit = () => {
-    const fullData = { ...formData, tyreLabel }
-    onAssign(fullData)
+  // POST mutation setup
+  const { mutate, isLoading } = useMutation({
+    mutationFn: async (data) => await postTyreSystemApi(data),
+    onSuccess: async () => {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Tyre Assigned Successfully',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+
+      // Refresh data in parent components
+      if (refetchData) {
+        await refetchData()
+      }
+
+      onClose()
+    },
+    onError: (err) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err?.response?.data?.message || 'Tyre assignment failed',
+      })
+    },
+  })
+
+  // Patch mutation
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => await updateDriver(id, data),
+    onSuccess: async () => {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Tyre Updated Successfully',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      if (refetchData) await refetchData()
+      onClose()
+    },
+    onError: (err) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err?.response?.data?.message || 'Tyre update failed',
+      })
+    },
+  })
+
+  // use effect to pre-fill form data if initialData is provided
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        serialNo: initialData?.tyreSerialNumber || '',
+        brandName: initialData?.brandName || '',
+        category: initialData?.category || '',
+        tyreStatus: initialData?.tyreStatus || '',
+        installationDate: initialData?.installationDate || '',
+        vendorName: initialData?.vendorName || '',
+        location: initialData?.location || '',
+        tyreSize: initialData?.tyreSize || '',
+        billImage: null, // don't pre-fill file input
+        amount: initialData?.amount || '',
+        paymentMode: initialData?.paymentMode || '',
+      })
+    } else {
+      // reset on new add
+      setFormData({
+        serialNo: '',
+        brandName: '',
+        category: '',
+        tyreStatus: '',
+        installationDate: '',
+        vendorName: '',
+        location: '',
+        tyreSize: '',
+        billImage: null,
+        amount: '',
+        paymentMode: '',
+      })
+    }
+  }, [initialData, show])
+
+  // submit handler
+
+  const handleSubmit = async () => {
+    const isEditing = !!initialData?.position
+
+    const confirm = await Swal.fire({
+      title: isEditing ? 'Update Tyre Assignment?' : 'Assign Tyre?',
+      text: isEditing
+        ? `Do you want to update the tyre at position ${tyreLabel}?`
+        : `Do you want to assign the tyre to position ${tyreLabel}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: isEditing ? 'Yes, update it!' : 'Yes, assign it!',
+      cancelButtonText: 'Cancel',
+    })
+
+    if (!confirm.isConfirmed) return
+
+    const dataToSend = new FormData()
+    dataToSend.append('tyreSerialNumber', formData.serialNo)
+    dataToSend.append('brandName', formData.brandName)
+    dataToSend.append('category', formData.category)
+    dataToSend.append('tyreStatus', formData.tyreStatus)
+    dataToSend.append('installationDate', formData.installationDate)
+    dataToSend.append('vendorName', formData.vendorName)
+    dataToSend.append('location', formData.location)
+    dataToSend.append('tyreSize', formData.tyreSize)
+    dataToSend.append('amount', formData.amount)
+    dataToSend.append('paymentMode', formData.paymentMode)
+    dataToSend.append('position', tyreLabel)
+    dataToSend.append('vehicleId', vehicleId)
+
+    if (formData.billImage) {
+      dataToSend.append('billImage', formData.billImage)
+    }
+
+    if (isEditing) {
+      updateMutation.mutate({ id: initialData?.id, data: dataToSend })
+    } else {
+      mutate(dataToSend) // old mutation for POST
+    }
   }
 
   return (
@@ -68,8 +197,21 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
+            <Form.Label>Vehicle Category</Form.Label>
+            <Form.Select name="category" value={formData.category} onChange={handleChange}>
+              <option value="" disabled hidden>
+                -- Select Vehicle Category --
+              </option>
+              <option value="car">Car</option>
+              <option value="truck">Truck</option>
+              <option value="bus">Bus</option>
+              <option value="other">Other</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-2">
             <Form.Label>Status</Form.Label>
-            <Form.Select name="status" value={formData.status} onChange={handleChange}>
+            <Form.Select name="tyreStatus" value={formData.tyreStatus} onChange={handleChange}>
               <option value="" disabled hidden>
                 -- Select Status --
               </option>
@@ -94,8 +236,8 @@ const TyreAssignModal = ({
             <Form.Label>Shop Name</Form.Label>
             <Form.Control
               type="text"
-              name="shopName"
-              value={formData.shopName}
+              name="vendorName"
+              value={formData.vendorName}
               onChange={handleChange}
             />
           </Form.Group>
@@ -152,8 +294,14 @@ const TyreAssignModal = ({
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="success" onClick={handleSubmit}>
-          Assign
+        <Button variant="success" onClick={handleSubmit} disabled={isLoading}>
+          {initialData?.position
+            ? isLoading
+              ? 'Updating...'
+              : 'Update'
+            : isLoading
+              ? 'Assigning...'
+              : 'Assign'}
         </Button>
       </Modal.Footer>
     </Modal>

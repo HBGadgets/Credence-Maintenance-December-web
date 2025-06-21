@@ -458,3 +458,113 @@ export const getFuelSystemData = async (id, month) => {
         throw error
     }
 }
+
+// ------------------------------------------------------------------------------------- 
+
+// Fetch Api For tyre system
+
+// GET API Maintance Log
+export const getTyreSystemApi = async (id) => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/tyre/vehicle/${id}`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("Vehicle Expenses Data: ", data);
+
+    return data.map((tyresystem) => ({
+        id: tyresystem._id,
+        installationDate: useSplitTimeDate(tyresystem.installationDate),
+        vehicleName: tyresystem.vehicleName,
+        originalDate: tyresystem.installationDate,
+        category: tyresystem.category || 'N/A',
+        position: tyresystem.position || 'N/A',
+        tyreSerialNumber: tyresystem.tyreSerialNumber || 'N/A',
+        brandName: tyresystem.brandName || 'N/A',
+        tyreStatus: tyresystem.tyreStatus || 'N/A',
+        vendorName: tyresystem.vendorName || "N/A",
+        location: tyresystem.location || "N/A",
+        lat: tyresystem.lat || 'No latitude',
+        long: tyresystem.long || 'No longitude',
+        tyreSize: tyresystem.tyreSize || "N/A",
+        amount: tyresystem.amount || 'N/A',
+        paymentMode: tyresystem.paymentMode || 'N/A',
+        billImg: tyresystem.billImg,
+    }));
+};
+
+
+// Post Tyre APi
+
+export const postTyreSystemApi = async (tyresystemData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/tyre/add`,
+            tyresystemData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        if (response.status === 201 || response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        throw error;
+    }
+}
+
+// Patch Tyre APi
+export const updateDriver = async (id, data) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data: response } = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/tyre/update/${id}`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        )
+
+        return response
+    } catch (error) {
+        console.error('Update driver failed:', error)
+        alert(error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+
+// Delete Tyre APi
+export const deleteTyreSystemApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/tyre/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log(data.message)
+    } catch (error) {
+        throw error
+    }
+}
