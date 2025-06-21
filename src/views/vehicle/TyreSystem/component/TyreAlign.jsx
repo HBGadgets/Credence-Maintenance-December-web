@@ -5,8 +5,9 @@ import Swal from 'sweetalert2'
 import TyreAssignModal from './TyreAssignModal'
 import { deleteTyreSystemApi } from '../../data/VehicleListData'
 import { useSplitTimeDate } from '../../../customhooks/useSplitTimeDate'
+import wheelImg from '../../../../assets/tyre/wheel.svg'
 
-const ManageTyre = ({ tyreImagePath = '/tyre1.png', attachedTyres = [], id, refetchData }) => {
+const ManageTyre = ({ tyreImagePath = wheelImg, attachedTyres = [], id, refetchData }) => {
   const category = attachedTyres[0]?.category || 'unknown'
 
   const { id: vehicleId } = useParams()
@@ -77,43 +78,6 @@ const ManageTyre = ({ tyreImagePath = '/tyre1.png', attachedTyres = [], id, refe
       setAssignedTyres(initialAssignments)
     }
   }, [attachedTyres])
-
-  // const handleWheelClick = async (label) => {
-  //   if (assignedTyres[label]) {
-  //     const result = await Swal.fire({
-  //       title: 'Remove Tyre',
-  //       text: `Tyre already assigned to ${label}. Do you want to remove it?`,
-  //       icon: 'warning',
-  //       showCancelButton: true,
-  //       confirmButtonText: 'Yes, remove it!',
-  //       cancelButtonText: 'Cancel',
-  //     })
-  //     if (result.isConfirmed) {
-  //       setAssignedTyres((prev) => {
-  //         const updated = { ...prev }
-  //         delete updated[label]
-  //         return updated
-  //       })
-  //       Swal.fire('Removed!', `Tyre removed from ${label}`, 'success')
-  //     }
-  //   } else {
-  //     const result = await Swal.fire({
-  //       title: 'Assign Tyre',
-  //       text: `Do you want to assign a tyre to ${label}?`,
-  //       icon: 'question',
-  //       showCancelButton: true,
-  //       confirmButtonText: 'Yes, assign it!',
-  //       cancelButtonText: 'Cancel',
-  //     })
-  //     if (result.isConfirmed) {
-  //       setAssignedTyres((prev) => ({
-  //         ...prev,
-  //         [label]: true,
-  //       }))
-  //       Swal.fire('Assigned!', `Tyre assigned to ${label}`, 'success')
-  //     }
-  //   }
-  // }
 
   const handleWheelClick = async (label) => {
     const assigned = assignedTyres[label]
