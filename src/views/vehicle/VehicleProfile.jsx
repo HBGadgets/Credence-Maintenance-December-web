@@ -97,7 +97,7 @@ function VehicleProfile() {
             {[
               { title: 'Vehicle Expenses', route: 'VehicleExpenses', icon: <IoCarOutline /> },
               { title: 'Vehicle Trips', route: 'VehicleTrips', icon: <GiPathDistance /> },
-              { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
+              // { title: 'Tyre Management', route: 'tyredetails', icon: <TbCategory /> },
               { title: 'Tyres System', route: 'ManageTyre', icon: <GiCarWheel /> },
               { title: 'Fuel System', route: 'Fuelsystem', icon: <BsFuelPumpDiesel /> },
               {

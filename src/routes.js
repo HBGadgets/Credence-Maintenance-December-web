@@ -13,11 +13,6 @@ const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/S
 
 
 
-// Tyre Management
-const TyreInventory = React.lazy(() => import('./views/Tyre-Management/TyreInventory.js'))
-const DetailedPage = React.lazy(() => import('./views/Tyre-Management/DetailedPage.js'))
-const TyreShowDoc = React.lazy(() => import('./views/Tyre-Management/TyreShowDoc.js'))
-
 // Supervisor
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const SubTrips = React.lazy(() => import('./views/Supervisor/trip/componets/SubTripMain.jsx'))
@@ -93,7 +88,6 @@ const routes = [
     element: VehicleExpenses,
   },
   { path: 'VehicleProfile/:id/VehicleTrips', name: 'Vehicle Trips', element: VehicleTrips },
-  { path: 'VehicleProfile/:id/tyredetails', name: 'Detailed Page', element: DetailedPage },
   { path: 'VehicleProfile/:id/ManageTyre', name: 'Tyres System', element: ManageTyre },
   { path: 'VehicleProfile/:id/Fuelsystem', name: 'Fuel System', element: Fuelsystem },
   { path: 'VehicleProfile/:id/Servicelist', name: 'Service List', element: Servicelist },
@@ -116,9 +110,6 @@ const routes = [
   { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
   { path: '/LR', name: 'Lorry Recipt', element: LR },
 
-  /*Tyre Management*/
-  { path: '/Inventory', name: 'Tyre Inventory', element: TyreInventory },
-  { path: 'Inventory/:id', name: 'Tyre Show Doc', element: TyreShowDoc },
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
