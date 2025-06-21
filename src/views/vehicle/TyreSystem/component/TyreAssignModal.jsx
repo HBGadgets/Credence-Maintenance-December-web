@@ -23,7 +23,7 @@ const TyreAssignModal = ({
     vendorName: '',
     location: '',
     tyreSize: '',
-    billImage: null,
+    billImg: null,
     amount: '',
     paymentMode: '',
   })
@@ -31,8 +31,8 @@ const TyreAssignModal = ({
   // handle form change
   const handleChange = (e) => {
     const { name, value, files } = e.target
-    if (name === 'billImage') {
-      setFormData({ ...formData, billImage: files[0] })
+    if (name === 'billImg') {
+      setFormData({ ...formData, billImg: files[0] })
     } else {
       setFormData({ ...formData, [name]: value })
     }
@@ -99,7 +99,7 @@ const TyreAssignModal = ({
         vendorName: initialData?.vendorName || '',
         location: initialData?.location || '',
         tyreSize: initialData?.tyreSize || '',
-        billImage: null, // don't pre-fill file input
+        billImg: null, // don't pre-fill file input
         amount: initialData?.amount || '',
         paymentMode: initialData?.paymentMode || '',
       })
@@ -114,7 +114,7 @@ const TyreAssignModal = ({
         vendorName: '',
         location: '',
         tyreSize: '',
-        billImage: null,
+        billImg: null,
         amount: '',
         paymentMode: '',
       })
@@ -153,8 +153,8 @@ const TyreAssignModal = ({
     dataToSend.append('position', tyreLabel)
     dataToSend.append('vehicleId', vehicleId)
 
-    if (formData.billImage) {
-      dataToSend.append('billImage', formData.billImage)
+    if (formData.billImg) {
+      dataToSend.append('billImg', formData.billImg)
     }
 
     if (isEditing) {
@@ -264,7 +264,7 @@ const TyreAssignModal = ({
 
           <Form.Group className="mb-2">
             <Form.Label>Bill Image</Form.Label>
-            <Form.Control type="file" name="billImage" accept="image/*" onChange={handleChange} />
+            <Form.Control type="file" name="billImg" accept="image/*" onChange={handleChange} />
           </Form.Group>
 
           <Form.Group className="mb-2">

@@ -508,7 +508,8 @@ export const postTyreSystemApi = async (tyresystemData) => {
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
-                    "Content-Type": "application/json",
+                    // "Content-Type": "application/json",
+                    "Content-Type": "multipart/form-data",
                 },
             }
         );
@@ -568,3 +569,25 @@ export const deleteTyreSystemApi = async (id) => {
         throw error
     }
 }
+
+//  get Image Api for Tyer expeses bill by id
+
+export const getTyerSystemBillApi = async (billImg) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/tyre/bill-image/${billImg}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        console.log("This is Driver Bill Image : ", response.data)
+        return response.data // contains base64Data and contentType
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
+        throw error
+    }
+}
+
+

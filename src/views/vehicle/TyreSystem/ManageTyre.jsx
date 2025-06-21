@@ -4,15 +4,26 @@ import { useQuery } from '@tanstack/react-query'
 import TyreAlign from './component/TyreAlign'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import { deleteTyreSystemApi, getTyreSystemApi } from '../data/VehicleListData'
+import {
+  deleteTyreSystemApi,
+  getTyerSystemBillApi,
+  getTyreSystemApi,
+} from '../data/VehicleListData'
 import Swal from 'sweetalert2'
 import TyreAssignModal from './component/TyreAssignModal'
+import BillShow from '../../components/BillModal/BillShow'
+import { toast, ToastContainer } from 'react-toastify'
 
 const ManageTyre = () => {
   const { id: vehicleId } = useParams()
   const [filteredData, setFilteredData] = useState([])
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
+
+  // Use state for modal for bill
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showBillModal, setShowBillModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // Add these state variables
   const [showModal, setShowModal] = useState(false)
@@ -123,8 +134,42 @@ const ManageTyre = () => {
   ]
 
   // handle view
-  const handleViewButton = (id) => {
-    console.log('View Tyre ID:', id)
+  const handleViewButton = async (id) => {
+    const selectedRow = filteredData.find((item) => item.id === id)
+    console.log('id', id)
+    if (!selectedRow) {
+      return toast.error('Data not found for this ID')
+    }
+
+    if (!selectedRow.billImg) {
+      return toast.warn('No bill image available for this entry.')
+    }
+
+    try {
+      const response = await getTyerSystemBillApi(selectedRow.billImg)
+      const { base64Data, contentType } = response
+
+      if (base64Data && contentType) {
+        const fileSrc = `data:${contentType};base64,${base64Data}`
+        console.log('Document bill image:', fileSrc)
+        setPdfBase64(fileSrc)
+
+        if (contentType.startsWith('application/pdf')) {
+          setModalTitle('Driver Bill (PDF)')
+        } else if (contentType.startsWith('image')) {
+          setModalTitle('Driver Bill (Image)')
+        } else {
+          setModalTitle('Driver Bill (File)')
+        }
+        // Open the modal
+        setShowBillModal(true)
+      } else {
+        toast.error('Invalid bill image data.')
+      }
+    } catch (error) {
+      console.error('Failed to fetch bill image:', error)
+      toast.error('No bill image found.')
+    }
   }
 
   // handle edit
@@ -176,6 +221,7 @@ const ManageTyre = () => {
 
   return (
     <div>
+      <ToastContainer />
       <div className="row mb-3">
         <div className="col-12 d-flex justify-content-between align-items-center">
           {tyresystem[0]?.vehicleName && (
@@ -212,6 +258,14 @@ const ManageTyre = () => {
             setItemsPerPage(filteredData.length)
           }
         }}
+      />
+
+      {/*  Bill Modal */}
+      <BillShow
+        showModal={showBillModal} // Corrected prop name (was showModalFrom)
+        setShowModal={setShowBillModal} // Corrected prop name (was setShowModalFrom)
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
       />
 
       {/* Add this modal component */}
