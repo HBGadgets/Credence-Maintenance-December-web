@@ -1,25 +1,109 @@
 /* Custom styling for the modal and its body */
-.custom-modal .modal-dialog {
+/* .custom-modal .modal-dialog {
     max-width: 70%;
-    /* Adjust the modal width */
 }
 
 .custom-modal .custom-modal-body {
     overflow-y: auto;
-    /* Ensure body scrolls if content overflows */
     max-height: 70vh;
-    /* Adjust height */
 }
 
-/* Optional: Customize the modal header and footer */
 .custom-modal .modal-header {
     background-color: #f7f7f7;
-    /* Lighter background for the header */
     border-bottom: 1px solid #ddd;
 }
 
 .custom-modal .modal-footer {
     background-color: #f7f7f7;
-    /* Lighter background for the footer */
     border-top: 1px solid #ddd;
+} */
+
+/* ---------------------------------------------------------------------------------------- */
+
+/* Gen Z + Modern UI Style for Bill Modal */
+
+.custom-modal-glass {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.modal-header-modern {
+    background: linear-gradient(135deg, #0a2d63, #a2b1c7);
+    color: white;
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.modal-title-modern {
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.custom-modal-body-modern {
+    background-color: #ffffffcc;
+    padding: 1.5rem;
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bill-image-modern {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bill-iframe-modern {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.unsupported-text {
+    color: #ff4d4f;
+    font-weight: 500;
+    text-align: center;
+}
+
+.custom-footer-modern {
+    background: #fff0f5;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-modern-download {
+    background: #0a2d63;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.btn-modern-download:hover {
+    opacity: 0.9;
+}
+
+.btn-modern-close {
+    border-radius: 8px;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ddd;
 }
