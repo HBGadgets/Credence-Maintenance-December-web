@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { postTyreSystemApi, updateDriver } from '../../data/VehicleListData'
 import Swal from 'sweetalert2'
+import Select from 'react-select'
 
 const TyreAssignModal = ({
   show,
   onClose,
   onAssign,
   vehicleId,
+  position,
   tyreLabel,
   refetchData = () => {},
   initialData = null,
@@ -26,6 +28,7 @@ const TyreAssignModal = ({
     billImg: null,
     amount: '',
     paymentMode: '',
+    position: position || '',
   })
 
   const [errors, setErrors] = useState({})
@@ -39,6 +42,7 @@ const TyreAssignModal = ({
     }
   }
 
+  // Post
   const { mutate, isLoading } = useMutation({
     mutationFn: async (data) => await postTyreSystemApi(data),
     onSuccess: async () => {
@@ -60,6 +64,7 @@ const TyreAssignModal = ({
     },
   })
 
+  // Patch
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => await updateDriver(id, data),
     onSuccess: async () => {
@@ -81,6 +86,33 @@ const TyreAssignModal = ({
     },
   })
 
+  // tyre position options -----
+  const positionOptions = []
+
+  const maxPosition = 10 // Change this to generate more or fewer positions
+  const positions = ['RI', 'RO', 'LI', 'LO']
+  const labels = {
+    RI: 'Rear Right Inner',
+    RO: 'Rear Right Outer',
+    LI: 'Rear Left Inner',
+    LO: 'Rear Left Outer',
+  }
+
+  // Optional: manually include special cases if needed
+  positionOptions.push({ value: 'RI1', label: 'Front Right Position 1' })
+  positionOptions.push({ value: 'LI1', label: 'Front Left Position 1' })
+
+  // Start from position 2, since 1 was already added manually above
+  for (let i = 2; i <= maxPosition; i++) {
+    for (const code of positions) {
+      positionOptions.push({
+        value: `${code}${i}`,
+        label: `${labels[code]} ${i}`,
+      })
+    }
+  }
+  // ------
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -95,6 +127,7 @@ const TyreAssignModal = ({
         billImg: null,
         amount: initialData?.amount || '',
         paymentMode: initialData?.paymentMode || '',
+        position: initialData?.position || tyreLabel || '',
       })
     } else {
       setFormData({
@@ -109,9 +142,10 @@ const TyreAssignModal = ({
         billImg: null,
         amount: '',
         paymentMode: '',
+        position: tyreLabel || '',
       })
     }
-  }, [initialData, show])
+  }, [initialData, tyreLabel, show])
 
   const handleSubmit = async () => {
     const requiredFields = [
@@ -176,8 +210,9 @@ const TyreAssignModal = ({
     dataToSend.append('tyreSize', formData.tyreSize)
     dataToSend.append('amount', formData.amount)
     dataToSend.append('paymentMode', formData.paymentMode)
-    dataToSend.append('position', tyreLabel)
+    // dataToSend.append('position', tyreLabel)
     dataToSend.append('vehicleId', vehicleId)
+    dataToSend.append('position', formData.position)
 
     if (formData.billImg) {
       dataToSend.append('billImg', formData.billImg)
@@ -199,7 +234,21 @@ const TyreAssignModal = ({
         <Form>
           <Form.Group className="mb-2">
             <Form.Label>Tyre Position</Form.Label>
-            <Form.Control type="text" value={tyreLabel} disabled />
+            <Select
+              name="position"
+              options={positionOptions}
+              value={positionOptions.find((opt) => opt.value === formData.position) || null}
+              onChange={(selected) =>
+                setFormData((prev) => ({ ...prev, position: selected?.value || '' }))
+              }
+              isClearable
+              placeholder="-- Select Tyre Position --"
+              classNamePrefix="react-select"
+              className={errors.position ? 'is-invalid' : ''}
+            />
+            {errors.position && (
+              <div className="invalid-feedback d-block">Position is required.</div>
+            )}
           </Form.Group>
 
           <Form.Group className="mb-2">
