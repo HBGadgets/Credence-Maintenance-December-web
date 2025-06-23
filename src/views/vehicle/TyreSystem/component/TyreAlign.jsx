@@ -27,7 +27,7 @@ const ManageTyre = ({ tyreImagePath = wheelImg, attachedTyres = [], id, refetchD
   const [leftWheels, setLeftWheels] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedTyreLabel, setSelectedTyreLabel] = useState('')
-  const isHeavyVehicle = ['truck', 'bus'].includes(category?.toLowerCase())
+  const isHeavyVehicle = ['truck', 'bus', 'other'].includes(category?.toLowerCase())
 
   const isTyreAssigned = (label) => !!assignedTyres[label]
 
