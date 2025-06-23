@@ -111,12 +111,6 @@ const _nav = [
         name: 'All Vehicles Expenses',
         to: '/VehicleExpensesBill',
       },
-
-      {
-        component: CNavItem,
-        name: 'Tyre Inventory',
-        to: '/Inventory',
-      },
       {
         component: CNavItem,
         name: 'LR',

@@ -10,9 +10,9 @@ const TyreAssignModal = ({
   onAssign,
   vehicleId,
   tyreLabel,
-  refetchData = () => {}, // Function to refetch data in parent component
-  initialData = null, // Initial data to pre-fill the form, if any
-  size = 'lg', // You can pass 'sm', 'lg', or 'xl' from parent
+  refetchData = () => {},
+  initialData = null,
+  size = 'lg',
 }) => {
   const [formData, setFormData] = useState({
     serialNo: '',
@@ -28,7 +28,8 @@ const TyreAssignModal = ({
     paymentMode: '',
   })
 
-  // handle form change
+  const [errors, setErrors] = useState({})
+
   const handleChange = (e) => {
     const { name, value, files } = e.target
     if (name === 'billImg') {
@@ -38,7 +39,6 @@ const TyreAssignModal = ({
     }
   }
 
-  // POST mutation setup
   const { mutate, isLoading } = useMutation({
     mutationFn: async (data) => await postTyreSystemApi(data),
     onSuccess: async () => {
@@ -48,12 +48,7 @@ const TyreAssignModal = ({
         timer: 1500,
         showConfirmButton: false,
       })
-
-      // Refresh data in parent components
-      if (refetchData) {
-        await refetchData()
-      }
-
+      if (refetchData) await refetchData()
       onClose()
     },
     onError: (err) => {
@@ -65,7 +60,6 @@ const TyreAssignModal = ({
     },
   })
 
-  // Patch mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => await updateDriver(id, data),
     onSuccess: async () => {
@@ -87,7 +81,6 @@ const TyreAssignModal = ({
     },
   })
 
-  // use effect to pre-fill form data if initialData is provided
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -99,12 +92,11 @@ const TyreAssignModal = ({
         vendorName: initialData?.vendorName || '',
         location: initialData?.location || '',
         tyreSize: initialData?.tyreSize || '',
-        billImg: null, // don't pre-fill file input
+        billImg: null,
         amount: initialData?.amount || '',
         paymentMode: initialData?.paymentMode || '',
       })
     } else {
-      // reset on new add
       setFormData({
         serialNo: '',
         brandName: '',
@@ -121,9 +113,43 @@ const TyreAssignModal = ({
     }
   }, [initialData, show])
 
-  // submit handler
-
   const handleSubmit = async () => {
+    const requiredFields = [
+      'serialNo',
+      'brandName',
+      'category',
+      'tyreStatus',
+      'installationDate',
+      'vendorName',
+      'location',
+      'tyreSize',
+      'amount',
+      'paymentMode',
+    ]
+
+    const newErrors = {}
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] = true
+      }
+    })
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      const firstInvalid = document.querySelector('[aria-invalid="true"]')
+      if (firstInvalid) firstInvalid.focus()
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Fields',
+        text: 'Please fill in all required fields.',
+      })
+
+      return
+    }
+
+    setErrors({}) // Clear errors if all fields are valid
+
     const isEditing = !!initialData?.position
 
     const confirm = await Swal.fire({
@@ -160,7 +186,7 @@ const TyreAssignModal = ({
     if (isEditing) {
       updateMutation.mutate({ id: initialData?.id, data: dataToSend })
     } else {
-      mutate(dataToSend) // old mutation for POST
+      mutate(dataToSend)
     }
   }
 
@@ -183,7 +209,10 @@ const TyreAssignModal = ({
               name="serialNo"
               value={formData.serialNo}
               onChange={handleChange}
+              isInvalid={!!errors.serialNo}
+              aria-invalid={!!errors.serialNo}
             />
+            <Form.Control.Feedback type="invalid">Serial number is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -193,12 +222,21 @@ const TyreAssignModal = ({
               name="brandName"
               value={formData.brandName}
               onChange={handleChange}
+              isInvalid={!!errors.brandName}
+              aria-invalid={!!errors.brandName}
             />
+            <Form.Control.Feedback type="invalid">Brand name is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
             <Form.Label>Vehicle Category</Form.Label>
-            <Form.Select name="category" value={formData.category} onChange={handleChange}>
+            <Form.Select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              isInvalid={!!errors.category}
+              aria-invalid={!!errors.category}
+            >
               <option value="" disabled hidden>
                 -- Select Vehicle Category --
               </option>
@@ -207,11 +245,20 @@ const TyreAssignModal = ({
               <option value="bus">Bus</option>
               <option value="other">Other</option>
             </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              Vehicle category is required.
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
             <Form.Label>Status</Form.Label>
-            <Form.Select name="tyreStatus" value={formData.tyreStatus} onChange={handleChange}>
+            <Form.Select
+              name="tyreStatus"
+              value={formData.tyreStatus}
+              onChange={handleChange}
+              isInvalid={!!errors.tyreStatus}
+              aria-invalid={!!errors.tyreStatus}
+            >
               <option value="" disabled hidden>
                 -- Select Status --
               </option>
@@ -220,6 +267,7 @@ const TyreAssignModal = ({
               <option value="need-replacement">Need Replacement</option>
               <option value="second-hand">Second Hand</option>
             </Form.Select>
+            <Form.Control.Feedback type="invalid">Status is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -229,7 +277,12 @@ const TyreAssignModal = ({
               name="installationDate"
               value={formData.installationDate}
               onChange={handleChange}
+              isInvalid={!!errors.installationDate}
+              aria-invalid={!!errors.installationDate}
             />
+            <Form.Control.Feedback type="invalid">
+              Installation date is required.
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -239,7 +292,10 @@ const TyreAssignModal = ({
               name="vendorName"
               value={formData.vendorName}
               onChange={handleChange}
+              isInvalid={!!errors.vendorName}
+              aria-invalid={!!errors.vendorName}
             />
+            <Form.Control.Feedback type="invalid">Shop name is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -249,7 +305,10 @@ const TyreAssignModal = ({
               name="location"
               value={formData.location}
               onChange={handleChange}
+              isInvalid={!!errors.location}
+              aria-invalid={!!errors.location}
             />
+            <Form.Control.Feedback type="invalid">Location is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -259,7 +318,10 @@ const TyreAssignModal = ({
               name="tyreSize"
               value={formData.tyreSize}
               onChange={handleChange}
+              isInvalid={!!errors.tyreSize}
+              aria-invalid={!!errors.tyreSize}
             />
+            <Form.Control.Feedback type="invalid">Tyre size is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
@@ -274,12 +336,21 @@ const TyreAssignModal = ({
               name="amount"
               value={formData.amount}
               onChange={handleChange}
+              isInvalid={!!errors.amount}
+              aria-invalid={!!errors.amount}
             />
+            <Form.Control.Feedback type="invalid">Amount is required.</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
             <Form.Label>Payment Mode</Form.Label>
-            <Form.Select name="paymentMode" value={formData.paymentMode} onChange={handleChange}>
+            <Form.Select
+              name="paymentMode"
+              value={formData.paymentMode}
+              onChange={handleChange}
+              isInvalid={!!errors.paymentMode}
+              aria-invalid={!!errors.paymentMode}
+            >
               <option value="" disabled hidden>
                 -- Select Payment Mode --
               </option>
@@ -287,6 +358,7 @@ const TyreAssignModal = ({
               <option value="upi">UPI</option>
               <option value="card">Card</option>
             </Form.Select>
+            <Form.Control.Feedback type="invalid">Payment mode is required.</Form.Control.Feedback>
           </Form.Group>
         </Form>
       </Modal.Body>
