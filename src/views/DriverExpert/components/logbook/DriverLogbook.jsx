@@ -8,8 +8,16 @@ import DateRangePicker from '../../../components/DateRangePicker'
 import BillShow from '../../../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
+import IconDropdown from '../../../Supervisor/IconDropdown'
 
 const DriverLogbook = ({ id }) => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const navigate = useNavigate()
 
   const [filteredData, setFilteredData] = useState([])
@@ -50,6 +58,7 @@ const DriverLogbook = ({ id }) => {
 
   const columns = [
     { label: 'Date', key: 'originalDate', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Start Time', key: 'startDate', sortable: true },
     { label: 'End Time', key: 'endDate', sortable: true },
@@ -99,6 +108,69 @@ const DriverLogbook = ({ id }) => {
     navigate(`/LogsDriver/${id}`)
   }
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'Driver LogBook Report',
+            columns,
+            data: filteredData,
+            fileName: 'Driver_LogBook_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'Driver LogBook Report',
+            columns,
+            data: filteredData,
+            fileName: 'Driver_LogBook_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
       <ToastContainer />
@@ -118,21 +190,6 @@ const DriverLogbook = ({ id }) => {
             viewButton={true}
             handleViewButton={handleViewButton}
           />
-
-          {/* <SmartPagination
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={(value) => {
-              if (value === -1) {
-                setItemsPerPage(filteredData.length)
-                setCurrentPage(1)
-              } else {
-                setItemsPerPage(value)
-                setCurrentPage(1)
-              }
-            }}
-          /> */}
         </>
         {/* Modal for displaying signature */}
         <BillShow
@@ -151,6 +208,9 @@ const DriverLogbook = ({ id }) => {
           </button>
         </div>
       </CContainer>
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

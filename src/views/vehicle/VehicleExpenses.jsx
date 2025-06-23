@@ -10,9 +10,10 @@ import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
-import { FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../Supervisor/IconDropdown'
+import { HiOutlineLogout } from 'react-icons/hi'
 
 const MaintenanceLog = () => {
   const { id } = useParams()
@@ -178,6 +179,23 @@ const MaintenanceLog = () => {
     [filteredData.length],
   )
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
   // Memoized dropdown items for export
   const dropdownItems = useMemo(
     () => [
@@ -219,6 +237,16 @@ const MaintenanceLog = () => {
         icon: FaPrint,
         label: 'Print Page',
         onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
     [filteredData, columns, exportToPDF, exportToExcel],

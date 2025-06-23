@@ -145,6 +145,7 @@ export const driverExpenses = async (id) => {
       id: expenses._id,
       originalDate: expenses.date,
       date: useSplitTimeDate(expenses.date),
+      driverName: expenses.driverName,
       description: expenses.description,
       location: expenses.location,
       lat: expenses.lat || 'No latitude',
@@ -195,6 +196,7 @@ export const driverLogbook = async (id, month) => {
     return data.map((logbook) => ({
       id: logbook._id,
       originalDate: useSplitTimeDate(logbook.startDate),
+      driverName: logbook.driverId.name || 'Unknown Driver',
       vehicleName: logbook.vehicleName,
       startDate: useSplitTimeDate(logbook.startDate),
       orignalstartDate: logbook.startDate,

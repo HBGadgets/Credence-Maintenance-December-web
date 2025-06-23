@@ -31,19 +31,32 @@ const useExcelExporter = () => {
                 };
 
                 const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet(title);
+                const worksheet = workbook.addWorksheet(title || 'Sheet 1');
+
+                const columnCount = columns.length + 1; // +1 for SN column
+                const lastColumnLetter = String.fromCharCode(64 + columnCount);
 
                 // --- HEADER SECTION ---
-                const titleRow = worksheet.addRow([CONFIG.companyName]);
-                titleRow.font = { bold: true, size: 16, color: { argb: CONFIG.colors.text } };
-                titleRow.fill = {
+
+                // Company Name Row
+                const companyRow = worksheet.addRow([CONFIG.companyName]);
+                companyRow.font = { bold: true, size: 14, color: { argb: CONFIG.colors.text } };
+                companyRow.fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: CONFIG.colors.primary },
                 };
+                companyRow.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${companyRow.number}:${lastColumnLetter}${companyRow.number}`);
+
+                // Title Row
+                const titleRow = worksheet.addRow([title]);
+                titleRow.font = { bold: true, size: 16 };
                 titleRow.alignment = { horizontal: 'center' };
-                worksheet.mergeCells(`A${titleRow.number}:${String.fromCharCode(65 + columns.length)}${titleRow.number}`);
-                worksheet.addRow([]); // Spacer Row
+                worksheet.mergeCells(`A${titleRow.number}:${lastColumnLetter}${titleRow.number}`);
+
+                // Spacer Row
+                worksheet.addRow([]);
 
                 // --- HEADER ROW ---
                 const tableColumns = ['SN', ...columns.map((col) => col.label)];
@@ -52,24 +65,27 @@ const useExcelExporter = () => {
                     cell.font = { bold: true, size: 12, color: { argb: CONFIG.colors.text } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CONFIG.colors.secondary } };
                     cell.alignment = { horizontal: 'center' };
-                    cell.border = { top: { style: CONFIG.borderStyle }, left: { style: CONFIG.borderStyle }, bottom: { style: CONFIG.borderStyle }, right: { style: CONFIG.borderStyle } };
+                    cell.border = {
+                        top: { style: CONFIG.borderStyle },
+                        left: { style: CONFIG.borderStyle },
+                        bottom: { style: CONFIG.borderStyle },
+                        right: { style: CONFIG.borderStyle },
+                    };
                 });
 
                 // --- CLEAN DATA FUNCTION ---
                 const cleanData = (data) => {
                     return data.map((item, index) => {
-                        const cleanedItem = { SN: index + 1 }; // Add SN column
+                        const cleanedItem = { SN: index + 1 };
                         columns.forEach((col) => {
                             let value = item[col.key];
-
-                            // Remove circular references
                             try {
-                                JSON.stringify(value); // Test if value is serializable
+                                JSON.stringify(value);
                             } catch (error) {
-                                value = '[Circular]'; // Replace circular objects with a placeholder
+                                value = '[Circular]';
                             }
-
-                            cleanedItem[col.label] = typeof value === 'object' ? JSON.stringify(value) : value || 'N/A';
+                            cleanedItem[col.label] =
+                                typeof value === 'object' ? JSON.stringify(value) : value || 'N/A';
                         });
                         return cleanedItem;
                     });
@@ -80,14 +96,13 @@ const useExcelExporter = () => {
                     worksheet.addRow(Object.values(item));
                 });
 
-
                 // --- METADATA SECTION ---
                 if (Object.keys(metaData).length > 0) {
                     worksheet.addRow([]);
                     Object.entries(metaData).forEach(([key, value]) => {
                         const row = worksheet.addRow([`${key}: ${value}`]);
                         row.font = { italic: true, size: 10 };
-                        worksheet.mergeCells(`A${row.number}:${String.fromCharCode(65 + columns.length)}${row.number}`);
+                        worksheet.mergeCells(`A${row.number}:${lastColumnLetter}${row.number}`);
                     });
                 }
 
@@ -96,11 +111,13 @@ const useExcelExporter = () => {
                 const footerRow = worksheet.addRow([`© ${new Date().getFullYear()} ${CONFIG.companyName}`]);
                 footerRow.font = { italic: true, size: 10 };
                 footerRow.alignment = { horizontal: 'right' };
-                worksheet.mergeCells(`A${footerRow.number}:${String.fromCharCode(65 + columns.length)}${footerRow.number}`);
+                worksheet.mergeCells(`A${footerRow.number}:${lastColumnLetter}${footerRow.number}`);
 
                 // --- EXPORT FILE ---
                 const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const blob = new Blob([buffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
                 saveAs(blob, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
 
                 toast.success('Excel file downloaded successfully');

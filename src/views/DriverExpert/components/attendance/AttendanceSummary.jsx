@@ -1,8 +1,11 @@
 /* eslint-disable prettier/prettier */
-import React from 'react'
+import React, { useMemo } from 'react'
 import './style.css'
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
+import IconDropdown from '../../../Supervisor/IconDropdown'
+import { FaArrowUp, FaPrint } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
 function AttendanceSummary({ filterData, id }) {
   const { Present = 0, Absent = 0, Pending = 0, Approved = 0 } = filterData || {}
 
@@ -18,6 +21,38 @@ function AttendanceSummary({ filterData, id }) {
   const handleViewDetailedReport = (id) => {
     navigate(`/DriverAttendance/${id}`)
   }
+
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(() => [
+    {
+      icon: HiOutlineLogout,
+      label: 'Logout',
+      onClick: () => handleLogout(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ])
 
   return (
     <>
@@ -41,6 +76,10 @@ function AttendanceSummary({ filterData, id }) {
             View Detailed Report
           </button>
         </div>
+      </div>
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </>
   )

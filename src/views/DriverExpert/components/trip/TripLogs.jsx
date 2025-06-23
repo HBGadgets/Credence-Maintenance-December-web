@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import SmartPagination from '../../../components/SmartPagination'
 import Table from '../../../components/Table'
 import { CContainer } from '@coreui/react'
@@ -6,8 +6,17 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { driverTripDetails } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import SearchInput from '../../../components/SearchInput'
+import IconDropdown from '../../../Supervisor/IconDropdown'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { ToastContainer } from 'react-toastify'
 
 const TripLogs = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -56,6 +65,27 @@ const TripLogs = () => {
     navigate(`/SubTrips/${id}`)
   }
 
+  const getStatusStyle = (status) => {
+    return {
+      display: 'inline-block',
+      minWidth: '70px',
+      padding: '1px 8px',
+      borderRadius: '10px',
+      textAlign: 'center',
+      textTransform: 'capitalize',
+      fontWeight: '400',
+      backgroundColor:
+        status === 'in-progress'
+          ? '#f5a623'
+          : status === 'completed'
+            ? '#28a745'
+            : status === 'cancelled'
+              ? '#dc3545'
+              : '#6c757d',
+      color: 'white',
+    }
+  }
+
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
@@ -64,7 +94,11 @@ const TripLogs = () => {
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },
     { label: 'Material Type', key: 'materialType', sortable: true },
-    { label: 'Status', key: 'status', sortable: true },
+    {
+      label: 'Status',
+      key: 'status',
+      render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
+    },
   ]
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
@@ -80,8 +114,73 @@ const TripLogs = () => {
     setSearchQuery(query)
   }
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'Driver Trips Report',
+            columns,
+            data: filteredData,
+            fileName: 'Driver_Trips_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'Driver Trips Report',
+            columns,
+            data: filteredData,
+            fileName: 'Driver_Trips_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
+      <ToastContainer />
+
       <CContainer className="px-2" fluid>
         <div className="mb-2 d-flex justify-content-between align-items-center">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
@@ -109,6 +208,9 @@ const TripLogs = () => {
           }}
         />
       </CContainer>
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

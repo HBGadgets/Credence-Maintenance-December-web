@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Table from '../../../components/Table'
 import { driverExpenses, getDriverBillApi } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
@@ -11,8 +11,16 @@ import DateRangeFilterCredence from '../../../../components/DateRangeFilterCrede
 import { CContainer } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import IconDropdown from '../../../Supervisor/IconDropdown'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
 
 function DriverExpenses({ id }) {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const navigate = useNavigate()
 
   const [filteredData, setFilteredData] = useState([])
@@ -106,6 +114,8 @@ function DriverExpenses({ id }) {
 
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+
     { label: 'Description', key: 'description', sortable: true },
     { label: 'Location', key: 'location', sortable: true },
     { label: 'Co-ordinate', key: 'coordinate', sortable: true },
@@ -163,6 +173,80 @@ function DriverExpenses({ id }) {
     navigate(`/ExpensesList/${id}`)
   }
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () => {
+          const cleanedData = filteredData.map((item) => ({
+            ...item,
+            payment:
+              typeof item.payment === 'string' ? item.payment : item.payment?.props?.children || '',
+          }))
+          exportToPDF({
+            title: 'Vehicle Expense Report',
+            columns,
+            data: cleanedData,
+            fileName: 'Vehicle_Expenses_Report',
+          })
+        },
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          const cleanedData = filteredData.map((item) => ({
+            ...item,
+            payment:
+              typeof item.payment === 'string' ? item.payment : item.payment?.props?.children || '',
+          }))
+          exportToExcel({
+            title: 'Vehicle Expenses Report',
+            columns,
+            data: cleanedData,
+            fileName: 'Vehicle_Expenses_Report',
+          })
+        },
+      },
+
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
       <CContainer className="px-2" fluid>
@@ -196,6 +280,10 @@ function DriverExpenses({ id }) {
           </button>
         </div>
       </CContainer>
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
