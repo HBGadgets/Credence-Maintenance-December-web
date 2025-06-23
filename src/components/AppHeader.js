@@ -83,7 +83,24 @@ const AppHeader = () => {
   const currentPathname = useLocation().pathname
   const currentRouteName = getRouteName(currentPathname, routes)
 
+  // const handleBackToCredence = () => {
+  //   window.history.replaceState(null, '', '/')
+  //   // window.location.href = 'http://localhost:3000'
+  //   window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  // }
+
   const handleBackToCredence = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
     window.history.replaceState(null, '', '/')
     // window.location.href = 'http://localhost:3000'
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
