@@ -30,6 +30,8 @@ const BranchDetails = React.lazy(
 )
 const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
+const AllDailyLogbook = React.lazy(() => import('./views/Supervisor/alldailylog/AllDailyLogbook.jsx'))
+
 // Expenses Management
 
 const DriverExpenses = React.lazy(
@@ -103,6 +105,7 @@ const routes = [
   { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },
   { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
   { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
+  { path: '/AllDailyLogbook', name: 'All Drives LogBooks', element: AllDailyLogbook },
 
   /**EXPENSES MANAGEMENT */
 

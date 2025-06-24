@@ -1,5 +1,6 @@
 import Swal from 'sweetalert2'
 import { deleteTripApi, getTripListApi, patchTripApi, postTripApi } from '../../data/data'
+import { toast } from 'react-toastify'
 
 // Fetch Trips
 export const fetchTripDataHelper = async (id, setAllData, setFilteredData, setLoading, setError) => {
@@ -61,6 +62,7 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             date: formData.date,
             status: formData.status,
         }
+
         await patchTripApi(formData._id, updatePayload)
 
         if (typeof fetchTripData === 'function') {
@@ -78,7 +80,11 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             confirmButtonText: 'OK',
         })
     } catch (err) {
-        console.error('Trip update failed:', err.message)
+        if (err.response && err.response.status === 400) {
+            toast.error(err.response.data.message || 'Request failed.')
+        } else {
+            console.error('Trip update failed.')
+        }
     }
 }
 

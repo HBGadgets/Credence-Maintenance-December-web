@@ -1,5 +1,7 @@
 import axios from "axios";
 import { formatDateToDDMMYYYY } from "../../customhooks/useFormattedDate";
+import { useFormattedTime } from "../../customhooks/useFormattedTime";
+import { useSplitTimeDate } from "../../customhooks/useSplitTimeDate";
 
 
 // Global token variable
@@ -436,6 +438,146 @@ export const deleteSubtripApi = async (id) => {
 
         return console.log("error", data.message)
     } catch (error) {
+        throw error
+    }
+}
+
+
+// --------------------------------------------------------------------------------------------- 
+
+// All DailyLog of drives get api
+
+export const getAllDriverDailyLogbookApi = async () => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Vehicle Expenses Data: ", data);
+
+    const response = data.data || [];
+    console.log("the response is : ", response);
+
+    // Map the response to desired format
+    return response.map((alldailylog) => ({
+        id: alldailylog._id,
+        originalDate: useSplitTimeDate(alldailylog.startDate) || "N/A",
+        driverName: alldailylog.driverId.name || "Unknown",
+        vehicleName: alldailylog.vehicleName || "N/A",
+        orignalstartDate: alldailylog.startDate,
+        orginalendDate: alldailylog.endDate,
+        startDate: useFormattedTime(alldailylog.startDate) || "Unknown",
+        endDate: useFormattedTime(alldailylog.endDate) || "Unknown",
+        logKM: alldailylog.logKM || "No description",
+        gpsKM: alldailylog.gpsKM || 'No',
+        duration: alldailylog.duration || 'No',
+        signatureId: alldailylog.signatureId || 'No',
+    }));
+};
+
+
+// Post All dailylog of driver
+
+export const postAllDriverDailyLogbookApi = async (id, alldailylogData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/dailylogs/create/${id}`,
+            alldailylogData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        )
+
+        if (response.status === 201 || response.status === 200) {
+            console.log('Daily Log Created Successfully:', response.data)
+            return response.data
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`)
+        }
+    } catch (error) {
+        console.error('API Error:', error.response?.data?.message || error.message)
+
+        // Properly throw the error to be caught in parent function
+        const err = new Error(
+            error.response?.data?.message || 'Failed to create daily log'
+        )
+        err.response = error.response // Attach the original response if needed
+        throw err
+    }
+}
+
+
+// PATCH all dailylog of driver by ID
+
+export const patchAllDriverDailyLogbookApi = async (id, data) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data: response } = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/dailylogs/update/${id}`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            },
+        )
+
+        return response
+    } catch (error) {
+        console.error('Update daily logs failed:', error, error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+
+// Delete driver dailylog by ID
+
+export const deleteAllDriverDailyLogbookApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/dailylogs/delete/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log("done", data.message)
+    } catch (error) {
+        throw error
+    }
+}
+
+
+// view signature image 
+export const getAllDriverDailyLogbookSign = async (signatureId) => {
+    try {
+
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/dailylogs/get-signature-image/${signatureId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+        return res.data
+    } catch (error) {
+        console.error('Error:', error.response?.data || error.message)
         throw error
     }
 }

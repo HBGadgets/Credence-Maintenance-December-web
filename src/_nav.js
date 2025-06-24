@@ -73,6 +73,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'All Drivers Logbooks',
+        to: '/AllDailyLogbook',
+      },
+      {
+        component: CNavItem,
         name: 'Driver Attendence Mark',
         to: '/Attendence'
       },

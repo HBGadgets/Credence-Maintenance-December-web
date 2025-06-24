@@ -21,6 +21,7 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../IconDropdown'
+import { ToastContainer } from 'react-toastify'
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -198,6 +199,7 @@ const Trip = () => {
 
   return (
     <>
+      <ToastContainer />
       <div>
         <div className="mb-3 d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">

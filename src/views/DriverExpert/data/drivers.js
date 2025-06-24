@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
+import { useFormattedTime } from '../../customhooks/useFormattedTime'
 
 
 // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
@@ -198,10 +199,10 @@ export const driverLogbook = async (id, month) => {
       originalDate: useSplitTimeDate(logbook.startDate),
       driverName: logbook.driverId.name || 'Unknown Driver',
       vehicleName: logbook.vehicleName,
-      startDate: useSplitTimeDate(logbook.startDate),
+      startDate: useFormattedTime(logbook.startDate),
       orignalstartDate: logbook.startDate,
       orginalendDate: logbook.endDate,
-      endDate: useSplitTimeDate(logbook.endDate),
+      endDate: useFormattedTime(logbook.endDate),
       duration: logbook.duration,
       logKM: logbook.logKM,
       gpsKM: logbook.gpsKM,
