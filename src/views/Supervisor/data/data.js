@@ -447,6 +447,38 @@ export const deleteSubtripApi = async (id) => {
 
 // All DailyLog of drives get api
 
+// export const getAllDriverDailyLogbookApi = async () => {
+//     if (!TOKEN) throw new Error('Authentication token not found');
+
+//     const { data } = await axios.get(
+//         `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs`,
+//         {
+//             headers: { Authorization: `Bearer ${TOKEN}` },
+//         }
+//     );
+
+//     console.log("All Vehicle Expenses Data: ", data);
+
+//     const response = data.data || [];
+//     console.log("the response is : ", response);
+
+//     // Map the response to desired format
+//     return response.map((alldailylog) => ({
+//         id: alldailylog._id,
+//         originalDate: useSplitTimeDate(alldailylog.startDate) || "N/A",
+//         driverName: alldailylog.driverId.name || "Unknown",
+//         vehicleName: alldailylog.vehicleName || "N/A",
+//         orignalstartDate: alldailylog.startDate,
+//         orginalendDate: alldailylog.endDate,
+//         startDate: useFormattedTime(alldailylog.startDate) || "Unknown",
+//         endDate: useFormattedTime(alldailylog.endDate) || "Unknown",
+//         logKM: alldailylog.logKM || "No description",
+//         gpsKM: alldailylog.gpsKM || 'No',
+//         duration: alldailylog.duration || 'No',
+//         signatureId: alldailylog.signatureId || 'No',
+//     }));
+// };
+
 export const getAllDriverDailyLogbookApi = async () => {
     if (!TOKEN) throw new Error('Authentication token not found');
 
@@ -460,24 +492,22 @@ export const getAllDriverDailyLogbookApi = async () => {
     console.log("All Vehicle Expenses Data: ", data);
 
     const response = data.data || [];
-    console.log("the response is : ", response);
 
-    // Map the response to desired format
+    // Just return raw and computed-safe data (no hooks)
     return response.map((alldailylog) => ({
         id: alldailylog._id,
-        originalDate: useSplitTimeDate(alldailylog.startDate) || "N/A",
-        driverName: alldailylog.driverId.name || "Unknown",
+        driverName: alldailylog.driverId?.name || "Unknown",
         vehicleName: alldailylog.vehicleName || "N/A",
-        orignalstartDate: alldailylog.startDate,
-        orginalendDate: alldailylog.endDate,
-        startDate: useFormattedTime(alldailylog.startDate) || "Unknown",
-        endDate: useFormattedTime(alldailylog.endDate) || "Unknown",
-        logKM: alldailylog.logKM || "No description",
-        gpsKM: alldailylog.gpsKM || 'No',
-        duration: alldailylog.duration || 'No',
-        signatureId: alldailylog.signatureId || 'No',
+        originalDate: useSplitTimeDate(alldailylog.startDate) || "N/A",
+        startDate: useSplitTimeDate(alldailylog.startDate),
+        endDate: useSplitTimeDate(alldailylog.endDate),
+        logKM: alldailylog.logKM ?? "No data",
+        gpsKM: alldailylog.gpsKM ?? 'No data',
+        duration: alldailylog.duration ?? 'No data',
+        signatureId: alldailylog.signatureId ?? 'No',
     }));
 };
+
 
 
 // Post All dailylog of driver
