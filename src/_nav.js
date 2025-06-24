@@ -86,11 +86,11 @@ const _nav = [
         name: 'Drivers Leave Requests',
         to: '/LeaveRequests',
       },
-      {
-        component: CNavItem,
-        name: 'Drivers Salary',
-        to: '/Salary',
-      },
+      // {
+      //   component: CNavItem,
+      //   name: 'Drivers Salary',
+      //   to: '/Salary',
+      // },
 
     ],
   },
@@ -115,6 +115,11 @@ const _nav = [
         component: CNavItem,
         name: 'All Vehicles Expenses',
         to: '/VehicleExpensesBill',
+      },
+      {
+        component: CNavItem,
+        name: 'Drivers Salary',
+        to: '/Salary',
       },
       {
         component: CNavItem,
