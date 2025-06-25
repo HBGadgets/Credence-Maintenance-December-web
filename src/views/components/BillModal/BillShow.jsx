@@ -81,7 +81,7 @@
 
 import React from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react'
-import './BillShow.css' // <- import the new CSS file
+import './billShow.css' // <- import the new CSS file
 
 const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
   const isImage = (base64) => {
