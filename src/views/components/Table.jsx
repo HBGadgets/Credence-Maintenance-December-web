@@ -27,6 +27,39 @@ const skeletonStyles = `
     border-radius: 4px;
     animation: pulse 1.5s infinite;
   }
+
+  .action-cell {
+    padding: 8px !important;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .action-button {
+    border: none;
+    background: none;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+
+  .action-button:hover {
+    background-color: #e9ecef;
+  }
+
+  .action-view-button {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 `
 
 function Table({
@@ -49,7 +82,7 @@ function Table({
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
-  const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null) // 👈 New
+  const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
 
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage)
@@ -127,25 +160,27 @@ function Table({
                         </CTableDataCell>
                       ))}
                       {(editButton || deleteButton || viewButton) && (
-                        <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
-                          {editButton && (
-                            <div
-                              className="skeleton-loader"
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                          )}
-                          {deleteButton && (
-                            <div
-                              className="skeleton-loader"
-                              style={{ width: '20px', height: '20px' }}
-                            />
-                          )}
-                          {viewButton && (
-                            <div
-                              className="skeleton-loader"
-                              style={{ width: '60px', height: '30px' }}
-                            />
-                          )}
+                        <CTableDataCell className="action-cell">
+                          <div className="action-buttons">
+                            {editButton && (
+                              <div
+                                className="skeleton-loader"
+                                style={{ width: '20px', height: '20px' }}
+                              />
+                            )}
+                            {deleteButton && (
+                              <div
+                                className="skeleton-loader"
+                                style={{ width: '20px', height: '20px' }}
+                              />
+                            )}
+                            {viewButton && (
+                              <div
+                                className="skeleton-loader"
+                                style={{ width: '60px', height: '30px' }}
+                              />
+                            )}
+                          </div>
                         </CTableDataCell>
                       )}
                     </CTableRow>
@@ -199,47 +234,49 @@ function Table({
                           </CTableDataCell>
                         ))}
                       {(editButton || deleteButton || viewButton) && (
-                        <CTableDataCell className="d-flex gap-2 justify-content-center align-items-center">
-                          {editButton && (
-                            <button
-                              className="btn btn-link p-0 me-2"
-                              onClick={() => handleEditButton(row.id)}
-                              aria-label="Edit"
-                            >
-                              <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-                            </button>
-                          )}
-                          {deleteButton && (
-                            <button
-                              className="btn btn-link p-0 me-3"
-                              onClick={() => handleDeleteButton(row.id)}
-                              aria-label="Delete"
-                            >
-                              <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-                            </button>
-                          )}
-                          {viewButton && (
-                            <button
-                              className="btn btn-sm d-flex align-items-center gap-1"
-                              onClick={async () => {
-                                setViewLoadingId(row.id)
-                                await handleViewButton(row.id)
-                                setViewLoadingId(null)
-                              }}
-                              disabled={viewLoadingId === row.id}
-                              style={{
-                                backgroundColor: viewButtonColor,
-                                color: 'white',
-                                borderColor: viewButtonColor,
-                                opacity: viewLoadingId === row.id ? 0.6 : 1,
-                              }}
-                            >
-                              {viewButtonIcon}
-                              <span>
-                                {viewLoadingId === row.id ? 'Loading...' : viewButtonLabel}
-                              </span>
-                            </button>
-                          )}
+                        <CTableDataCell className="action-cell">
+                          <div className="action-buttons">
+                            {editButton && (
+                              <button
+                                className="action-button"
+                                onClick={() => handleEditButton(row.id)}
+                                aria-label="Edit"
+                              >
+                                <Pencil color="#2D336B" size={18} />
+                              </button>
+                            )}
+                            {deleteButton && (
+                              <button
+                                className="action-button"
+                                onClick={() => handleDeleteButton(row.id)}
+                                aria-label="Delete"
+                              >
+                                <Trash2 color="#2D336B" size={18} />
+                              </button>
+                            )}
+                            {viewButton && (
+                              <button
+                                className="action-view-button"
+                                onClick={async () => {
+                                  setViewLoadingId(row.id)
+                                  await handleViewButton(row.id)
+                                  setViewLoadingId(null)
+                                }}
+                                disabled={viewLoadingId === row.id}
+                                style={{
+                                  backgroundColor: viewButtonColor,
+                                  color: 'white',
+                                  opacity: viewLoadingId === row.id ? 0.6 : 1,
+                                  border: 'none',
+                                }}
+                              >
+                                {viewButtonIcon}
+                                <span>
+                                  {viewLoadingId === row.id ? 'Loading...' : viewButtonLabel}
+                                </span>
+                              </button>
+                            )}
+                          </div>
                         </CTableDataCell>
                       )}
                     </CTableRow>
