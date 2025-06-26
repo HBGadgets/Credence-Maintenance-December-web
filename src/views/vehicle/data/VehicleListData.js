@@ -590,4 +590,76 @@ export const getTyerSystemBillApi = async (billImg) => {
     }
 }
 
+// ---------------------------------------------------------------------------------------- 
 
+// Get inpection vehicle by id 
+
+export const getInpectionVehicleIdApi = async (id) => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/inspection/get-inspection/${id}`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Vehicle Inspection Data: ", data);
+
+    const response = data.data || [];
+
+    const formatItem = (item) => {
+        if (!item) return { status: "Unknown" };
+        return {
+            status: item.status ? "Pass" : "Fail",
+            ...(item.status === false && {
+                description: item.description || "No Issuse in this part",
+                image: item.Image || null,
+            }),
+        };
+    };
+
+    return response.map((inspection) => {
+        const items = {
+            engineOil: formatItem(inspection.engineOil),
+            acCollent: formatItem(inspection.acCollent),
+            sparkPlug: formatItem(inspection.sparkPlug),
+            airFilter: formatItem(inspection.airFilter),
+            breakFluid: formatItem(inspection.breakFluid),
+            transmissionFluid: formatItem(inspection.transmissionFluid),
+            powerStairingFluid: formatItem(inspection.powerStairingFluid),
+            windShieldWasherFluid: formatItem(inspection.windShieldWasherFluid),
+            tyrePressure: formatItem(inspection.tyrePressure),
+            tyreAlignment: formatItem(inspection.tyreAlignment),
+            batteryCharge: formatItem(inspection.batteryCharge),
+            wiperBlades: formatItem(inspection.wiperBlades),
+            suspensionAndStairing: formatItem(inspection.suspensionAndStairing),
+            underbody: formatItem(inspection.underbody),
+            exaustSystem: formatItem(inspection.exaustSystem),
+            warningLights: formatItem(inspection.warningLights),
+            headLights: formatItem(inspection.headLights),
+            indicator: formatItem(inspection.indicator),
+        };
+
+        // Count Pass/Fail
+        const values = Object.values(items);
+        const inspectionPass = values.filter((item) => item.status === "Pass").length;
+        const inspectionFail = values.filter((item) => item.status === "Fail").length;
+
+        return {
+            id: inspection._id,
+            vehicleId: inspection.vehicleId,
+            vehicleName: inspection.vehicleDetails?.name || "Unknown",
+            orignalDate: inspection.createdAt,
+            date: useSplitTimeDate(inspection.createdAt),
+            driverName: inspection.DriverId?.name || "Unknown",
+            startLocation: inspection.tripId?.startLocation || "N/A",
+            endLocation: inspection.tripId?.endLocation || "N/A",
+            status: inspection.tripId?.status || "N/A",
+            inpectionPass: inspectionPass,
+            inpectionFail: inspectionFail,
+            category: inspection.vehicleDetails?.category || "N/A",
+            items, // raw item details (optional, if needed later)
+        };
+    });
+};

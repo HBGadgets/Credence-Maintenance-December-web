@@ -11,6 +11,7 @@ import { GiCarWheel, GiPathDistance } from 'react-icons/gi'
 import { BsFuelPumpDiesel } from 'react-icons/bs'
 import ServiceInfo from '../components/ServiceInfo'
 import { MdOutlineMiscellaneousServices } from 'react-icons/md'
+import { FaListCheck } from 'react-icons/fa6'
 
 function VehicleProfile() {
   const navigate = useNavigate()
@@ -104,6 +105,11 @@ function VehicleProfile() {
                 title: 'Service Checkup List',
                 route: 'ServiceList',
                 icon: <MdOutlineMiscellaneousServices />,
+              },
+              {
+                title: 'Vehicle Inpection',
+                route: 'InpectionList',
+                icon: <FaListCheck />,
               },
 
               // Add more items here if needed

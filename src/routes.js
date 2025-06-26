@@ -10,7 +10,8 @@ const VehicleTrips = React.lazy(() => import('./views/vehicle/VehicleTrips.jsx')
 const ManageTyre = React.lazy(() => import('./views/vehicle/TyreSystem/ManageTyre.jsx'))
 const Fuelsystem = React.lazy(() => import('./views/vehicle/FuelSystem/Fuelsystem.jsx'))
 const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/Servicelist.jsx'))
-
+const InpectionList = React.lazy(() => import('./views/vehicle/VehicleInpection/InpectionList.jsx'))
+const AllVehicleInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/AllVehicleInpection.jsx'))
 
 
 // Supervisor
@@ -31,6 +32,8 @@ const BranchDetails = React.lazy(
 const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
 const AllDailyLogbook = React.lazy(() => import('./views/Supervisor/alldailylog/AllDailyLogbook.jsx'))
+
+const AnalayisInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/components/AnalayisInpection.jsx'))
 
 // Expenses Management
 
@@ -93,6 +96,7 @@ const routes = [
   { path: 'VehicleProfile/:id/ManageTyre', name: 'Tyres System', element: ManageTyre },
   { path: 'VehicleProfile/:id/Fuelsystem', name: 'Fuel System', element: Fuelsystem },
   { path: 'VehicleProfile/:id/Servicelist', name: 'Service List', element: Servicelist },
+  { path: 'VehicleProfile/:id/InpectionList', name: 'Vehicle Inpection', element: InpectionList },
 
   /**SUPERVISOR */
 
@@ -106,6 +110,8 @@ const routes = [
   { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
   { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
   { path: '/AllDailyLogbook', name: 'All Drives LogBooks', element: AllDailyLogbook },
+  { path: '/AllVehicleInpection', name: 'All Vehicle Inpections', element: AllVehicleInpection },
+  { path: '/AnalayisInpection/:id', name: 'All Analayis Vehicle Inpection', element: AnalayisInpection },
 
   /**EXPENSES MANAGEMENT */
 

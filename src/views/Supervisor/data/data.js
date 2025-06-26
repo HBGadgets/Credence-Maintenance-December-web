@@ -612,4 +612,160 @@ export const getAllDriverDailyLogbookSign = async (signatureId) => {
     }
 }
 
+// ----------------------------------------------------------------------------------------- 
+
+// Get Api for All Vehicle Inpection List
+
+export const getAllVehicleInpectionApi = async () => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/inspection/get-all-inspection`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Vehicle Inspection Data: ", data);
+
+    const response = data.data || [];
+
+    const formatItem = (item) => {
+        if (!item) return { status: "Unknown" };
+        return {
+            status: item.status ? "Pass" : "Fail",
+            ...(item.status === false && {
+                description: item.description || "No Issuse in this part",
+                image: item.Image || null,
+            }),
+        };
+    };
+
+    return response.map((inspection) => {
+        const items = {
+            engineOil: formatItem(inspection.engineOil),
+            acCollent: formatItem(inspection.acCollent),
+            sparkPlug: formatItem(inspection.sparkPlug),
+            airFilter: formatItem(inspection.airFilter),
+            breakFluid: formatItem(inspection.breakFluid),
+            transmissionFluid: formatItem(inspection.transmissionFluid),
+            powerStairingFluid: formatItem(inspection.powerStairingFluid),
+            windShieldWasherFluid: formatItem(inspection.windShieldWasherFluid),
+            tyrePressure: formatItem(inspection.tyrePressure),
+            tyreAlignment: formatItem(inspection.tyreAlignment),
+            batteryCharge: formatItem(inspection.batteryCharge),
+            wiperBlades: formatItem(inspection.wiperBlades),
+            suspensionAndStairing: formatItem(inspection.suspensionAndStairing),
+            underbody: formatItem(inspection.underbody),
+            exaustSystem: formatItem(inspection.exaustSystem),
+            warningLights: formatItem(inspection.warningLights),
+            headLights: formatItem(inspection.headLights),
+            indicator: formatItem(inspection.indicator),
+        };
+
+        // Count Pass/Fail
+        const values = Object.values(items);
+        const inspectionPass = values.filter((item) => item.status === "Pass").length;
+        const inspectionFail = values.filter((item) => item.status === "Fail").length;
+
+        return {
+            id: inspection._id,
+            vehicleId: inspection.vehicleId,
+            vehicleName: inspection.vehicleDetails?.name || "Unknown",
+            orignalDate: inspection.createdAt,
+            date: useSplitTimeDate(inspection.createdAt),
+            driverName: inspection.DriverId?.name || "Unknown",
+            startLocation: inspection.tripId?.startLocation || "N/A",
+            endLocation: inspection.tripId?.endLocation || "N/A",
+            status: inspection.tripId?.status || "N/A",
+            inpectionPass: inspectionPass,
+            inpectionFail: inspectionFail,
+            category: inspection.vehicleDetails?.category || "N/A",
+            items, // raw item details (optional, if needed later)
+        };
+    });
+};
+
+// Post api for All vehicle inpection
+
+export const postAllVehicleInpectionApi = async (vehicleId, formData) => {
+    const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/inspection/add-inspection?vehicleId=${vehicleId}`,
+        formData,
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    )
+
+    if (response.status === 201 || response.status === 200) {
+        console.log('Inspection Log Created Successfully:', response.data)
+        return response.data
+    } else {
+        throw new Error(`Unexpected response status: ${response.status}`)
+    }
+}
+
+//  Patch api for all vehicle inpection by inpectionId
+
+export const patchAllVehicleInpectionApi = async (id, data) => {
+    const { data: response } = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/inspection/edit-inspection/${id}`,
+        data,
+        {
+            headers: {
+                Authorization: `Bearer ${TOKEN}`,
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    )
+
+    return response
+}
+
+
+// Delete vehicle inpection by ID
+
+export const deleteAllVehicleInpectionApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/inspection/delete-inspection/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+
+        return console.log("done", data.message)
+    } catch (error) {
+        throw error
+    }
+}
+
+// view inpection image 
+export const getAllFailInpectionImageApi = async (Image) => {
+    try {
+
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/inspection/inspection-image/${Image}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+        return res.data
+    } catch (error) {
+        console.error('Error:', error.response?.data || error.message)
+        throw error
+    }
+}
+
 
