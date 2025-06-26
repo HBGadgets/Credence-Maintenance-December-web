@@ -29,7 +29,7 @@ const ServiceList = () => {
       options: [
         { value: 'engineOil', label: 'Engine Oil Change & Filters.' },
         { value: 'brakeMaintenance', label: 'Brake Maintenance.' },
-        { value: 'tireWheel', label: 'Tire & Wheel Service.' },
+        { value: 'tyreWheel', label: 'Tire & Wheel Service.' },
         { value: 'fuel', label: 'Fuels and Gas Service.' },
         { value: 'battery', label: 'Battery & Electrical.' },
         { value: 'newPartService', label: 'Part Changes Or New Parts Buys for vehicle' },
@@ -40,12 +40,23 @@ const ServiceList = () => {
       ],
     },
     { name: 'description', label: 'Description', type: 'text', placeholder: 'Description' },
-    { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
     {
       name: 'nextServiceKm',
       label: 'Next Service KM',
       type: 'number',
       placeholder: 'Next Service Km',
+    },
+    { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
+    {
+      name: 'paymentMode',
+      label: 'Payment Mode',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'upi', label: 'UPI' },
+        { value: 'cash', label: 'CASH' },
+        { value: 'card', label: 'CARD' },
+      ],
     },
   ]
 
