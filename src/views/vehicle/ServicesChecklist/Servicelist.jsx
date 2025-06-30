@@ -46,6 +46,7 @@ const ServiceList = () => {
       type: 'number',
       placeholder: 'Next Service Km',
     },
+    { name: 'location', label: 'Location', type: 'text', placeholder: 'Location' },
     { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
     {
       name: 'paymentMode',
@@ -57,6 +58,12 @@ const ServiceList = () => {
         { value: 'cash', label: 'CASH' },
         { value: 'card', label: 'CARD' },
       ],
+    },
+    {
+      name: 'billImg',
+      label: 'Bill Image',
+      type: 'file',
+      accept: 'image/*',
     },
   ]
 
@@ -77,6 +84,7 @@ const ServiceList = () => {
       odometer: 40000,
       amount: '89.99',
       nextServiceKm: 45000,
+      location: 'Mumbai Workshop',
     },
     {
       id: 2,
@@ -86,6 +94,7 @@ const ServiceList = () => {
       odometer: 35000,
       amount: '249.99',
       nextServiceKm: 40000,
+      location: 'Pune Workshop',
     },
     {
       id: 3,
@@ -95,6 +104,7 @@ const ServiceList = () => {
       odometer: 30000,
       amount: '199.99',
       nextServiceKm: 35000,
+      location: 'Nagpur Workshop',
     },
     {
       id: 4,
@@ -104,6 +114,7 @@ const ServiceList = () => {
       odometer: 25000,
       amount: '220.00',
       nextServiceKm: 30000,
+      location: 'Bhopal Workshop',
     },
     {
       id: 5,
@@ -113,6 +124,7 @@ const ServiceList = () => {
       odometer: 20000,
       amount: '99.99',
       nextServiceKm: 25000,
+      location: 'Indore Workshop',
     },
     {
       id: 6,
@@ -122,6 +134,7 @@ const ServiceList = () => {
       odometer: 15000,
       amount: '79.99',
       nextServiceKm: 20000,
+      location: 'Assam Workshop',
     },
   ]
 
@@ -149,6 +162,10 @@ const ServiceList = () => {
 
   const handleDelete = (id) => {
     alert(`Delete clicked for ID: ${id}`)
+  }
+
+  const handleView = (id) => {
+    alert(`View clicked for ID: ${id}`)
   }
 
   // date range
@@ -222,6 +239,7 @@ const ServiceList = () => {
           paginatedData={paginatedData}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onView={handleView}
         />
         <SmartPagination
           totalPages={totalPages}

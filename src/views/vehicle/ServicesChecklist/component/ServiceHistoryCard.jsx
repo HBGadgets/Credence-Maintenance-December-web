@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
 import React, { useState } from 'react'
 import { Card, Badge, Dropdown, ButtonGroup } from 'react-bootstrap'
-import { RotateCcw, MoreVertical } from 'lucide-react'
+import { RotateCcw, MoreVertical, MapPin } from 'lucide-react'
 import PropTypes from 'prop-types'
 
-const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete }) => {
+const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete, onView }) => {
   const [openMenuId, setOpenMenuId] = useState(null)
 
   const handleMenuToggle = (isOpen, id) => {
@@ -63,6 +63,14 @@ const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete }) => {
                 >
                   Delete
                 </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => {
+                    onView(entry.id)
+                    setOpenMenuId(null)
+                  }}
+                >
+                  View Bill
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -72,7 +80,16 @@ const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete }) => {
             <div>
               <div className="fw-semibold">{entry.description}</div>
               <div className="text-muted small">Odometer: {entry.odometer} km</div>
+
+              {/* Location Section */}
+              {entry.location && (
+                <div className="text-muted small d-flex align-items-center mt-1">
+                  <MapPin size={14} className="me-1" />
+                  <span>Location: {entry.location}</span>
+                </div>
+              )}
             </div>
+
             <div className="text-end">
               <div className="fw-bold text-dark">₹{entry.amount}</div>
               <div className="text-muted small">Next: {entry.nextServiceKm} km</div>
@@ -88,6 +105,7 @@ ServiceHistoryCard.propTypes = {
   paginatedData: PropTypes.array.isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  onView: PropTypes.func.isRequired,
 }
 
 export default ServiceHistoryCard
