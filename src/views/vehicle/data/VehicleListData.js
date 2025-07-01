@@ -24,10 +24,10 @@ export const fetchVehicles = async () => {
 
         console.log("vehicles", vehicles)
         return vehicles.map((vehicle) => ({
-            name: vehicle.name,
-            model: vehicle.model,
-            category: vehicle.category,
-            id: vehicle._id,
+            name: vehicle.name || 'N/A',
+            model: vehicle.model || 'N/A',
+            category: vehicle.category || 'N/A',
+            id: vehicle._id || 'N/A',
         }))
     } catch (error) {
         console.error(error)
@@ -276,18 +276,18 @@ export const maintenanceLogApi = async (id) => {
 
     return data.map((vehiclelogs) => ({
         id: vehiclelogs._id,
-        date: useSplitTimeDate(vehiclelogs.date),
+        date: useSplitTimeDate(vehiclelogs.date) || 'N/A',
         originalDate: vehiclelogs.date,
         driverName: vehiclelogs.driverName || 'N/A',
-        shopName: vehiclelogs.vendor,
-        expenseType: vehiclelogs.expenseType,
-        description: vehiclelogs.description,
-        location: vehiclelogs.location || "Unknown",
+        shopName: vehiclelogs.vendor || 'N/A',
+        expenseType: vehiclelogs.expenseType || 'N/A',
+        description: vehiclelogs.description || 'N/A',
+        location: vehiclelogs.location || 'N/A',
         lat: vehiclelogs.lat || 'No latitude',
         long: vehiclelogs.long || 'No longitude',
-        amount: vehiclelogs.amount,
-        paymentMode: vehiclelogs.paymentMode,
-        billImg: vehiclelogs.billImg,
+        amount: vehiclelogs.amount || 'N/A',
+        paymentMode: vehiclelogs.paymentMode || 'N/A',
+        billImg: vehiclelogs.billImg || 'N/A',
     }));
 };
 
@@ -331,15 +331,15 @@ export const getVehicleTripsByIdAPI = async (id) => {
 
     return data.map((vehicleTrips) => ({
         id: vehicleTrips._id,
-        date: useSplitTimeDate(vehicleTrips.date),
+        date: useSplitTimeDate(vehicleTrips.date) || 'N/A',
         originalDate: vehicleTrips.date,
         driverName: vehicleTrips.driverId?.name || 'N/A',
-        vehicleName: vehicleTrips.vehicleName,
-        startLocation: vehicleTrips.startLocation,
-        endLocation: vehicleTrips.endLocation,
-        budgetAllocated: vehicleTrips.budgetAllocated,
-        spentAmount: vehicleTrips.spentAmount,
-        status: vehicleTrips.status,
+        vehicleName: vehicleTrips.vehicleName || 'N/A',
+        startLocation: vehicleTrips.startLocation || 'N/A',
+        endLocation: vehicleTrips.endLocation || 'N/A',
+        budgetAllocated: vehicleTrips.budgetAllocated || 'N/A',
+        spentAmount: vehicleTrips.spentAmount || 'N/A',
+        status: vehicleTrips.status || 'N/A',
     }));
 
 };
@@ -663,3 +663,173 @@ export const getInpectionVehicleIdApi = async (id) => {
         };
     });
 };
+
+// ----------------------------------------------------------------------------------------- 
+
+//  Get Vehicle Service History By vehicle id
+
+export const getVehicleServiceHistoryApi = async (id) => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/service/get-services?vehicleId=${id}`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("Raw Vehicle Service History Data: ", data);
+
+    // Map service history data
+    const serviceData = (data?.data || []).map((entry) => ({
+        id: entry._id,
+        vehicleId: entry.vehicleId,
+        driverName: entry.driverId?.name || 'N/A',
+        currentVehicleName: entry.driverId?.currentVehicleName || 'N/A',
+        date: useSplitTimeDate(entry.date),
+        originalDate: entry.date,
+        serviceType: entry.serviceType || 'N/A',
+        description: entry.description || 'N/A',
+        amount: entry.amount || 'N/A',
+        paymentMode: entry.paymentMode || 'N/A',
+        odometer: entry.lastService || 'N/A',
+        nextServiceKm: entry.nextServiceDue || 'N/A',
+        location: entry.location || 'N/A',
+        serviceImg: entry.serviceImg,
+        createdAt: entry.createdAt
+    }));
+
+    console.log("dataaaaaaa", serviceData)
+
+    // Extract odometer summary
+    const odometerSummary = {
+        currentOdometer: data.odometer?.currentOdometer || 0,
+        nextServiceDue: data.odometer?.nextServiceDue || 0,
+        lastService: data.odometer?.lastService || 0,
+    };
+
+    return {
+        serviceData,
+        odometerSummary,
+    };
+};
+
+// Post Api For Vehicle Service History
+
+export const postVehicleServiceApi = async (tyresystemData, id) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/service/create-service?vehicleId=${id}`,
+            tyresystemData,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    // "Content-Type": "application/json",
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        if (response.status === 201 || response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        throw error;
+    }
+}
+
+// Delete Service API
+export const deleteVehicleServiceApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found');
+
+        const { data } = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/service/delete-service/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+
+        return data; // return instead of console.log
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Patch for vehicle Services
+export const patchVehicleServiceApi = async (id, updateVehicleService) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/service/edit-services/${id}`,
+            updateVehicleService,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        if (response.status === 201 || response.status === 200) {
+            console.log("Updated LR data", response.data)
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error("API Error:", error.response?.data?.message || error.message);
+        throw error;
+    }
+}
+
+// Update odomete api
+
+export const patchVehicleServiceOdometerApi = async (id, updateVehicleServiceOdometer) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/service/edit-odometer/${id}`,
+            updateVehicleServiceOdometer,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        )
+
+        if (response.status === 200 || response.status === 201) {
+            console.log('Updated Odometer:', response.data)
+            return response.data
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`)
+        }
+    } catch (error) {
+        console.error('API Error:', error.response?.data?.message || error.message)
+        throw error
+    }
+}
+
+// View bill image
+
+export const getVehicleServiceBillApi = async (serviceImg) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/service/get-service-image/${serviceImg}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        console.log("This is Service Bill Image : ", response.data)
+        return response.data // contains base64Data and contentType
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
+        throw error
+    }
+}

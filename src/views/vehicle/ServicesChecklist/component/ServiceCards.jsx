@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 // Easing for smooth acceleration and deceleration
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
 
-const ServiceCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
+const ServiceCards = ({ title, value, unit, range, icon: Icon, iconColor, description }) => {
   const [animatedValue, setAnimatedValue] = useState(0)
 
   useEffect(() => {
@@ -49,6 +49,11 @@ const ServiceCards = ({ title, value, unit, range, icon: Icon, iconColor }) => {
       <h4 className="my-2">
         {formattedValue} {unit}
       </h4>
+      {description && (
+        <div className="text fw-semibold" style={{ fontSize: '0.9rem' }}>
+          {description}
+        </div>
+      )}
       {range && (
         <div className="text-muted" style={{ fontSize: '0.9rem' }}>
           Range: {range}

@@ -10,6 +10,7 @@ const AddFormButton = ({
   editMode = false,
   showExternally = false,
   onCloseExternal,
+  size,
 }) => {
   const [show, setShow] = useState(false)
   const [formData, setFormData] = useState({})
@@ -153,7 +154,7 @@ const AddFormButton = ({
         </Button>
       )}
 
-      <Modal show={show || showExternally} onHide={handleClose} centered size="lg">
+      <Modal show={show || showExternally} onHide={handleClose} centered size={size || 'lg'}>
         <Modal.Header closeButton>
           <Modal.Title>{editMode ? 'Edit Service' : buttonLabel + ' Form'}</Modal.Title>
         </Modal.Header>
