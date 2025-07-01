@@ -85,6 +85,7 @@ const ServiceList = () => {
       amount: '89.99',
       nextServiceKm: 45000,
       location: 'Mumbai Workshop',
+      paymentMode: 'cash', // ✅ Added
     },
     {
       id: 2,
@@ -95,6 +96,7 @@ const ServiceList = () => {
       amount: '249.99',
       nextServiceKm: 40000,
       location: 'Pune Workshop',
+      paymentMode: 'card', // ✅ Added
     },
     {
       id: 3,
@@ -105,6 +107,7 @@ const ServiceList = () => {
       amount: '199.99',
       nextServiceKm: 35000,
       location: 'Nagpur Workshop',
+      paymentMode: 'upi', // ✅ Added
     },
     {
       id: 4,
@@ -115,6 +118,7 @@ const ServiceList = () => {
       amount: '220.00',
       nextServiceKm: 30000,
       location: 'Bhopal Workshop',
+      paymentMode: 'cash', // ✅ Added
     },
     {
       id: 5,
@@ -125,6 +129,7 @@ const ServiceList = () => {
       amount: '99.99',
       nextServiceKm: 25000,
       location: 'Indore Workshop',
+      paymentMode: 'upi', // ✅ Added
     },
     {
       id: 6,
@@ -135,6 +140,7 @@ const ServiceList = () => {
       amount: '79.99',
       nextServiceKm: 20000,
       location: 'Assam Workshop',
+      paymentMode: 'card', // ✅ Added
     },
   ]
 

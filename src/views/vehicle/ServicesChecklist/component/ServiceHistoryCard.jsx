@@ -81,7 +81,6 @@ const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete, onView }) =>
               <div className="fw-semibold">{entry.description}</div>
               <div className="text-muted small">Odometer: {entry.odometer} km</div>
 
-              {/* Location Section */}
               {entry.location && (
                 <div className="text-muted small d-flex align-items-center mt-1">
                   <MapPin size={14} className="me-1" />
@@ -93,6 +92,31 @@ const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete, onView }) =>
             <div className="text-end">
               <div className="fw-bold text-dark">₹{entry.amount}</div>
               <div className="text-muted small">Next: {entry.nextServiceKm} km</div>
+              {entry.paymentMode && (
+                <div className="mt-2">
+                  <span
+                    style={{
+                      backgroundColor:
+                        entry.paymentMode === 'upi'
+                          ? '#0000FF'
+                          : entry.paymentMode === 'cash'
+                            ? '#28a745'
+                            : entry.paymentMode === 'card'
+                              ? '#f5a623'
+                              : '#0000FF',
+                      color: 'white',
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      fontWeight: 'bold',
+                      fontSize: '0.75rem',
+                      display: 'inline-block',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {entry.paymentMode}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </Card>
