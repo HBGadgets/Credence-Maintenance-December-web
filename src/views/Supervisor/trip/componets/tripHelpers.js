@@ -81,7 +81,7 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
         })
     } catch (err) {
         if (err.response && err.response.status === 400) {
-            toast.error(err.response.data.message || 'Request failed.')
+            console.error(err.response.data.message || 'Request failed.')
         } else {
             console.error('Trip update failed.')
         }

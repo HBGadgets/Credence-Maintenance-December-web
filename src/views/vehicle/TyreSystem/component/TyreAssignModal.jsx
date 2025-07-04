@@ -149,6 +149,7 @@ const TyreAssignModal = ({
 
   const handleSubmit = async () => {
     const requiredFields = [
+      'position',
       'serialNo',
       'brandName',
       'category',
@@ -233,7 +234,9 @@ const TyreAssignModal = ({
       <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <Form>
           <Form.Group className="mb-2">
-            <Form.Label>Tyre Position</Form.Label>
+            <Form.Label>
+              Tyre Position <span className="text-danger">*</span>
+            </Form.Label>
             <Select
               name="position"
               options={positionOptions}
@@ -252,7 +255,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Serial No.</Form.Label>
+            <Form.Label>
+              Serial No <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="serialNo"
@@ -265,7 +270,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Brand Name</Form.Label>
+            <Form.Label>
+              Brand Name <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="brandName"
@@ -278,7 +285,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Vehicle Category</Form.Label>
+            <Form.Label>
+              Vehicle Category <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Select
               name="category"
               value={formData.category}
@@ -300,7 +309,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Status</Form.Label>
+            <Form.Label>
+              Status <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Select
               name="tyreStatus"
               value={formData.tyreStatus}
@@ -320,7 +331,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Installation Date</Form.Label>
+            <Form.Label>
+              Installation Date <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="date"
               name="installationDate"
@@ -335,7 +348,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Shop Name</Form.Label>
+            <Form.Label>
+              Shop Name <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="vendorName"
@@ -348,7 +363,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Location</Form.Label>
+            <Form.Label>
+              Location <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="location"
@@ -361,7 +378,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Tyre Size</Form.Label>
+            <Form.Label>
+              Tyre Size <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               name="tyreSize"
@@ -379,7 +398,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Amount</Form.Label>
+            <Form.Label>
+              Amount <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="number"
               name="amount"
@@ -392,7 +413,9 @@ const TyreAssignModal = ({
           </Form.Group>
 
           <Form.Group className="mb-2">
-            <Form.Label>Payment Mode</Form.Label>
+            <Form.Label>
+              Payment Mode <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Select
               name="paymentMode"
               value={formData.paymentMode}

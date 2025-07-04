@@ -68,11 +68,22 @@ const Trip = () => {
       )
     }
 
-    // Apply status badge styling to the filtered data
-    const styledData = filtered.map((data) => ({
-      ...data,
-      status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
-    }))
+    // Apply remaining amount calculation and status badge styling
+    const styledData = filtered.map((data) => {
+      const budgetAllocated = Number(data.budgetAllocated) || 0
+      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
+      const spentAmount = Number(data.spentAmount) || 0
+
+      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount
+
+      return {
+        ...data,
+        remainingAmount: (
+          <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
+        ),
+        status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
+      }
+    })
 
     setFilteredData(styledData)
   }, [TripsList, dateRange, searchQuery])
@@ -86,8 +97,10 @@ const Trip = () => {
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Start Location', key: 'startLocation', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
-    { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
+    { label: 'Supervisor Budget', key: 'budgetAllocated', sortable: true },
+    { label: 'SubTrip Amount', key: 'subTripBudgetAllocated', sortable: true },
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },
+    { label: 'Remaining Amount', key: 'remainingAmount', sortable: true },
     { label: 'Material Type', key: 'materialType', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]

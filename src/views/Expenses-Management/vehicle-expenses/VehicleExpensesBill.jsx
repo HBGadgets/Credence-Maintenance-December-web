@@ -489,7 +489,7 @@ const VehicleExpensesBill = () => {
           setEditingUser(null)
         }}
         onSubmit={handleFormSubmit}
-        title={editMode ? 'Edit Driver Expense' : 'Add New Driver Expense'}
+        title={editMode ? 'Edit Vehicle Expense' : 'Add New Vehicle Expense'}
         size="xl"
         fields={field}
         isSubmitting={isSubmitting || isUpdating}

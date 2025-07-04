@@ -78,6 +78,11 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'All Vehicle Service Log',
+        to: '/AllVehicleServicesData',
+      },
+      {
+        component: CNavItem,
         name: 'All Vehicle Inpections',
         to: '/AllVehicleInpection',
       },

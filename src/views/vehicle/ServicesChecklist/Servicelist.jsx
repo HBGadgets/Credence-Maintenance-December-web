@@ -43,13 +43,13 @@ const ServiceList = () => {
   const [modalTitle, setModalTitle] = useState('')
 
   //Fetch api
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: ['serviceData', id],
     queryFn: () => getVehicleServiceHistoryApi(id),
     enabled: !!id,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     staleTime: Infinity,
     cacheTime: 1000 * 60 * 60,
   })
@@ -136,7 +136,8 @@ const ServiceList = () => {
     mutationFn: (id) => deleteVehicleServiceApi(id),
     onSuccess: (data) => {
       Swal.fire('Deleted!', data.message || 'Service deleted successfully.', 'success')
-      queryClient.invalidateQueries(['vehicleServiceList']) // refetch service list
+      queryClient.invalidateQueries(['serviceData', id])
+      refetch()
     },
     onError: (error) => {
       Swal.fire('Error!', error?.response?.data?.message || 'Failed to delete service.', 'error')
@@ -418,14 +419,13 @@ const ServiceList = () => {
           Odometer Service KM
         </Card.Header>
         <Card.Body className="px-4 py-3">
-          <div className="mb-4">
-            <h6 className="text-muted mb-1">Vehicle Name</h6>
-            <h5 className="fw-bold text-dark">
-              <h5 className="fw-bold text-dark">
-                {serviceData.length > 0 ? serviceData[0].currentVehicleName : 'N/A'}
-              </h5>
-            </h5>
-          </div>
+          {serviceData.length > 0 && (
+            <div className="mb-4">
+              <h6 className="text-muted mb-1">Vehicle Name</h6>
+              <h5 className="fw-bold text-dark">{serviceData[0].vehicleName}</h5>
+            </div>
+          )}
+
           <div className="row">
             {/* odometer */}
             <div className="col-md-4 mb-4">

@@ -50,9 +50,12 @@ const InpectionList = () => {
   } = useQuery({
     queryKey: ['vehicleinpection', id],
     queryFn: () => getInpectionVehicleIdApi(id),
-    staleTime: Infinity, // fetch only once unless manually refetched
-    cacheTime: Infinity,
     enabled: !!id, // only run if `id` exists
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: Infinity,
+    cacheTime: 1000 * 60 * 60,
   })
 
   console.log(vehicleinpection)

@@ -91,6 +91,8 @@ const ServiceHistoryCard = ({ paginatedData = [], onEdit, onDelete, onView, load
 
                 {entry.driverName && <div className="fw-semibold">Driver: {entry.driverName}</div>}
 
+                {entry.vendor && <div className="fw-semibold">Shop Name: {entry.vendor}</div>}
+
                 {entry.location && (
                   <div className="fw-semibold small d-flex align-items-center mt-1">
                     <MapPin size={14} className="me-1" />

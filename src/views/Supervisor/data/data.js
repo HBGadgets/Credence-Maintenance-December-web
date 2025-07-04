@@ -235,6 +235,7 @@ export const getTripListApi = async () => {
         startLocation: TripsList.startLocation,
         endLocation: TripsList.endLocation,
         budgetAllocated: TripsList.budgetAllocated,
+        subTripBudgetAllocated: TripsList.subTripBudgetAllocated,
         spentAmount: TripsList.spentAmount,
         materialType: TripsList.materialType,
         status: TripsList.status,
@@ -768,4 +769,52 @@ export const getAllFailInpectionImageApi = async (Image) => {
     }
 }
 
+// --------------------------------------------------------------------------------------------------
 
+//  Get all Vehicle Service odometer List section 
+
+export const getAllServiceHistoryApi = async (id) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/service/get-all-services?userId=${id}`,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        )
+
+        console.log('All Vehicle Service History Raw Response:', response)
+
+        const data = response.data?.data || []
+
+        const mappedData = data.map((entry) => ({
+            id: entry._id,
+            vehicleId: entry.vehicleId,
+            driverName: entry.driverId?.name || 'N/A',
+            currentVehicleName: entry.vehicleName || 'N/A',
+            date: useSplitTimeDate(entry.date),
+            originalDate: entry.date,
+            serviceType: entry.serviceType || 'N/A',
+            description: entry.description || 'N/A',
+            amount: entry.amount || 'N/A',
+            paymentMode: entry.paymentMode || 'N/A',
+            odometer: entry.lastService || 'N/A',
+            nextServiceKm: entry.nextServiceDue || 'N/A',
+            location: entry.location || 'N/A',
+            serviceImg: entry.serviceImg,
+            tripStartLocation: entry.trip?.startLocation || 'N/A',
+            tripEndLocation: entry.trip?.endLocation || 'N/A',
+            tripStatus: entry.trip?.status || 'N/A',
+            shopName: entry.shopName || 'N/A',
+            coordinate: entry.coordinate || 'N/A',
+        }))
+
+        console.log('Mapped Vehicle Service History Data:', mappedData)
+
+        return mappedData
+    } catch (error) {
+        console.error('Error fetching service history:', error.message)
+        throw error
+    }
+}

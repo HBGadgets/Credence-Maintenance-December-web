@@ -35,6 +35,8 @@ const AllDailyLogbook = React.lazy(() => import('./views/Supervisor/alldailylog/
 
 const AnalayisInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/components/AnalayisInpection.jsx'))
 
+const AllVehicleServicesData = React.lazy(() => import('./views/Supervisor/allvehicleserviceslist/AllVehicleServicesData.jsx'))
+
 // Expenses Management
 
 const DriverExpenses = React.lazy(
@@ -112,6 +114,7 @@ const routes = [
   { path: '/AllDailyLogbook', name: 'All Drives LogBooks', element: AllDailyLogbook },
   { path: '/AllVehicleInpection', name: 'All Vehicle Inpections', element: AllVehicleInpection },
   { path: '/AnalayisInpection/:id', name: 'All Analayis Vehicle Inpection', element: AnalayisInpection },
+  { path: '/AllVehicleServicesData', name: 'All Vehicle Service Data', element: AllVehicleServicesData },
 
   /**EXPENSES MANAGEMENT */
 
