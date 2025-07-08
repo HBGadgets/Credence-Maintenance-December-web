@@ -19,7 +19,7 @@ const TyreAssignModal = ({
   const [formData, setFormData] = useState({
     serialNo: '',
     brandName: '',
-    category: '',
+    // category: '',
     tyreStatus: '',
     installationDate: '',
     vendorName: '',
@@ -118,7 +118,7 @@ const TyreAssignModal = ({
       setFormData({
         serialNo: initialData?.tyreSerialNumber || '',
         brandName: initialData?.brandName || '',
-        category: initialData?.category || '',
+        // category: initialData?.category || '',
         tyreStatus: initialData?.tyreStatus || '',
         installationDate: initialData?.installationDate || '',
         vendorName: initialData?.vendorName || '',
@@ -133,7 +133,7 @@ const TyreAssignModal = ({
       setFormData({
         serialNo: '',
         brandName: '',
-        category: '',
+        // category: '',
         tyreStatus: '',
         installationDate: '',
         vendorName: '',
@@ -152,7 +152,7 @@ const TyreAssignModal = ({
       'position',
       'serialNo',
       'brandName',
-      'category',
+      // 'category',
       'tyreStatus',
       'installationDate',
       'vendorName',
@@ -203,7 +203,7 @@ const TyreAssignModal = ({
     const dataToSend = new FormData()
     dataToSend.append('tyreSerialNumber', formData.serialNo)
     dataToSend.append('brandName', formData.brandName)
-    dataToSend.append('category', formData.category)
+    // dataToSend.append('category', formData.category)
     dataToSend.append('tyreStatus', formData.tyreStatus)
     dataToSend.append('installationDate', formData.installationDate)
     dataToSend.append('vendorName', formData.vendorName)
@@ -284,7 +284,7 @@ const TyreAssignModal = ({
             <Form.Control.Feedback type="invalid">Brand name is required.</Form.Control.Feedback>
           </Form.Group>
 
-          <Form.Group className="mb-2">
+          {/* <Form.Group className="mb-2">
             <Form.Label>
               Vehicle Category <span className="text-danger">*</span>
             </Form.Label>
@@ -306,7 +306,7 @@ const TyreAssignModal = ({
             <Form.Control.Feedback type="invalid">
               Vehicle category is required.
             </Form.Control.Feedback>
-          </Form.Group>
+          </Form.Group> */}
 
           <Form.Group className="mb-2">
             <Form.Label>

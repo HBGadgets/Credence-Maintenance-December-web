@@ -387,7 +387,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { fetchVehicles } from './data/VehicleListData'
 import SearchInput from '../components/SearchInput'
 import { ToastContainer } from 'react-toastify'
@@ -397,6 +397,9 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import IconDropdown from '../Supervisor/IconDropdown'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
+import SingleSelectDropdown from '../components/SingleSelectDropdown' // Make sure this exists
+import { TokenContext } from '../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const VehicleList = () => {
   const { exportToPDF } = usePdfExporter()
@@ -405,73 +408,77 @@ const VehicleList = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedName, setSelectedName] = useState(null)
+  const [nameOptions, setNameOptions] = useState([])
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
 
   const navigate = useNavigate()
 
   const { data: vehicles = [], isFetching } = useQuery({
     queryKey: ['vehicles'],
     queryFn: fetchVehicles,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
   })
 
+  // Set name filter options
   useEffect(() => {
-    let updatedData = [...vehicles] // Start with all vehicles
+    const usernames = [...new Set(vehicles.map((v) => v.username).filter(Boolean))]
+    const options = usernames.map((name) => ({ label: name, value: name }))
+    setNameOptions(options)
+  }, [vehicles])
+
+  // Filtering logic
+  useEffect(() => {
+    let updatedData = [...vehicles]
 
     if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase()
+      const lower = searchQuery.toLowerCase()
       updatedData = updatedData.filter((item) =>
         Object.values(item).some(
-          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lower),
         ),
       )
     }
 
-    setFilteredData(updatedData)
-  }, [vehicles, searchQuery])
+    if (selectedName) {
+      updatedData = updatedData.filter((item) => item.username === selectedName.value)
+    }
 
-  console.log('vehicles', vehicles)
+    setFilteredData(updatedData)
+  }, [vehicles, searchQuery, selectedName])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-  // Table columns
   const columns = [
     { label: 'Vehicle', key: 'name', sortable: true },
     { label: 'Model', key: 'model', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
+    { label: 'Username', key: 'username', sortable: true },
   ]
 
-  // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
   }
 
-  // Handle view
   const handleViewButton = (id) => {
-    console.log('idsss', id)
     navigate(`/VehicleProfile/${id}`)
   }
 
-  console.log('filterdata', filteredData)
-
-  // Handle Logout
   const handleLogout = () => {
-    // Clear sessionStorage and localStorage
     sessionStorage.clear()
     localStorage.clear()
-
-    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
     document.cookie.split(';').forEach((c) => {
       const base = c.trim().split('=')[0]
       document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
     })
-
-    // Redirect to Credence
     window.history.replaceState(null, '', '/')
-    // window.location.href = 'http://localhost:3000'
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
   }
 
-  // Memoized dropdown items for export
   const dropdownItems = useMemo(
     () => [
       {
@@ -488,14 +495,13 @@ const VehicleList = () => {
       {
         icon: PiMicrosoftExcelLogo,
         label: 'Download Excel',
-        onClick: () => {
+        onClick: () =>
           exportToExcel({
             title: 'All Vehicle List Report',
             columns,
             data: filteredData,
             fileName: 'Vehicle_List_Report',
-          })
-        },
+          }),
       },
       {
         icon: FaPrint,
@@ -520,7 +526,18 @@ const VehicleList = () => {
     <>
       <ToastContainer />
 
-      <div className="mb-2 d-flex justify-content-end align-items-center">
+      <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
+        {userRole === 'superadmin' && (
+          <div style={{ width: '330px' }}>
+            <SingleSelectDropdown
+              options={nameOptions}
+              value={selectedName}
+              onChange={setSelectedName}
+              isClearable
+              placeholder="Filter by username..."
+            />
+          </div>
+        )}
         <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
       </div>
 

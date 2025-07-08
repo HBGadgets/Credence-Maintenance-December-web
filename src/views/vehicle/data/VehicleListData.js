@@ -14,27 +14,27 @@ const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
 export const fetchVehicles = async () => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        if (!TOKEN) throw new Error('Authentication token not found');
 
         const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vehicle/get-all`, {
             headers: { Authorization: `Bearer ${TOKEN}` },
-        })
+        });
 
-        const vehicles = data.devices // adjust according to actual response
+        const vehicles = data.devices; // adjust if needed
 
-        console.log("vehicles", vehicles)
+        console.log("vehicles", vehicles);
         return vehicles.map((vehicle) => ({
             name: vehicle.name || 'N/A',
             model: vehicle.model || 'N/A',
             category: vehicle.category || 'N/A',
             id: vehicle._id || 'N/A',
-        }))
+            username: vehicle.users?.[0]?.username || 'N/A',
+        }));
     } catch (error) {
-        console.error(error)
-        throw error
+        console.error(error);
+        throw error;
     }
-
-}
+};
 
 
 
