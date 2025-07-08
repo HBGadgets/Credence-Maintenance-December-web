@@ -43,12 +43,34 @@ export const fetchDrivers = async () => {
       email: driver.email,
       password: driver.password,
       id: driver._id,
+      supervisor: driver.supervisor,
     }))
   } catch (error) {
     alert(error.message)
     throw error
   }
 }
+
+export const fetchSupervisor = async () => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/get`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const users = Array.isArray(data) ? data : data.users || data.data || []
+
+    return users.map((sup) => ({
+      value: sup._id,
+      label: sup.username || sup.name || 'Unnamed Supervisor',
+    }))
+  } catch (error) {
+    console.log('Supervisor fetch error:', error.message)
+    throw error
+  }
+}
+
 
 export const deleteDriver = async (id) => {
   try {

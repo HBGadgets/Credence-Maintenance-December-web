@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useContext } from 'react'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import { addDriver, deleteDriver, fetchDrivers, updateDriver } from './data/drivers'
+import {
+  addDriver,
+  deleteDriver,
+  fetchDrivers,
+  fetchSupervisor,
+  updateDriver,
+} from './data/drivers'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import SearchInput from '../components/SearchInput'
@@ -17,6 +23,9 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import IconDropdown from '../Supervisor/IconDropdown'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
+import SingleSelectDropdown from '../components/SingleSelectDropdown'
+import { TokenContext } from '../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 function DriversPage() {
   const { exportToPDF } = usePdfExporter()
@@ -38,12 +47,28 @@ function DriversPage() {
   const [editMode, setEditMode] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [submitEdit, setSubmitEdit] = useState(false)
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
 
   // Fetch driver
   const { data: drivers = [], isFetching } = useQuery({
     queryKey: ['drivers'],
     queryFn: fetchDrivers,
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+  })
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
   })
 
   // Add Driver
@@ -87,10 +112,22 @@ function DriversPage() {
   })
 
   useEffect(() => {
-    setFilteredData(drivers)
-  }, [drivers])
+    let filtered = drivers
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((driver) => driver.supervisor === selectedName.value)
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter((driver) =>
+        driver.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    }
+
+    setFilteredData(filtered)
+  }, [drivers, selectedName, searchQuery])
 
   // field from
 
@@ -228,16 +265,6 @@ function DriversPage() {
   // Search handler (Filters allData)
   const handleSearch = (query) => {
     setSearchQuery(query)
-
-    if (!query) {
-      setFilteredData(drivers) // ← this should be "drivers"
-      return
-    }
-
-    const filtered = drivers.filter((item) =>
-      item.name?.toLowerCase().includes(query.toLowerCase()),
-    )
-    setFilteredData(filtered)
   }
 
   // Handle Logout
@@ -303,16 +330,36 @@ function DriversPage() {
     [filteredData, columns, exportToPDF, exportToExcel],
   )
 
+  console.log('drivers:', drivers)
+  console.log('selectedName:', selectedName)
+  console.log(
+    'Drivers:',
+    drivers.map((d) => ({ name: d.name, supervisor: d.supervisor })),
+  )
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <>
       <ToastContainer />
 
-      <div className="mb-3 d-flex justify-content-end align-items-center">
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          {userRole === 'superadmin' && (
+            <div style={{ width: '330px' }}>
+              <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
+        </div>
         <div className="d-flex justify-content-end align-items-center gap-2 w-75">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
           <AddButton
             label="Add Driver"
-            // icon={<FaPlus />}
             onClick={() => {
               setEditMode(false)
               setSubmitEdit(false)

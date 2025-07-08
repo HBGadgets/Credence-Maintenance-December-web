@@ -526,19 +526,23 @@ const VehicleList = () => {
     <>
       <ToastContainer />
 
-      <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
-        {userRole === 'superadmin' && (
-          <div style={{ width: '330px' }}>
-            <SingleSelectDropdown
-              options={nameOptions}
-              value={selectedName}
-              onChange={setSelectedName}
-              isClearable
-              placeholder="Filter by username..."
-            />
-          </div>
-        )}
-        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
+          {userRole === 'superadmin' && (
+            <div style={{ width: '330px' }}>
+              <SingleSelectDropdown
+                options={nameOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
+        </div>
+        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+        </div>
       </div>
 
       <Table
