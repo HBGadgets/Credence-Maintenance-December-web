@@ -51,7 +51,7 @@ const HeaderInpection = ({ inspection }) => {
                   {startLocation && endLocation ? `${startLocation} → ${endLocation}` : 'N/A'}
                 </div>
                 <span
-                  className={`badge rounded-pill mt-2 bg-${status === 'in-progress' ? 'warning' : 'secondary'}`}
+                  className={`badge rounded-pill mt-2 bg-${status === 'in-progress' ? 'warning' : 'success'}`}
                 >
                   {status}
                 </span>
