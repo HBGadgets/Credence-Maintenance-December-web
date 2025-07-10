@@ -22,13 +22,7 @@ const LeaveRequests = React.lazy(() => import('./views/Supervisor/leave-request/
 const CurrentAttendence = React.lazy(
   () => import('./views/Supervisor/attendence/CurrentAttendence.jsx'),
 )
-const ComDetails = React.lazy(() => import('./views/Supervisor/company-details/ComDetails.js'))
-const SelectedCompDetails = React.lazy(
-  () => import('./views/Supervisor/company-details/SelectedCompDetails.js'),
-)
-const BranchDetails = React.lazy(
-  () => import('./views/Supervisor/company-details/BranchDetails.js'),
-)
+
 const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
 const AllDailyLogbook = React.lazy(() => import('./views/Supervisor/alldailylog/AllDailyLogbook.jsx'))
@@ -106,10 +100,7 @@ const routes = [
   { path: '/SubTrips/:id', name: 'Sub Trips', element: SubTrips },
   { path: '/Salary', name: 'Drivers Salary', element: DriverSalary },
   { path: '/Attendence', name: 'Driver Attendence Mark', element: CurrentAttendence },
-  { path: '/ComDetails', name: 'Company Details', element: ComDetails },
   { path: '/LeaveRequests', name: 'Leave Requests', element: LeaveRequests },
-  { path: '/ComDetails/:id', name: 'Selected Company', element: SelectedCompDetails },
-  { path: '/ComDetails/:id/branch-details/:id', name: 'Branch Details', element: BranchDetails },
   { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
   { path: '/AllDailyLogbook', name: 'All Drives LogBooks', element: AllDailyLogbook },
   { path: '/AllVehicleInpection', name: 'All Vehicle Inpections', element: AllVehicleInpection },

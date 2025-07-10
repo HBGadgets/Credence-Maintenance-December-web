@@ -15,7 +15,7 @@ const TT = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
 // GET API Supervisor See Driver List all
 
-export const getDriverListApi = async (id) => {
+export const getDriverListApi = async () => {
     if (!TOKEN) throw new Error("Authentication token not found");
 
     const { data } = await axios.get(
@@ -28,7 +28,7 @@ export const getDriverListApi = async (id) => {
     );
     console.log("This all drivers list for today mark for present : ", data);
 
-    return data.map((driverlist) => ({
+    return data?.data.map((driverlist) => ({
         id: driverlist._id,
         name: driverlist.name,
         contactNumber: driverlist.contactNumber,
@@ -773,12 +773,12 @@ export const getAllFailInpectionImageApi = async (Image) => {
 
 //  Get all Vehicle Service odometer List section 
 
-export const getAllServiceHistoryApi = async (id) => {
+export const getAllServiceHistoryApi = async () => {
     try {
         if (!TOKEN) throw new Error('Authentication token not found')
 
         const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/service/get-all-services?userId=${id}`,
+            `${import.meta.env.VITE_API_URL}/api/service/get-all-services`,
             {
                 headers: { Authorization: `Bearer ${TOKEN}` },
             }
@@ -806,7 +806,7 @@ export const getAllServiceHistoryApi = async (id) => {
             tripStartLocation: entry.trip?.startLocation || 'N/A',
             tripEndLocation: entry.trip?.endLocation || 'N/A',
             tripStatus: entry.trip?.status || 'N/A',
-            shopName: entry.shopName || 'N/A',
+            shopName: entry.vendor || 'N/A',
             coordinate: entry.coordinate || 'N/A',
         }))
 

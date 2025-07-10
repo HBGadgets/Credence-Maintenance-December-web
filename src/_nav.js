@@ -61,11 +61,6 @@ const _nav = [
       />
     ),
     items: [
-      // {
-      //   component: CNavItem,
-      //   name: 'Company details',
-      //   to: '/ComDetails',
-      // },
       {
         component: CNavItem,
         name: 'Trips',

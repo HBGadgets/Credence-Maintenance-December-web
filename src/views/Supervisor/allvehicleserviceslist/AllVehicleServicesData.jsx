@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 
-const AllVehicleServicesData = ({ id }) => {
+const AllVehicleServicesData = () => {
   const navigate = useNavigate()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)

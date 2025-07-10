@@ -160,7 +160,7 @@ export const getAllVehicleExpesesListApi = async () => {
         originalDate: vehicleExpenseList.date,
         date: formatDateToDDMMYYYY(vehicleExpenseList.date),
         driverName: vehicleExpenseList.driverId?.name || "Unknown",
-        currentVehicleName: vehicleExpenseList.driverId?.currentVehicleName || "N/A",
+        currentVehicleName: vehicleExpenseList.vehicleName || "N/A",
         shopName: vehicleExpenseList.vendor || "Unknown",
         expenseType: vehicleExpenseList.expenseType || "Unknown",
         description: vehicleExpenseList.description || "No description",
