@@ -33,26 +33,23 @@ import { fetchDashboardData } from './data/data';
 import SingleSelectDropdown from '../components/SingleSelectDropdown';
 import { jwtDecode } from 'jwt-decode';
 import { fetchSupervisor } from '../DriverExpert/data/drivers';
+import { getTripListApi } from '../Supervisor/data/data';
+import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers';
+import Table from '../components/Table';
+import SmartPagination from '../components/SmartPagination';
+import SearchInput from '../components/SearchInput';
+import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+
 const Dashboard = () => {
   const token = useContext(TokenContext);
 
-  // Static values as per original code
-  const activeDrivers = 12;
-  const inactiveDrivers = 3;
-  const presentDrivers = 10;
-  const absentDrivers = 5;
-  const activeVehicles = 8;
-  const inactiveVehicles = 2;
-  const totalExpenses = 15340;
-  const underMaintenanceVehicles = 2;
-  const goodConditionVehicles = 6;
-  const driverLocation = 8;
-  const roadSide = 5;
+  const [filteredData, setFilteredData] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
-  const expiringInsurances = [
-    { name: 'Vehicle A', insuranceExpiryDate: '2024-12-30' },
-    { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' },
-  ];
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -71,9 +68,20 @@ const Dashboard = () => {
     staleTime: 1000 * 60 * 10,
   })
 
+  // Fetch Trip Data
+  const {
+    data: TripsList = [],
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['TripsList'],
+    queryFn: getTripListApi,
+    staleTime: 1000 * 60 * 30,
+  })
+
 
   // Fetch dashboard data using React Query
-  const { data, isLoading, error } = useQuery({
+  const { data } = useQuery({
     queryKey: ['dashboardData', token, selectedName?.value], // 👈 include supervisor id
     queryFn: () => fetchDashboardData(selectedName?.value),
     enabled: !!token,
@@ -97,64 +105,87 @@ const Dashboard = () => {
     setModalContent('');
   };
 
-  const tableData = [
-    {
-      driver: { name: 'Dove Lara' },
-      vehicle: { model: 'Toyota Camry', plate: 'ABC-123' },
-      route: 'Nagpur → Bhopal',
-      date: 'Mar 15, 2024',
-      duration: '6 hours',
-      totalExpense: 450,
-      expenses: { driver: 150, vehicle: 300 },
-      status: 'Active',
-    },
-    {
-      driver: { name: 'Jane Dom' },
-      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: { driver: 130, vehicle: 270 },
-      status: 'Active',
-    },
-    {
-      driver: { name: 'Stive Smith' },
-      vehicle: { model: 'Honda Accord', plate: 'XYZ-887' },
-      route: 'Mumbai → Pune',
-      date: 'Aug 16, 2024',
-      duration: '5 hours',
-      totalExpense: 10000,
-      expenses: { driver: 2500, vehicle: 3700 },
-      status: 'Inactive',
-    },
-    {
-      driver: { name: 'July Kim' },
-      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: { driver: 130, vehicle: 270 },
-      status: 'Active',
-    },
-    {
-      driver: { name: 'Jurry Atnone' },
-      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: { driver: 130, vehicle: 270 },
-      status: 'Inactive',
-    },
-  ];
+
+  useEffect(() => {
+    let filtered = TripsList
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+    }
+
+    // Filter by date range if available
+    if (dateRange.startDate && dateRange.endDate) {
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.orginalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      })
+    }
+
+    // Apply search query filter
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase()
+      filtered = filtered.filter((item) =>
+        Object.values(item).some(
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
+    }
+
+    // Apply remaining amount calculation and status badge styling
+    const styledData = filtered.map((data) => {
+      const budgetAllocated = Number(data.budgetAllocated) || 0
+      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
+      const spentAmount = Number(data.spentAmount) || 0
+
+      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount
+
+      return {
+        ...data,
+        remainingAmount: (
+          <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
+        ),
+        status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
+      }
+    })
+
+    setFilteredData(styledData)
+  }, [TripsList, selectedName, searchQuery, dateRange])
+
 
   useEffect(() => {
     if (token) {
       console.log('token', token);
     }
   }, [token]);
+
+
+  // Table view
+  const columns = [
+    { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
+    { label: 'Start Date', key: 'date', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Start Location', key: 'startLocation', sortable: true },
+    { label: 'End Location', key: 'endLocation', sortable: true },
+    { label: 'Supervisor Budget', key: 'budgetAllocated', sortable: true },
+    { label: 'SubTrip Amount', key: 'subTripBudgetAllocated', sortable: true },
+    { label: 'Spent Amount', key: 'spentAmount', sortable: true },
+    { label: 'Remaining Amount', key: 'remainingAmount', sortable: true },
+    { label: 'Material Type', key: 'materialType', sortable: true },
+    { label: 'Status', key: 'status', sortable: true },
+  ]
+
+
+  // Handle Search
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
+
+  // Handle Date Range Change
+  const handleDateRangeChange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate })
+  }
 
 
   return token ? (
@@ -274,22 +305,29 @@ const Dashboard = () => {
               label: 'Vehicles',
               icon: <FaTruckMoving className="dashboard-icon" />,
               top: `Available: ${dashboardData?.availableVehicles} | Unavailable: ${dashboardData?.unavailableVehicles}`,
-              bottom: `Total: ${dashboardData?.totalVehicles} (${((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100).toFixed(0)}% Running)`,
+              bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
               color: 'text-success',
               onClick: () => openModal('Vehicles'),
             },
             {
               label: 'Maintenance',
               icon: <IoSettingsSharp className="dashboard-icon" />,
-              top: `Good: ${dashboardData?.totalVehicles} | Under: ${dashboardData?.vehiclesUnderMaintenance}`,
-              // bottom: `Total Checked: ${totalMaintenances} (${((fetchedAvailableVehicles / totalMaintenances) * 100).toFixed(0)}% Healthy)`,
+              top: `Good: ${(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} | Need Services: ${dashboardData?.vehiclesUnderMaintenance ?? 0}`,
+              bottom: (() => {
+                const total = dashboardData?.totalVehicles ?? 0;
+                const under = dashboardData?.vehiclesUnderMaintenance ?? 0;
+                const good = total - under;
+                const totalChecked = total;
+                const healthyPercent = totalChecked ? Math.floor((good / totalChecked) * 100) : 0;
+                return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`;
+              })(),
               color: 'text-success',
               onClick: () => openModal('Maintenance'),
             },
             {
               label: 'Expenses',
               icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
-              top: `₹${dashboardData?.expenses?.total.toLocaleString()}`,
+              top: `Today Expenses: ₹${dashboardData?.expenses?.total.toLocaleString()}`,
               bottom: 'Fleet Expenses',
               color: 'text-primary',
               onClick: () => openModal('Expenses'),
@@ -313,8 +351,8 @@ const Dashboard = () => {
             {
               label: 'Driver Locations',
               icon: <FaMapLocationDot className="dashboard-icon" />,
-              top: `${dashboardData?.driverLocations} Tracked`,
-              bottom: 'Driver GPS Count',
+              top: `${dashboardData?.driverLocations} Locations`,
+              bottom: 'Driver Today Attendances',
               color: 'text-info',
               onClick: () => openModal('Driver Attendance Location'),
             },
@@ -352,60 +390,46 @@ const Dashboard = () => {
           <CButton color="secondary" onClick={closeModal}>Close</CButton>
         </CModalFooter>
       </CModal>
-      <br />
 
-      <CRow>
-        <CCol xs>
-          <CCard className="mb-4 shadow-sm">
-            <CCardHeader className="fw-bold d-flex justify-content-between align-items-center">
-              <span>Recent Trips Overview</span>
-              <CButton size="sm" color="dark" variant="ghost">Export Report</CButton>
-            </CCardHeader>
-            <CCardBody>
-              <CTable align="middle" className="mb-0 table-modern" hover responsive>
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>Driver</CTableHeaderCell>
-                    <CTableHeaderCell>Vehicle</CTableHeaderCell>
-                    <CTableHeaderCell>Route</CTableHeaderCell>
-                    <CTableHeaderCell>Date</CTableHeaderCell>
-                    <CTableHeaderCell>Duration</CTableHeaderCell>
-                    <CTableHeaderCell>Expenses</CTableHeaderCell>
-                    <CTableHeaderCell>Status</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {tableData.map((trip, index) => (
-                    <CTableRow key={index}>
-                      <CTableDataCell>{trip.driver.name}</CTableDataCell>
-                      <CTableDataCell>
-                        <div>{trip.vehicle.model}</div>
-                        <div className="small text-muted">{trip.vehicle.plate}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>{trip.route}</CTableDataCell>
-                      <CTableDataCell>{trip.date}</CTableDataCell>
-                      <CTableDataCell>{trip.duration}</CTableDataCell>
-                      <CTableDataCell>
-                        <div>Total: ₹{trip.totalExpense}</div>
-                        <div className="small text-muted">Driver: ₹{trip.expenses.driver}</div>
-                        <div className="small text-muted">Vehicle: ₹{trip.expenses.vehicle}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <span className={`badge ${trip.status === 'Active' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                          {trip.status}
-                        </span>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-              <div className="d-flex justify-content-end mt-3">
-                <CButton color="dark" className="px-4 rounded-pill shadow-sm">View More</CButton>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
+      <CCard className="mb-4 shadow-sm border-0">
+        <CCardBody className="p-3">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+
+            {/* Heading */}
+            <h5 className="mb-3 mb-md-0 fw-bold text-dark">Trips Details</h5>
+
+            {/* Filters */}
+            <div className="d-flex justify-content-end align-items-center gap-3 w-75">
+              <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+              <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+            </div>
+
+          </div>
+        </CCardBody>
+      </CCard>
+
+
+
+
+      <Table
+        title="All Vehicles Trips"
+        columns={columns}
+        filteredData={filteredData}
+        setFilteredData={setFilteredData}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        isFetching={isFetching}
+      />
+
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setCurrentPage(1)
+        }}
+      />
     </>
   ) : null;
 };
