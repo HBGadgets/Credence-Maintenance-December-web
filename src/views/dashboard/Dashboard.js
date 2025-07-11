@@ -197,8 +197,21 @@ const Dashboard = () => {
         }
       `}</style>
 
-      <h3>Fleets Management Systems </h3>
-      <br />
+
+      <CCard className="mb-4 shadow-sm border-0 bg-white">
+        <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
+          <div className="d-flex align-items-center gap-3">
+            <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '44px', height: '40px' }}>
+              <FaTruckMoving size={20} />
+            </div>
+            <div>
+              <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
+              <div className="text-muted small">Track, maintain, and manage your entire fleet in real-time</div>
+            </div>
+          </div>
+        </CCardBody>
+      </CCard>
+
 
       <CCardGroup className="mb-4">
         <CRow className="g-4">

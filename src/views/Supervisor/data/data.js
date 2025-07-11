@@ -236,6 +236,7 @@ export const getTripListApi = async () => {
         endLocation: TripsList.endLocation,
         budgetAllocated: TripsList.budgetAllocated,
         subTripBudgetAllocated: TripsList.subTripBudgetAllocated,
+        supervisorId: TripsList.supervisorId,
         spentAmount: TripsList.spentAmount,
         materialType: TripsList.materialType,
         status: TripsList.status,

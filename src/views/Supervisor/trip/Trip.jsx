@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
@@ -22,6 +22,10 @@ import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../IconDropdown'
 import { ToastContainer } from 'react-toastify'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
+import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -36,6 +40,14 @@ const Trip = () => {
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
   const navigate = useNavigate()
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch Data
   const {
     data: TripsList = [],
@@ -47,8 +59,20 @@ const Trip = () => {
     staleTime: 1000 * 60 * 30,
   })
 
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
+
   useEffect(() => {
     let filtered = TripsList
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+    }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
@@ -86,7 +110,7 @@ const Trip = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, dateRange, searchQuery])
+  }, [TripsList, dateRange, searchQuery, selectedName])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -106,7 +130,9 @@ const Trip = () => {
   ]
 
   // Handle Search
-  const handleSearch = (query) => setSearchQuery(query)
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
 
   // Handle Date Range Change
   const handleDateRangeChange = (startDate, endDate) => {
@@ -210,14 +236,34 @@ const Trip = () => {
     },
   ]
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <>
       <ToastContainer />
       <div>
         <div className="mb-3 d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
+          <div className="d-flex flex-wrap align-items-center gap-2">
             <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+            {userRole === 'superadmin' && (
+              <div style={{ width: '150px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
           </div>
+
           <div className="d-flex justify-content-end align-items-center gap-2 w-75">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
             {/* Add Button */}
