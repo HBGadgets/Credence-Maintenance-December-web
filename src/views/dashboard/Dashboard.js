@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react'
+// new code 
+
+import React, { useState, useContext } from 'react'
 import {
   CAvatar,
   CButton,
@@ -19,187 +21,44 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import {
-  cilCog,
-  cilDollar,
-  cilGridSlash,
-  cilListRich,
-  cilMap,
-  cilPaintBucket,
-  cilPeople,
-  cilShieldAlt,
-  cilSpeedometer,
-  cilTruck,
-  cilUser,
-  cilWarning,
-} from '@coreui/icons'
-import { IoPersonSharp } from 'react-icons/io5'
-import { FaTruckMoving } from 'react-icons/fa6'
-import { IoSettingsSharp } from 'react-icons/io5'
-import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
+  IoPersonSharp,
+  IoSettingsSharp,
+  IoAlertCircle,
+} from 'react-icons/io5'
+import { FaTruckMoving, FaMapLocationDot, FaHandshakeSimple } from 'react-icons/fa6'
 import { TbTruckDelivery } from 'react-icons/tb'
-import { IoAlertCircle } from 'react-icons/io5'
-import { FaMapLocationDot } from 'react-icons/fa6'
-import { FaHandshakeSimple } from 'react-icons/fa6'
+import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TokenContext } from '../../context/TokenContext'
-import avatar1 from 'src/assets/images/avatars/1.jpg'
-import avatar2 from 'src/assets/images/avatars/2.jpg'
-import avatar3 from 'src/assets/images/avatars/3.jpg'
-import avatar4 from 'src/assets/images/avatars/4.jpg'
-import avatar5 from 'src/assets/images/avatars/5.jpg'
 
 const Dashboard = () => {
   const token = useContext(TokenContext)
-  // Data processing (these should be calculated dynamically based on actual data)
+
   const activeDrivers = 12
   const inactiveDrivers = 3
+  const presentDrivers = 10
+  const absentDrivers = 5
   const activeVehicles = 8
   const inactiveVehicles = 2
   const totalExpenses = 15340
   const underMaintenanceVehicles = 2
   const goodConditionVehicles = 6
-  const presentDrivers = 10
-  const absentDrivers = 5
   const driverLocation = 8
   const roadSide = 5
+
   const expiringInsurances = [
     { name: 'Vehicle A', insuranceExpiryDate: '2024-12-30' },
     { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' },
   ]
 
-  // Calculate the count of expiring insurances
   const expiringInsuranceCount = expiringInsurances.length
+  const totalDrivers = activeDrivers + inactiveDrivers
+  const totalVehicles = activeVehicles + inactiveVehicles
+  const totalMaintenances = goodConditionVehicles + underMaintenanceVehicles
+  const totalAttendance = presentDrivers + absentDrivers
 
-  const tableData = [
-    {
-      driver: {
-        name: 'Dove Lara',
-        avatar: avatar1,
-        status: 'success',
-      },
-      vehicle: {
-        model: 'Toyota Camry',
-        plate: 'ABC-123',
-      },
-      route: 'Nagpur → Bhopal',
-      date: 'Mar 15, 2024',
-      duration: '6 hours',
-      totalExpense: 450,
-      expenses: {
-        driver: 150,
-        vehicle: 300,
-      },
-      status: 'Active',
-    },
-    {
-      driver: {
-        name: 'Jane Dom',
-        avatar: avatar2,
-        status: 'warning',
-      },
-      vehicle: {
-        model: 'Honda Civic',
-        plate: 'XYZ-789',
-      },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: {
-        driver: 130,
-        vehicle: 270,
-      },
-      status: 'Active',
-    },
-    {
-      driver: {
-        name: 'Stive Smith',
-        avatar: avatar3,
-        status: 'success',
-      },
-      vehicle: {
-        model: 'Honda Accord',
-        plate: 'XYZ-887',
-      },
-      route: 'Mumbai → Pune',
-      date: 'Aug 16, 2024',
-      duration: '5 hours',
-      totalExpense: 10000,
-      expenses: {
-        driver: 2500,
-        vehicle: 3700,
-      },
-      status: 'Inactive',
-    },
-    {
-      driver: {
-        name: 'July Kim',
-        avatar: avatar4,
-        status: 'success',
-      },
-      vehicle: {
-        model: 'Honda Civic',
-        plate: 'XYZ-789',
-      },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: {
-        driver: 130,
-        vehicle: 270,
-      },
-      status: 'Active',
-    },
-    {
-      driver: {
-        name: 'Jurry Atnone',
-        avatar: avatar5,
-        status: 'warning',
-      },
-      vehicle: {
-        model: 'Honda Civic',
-        plate: 'XYZ-789',
-      },
-      route: 'Raipur → Mumbai',
-      date: 'Mar 10, 2024',
-      duration: '5 hours',
-      totalExpense: 400,
-      expenses: {
-        driver: 130,
-        vehicle: 270,
-      },
-      status: 'Inactive',
-    },
-  ]
-
-  // const [token, setToken] = useState('')
-
-  // useEffect(() => {
-  //   const hash = window.location.hash
-  //   const queryString = hash.includes('?') ? hash.split('?')[1] : ''
-  //   const queryParams = new URLSearchParams(queryString)
-  //   const extractedToken = queryParams.get('token')
-
-  //   if (!extractedToken) {
-  //     window.location.href = 'http://104.251.218.94/'
-  //   } else {
-  //     setToken(extractedToken)
-  //     sessionStorage.setItem('crdnsMaintToken', extractedToken)
-  //   }
-  // }, [])
-
-  // useEffect(() => {
-  //   if (token) {
-  //     console.log('token', token)
-  //   }
-  // }, [token])
-
-  // For cart new dialog box open and close.
   const [modalVisible, setModalVisible] = useState(false)
   const [modalContent, setModalContent] = useState('')
-  const [showAllLogs, setShowAllLogs] = useState(false)
 
   const openModal = (cardName) => {
     setModalContent(cardName)
@@ -211,267 +70,286 @@ const Dashboard = () => {
     setModalContent('')
   }
 
-  const handleClickView = () => {
-    setShowAllLogs(true)
-  }
-  useEffect(() => {
-    console.log('token', token)
-  }, [token])
-  return (
+  const tableData = [
+    {
+      driver: { name: 'Dove Lara' },
+      vehicle: { model: 'Toyota Camry', plate: 'ABC-123' },
+      route: 'Nagpur → Bhopal',
+      date: 'Mar 15, 2024',
+      duration: '6 hours',
+      totalExpense: 450,
+      expenses: { driver: 150, vehicle: 300 },
+      status: 'Active',
+    },
+    {
+      driver: { name: 'Jane Dom' },
+      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
+      route: 'Raipur → Mumbai',
+      date: 'Mar 10, 2024',
+      duration: '5 hours',
+      totalExpense: 400,
+      expenses: { driver: 130, vehicle: 270 },
+      status: 'Active',
+    },
+    {
+      driver: { name: 'Stive Smith' },
+      vehicle: { model: 'Honda Accord', plate: 'XYZ-887' },
+      route: 'Mumbai → Pune',
+      date: 'Aug 16, 2024',
+      duration: '5 hours',
+      totalExpense: 10000,
+      expenses: { driver: 2500, vehicle: 3700 },
+      status: 'Inactive',
+    },
+    {
+      driver: { name: 'July Kim' },
+      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
+      route: 'Raipur → Mumbai',
+      date: 'Mar 10, 2024',
+      duration: '5 hours',
+      totalExpense: 400,
+      expenses: { driver: 130, vehicle: 270 },
+      status: 'Active',
+    },
+    {
+      driver: { name: 'Jurry Atnone' },
+      vehicle: { model: 'Honda Civic', plate: 'XYZ-789' },
+      route: 'Raipur → Mumbai',
+      date: 'Mar 10, 2024',
+      duration: '5 hours',
+      totalExpense: 400,
+      expenses: { driver: 130, vehicle: 270 },
+      status: 'Inactive',
+    },
+  ]
+
+  return token ? (
     <>
-      {token && (
-        <>
-          <style>
-            {`
-          .hover-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-          }
-          .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-          }
-          .hover-table tr:hover {
-            background-color: #f1f1f1;
-          }
-        `}
-          </style>
+      <style>{`
+        .hover-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 16px;
+        }
+        .hover-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        }
+        .dashboard-icon { font-size: 26px; color: #000; }
+        .card-label { font-weight: 600; font-size: 16px; }
+        .card-count { font-size: 17px; font-weight: 600; }
+        .card-subtext { font-size: 14px; color: #6c757d; }
 
-          <CCardGroup className="mb-4">
-            <CRow className="g-3">
-              {/* Active/Inactive Drivers Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Drivers')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <IoPersonSharp style={{ fontSize: '21px' }} />
-                    <span className="font-weight-bold">Drivers</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-success">Active: {activeDrivers}</h5>
-                    <h6 className="mb-2 text-danger">Absent: {absentDrivers}</h6>
-                    <p className="text-muted">Drivers currently available or absent</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .table-modern {
+          border-radius: 10px;
+          overflow: hidden;
+          border-collapse: separate;
+          border-spacing: 0;
+          background-color: #fff;
+          box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+          font-size: 15px;
+        }
 
-              {/* Active/Inactive Vehicles Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Vehicles')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <FaTruckMoving style={{ fontSize: '22px' }} />
-                    <span className="font-weight-bold">Vehicles</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-success">Active: {activeVehicles}</h5>
-                    <h6 className="mb-2 text-danger">Inactive: {inactiveVehicles}</h6>
-                    <p className="text-muted">Vehicle status and tracking details</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .table-modern thead {
+          background-color: #f8f9fa;
+          text-transform: uppercase;
+          font-size: 13px;
+          letter-spacing: 0.03em;
+        }
 
-              {/* Vehicle Maintenance Status Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Maintenance')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <IoSettingsSharp style={{ fontSize: '22px' }} />
-                    <span className="font-weight-bold">Maintenance Status</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-success">Good to Go: {goodConditionVehicles}</h5>
-                    <h6 className="mb-2 text-danger">
-                      Under Maintenance: {underMaintenanceVehicles}
-                    </h6>
-                    <p className="text-muted">Maintenance status of the fleet</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .table-modern th,
+        .table-modern td {
+          padding: 14px 16px;
+          vertical-align: middle;
+          border-bottom: 1px solid #e9ecef;
+        }
 
-              {/* Total Expenses Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Expenses')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <RiMoneyRupeeCircleFill style={{ fontSize: '22px' }} />
-                    <span className="font-weight-bold">Expenses</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-primary">Total: ₹{totalExpenses.toLocaleString()}</h5>
-                    <p className="text-muted">
-                      Total expenses for the fleet, including driver and vehicle costs
-                    </p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .table-modern tbody tr:nth-child(odd) {
+          background-color: #fcfcfc;
+        }
 
-              {/* Live on Work Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Live on Work')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <TbTruckDelivery style={{ fontSize: '23px' }} />
-                    <span className="font-weight-bold">Live on Work</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-primary">On Duty: {presentDrivers}</h5>
-                    <p className="text-muted">Drivers currently on their work duties</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .table-modern tbody tr:hover {
+          background-color: #f0f2f5;
+          transition: background-color 0.2s ease-in-out;
+        }
 
-              {/* Insurance Alert Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Insurance Alert')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <IoAlertCircle style={{ fontSize: '23px' }} />
-                    <span className="font-weight-bold">Insurance Alert</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-danger">Expiring Soon: {expiringInsuranceCount}</h5>
-                    <p className="text-muted">Vehicles with insurance expiring soon</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .badge {
+          font-size: 13px;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 20px;
+          display: inline-block;
+          text-align: center;
+        }
 
-              {/* Vehicle Location Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Driver Attendance Location')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <FaMapLocationDot style={{ fontSize: '23px' }} />
-                    <span className="font-weight-bold">Drivers Attendance Location</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-primary">Drivers Location: {driverLocation} </h5>
-                    <p className="text-muted">Present location of all Active Drivers</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
+        .badge.bg-success {
+          background-color: #198754;
+          color: white;
+        }
 
-              {/* Roadside Assistance Card */}
-              <CCol xs="12" sm="6" lg="3">
-                <CCard
-                  className="shadow-sm border-0 hover-card"
-                  onClick={() => openModal('Roadside Assistance')}
-                >
-                  <CCardHeader className="d-flex align-items-center justify-content-between">
-                    <FaHandshakeSimple style={{ fontSize: '23px' }} />
-                    <span className="font-weight-bold">Roadside Assitance</span>
-                  </CCardHeader>
-                  <CCardBody>
-                    <h5 className="mb-2 text-primary">Used Service: {roadSide}</h5>
-                    <p className="text-muted">Vehicles using Roadside Assistance</p>
-                  </CCardBody>
-                </CCard>
-              </CCol>
-            </CRow>
-          </CCardGroup>
+        .badge.bg-warning {
+          background-color: #ffc107;
+          color: #212529;
+        }
 
-          {/* Modals for each card */}
-          <CModal visible={modalVisible} onClose={closeModal} size="lg" className="pt-5">
-            <CModalHeader>
-              <h5>{modalContent} Details</h5>
-            </CModalHeader>
-            <CModalBody>
-              <p>{`Content for ${modalContent} will go here`}</p>
-            </CModalBody>
-            <CModalFooter>
-              <CButton color="secondary" onClick={closeModal}>
-                Close
-              </CButton>
-            </CModalFooter>
-          </CModal>
+        .table-modern .small.text-muted {
+          font-size: 12px;
+          color: #6c757d;
+        }
+      `}</style>
 
-          {/* Recent Trips Table */}
-          <CRow>
-            <CCol xs>
-              <CCard className="mb-4">
-                <CCardHeader>Recent Trips</CCardHeader>
+      <h3>Fleets Management Systems </h3>
+      <br />
+
+      <CCardGroup className="mb-4">
+        <CRow className="g-4">
+          {[
+            {
+              label: 'Drivers',
+              icon: <IoPersonSharp className="dashboard-icon" />,
+              top: `Active: ${activeDrivers} | Absent: ${absentDrivers}`,
+              bottom: `Total: ${totalDrivers} (${((activeDrivers / totalDrivers) * 100).toFixed(0)}% Active)`,
+              color: 'text-success',
+              onClick: () => openModal('Drivers'),
+            },
+            {
+              label: 'Vehicles',
+              icon: <FaTruckMoving className="dashboard-icon" />,
+              top: `Active: ${activeVehicles} | Inactive: ${inactiveVehicles}`,
+              bottom: `Total: ${totalVehicles} (${((activeVehicles / totalVehicles) * 100).toFixed(0)}% Running)`,
+              color: 'text-success',
+              onClick: () => openModal('Vehicles'),
+            },
+            {
+              label: 'Maintenance',
+              icon: <IoSettingsSharp className="dashboard-icon" />,
+              top: `Good: ${goodConditionVehicles} | Under: ${underMaintenanceVehicles}`,
+              bottom: `Total Checked: ${totalMaintenances} (${((goodConditionVehicles / totalMaintenances) * 100).toFixed(0)}% Healthy)`,
+              color: 'text-success',
+              onClick: () => openModal('Maintenance'),
+            },
+            {
+              label: 'Expenses',
+              icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
+              top: `₹${totalExpenses.toLocaleString()}`,
+              bottom: 'Fleet Expenses',
+              color: 'text-primary',
+              onClick: () => openModal('Expenses'),
+            },
+            {
+              label: 'Live on Work',
+              icon: <TbTruckDelivery className="dashboard-icon" />,
+              top: `On Duty: ${presentDrivers}`,
+              bottom: `Total Marked: ${totalAttendance}`,
+              color: 'text-primary',
+              onClick: () => openModal('Live on Work'),
+            },
+            {
+              label: 'Insurance Alert',
+              icon: <IoAlertCircle className="dashboard-icon" />,
+              top: `Expiring: ${expiringInsuranceCount}`,
+              bottom: 'Expiring Soon',
+              color: 'text-danger',
+              onClick: () => openModal('Insurance Alert'),
+            },
+            {
+              label: 'Driver Locations',
+              icon: <FaMapLocationDot className="dashboard-icon" />,
+              top: `${driverLocation} Tracked`,
+              bottom: 'Driver GPS Count',
+              color: 'text-info',
+              onClick: () => openModal('Driver Attendance Location'),
+            },
+            {
+              label: 'Roadside Assistance',
+              icon: <FaHandshakeSimple className="dashboard-icon" />,
+              top: `Used: ${roadSide}`,
+              bottom: 'Service Calls',
+              color: 'text-primary',
+              onClick: () => openModal('Roadside Assistance'),
+            },
+          ].map((card, idx) => (
+            <CCol key={idx} xs="12" sm="6" lg="3">
+              <CCard className="hover-card shadow-sm border-0" onClick={card.onClick}>
                 <CCardBody>
-                  <CTable align="middle" className="mb-0 border" hover responsive>
-                    <CTableHead>
-                      <CTableRow>
-                        <CTableHeaderCell className="text-center">
-                          <CIcon icon={cilPeople} />
-                        </CTableHeaderCell>
-                        <CTableHeaderCell>Driver</CTableHeaderCell>
-                        <CTableHeaderCell>Vehicle</CTableHeaderCell>
-                        <CTableHeaderCell>Route</CTableHeaderCell>
-                        <CTableHeaderCell>Date</CTableHeaderCell>
-                        <CTableHeaderCell>Duration</CTableHeaderCell>
-                        <CTableHeaderCell>Expenses</CTableHeaderCell>
-                        <CTableHeaderCell>Status</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {tableData.map((trip, index) => (
-                        <CTableRow key={index}>
-                          <CTableDataCell className="text-center">
-                            <CAvatar
-                              size="md"
-                              src={trip.driver.avatar}
-                              status={trip.driver.status}
-                            />
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <div>{trip.driver.name}</div>
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <div>{trip.vehicle.model}</div>
-                            <div className="small text-body-secondary">{trip.vehicle.plate}</div>
-                          </CTableDataCell>
-                          <CTableDataCell>{trip.route}</CTableDataCell>
-                          <CTableDataCell>{trip.date}</CTableDataCell>
-                          <CTableDataCell>{trip.duration}</CTableDataCell>
-                          <CTableDataCell>
-                            <div>Total: ₹{trip.totalExpense}</div>
-                            <div className="small text-body-secondary">
-                              Driver: ₹{trip.expenses.driver}
-                            </div>
-                            <div className="small text-body-secondary">
-                              Vehicle: ₹{trip.expenses.vehicle}
-                            </div>
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <span
-                              className={trip.status === 'Active' ? 'text-success' : 'text-warning'}
-                            >
-                              {trip.status}
-                            </span>
-                          </CTableDataCell>
-                        </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                  <div className="d-flex justify-content-end mt-3">
-                    <button type="button" className="btn btn-secondary" onClick={handleClickView}>
-                      View More
-                    </button>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    {card.icon}
+                    <span className="card-label">{card.label}</span>
                   </div>
+                  <div className={`card-count ${card.color}`}>{card.top}</div>
+                  <div className="card-subtext">{card.bottom}</div>
                 </CCardBody>
               </CCard>
             </CCol>
-          </CRow>
-        </>
-      )}
+          ))}
+        </CRow>
+      </CCardGroup>
+
+      <CModal visible={modalVisible} onClose={closeModal} size="lg">
+        <CModalHeader><h5>{modalContent} Details</h5></CModalHeader>
+        <CModalBody>
+          <p>{`More details about ${modalContent} will be displayed here.`}</p>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={closeModal}>Close</CButton>
+        </CModalFooter>
+      </CModal>
+      <br />
+
+      <CRow>
+        <CCol xs>
+          <CCard className="mb-4 shadow-sm">
+            <CCardHeader className="fw-bold d-flex justify-content-between align-items-center">
+              <span>Recent Trips Overview</span>
+              <CButton size="sm" color="dark" variant="ghost">Export Report</CButton>
+            </CCardHeader>
+            <CCardBody>
+              <CTable align="middle" className="mb-0 table-modern" hover responsive>
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>Driver</CTableHeaderCell>
+                    <CTableHeaderCell>Vehicle</CTableHeaderCell>
+                    <CTableHeaderCell>Route</CTableHeaderCell>
+                    <CTableHeaderCell>Date</CTableHeaderCell>
+                    <CTableHeaderCell>Duration</CTableHeaderCell>
+                    <CTableHeaderCell>Expenses</CTableHeaderCell>
+                    <CTableHeaderCell>Status</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {tableData.map((trip, index) => (
+                    <CTableRow key={index}>
+
+                      <CTableDataCell>{trip.driver.name}</CTableDataCell>
+                      <CTableDataCell>
+                        <div>{trip.vehicle.model}</div>
+                        <div className="small text-muted">{trip.vehicle.plate}</div>
+                      </CTableDataCell>
+                      <CTableDataCell>{trip.route}</CTableDataCell>
+                      <CTableDataCell>{trip.date}</CTableDataCell>
+                      <CTableDataCell>{trip.duration}</CTableDataCell>
+                      <CTableDataCell>
+                        <div>Total: ₹{trip.totalExpense}</div>
+                        <div className="small text-muted">Driver: ₹{trip.expenses.driver}</div>
+                        <div className="small text-muted">Vehicle: ₹{trip.expenses.vehicle}</div>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <span className={`badge ${trip.status === 'Active' ? 'bg-success' : 'bg-warning text-dark'}`}>
+                          {trip.status}
+                        </span>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+                </CTableBody>
+              </CTable>
+              <div className="d-flex justify-content-end mt-3">
+                <CButton color="dark" className="px-4 rounded-pill shadow-sm">View More</CButton>
+              </div>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
     </>
-  )
+  ) : null
 }
 
 export default Dashboard
