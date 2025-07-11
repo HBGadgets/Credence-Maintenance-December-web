@@ -54,7 +54,7 @@ const Dashboard = () => {
   // Fetch dashboard data using React Query
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboardData', token],
-    queryFn: () => fetchDashboardData(token),
+    queryFn: () => fetchDashboardData(),// give supervisor id here
     enabled: !!token,
   });
 
