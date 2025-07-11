@@ -29,8 +29,9 @@ function DriverTrip({ id }) {
   })
 
   useEffect(() => {
-    console.log('Driver Trip Data', DriverTripData)
-    setFilteredData(DriverTripData)
+    if (JSON.stringify(filteredData) !== JSON.stringify(DriverTripData)) {
+      setFilteredData(DriverTripData)
+    }
   }, [DriverTripData])
 
   const handleViewButton = (id) => {

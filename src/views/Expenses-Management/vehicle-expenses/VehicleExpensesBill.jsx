@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import {
   deleteVehicleExpenseApi,
   getAllVehicleExpesesListApi,
@@ -20,8 +20,11 @@ import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import AddButton from '../../components/AddButton'
 import ReusableModal from '../../components/ReusableModal'
-import { fetchDrivers } from '../../DriverExpert/data/drivers'
+import { fetchDrivers, fetchSupervisor } from '../../DriverExpert/data/drivers'
 import Swal from 'sweetalert2'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const VehicleExpensesBill = () => {
   const queryClient = useQueryClient()
@@ -47,6 +50,14 @@ const VehicleExpensesBill = () => {
   //  select driver inpt box
   const [selectedDriverId, setSelectedDriverId] = useState(null)
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch Data
   const { data: vehicleExpenseList = [], isFetching } = useQuery({
     queryKey: ['vehicleExpenseList'],
@@ -62,6 +73,13 @@ const VehicleExpensesBill = () => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
   })
   console.log('drivers list', drivers)
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
 
   // Post driver expense
   const { mutate: addVehicleExpense, isLoading: isSubmitting } = useMutation({
@@ -105,6 +123,11 @@ const VehicleExpensesBill = () => {
 
   useEffect(() => {
     let filtered = vehicleExpenseList
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((vehicleExp) => vehicleExp.supervisor === selectedName.value)
+    }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
@@ -157,7 +180,7 @@ const VehicleExpensesBill = () => {
     }))
 
     setFilteredData(styledData)
-  }, [searchQuery, vehicleExpenseList, dateRange])
+  }, [searchQuery, vehicleExpenseList, dateRange, selectedName])
 
   console.log('All Vehicle Expenses Data: ', filteredData)
 
@@ -456,14 +479,34 @@ const VehicleExpensesBill = () => {
     },
   ]
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <>
       <ToastContainer />
 
       <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
+        <div className="d-flex flex-wrap align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+          {userRole === 'superadmin' && (
+            <div style={{ width: '150px' }}>
+              <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
         </div>
+
         <div className="d-flex justify-content-end align-items-center gap-2 w-75">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import {
   deleteAllDriverDailyLogbookApi,
   getAllDriverDailyLogbookApi,
@@ -9,7 +9,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import SmartPagination from '../../components/SmartPagination'
 import Table from '../../components/Table'
-import { fetchDrivers } from '../../DriverExpert/data/drivers'
+import { fetchDrivers, fetchSupervisor } from '../../DriverExpert/data/drivers'
 import AddButton from '../../components/AddButton'
 import ReusableModal from '../../components/ReusableModal'
 import Swal from 'sweetalert2'
@@ -17,6 +17,9 @@ import BillShow from '../../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const AllDailyLogbook = () => {
   const queryClient = useQueryClient()
@@ -37,6 +40,14 @@ const AllDailyLogbook = () => {
   const [editingUser, setEditingUser] = useState(null)
   const [submitEdit, setSubmitEdit] = useState(false)
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch Data
   const { data: alldailylog, isFetching } = useQuery({
     queryKey: ['alldailylog'],
@@ -47,6 +58,13 @@ const AllDailyLogbook = () => {
     },
   })
   console.log(alldailylog)
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
 
   // POST
   const createDailyLogMutation = useMutation({
@@ -96,6 +114,13 @@ const AllDailyLogbook = () => {
   useEffect(() => {
     let filtered = alldailylog || []
 
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter(
+        (dailylog) => dailylog.supervisor?.toLowerCase() === selectedName.value.toLowerCase(),
+      )
+    }
+
     // Filter by date range
     if (dateRange.startDate && dateRange.endDate) {
       filtered = filtered.filter((item) => {
@@ -115,7 +140,7 @@ const AllDailyLogbook = () => {
     }
 
     setFilteredData(filtered)
-  }, [alldailylog, dateRange, searchQuery])
+  }, [alldailylog, dateRange, searchQuery, selectedName])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -287,14 +312,33 @@ const AllDailyLogbook = () => {
     }
   }
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <div>
       <ToastContainer />
 
       <div>
         <div className="mb-3 d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center gap-2">
             <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+            {userRole === 'superadmin' && (
+              <div style={{ width: '150px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
           </div>
           <div className="d-flex justify-content-end align-items-center gap-2 w-75">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />

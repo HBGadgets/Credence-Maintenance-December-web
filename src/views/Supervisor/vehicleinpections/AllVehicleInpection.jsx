@@ -1,5 +1,5 @@
 // InpectionList.jsx
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import AddButton from '../../components/AddButton'
 import InspectionForm from './components/InpectFrom'
 import Table from '../../components/Table'
@@ -17,6 +17,10 @@ import Swal from 'sweetalert2'
 import { useNavigate } from 'react-router-dom'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import { fetchSupervisor } from '../../DriverExpert/data/drivers'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const AllVehicleInpection = () => {
   const queryClient = useQueryClient()
@@ -32,6 +36,14 @@ const AllVehicleInpection = () => {
   // Edit modal
   const [editingInspection, setEditingInspection] = useState(null)
   const [isEditMode, setIsEditMode] = useState(false)
+
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
 
   const getStatusStyle = (status) => {
     return {
@@ -70,6 +82,13 @@ const AllVehicleInpection = () => {
     queryKey: ['vehicles'],
     queryFn: fetchVehicles,
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+  })
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
   })
 
   // post
@@ -153,21 +172,31 @@ const AllVehicleInpection = () => {
 
   // Keep your existing filteredData useEffect
   useEffect(() => {
-    if (!allvehicleinpection) return
+    if (!Array.isArray(allvehicleinpection)) return
 
     let filtered = [...allvehicleinpection]
 
+    // Filter by supervisor
+    if (selectedName?.value) {
+      filtered = filtered.filter((trip) => trip.supervisor === selectedName.value)
+    }
+
     // Filter by date range
-    if (dateRange.startDate && dateRange.endDate) {
+    const { startDate, endDate } = dateRange || {}
+    if (startDate && endDate) {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.orignalDate) // Adjust the field name if needed
-        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+        const itemDate = new Date(item.orignalDate)
+        return itemDate >= start && itemDate <= end
       })
     }
 
     // Filter by search query
-    if (searchQuery) {
+    if (searchQuery?.trim()) {
       const lowercasedQuery = searchQuery.toLowerCase()
+
       filtered = filtered.filter((item) =>
         Object.values(item).some(
           (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
@@ -176,7 +205,7 @@ const AllVehicleInpection = () => {
     }
 
     setFilteredData(filtered)
-  }, [allvehicleinpection, searchQuery, dateRange])
+  }, [allvehicleinpection, selectedName, dateRange, searchQuery])
 
   // From field opening modal
   const initialItems = [
@@ -546,8 +575,19 @@ const AllVehicleInpection = () => {
 
       <div>
         <div className="mb-3 d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
+          <div className="d-flex flex-wrap align-items-center gap-2">
             <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+            {userRole === 'superadmin' && (
+              <div style={{ width: '150px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
           </div>
           <div className="d-flex justify-content-end align-items-center gap-2 w-75">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />

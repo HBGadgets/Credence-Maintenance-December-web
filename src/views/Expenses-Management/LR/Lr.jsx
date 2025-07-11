@@ -280,7 +280,7 @@
 // export default Lr
 
 // Lr.js
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import SmartPagination from '../../components/SmartPagination'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import SearchInput from '../../components/SearchInput'
@@ -292,6 +292,10 @@ import InvoiceBill from './componets/InvoiceBill'
 import LorryReceiptForm from './componets/LorryReceiptForm'
 import { handleDelete, handleFormSubmit } from './componets/lorryReceiptHandlers'
 import { getLorryReciptApi } from '../data/data'
+import { jwtDecode } from 'jwt-decode'
+import { TokenContext } from '../../../context/TokenContext'
+import { fetchSupervisor } from '../../DriverExpert/data/drivers'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const Lr = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -305,6 +309,14 @@ const Lr = () => {
   const [formMode, setFormMode] = useState('add')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch Data
   const {
     data: lorryReciptList = [],
@@ -316,9 +328,21 @@ const Lr = () => {
     staleTime: 1000 * 60 * 30, // Cache time in milliseconds
   })
 
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
+
   // Use effect to filter data
   useEffect(() => {
     let filtered = lorryReciptList
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((recipt) => recipt.supervisor === selectedName.value)
+    }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
@@ -338,7 +362,7 @@ const Lr = () => {
       )
     }
     setFilteredData(filtered)
-  }, [searchQuery, lorryReciptList, dateRange])
+  }, [searchQuery, lorryReciptList, dateRange, selectedName])
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
@@ -426,14 +450,34 @@ const Lr = () => {
     handleFormSubmit(formData, formMode, selectedData, setFilteredData, setShowForm, refetch)
   }
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <>
       <div>
         <ToastContainer />
         <div className="mb-3 d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
+          <div className="d-flex flex-wrap align-items-center gap-2">
             <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+            {userRole === 'superadmin' && (
+              <div style={{ width: '150px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
           </div>
+
           <div className="d-flex justify-content-end align-items-center gap-2 w-75">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
             <Button variant="primary" onClick={handleAdd}>

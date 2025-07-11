@@ -499,6 +499,7 @@ export const getAllDriverDailyLogbookApi = async () => {
     return response.map((alldailylog) => ({
         id: alldailylog._id,
         driverName: alldailylog.driverId?.name || "Unknown",
+        supervisor: alldailylog.driverId?.supervisor || "Unknown",
         vehicleName: alldailylog.vehicleName || "N/A",
         originalDate: useSplitTimeDate(alldailylog.startDate) || "N/A",
         startDate: useFormattedTime(alldailylog.startDate),
@@ -677,6 +678,7 @@ export const getAllVehicleInpectionApi = async () => {
             orignalDate: inspection.createdAt,
             date: useSplitTimeDate(inspection.createdAt),
             driverName: inspection.DriverId?.name || "Unknown",
+            supervisor: inspection.DriverId?.supervisor || "Unknown",
             startLocation: inspection.tripId?.startLocation || "N/A",
             endLocation: inspection.tripId?.endLocation || "N/A",
             status: inspection.tripId?.status || "N/A",
@@ -793,6 +795,7 @@ export const getAllServiceHistoryApi = async () => {
             id: entry._id,
             vehicleId: entry.vehicleId,
             driverName: entry.driverId?.name || 'N/A',
+            supervisor: entry.driverId?.supervisor || 'N/A',
             currentVehicleName: entry.vehicleName || 'N/A',
             date: useSplitTimeDate(entry.date),
             originalDate: entry.date,
