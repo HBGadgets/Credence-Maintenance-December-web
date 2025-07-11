@@ -61,10 +61,10 @@ const Dashboard = () => {
 
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
-console.log("selected name", selectedName);
+  console.log("selected name", selectedName);
 
 
- // supervisor fetch
+  // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
@@ -73,16 +73,16 @@ console.log("selected name", selectedName);
 
 
   // Fetch dashboard data using React Query
-const { data, isLoading, error } = useQuery({
-  queryKey: ['dashboardData', token, selectedName?.value], // 👈 include supervisor id
-  queryFn: () => fetchDashboardData(selectedName?.value),
-  enabled: !!token,
-});
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboardData', token, selectedName?.value], // 👈 include supervisor id
+    queryFn: () => fetchDashboardData(selectedName?.value),
+    enabled: !!token,
+  });
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
-const metadata = data?.metadata || {}
-console.log("metadata", metadata);
+  const metadata = data?.metadata || {}
+  console.log("metadata", metadata);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState('');
@@ -233,6 +233,7 @@ console.log("metadata", metadata);
 
       <CCard className="mb-4 shadow-sm border-0 bg-white">
         <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
+          {/* Left side: icon and title */}
           <div className="d-flex align-items-center gap-3">
             <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '44px', height: '40px' }}>
               <FaTruckMoving size={20} />
@@ -241,14 +242,20 @@ console.log("metadata", metadata);
               <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
               <div className="text-muted small">Track, maintain, and manage your entire fleet in real-time</div>
             </div>
-              {<SingleSelectDropdown
-                   options={supervisorOptions}
-                  value={selectedName}
-                  onChange={setSelectedName}
-                  isClearable
-                  placeholder="Filter by Supervisor Name..."
-                  />}
           </div>
+
+          {/* Right side: dropdown */}
+          {userRole === 'superadmin' && (
+            <div style={{ width: '320px' }}>
+              <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
         </CCardBody>
       </CCard>
 
