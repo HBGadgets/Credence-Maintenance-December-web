@@ -1,6 +1,6 @@
 // new code 
 
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import {
   CAvatar,
   CButton,
@@ -122,6 +122,12 @@ const Dashboard = () => {
       status: 'Inactive',
     },
   ]
+
+  useEffect(() => {
+    if (token) {
+      console.log('token', token)
+    }
+  }, [token])
 
   return token ? (
     <>
