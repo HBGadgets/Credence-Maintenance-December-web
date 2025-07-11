@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import { getAllServiceHistoryApi } from '../data/data'
 import { useNavigate } from 'react-router-dom'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import { fetchSupervisor } from '../../DriverExpert/data/drivers'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const AllVehicleServicesData = () => {
   const navigate = useNavigate()
@@ -16,6 +20,14 @@ const AllVehicleServicesData = () => {
   const totalPages = Math.ceil((filteredData?.length || 0) / itemsPerPage)
   const [searchQuery, setSearchQuery] = useState('')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
 
   // fetch data
   const { data: serviceLogs, isFetching } = useQuery({
@@ -28,12 +40,24 @@ const AllVehicleServicesData = () => {
     cacheTime: 1000 * 60 * 60,
   })
 
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
+
   // useeffect
   useEffect(() => {
     if (!Array.isArray(serviceLogs)) return
 
     // Step 1: Start with full data
     let filtered = [...serviceLogs]
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((services) => services.supervisor === selectedName.value)
+    }
 
     // Step 2: Filter by date range
     if (dateRange.startDate && dateRange.endDate) {
@@ -66,7 +90,7 @@ const AllVehicleServicesData = () => {
       map[row.id] = row
     })
     setRowMapById(map)
-  }, [serviceLogs, dateRange, searchQuery])
+  }, [serviceLogs, dateRange, searchQuery, selectedName])
 
   // payment colors
   const getPaymentStyle = (payment) => {
@@ -161,11 +185,28 @@ const AllVehicleServicesData = () => {
     setDateRange({ startDate, endDate })
   }
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
   return (
     <>
       <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+          {userRole === 'superadmin' && (
+            <div style={{ width: '150px' }}>
+              <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
         </div>
         <div className="d-flex justify-content-end align-items-center gap-2 w-75">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />

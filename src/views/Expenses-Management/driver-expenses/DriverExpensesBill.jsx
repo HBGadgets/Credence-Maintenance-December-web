@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
@@ -21,8 +21,11 @@ import IconDropdown from '../../Supervisor/IconDropdown'
 import AddButton from '../../components/AddButton'
 import { FaPlus } from 'react-icons/fa'
 import ReusableModal from '../../components/ReusableModal'
-import { fetchDrivers } from '../../DriverExpert/data/drivers'
+import { fetchDrivers, fetchSupervisor } from '../../DriverExpert/data/drivers'
 import Swal from 'sweetalert2'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const DriverExpensesBill = () => {
   const queryClient = useQueryClient()
@@ -48,6 +51,14 @@ const DriverExpensesBill = () => {
   //  select driver inpt box
   const [selectedDriverId, setSelectedDriverId] = useState(null)
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch Data
   const { data: driverExpenseList = [], isFetching } = useQuery({
     queryKey: ['driverExpenseList'],
@@ -63,6 +74,13 @@ const DriverExpensesBill = () => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
   })
   console.log('drivers list', drivers)
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
 
   // Post driver expense
   const { mutate: addDriverExpense, isLoading: isSubmitting } = useMutation({
@@ -106,6 +124,11 @@ const DriverExpensesBill = () => {
 
   useEffect(() => {
     let filtered = driverExpenseList
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((driverexp) => driverexp.supervisor === selectedName.value)
+    }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
@@ -159,7 +182,7 @@ const DriverExpensesBill = () => {
     }))
 
     setFilteredData(styledData)
-  }, [searchQuery, driverExpenseList, dateRange])
+  }, [searchQuery, driverExpenseList, dateRange, selectedName])
 
   console.log('All Driver Expenses Data: ', filteredData)
 
@@ -428,13 +451,32 @@ const DriverExpensesBill = () => {
     },
   ]
 
+  console.log('selectedName:', selectedName)
+  console.log('Comparing supervisor:', {
+    selectedValue: selectedName?.value,
+    selectedLabel: selectedName?.label,
+  })
+
+  console.log('Supervisors:', supervisorOptions)
+
   return (
     <>
       <ToastContainer />
 
       <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
+        <div className="d-flex flex-wrap align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+          {userRole === 'superadmin' && (
+            <div style={{ width: '150px' }}>
+              <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              />
+            </div>
+          )}
         </div>
         <div className="d-flex justify-content-end align-items-center gap-2 w-75">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
