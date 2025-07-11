@@ -1,6 +1,4 @@
-// new code 
-
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect } from 'react';
 import {
   CAvatar,
   CButton,
@@ -20,55 +18,63 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-} from '@coreui/react'
+} from '@coreui/react';
 import {
   IoPersonSharp,
   IoSettingsSharp,
   IoAlertCircle,
-} from 'react-icons/io5'
-import { FaTruckMoving, FaMapLocationDot, FaHandshakeSimple } from 'react-icons/fa6'
-import { TbTruckDelivery } from 'react-icons/tb'
-import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
-import { TokenContext } from '../../context/TokenContext'
-
+} from 'react-icons/io5';
+import { FaTruckMoving, FaMapLocationDot, FaHandshakeSimple } from 'react-icons/fa6';
+import { TbTruckDelivery } from 'react-icons/tb';
+import { RiMoneyRupeeCircleFill } from 'react-icons/ri';
+import { TokenContext } from '../../context/TokenContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchDashboardData } from './data/data';
 const Dashboard = () => {
-  const token = useContext(TokenContext)
+  const token = useContext(TokenContext);
 
-  const activeDrivers = 12
-  const inactiveDrivers = 3
-  const presentDrivers = 10
-  const absentDrivers = 5
-  const activeVehicles = 8
-  const inactiveVehicles = 2
-  const totalExpenses = 15340
-  const underMaintenanceVehicles = 2
-  const goodConditionVehicles = 6
-  const driverLocation = 8
-  const roadSide = 5
+  // Static values as per original code
+  const activeDrivers = 12;
+  const inactiveDrivers = 3;
+  const presentDrivers = 10;
+  const absentDrivers = 5;
+  const activeVehicles = 8;
+  const inactiveVehicles = 2;
+  const totalExpenses = 15340;
+  const underMaintenanceVehicles = 2;
+  const goodConditionVehicles = 6;
+  const driverLocation = 8;
+  const roadSide = 5;
 
   const expiringInsurances = [
     { name: 'Vehicle A', insuranceExpiryDate: '2024-12-30' },
     { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' },
-  ]
+  ];
 
-  const expiringInsuranceCount = expiringInsurances.length
-  const totalDrivers = activeDrivers + inactiveDrivers
-  const totalVehicles = activeVehicles + inactiveVehicles
-  const totalMaintenances = goodConditionVehicles + underMaintenanceVehicles
-  const totalAttendance = presentDrivers + absentDrivers
+  // Fetch dashboard data using React Query
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboardData', token],
+    queryFn: () => fetchDashboardData(token),
+    enabled: !!token,
+  });
 
-  const [modalVisible, setModalVisible] = useState(false)
-  const [modalContent, setModalContent] = useState('')
+  // Use fetched data if available, otherwise fallback to static values
+  const dashboardData = data?.data || {};
+const metadata = data?.metadata || {}
+console.log("metadata", metadata);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState('');
 
   const openModal = (cardName) => {
-    setModalContent(cardName)
-    setModalVisible(true)
-  }
+    setModalContent(cardName);
+    setModalVisible(true);
+  };
 
   const closeModal = () => {
-    setModalVisible(false)
-    setModalContent('')
-  }
+    setModalVisible(false);
+    setModalContent('');
+  };
 
   const tableData = [
     {
@@ -121,13 +127,14 @@ const Dashboard = () => {
       expenses: { driver: 130, vehicle: 270 },
       status: 'Inactive',
     },
-  ]
+  ];
 
   useEffect(() => {
     if (token) {
-      console.log('token', token)
+      console.log('token', token);
     }
-  }, [token])
+  }, [token]);
+
 
   return token ? (
     <>
@@ -203,7 +210,6 @@ const Dashboard = () => {
         }
       `}</style>
 
-
       <CCard className="mb-4 shadow-sm border-0 bg-white">
         <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
           <div className="d-flex align-items-center gap-3">
@@ -218,38 +224,37 @@ const Dashboard = () => {
         </CCardBody>
       </CCard>
 
-
       <CCardGroup className="mb-4">
         <CRow className="g-4">
           {[
             {
               label: 'Drivers',
               icon: <IoPersonSharp className="dashboard-icon" />,
-              top: `Active: ${activeDrivers} | Absent: ${absentDrivers}`,
-              bottom: `Total: ${totalDrivers} (${((activeDrivers / totalDrivers) * 100).toFixed(0)}% Active)`,
+              top: `Available: ${dashboardData?.availableDrivers} | Unavailable: ${dashboardData?.unavailableDrivers}`,
+              bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
               color: 'text-success',
               onClick: () => openModal('Drivers'),
             },
             {
               label: 'Vehicles',
               icon: <FaTruckMoving className="dashboard-icon" />,
-              top: `Active: ${activeVehicles} | Inactive: ${inactiveVehicles}`,
-              bottom: `Total: ${totalVehicles} (${((activeVehicles / totalVehicles) * 100).toFixed(0)}% Running)`,
+              top: `Active: ${dashboardData?.availableVehicles} | Inactive: ${dashboardData?.unavailableVehicles}`,
+              bottom: `Total: ${dashboardData?.totalVehicles} (${((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100).toFixed(0)}% Running)`,
               color: 'text-success',
               onClick: () => openModal('Vehicles'),
             },
             {
               label: 'Maintenance',
               icon: <IoSettingsSharp className="dashboard-icon" />,
-              top: `Good: ${goodConditionVehicles} | Under: ${underMaintenanceVehicles}`,
-              bottom: `Total Checked: ${totalMaintenances} (${((goodConditionVehicles / totalMaintenances) * 100).toFixed(0)}% Healthy)`,
+              top: `Good: ${dashboardData?.totalVehicles} | Under: ${dashboardData?.vehiclesUnderMaintenance}`,
+              // bottom: `Total Checked: ${totalMaintenances} (${((fetchedAvailableVehicles / totalMaintenances) * 100).toFixed(0)}% Healthy)`,
               color: 'text-success',
               onClick: () => openModal('Maintenance'),
             },
             {
               label: 'Expenses',
               icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
-              top: `₹${totalExpenses.toLocaleString()}`,
+              top: `₹${dashboardData?.expenses?.total.toLocaleString()}`,
               bottom: 'Fleet Expenses',
               color: 'text-primary',
               onClick: () => openModal('Expenses'),
@@ -257,15 +262,15 @@ const Dashboard = () => {
             {
               label: 'Live on Work',
               icon: <TbTruckDelivery className="dashboard-icon" />,
-              top: `On Duty: ${presentDrivers}`,
-              bottom: `Total Marked: ${totalAttendance}`,
+              top: `On Duty: ${dashboardData?.driversLiveOnWork}`,
+              bottom: `Total Marked: ${dashboardData?.totalDrivers}`,
               color: 'text-primary',
               onClick: () => openModal('Live on Work'),
             },
             {
-              label: 'Insurance Alert',
+              label: 'Document Alert',
               icon: <IoAlertCircle className="dashboard-icon" />,
-              top: `Expiring: ${expiringInsuranceCount}`,
+              top: `Expiring: ${dashboardData?.documentAlerts}`,
               bottom: 'Expiring Soon',
               color: 'text-danger',
               onClick: () => openModal('Insurance Alert'),
@@ -273,7 +278,7 @@ const Dashboard = () => {
             {
               label: 'Driver Locations',
               icon: <FaMapLocationDot className="dashboard-icon" />,
-              top: `${driverLocation} Tracked`,
+              top: `${dashboardData?.driverLocations} Tracked`,
               bottom: 'Driver GPS Count',
               color: 'text-info',
               onClick: () => openModal('Driver Attendance Location'),
@@ -281,7 +286,7 @@ const Dashboard = () => {
             {
               label: 'Roadside Assistance',
               icon: <FaHandshakeSimple className="dashboard-icon" />,
-              top: `Used: ${roadSide}`,
+              top: `Used: 5`,
               bottom: 'Service Calls',
               color: 'text-primary',
               onClick: () => openModal('Roadside Assistance'),
@@ -337,7 +342,6 @@ const Dashboard = () => {
                 <CTableBody>
                   {tableData.map((trip, index) => (
                     <CTableRow key={index}>
-
                       <CTableDataCell>{trip.driver.name}</CTableDataCell>
                       <CTableDataCell>
                         <div>{trip.vehicle.model}</div>
@@ -368,7 +372,7 @@ const Dashboard = () => {
         </CCol>
       </CRow>
     </>
-  ) : null
-}
+  ) : null;
+};
 
-export default Dashboard
+export default Dashboard;
