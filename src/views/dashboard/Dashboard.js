@@ -30,6 +30,9 @@ import { RiMoneyRupeeCircleFill } from 'react-icons/ri';
 import { TokenContext } from '../../context/TokenContext';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDashboardData } from './data/data';
+import SingleSelectDropdown from '../components/SingleSelectDropdown';
+import { jwtDecode } from 'jwt-decode';
+import { fetchSupervisor } from '../DriverExpert/data/drivers';
 const Dashboard = () => {
   const token = useContext(TokenContext);
 
@@ -51,12 +54,30 @@ const Dashboard = () => {
     { name: 'Vehicle B', insuranceExpiryDate: '2025-01-15' },
   ];
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+console.log("selected name", selectedName);
+
+
+ // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
+
+
   // Fetch dashboard data using React Query
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboardData', token],
-    queryFn: () => fetchDashboardData(),// give supervisor id here
-    enabled: !!token,
-  });
+const { data, isLoading, error } = useQuery({
+  queryKey: ['dashboardData', token, selectedName?.value], // 👈 include supervisor id
+  queryFn: () => fetchDashboardData(selectedName?.value),
+  enabled: !!token,
+});
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
@@ -220,6 +241,13 @@ console.log("metadata", metadata);
               <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
               <div className="text-muted small">Track, maintain, and manage your entire fleet in real-time</div>
             </div>
+              {<SingleSelectDropdown
+                   options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                  />}
           </div>
         </CCardBody>
       </CCard>
@@ -238,7 +266,7 @@ console.log("metadata", metadata);
             {
               label: 'Vehicles',
               icon: <FaTruckMoving className="dashboard-icon" />,
-              top: `Active: ${dashboardData?.availableVehicles} | Inactive: ${dashboardData?.unavailableVehicles}`,
+              top: `Available: ${dashboardData?.availableVehicles} | Unavailable: ${dashboardData?.unavailableVehicles}`,
               bottom: `Total: ${dashboardData?.totalVehicles} (${((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100).toFixed(0)}% Running)`,
               color: 'text-success',
               onClick: () => openModal('Vehicles'),
