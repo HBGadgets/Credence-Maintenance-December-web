@@ -12,7 +12,7 @@ const Fuelsystem = React.lazy(() => import('./views/vehicle/FuelSystem/Fuelsyste
 const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/Servicelist.jsx'))
 const InpectionList = React.lazy(() => import('./views/vehicle/VehicleInpection/InpectionList.jsx'))
 const AllVehicleInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/AllVehicleInpection.jsx'))
-
+const DocumentAlert = React.lazy(() => import('./views/vehicle/AlertDoc/DocumentAlert.jsx'))
 
 // Supervisor
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
@@ -50,6 +50,8 @@ const BudgetAllocation = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx'),
 )
 
+const ServiceCall = React.lazy(() => import('./views/road-side-assistance/asstiance/ServiceCall.jsx'))
+
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
@@ -72,6 +74,10 @@ const ViewAllSalary = React.lazy(
   () => import('./views/DriverExpert/components/salary/ViewAllSalary.jsx'),
 )
 
+const DriverStatus = React.lazy(() => import('./views/DriverExpert/components/status/DriverStatus.jsx'))
+
+const DriverLocation = React.lazy(() => import('./views/DriverExpert/components/driverlocation/DriverLocation.jsx'))
+
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
 
@@ -93,6 +99,7 @@ const routes = [
   { path: 'VehicleProfile/:id/Fuelsystem', name: 'Fuel System', element: Fuelsystem },
   { path: 'VehicleProfile/:id/Servicelist', name: 'Service List', element: Servicelist },
   { path: 'VehicleProfile/:id/InpectionList', name: 'Vehicle Inpection', element: InpectionList },
+  { path: '/DocumentAlert', name: 'Document Expering', element: DocumentAlert },
 
   /**SUPERVISOR */
 
@@ -117,6 +124,8 @@ const routes = [
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
   { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
+  //new
+  { path: '/ServiceCall', name: 'Roadside Assitance Services', element: ServiceCall },
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
@@ -130,6 +139,8 @@ const routes = [
   { path: '/LogsDriver/:id', name: 'Logs Driver', element: LogsDriver },
   { path: '/TripLogs/:id', name: 'Trip Logs', element: TripLogs },
   { path: '/ViewAllSalary/:id', name: 'Salary', element: ViewAllSalary },
+  { path: '/DriverStatus', name: 'Driver Status', element: DriverStatus },
+  { path: '/DriverLocation', name: 'Driver Attendance Location', element: DriverLocation },
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },

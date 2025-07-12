@@ -37,7 +37,6 @@ import { fetchSupervisor } from '../DriverExpert/data/drivers';
 import { getTripListApi } from '../Supervisor/data/data';
 import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers';
 import Table from '../components/Table';
-import SmartPagination from '../components/SmartPagination';
 import SearchInput from '../components/SearchInput';
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom';
@@ -106,20 +105,6 @@ const Dashboard = () => {
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
   const metadata = data?.metadata || {}
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState('');
-
-  const openModal = (cardName) => {
-    setModalContent(cardName);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setModalContent('');
-  };
-
 
   useEffect(() => {
     let filtered = TripsList
@@ -197,8 +182,48 @@ const Dashboard = () => {
   }
 
   // handle navigate
-  const handleViewDetailedReport = (i) => {
+  const handleViewDetailedReport = () => {
     navigate(`/Trip`)
+  }
+
+  //handle navigate driver
+  const handleViewDrives = () => {
+    navigate('/DriverExp')
+  }
+
+  //handle navigate vehicle
+  const handleViewVehicles = () => {
+    navigate('/Vehicle')
+  }
+
+  //handle navigate servicelogs
+  const handleViewServicelog = () => {
+    navigate('/AllVehicleServicesData')
+  }
+
+  //handle navigate Expenses
+  const handleExpenses = () => {
+    navigate('/VehicleExpensesBill')
+  }
+
+  //handle navigate Expenses
+  const handleDriveStatus = () => {
+    navigate('/DriverStatus')
+  }
+
+  //handle navigate Doc exp
+  const handleDocExp = () => {
+    navigate('/DocumentAlert')
+  }
+
+  // handle navigate driver loc
+  const handleDriverLoc = () => {
+    navigate('/DriverLocation')
+  }
+
+  // handle navigate roadside assit
+  const handleRoadside = () => {
+    navigate('/ServiceCall')
   }
 
 
@@ -319,7 +344,7 @@ const Dashboard = () => {
               top: `Available: ${dashboardData?.availableDrivers} | Unavailable: ${dashboardData?.unavailableDrivers}`,
               bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
               color: 'text-success',
-              onClick: () => openModal('Drivers'),
+              onClick: () => handleViewDrives('Drivers'),
             },
             {
               label: 'Vehicles',
@@ -327,7 +352,7 @@ const Dashboard = () => {
               top: `Available: ${dashboardData?.availableVehicles} | Unavailable: ${dashboardData?.unavailableVehicles}`,
               bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
               color: 'text-success',
-              onClick: () => openModal('Vehicles'),
+              onClick: () => handleViewVehicles('Vehicles'),
             },
             {
               label: 'Maintenance',
@@ -342,7 +367,7 @@ const Dashboard = () => {
                 return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`;
               })(),
               color: 'text-success',
-              onClick: () => openModal('Maintenance'),
+              onClick: () => handleViewServicelog('Maintenance'),
             },
             {
               label: 'Expenses',
@@ -350,7 +375,7 @@ const Dashboard = () => {
               top: `Today Expenses: ₹${dashboardData?.expenses?.total.toLocaleString()}`,
               bottom: 'Fleet Expenses',
               color: 'text-primary',
-              onClick: () => openModal('Expenses'),
+              onClick: () => handleExpenses('Expenses'),
             },
             {
               label: 'Live on Work',
@@ -358,7 +383,7 @@ const Dashboard = () => {
               top: `On Duty: ${dashboardData?.driversLiveOnWork}`,
               bottom: `Total Marked: ${dashboardData?.totalDrivers}`,
               color: 'text-primary',
-              onClick: () => openModal('Live on Work'),
+              onClick: () => handleDriveStatus('Live on Work'),
             },
             {
               label: 'Document Alert',
@@ -366,7 +391,7 @@ const Dashboard = () => {
               top: `Expiring: ${dashboardData?.documentAlerts}`,
               bottom: 'Expiring Soon',
               color: 'text-danger',
-              onClick: () => openModal('Insurance Alert'),
+              onClick: () => handleDocExp('Insurance Alert'),
             },
             {
               label: 'Driver Locations',
@@ -374,7 +399,7 @@ const Dashboard = () => {
               top: `${dashboardData?.driverLocations} Locations`,
               bottom: 'Driver Today Attendances',
               color: 'text-info',
-              onClick: () => openModal('Driver Attendance Location'),
+              onClick: () => handleDriverLoc('Driver Attendance Location'),
             },
             {
               label: 'Roadside Assistance',
@@ -382,7 +407,7 @@ const Dashboard = () => {
               top: `Used: 5`,
               bottom: 'Service Calls',
               color: 'text-primary',
-              onClick: () => openModal('Roadside Assistance'),
+              onClick: () => handleRoadside('Roadside Assistance'),
             },
           ].map((card, idx) => (
             <CCol key={idx} xs="12" sm="6" lg="3">
@@ -401,17 +426,9 @@ const Dashboard = () => {
         </CRow>
       </CCardGroup>
 
-      <CModal visible={modalVisible} onClose={closeModal} size="lg">
-        <CModalHeader><h5>{modalContent} Details</h5></CModalHeader>
-        <CModalBody>
-          <p>{`More details about ${modalContent} will be displayed here.`}</p>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={closeModal}>Close</CButton>
-        </CModalFooter>
-      </CModal>
+      <br />
 
-      <CCard className="mb-4 shadow-sm border-0">
+      <CCard className="mb-3 shadow-sm border-0" >
         <CCardBody className="p-3">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
 
