@@ -64,7 +64,7 @@ const Dashboard = () => {
   const { data } = useQuery({
     queryKey: ['dashboardData', token, selectedName?.value],
     queryFn: () => fetchDashboardData(selectedName?.value),
-    enabled: hasValidToken,
+    enabled: !!token,
   });
 
   // supervisor fetch
