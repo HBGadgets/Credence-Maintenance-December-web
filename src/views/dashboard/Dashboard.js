@@ -294,8 +294,12 @@ const Dashboard = () => {
         <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
           {/* Left side: icon and title */}
           <div className="d-flex align-items-center gap-3">
-            <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '44px', height: '40px' }}>
-              <FaTruckMoving size={20} />
+            <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '70px', height: '70px', overflow: 'hidden' }}>
+              <img
+                src="https://www.shutterstock.com/image-vector/fms-fleet-management-system-acronym-260nw-2550488081.jpg"
+                alt="Fleet Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
             <div>
               <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
@@ -379,7 +383,7 @@ const Dashboard = () => {
             {
               label: 'Driver Locations',
               icon: <FaMapLocationDot className="dashboard-icon" />,
-              top: `${dashboardData?.driverLocations} Locations`,
+              top: `Locations : ${dashboardData?.driverLocations} `,
               bottom: 'Driver Today Attendances',
               color: 'text-info',
               onClick: () => handleDriverLoc('Driver Attendance Location'),
