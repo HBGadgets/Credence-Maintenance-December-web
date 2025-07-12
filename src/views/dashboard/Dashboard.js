@@ -7,6 +7,7 @@ import {
   CCardGroup,
   CCardHeader,
   CCol,
+  CContainer,
   CModal,
   CModalBody,
   CModalFooter,
@@ -39,17 +40,17 @@ import Table from '../components/Table';
 import SmartPagination from '../components/SmartPagination';
 import SearchInput from '../components/SearchInput';
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const token = useContext(TokenContext);
-
+  const navigate = useNavigate()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
-
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
+  const [hasValidToken, setHasValidToken] = useState(false);
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -58,8 +59,13 @@ const Dashboard = () => {
 
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
-  console.log("selected name", selectedName);
 
+  // Fetch dashboard data using React Query
+  const { data } = useQuery({
+    queryKey: ['dashboardData', token, selectedName?.value],
+    queryFn: () => fetchDashboardData(selectedName?.value),
+    enabled: hasValidToken,
+  });
 
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
@@ -80,17 +86,26 @@ const Dashboard = () => {
   })
 
 
-  // Fetch dashboard data using React Query
-  const { data } = useQuery({
-    queryKey: ['dashboardData', token, selectedName?.value], // 👈 include supervisor id
-    queryFn: () => fetchDashboardData(selectedName?.value),
-    enabled: !!token,
-  });
+  // Watch the token and decode it when ready
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded && decoded.exp * 1000 > Date.now()) {
+          setHasValidToken(true); // Token is present and not expired
+        } else {
+          setHasValidToken(false); // Expired or invalid
+        }
+      } catch (err) {
+        setHasValidToken(false); // Decoding failed
+      }
+    }
+  }, [token]);
+
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
   const metadata = data?.metadata || {}
-  console.log("metadata", metadata);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState('');
@@ -153,12 +168,6 @@ const Dashboard = () => {
   }, [TripsList, selectedName, searchQuery, dateRange])
 
 
-  useEffect(() => {
-    if (token) {
-      console.log('token', token);
-    }
-  }, [token]);
-
 
   // Table view
   const columns = [
@@ -187,6 +196,17 @@ const Dashboard = () => {
     setDateRange({ startDate, endDate })
   }
 
+  // handle navigate
+  const handleViewDetailedReport = (i) => {
+    navigate(`/Trip`)
+  }
+
+
+  useEffect(() => {
+    if (token) {
+      console.log('token', token);
+    }
+  }, [token]);
 
   return token ? (
     <>
@@ -408,28 +428,27 @@ const Dashboard = () => {
         </CCardBody>
       </CCard>
 
+      <CContainer className="px-2" fluid>
+        <Table
+          title="All Vehicles Trips"
+          columns={columns}
+          filteredData={filteredData}
+          setFilteredData={setFilteredData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          isFetching={isFetching}
+        />
 
+        <div className="text-end mb-4">
+          <button
+            onClick={() => handleViewDetailedReport()}
+            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
+          >
+            View Detailed Report
+          </button>
+        </div>
+      </CContainer>
 
-
-      <Table
-        title="All Vehicles Trips"
-        columns={columns}
-        filteredData={filteredData}
-        setFilteredData={setFilteredData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        isFetching={isFetching}
-      />
-
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
-          setCurrentPage(1)
-        }}
-      />
     </>
   ) : null;
 };
