@@ -493,3 +493,31 @@ export const deleteDocumentAPI = async (id) => {
     throw error.response?.data || error.message;
   }
 };
+
+
+export const fetchDriverStatus = async () => {
+  try {
+    if (!token) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/get-driver/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const mapDriver = (driverStatus) => ({
+      id: driverStatus._id,
+      name: driverStatus.name,
+      contactNumber: driverStatus.contactNumber,
+      email: driverStatus.email ?? '',
+      supervisor: driverStatus.supervisor,
+    });
+
+    return {
+      available: data.availableDrivers.map(mapDriver),
+      unavailable: data.unavailableDrivers.map(mapDriver),
+    };
+  } catch (error) {
+    alert(error.message);
+    throw error;
+  }
+};
+
