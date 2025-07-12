@@ -49,7 +49,6 @@ const Dashboard = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
-  const [hasValidToken, setHasValidToken] = useState(false);
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -83,23 +82,6 @@ const Dashboard = () => {
     queryFn: getTripListApi,
     staleTime: 1000 * 60 * 30,
   })
-
-
-  // Watch the token and decode it when ready
-  useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        if (decoded && decoded.exp * 1000 > Date.now()) {
-          setHasValidToken(true); // Token is present and not expired
-        } else {
-          setHasValidToken(false); // Expired or invalid
-        }
-      } catch (err) {
-        setHasValidToken(false); // Decoding failed
-      }
-    }
-  }, [token]);
 
 
   // Use fetched data if available, otherwise fallback to static values
