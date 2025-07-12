@@ -78,10 +78,11 @@ const Dashboard = () => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ['TripsList'],
+    queryKey: ['TripsList', token],
     queryFn: getTripListApi,
     staleTime: 1000 * 60 * 30,
-  })
+    enabled: !!token,
+  });
 
 
   // Use fetched data if available, otherwise fallback to static values
