@@ -81,7 +81,7 @@ const Dashboard = () => {
     queryKey: ['TripsList', token],
     queryFn: getTripListApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token,
+    enabled: !!token && !!decodedToken,
   });
 
 
@@ -90,38 +90,39 @@ const Dashboard = () => {
   const metadata = data?.metadata || {}
 
   useEffect(() => {
-    let filtered = TripsList
+    if (!TripsList || TripsList.length === 0) return;
+
+    let filtered = TripsList;
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
-      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value);
     }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.orginalDate)
-        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
-      })
+        const itemDate = new Date(item.orginalDate);
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate);
+      });
     }
 
     // Apply search query filter
     if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase()
+      const lowercasedQuery = searchQuery.toLowerCase();
       filtered = filtered.filter((item) =>
         Object.values(item).some(
-          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
-        ),
-      )
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery)
+        )
+      );
     }
 
-    // Apply remaining amount calculation and status badge styling
+    // Add calculated fields
     const styledData = filtered.map((data) => {
-      const budgetAllocated = Number(data.budgetAllocated) || 0
-      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
-      const spentAmount = Number(data.spentAmount) || 0
-
-      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount
+      const budgetAllocated = Number(data.budgetAllocated) || 0;
+      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0;
+      const spentAmount = Number(data.spentAmount) || 0;
+      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount;
 
       return {
         ...data,
@@ -129,11 +130,11 @@ const Dashboard = () => {
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
         status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
-      }
-    })
+      };
+    });
 
-    setFilteredData(styledData)
-  }, [TripsList, selectedName, searchQuery, dateRange])
+    setFilteredData(styledData);
+  }, [TripsList, selectedName, searchQuery, dateRange]);
 
 
 
