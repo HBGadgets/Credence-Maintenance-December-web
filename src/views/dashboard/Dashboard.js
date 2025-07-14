@@ -30,11 +30,9 @@ import { TbTruckDelivery } from 'react-icons/tb';
 import { RiMoneyRupeeCircleFill } from 'react-icons/ri';
 import { TokenContext } from '../../context/TokenContext';
 import { useQuery } from '@tanstack/react-query';
-import { fetchDashboardData } from './data/data';
+import { fetchAllAdmin, fetchDashboardData, getAllTripListApi } from './data/data';
 import SingleSelectDropdown from '../components/SingleSelectDropdown';
 import { jwtDecode } from 'jwt-decode';
-import { fetchSupervisor } from '../DriverExpert/data/drivers';
-import { getTripListApi } from '../Supervisor/data/data';
 import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers';
 import Table from '../components/Table';
 import SearchInput from '../components/SearchInput';
@@ -68,7 +66,7 @@ const Dashboard = () => {
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
-    queryFn: fetchSupervisor,
+    queryFn: fetchAllAdmin,
     staleTime: 1000 * 60 * 10,
   })
 
@@ -76,10 +74,9 @@ const Dashboard = () => {
   const {
     data: TripsList = [],
     isFetching,
-    refetch,
   } = useQuery({
     queryKey: ['TripsList', token],
-    queryFn: getTripListApi,
+    queryFn: getAllTripListApi,
     staleTime: 1000 * 60 * 30,
     enabled: !!token && !!decodedToken,
   });
@@ -88,6 +85,13 @@ const Dashboard = () => {
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
   const metadata = data?.metadata || {}
+
+  useEffect(() => {
+    if (token) {
+      console.log('token', token);
+    }
+  }, [token]);
+
 
   useEffect(() => {
     if (!TripsList || TripsList.length === 0) return;
@@ -211,11 +215,6 @@ const Dashboard = () => {
   }
 
 
-  useEffect(() => {
-    if (token) {
-      console.log('token', token);
-    }
-  }, [token]);
 
   return token ? (
     <>
