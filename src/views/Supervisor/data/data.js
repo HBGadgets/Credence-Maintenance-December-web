@@ -518,7 +518,7 @@ export const getAllDriverDailyLogbookApi = async () => {
 export const postAllDriverDailyLogbookApi = async (id, alldailylogData) => {
     try {
         const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/dailylogs/create/${id}`,
+            `${import.meta.env.VITE_API_URL}/api/dailylogs/create?driverId=${id}`,
             alldailylogData,
             {
                 headers: {

@@ -2,6 +2,7 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 import { useFormattedTime } from '../../customhooks/useFormattedTime'
+import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 
 
 // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
@@ -518,6 +519,66 @@ export const fetchDriverStatus = async () => {
   } catch (error) {
     alert(error.message);
     throw error;
+  }
+};
+
+
+export const fetchDriverAttendanceLocation = async () => {
+  try {
+    const token = sessionStorage.getItem('crdnsMaintToken');
+
+    if (!token) throw new Error('Authentication token not found');
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendance-location`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const data = response.data?.attendanceLocations;
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid API response: attendanceLocations must be an array');
+    }
+
+    const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return sortedData.map((attendanceLoc) => ({
+      id: attendanceLoc._id,
+      originalDate: attendanceLoc.createdAt,
+      date: formatDateToDDMMYYYY(attendanceLoc.createdAt),
+      name: attendanceLoc.driverId?.name || 'N/A',
+      lat: attendanceLoc.lat || 'N/A',
+      long: attendanceLoc.long || 'N/A',
+      coordinate: `${attendanceLoc.lat}, ${attendanceLoc.long}` || 'No Co-ordinate',
+      status: attendanceLoc.status || 'N/A',
+      supervisor: attendanceLoc.driverId?.supervisor || 'N/A',
+    }));
+
+
+  } catch (error) {
+    alert(error.message);
+    throw error;
+  }
+};
+
+
+export const getAddressApi = async (latitude, longitude) => {
+  try {
+    const apiKey = 'zstIsERMom7VAfZNEAhP'; // Your MapTiler API Key
+    const response = await axios.get(
+      `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${apiKey}`
+    );
+
+    if (response.data?.features?.length > 0) {
+      return response.data.features[0].place_name;
+    } else {
+      return 'Address not available';
+    }
+  } catch (error) {
+    console.error('Geocoding Error:', error.message);
+    return 'Address not available';
   }
 };
 
