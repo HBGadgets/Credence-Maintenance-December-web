@@ -423,7 +423,7 @@ const Dashboard = () => {
             <h5 className="mb-3 mb-md-0 fw-bold text-dark">Trips Details</h5>
 
             {/* Filters */}
-            <div className="d-flex justify-content-end align-items-center gap-3 w-75">
+            <div className="d-flex justify-content-end align-items-center gap-4 w-75">
               <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
               <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
             </div>

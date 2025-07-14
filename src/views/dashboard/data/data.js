@@ -42,7 +42,10 @@ export const getAllTripListApi = async (userId = null) => {
 
   console.log("All drivers list for today marked as present: ", data);
 
-  return data.map((TripsList) => ({
+  // Sort data by date in descending order (latest date first)
+  const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return sortedData.map((TripsList) => ({
     id: TripsList._id,
     orginalDate: TripsList.date,
     date: formatDateToDDMMYYYY(TripsList.date),
@@ -59,6 +62,7 @@ export const getAllTripListApi = async (userId = null) => {
     updatedAt: TripsList.updatedAt,
   }));
 };
+
 
 // Get supervisor id
 export const fetchAllAdmin = async (userId = null) => {
