@@ -38,6 +38,7 @@ import Table from '../components/Table';
 import SearchInput from '../components/SearchInput';
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom';
+import logo from 'src/assets/brand/fms.jpg'
 
 const Dashboard = () => {
   const token = useContext(TokenContext);
@@ -296,7 +297,7 @@ const Dashboard = () => {
           <div className="d-flex align-items-center gap-3">
             <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '70px', height: '70px', overflow: 'hidden' }}>
               <img
-                src="https://www.shutterstock.com/image-vector/fms-fleet-management-system-acronym-260nw-2550488081.jpg"
+                src={logo}
                 alt="Fleet Logo"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
