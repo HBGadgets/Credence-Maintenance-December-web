@@ -1,28 +1,63 @@
 import React from 'react'
 
 const ServiceCall = () => {
+  // Keyframes as style tags in the component
+  const keyframes = `
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    @keyframes slideFadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  `
+
   return (
-    <div className="d-flex justify-content-center align-items-center ">
-      <div
-        className="card shadow-lg p-4 border-0"
-        style={{ maxWidth: '500px', animation: 'fadeIn 1.2s ease-in-out' }}
-      >
-        <div className="card-body text-center">
+    <>
+      <style>{keyframes}</style>
+
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '600px' }}>
+        <div
+          className="card text-center p-4"
+          style={{
+            maxWidth: '500px',
+            border: 'none',
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+            opacity: 0,
+            transform: 'translateY(30px)',
+            animation: 'slideFadeIn 1.2s ease-out forwards',
+            backgroundColor: '#fff',
+          }}
+        >
           <i
-            className="bi bi-exclamation-triangle-fill text-warning"
-            style={{ fontSize: '3rem' }}
+            className="bi bi-tools text-primary"
+            style={{
+              fontSize: '3rem',
+              animation: 'bounce 2s infinite',
+            }}
           ></i>
-          <h1 className="card-title mt-3 mb-2 text-dark fw-bold">Coming Soon</h1>
+          <h1 className="mt-3 mb-2 fw-bold text-dark">Coming Soon</h1>
           <h5 className="text-muted mb-3">Roadside Assistance</h5>
-          <p className="card-text text-secondary">
-            We’re gearing up to bring you reliable roadside help — fast, safe, and always ready.
+          <p className="text-secondary">
+            We're building a better way to keep you moving — fast, safe, and always there when you
+            need us.
           </p>
-          <button className="btn btn-warning mt-3" disabled>
+          <button className="btn btn-primary mt-3" disabled>
             Launching Soon
           </button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
