@@ -15,11 +15,12 @@ const TT = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
 // GET API Supervisor See Driver List all
 
-export const getDriverListApi = async () => {
+export const getDriverListApi = async (userId = null, TOKEN) => {
     if (!TOKEN) throw new Error("Authentication token not found");
 
+    const query = userId ? `?id=${userId}` : '';
     const { data } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/attendance/get-remaining-attendence-of-drivers`,
+        `${import.meta.env.VITE_API_URL}/api/attendance/get-remaining-attendence-of-drivers${query}`,
         {
             headers: {
                 Authorization: `Bearer ${TOKEN}`,
@@ -61,10 +62,13 @@ export const markAttendanceBySupervisorApi = async (id) => {
 
 // GET API for Leave Request list for supervisor.
 
-export const getLeaveResquestDriverApi = async (id) => {
+export const getLeaveResquestDriverApi = async (userId = null, TOKEN) => {
+    if (!TOKEN) throw new Error("Authentication token not found");
+
+    const query = userId ? `?id=${userId}` : '';
     try {
         const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/leave/get-leaves-for-approval`,
+            `${import.meta.env.VITE_API_URL}/api/leave/get-leaves-for-approval${query}`,
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
@@ -213,23 +217,19 @@ export const patchDriverSalaryApi = async (id, updatedData) => {
 // -------------------------------------------------------------------------------------------------------------------------------- 
 
 // GET API for Trip List.
-export const getTripListApi = async (userId = null) => {
-
-    if (!TOKEN) throw new Error("Authentication token not found");
+export const getTripListApi = async (userId = null, token) => {
+    if (!token) throw new Error("Authentication token not found");
 
     const query = userId ? `?id=${userId}` : '';
     const { data } = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/trips/get${query}`,
         {
             headers: {
-                Authorization: `Bearer ${TOKEN}`,
+                Authorization: `Bearer ${token}`,
             },
         }
     );
 
-    console.log("All drivers list for today marked as present: ", data);
-
-    // Sort data by date in descending order (latest date first)
     const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return sortedData.map((TripsList) => ({
@@ -249,6 +249,7 @@ export const getTripListApi = async (userId = null) => {
         updatedAt: TripsList.updatedAt,
     }));
 };
+
 
 // POST API for Trip.
 
@@ -485,11 +486,12 @@ export const deleteSubtripApi = async (id) => {
 //     }));
 // };
 
-export const getAllDriverDailyLogbookApi = async () => {
+export const getAllDriverDailyLogbookApi = async (userId = null, TOKEN) => {
     if (!TOKEN) throw new Error('Authentication token not found');
 
+    const query = userId ? `?id=${userId}` : '';
     const { data } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs`,
+        `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs${query}`,
         {
             headers: { Authorization: `Bearer ${TOKEN}` },
         }
@@ -623,11 +625,12 @@ export const getAllDriverDailyLogbookSign = async (signatureId) => {
 
 // Get Api for All Vehicle Inpection List
 
-export const getAllVehicleInpectionApi = async () => {
+export const getAllVehicleInpectionApi = async (userId = null, TOKEN) => {
     if (!TOKEN) throw new Error('Authentication token not found');
 
+    const query = userId ? `?id=${userId}` : '';
     const { data } = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/inspection/get-all-inspection`,
+        `${import.meta.env.VITE_API_URL}/api/inspection/get-all-inspection${query}`,
         {
             headers: { Authorization: `Bearer ${TOKEN}` },
         }
@@ -780,12 +783,13 @@ export const getAllFailInpectionImageApi = async (Image) => {
 
 //  Get all Vehicle Service odometer List section 
 
-export const getAllServiceHistoryApi = async () => {
+export const getAllServiceHistoryApi = async (userId = null, TOKEN) => {
     try {
         if (!TOKEN) throw new Error('Authentication token not found')
 
+        const query = userId ? `?id=${userId}` : '';
         const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/service/get-all-services`,
+            `${import.meta.env.VITE_API_URL}/api/service/get-all-services${query}`,
             {
                 headers: { Authorization: `Bearer ${TOKEN}` },
             }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { getDriverListApi, markAttendanceBySupervisorApi } from '../data/data'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
@@ -13,6 +13,10 @@ import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { ToastContainer } from 'react-toastify'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import { fetchSupervisor } from '../../DriverExpert/data/drivers'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 
 const CurrentAttendence = () => {
   const { exportToPDF } = usePdfExporter()
@@ -22,14 +26,39 @@ const CurrentAttendence = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
+  // fetch data
   const { data: driverlist = [], isFetching } = useQuery({
     queryKey: ['driverlist'],
-    queryFn: getDriverListApi,
+    queryFn: () => getDriverListApi(null, token),
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    enabled: !!token, //  only run if token is available
+  })
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+    enabled: !!token && !!decodedToken,
   })
 
   useEffect(() => {
+    if (!driverlist || driverlist.length === 0) return
+
     let filtered = driverlist
+
+    // Filter by supervisor if selected
+    if (selectedName?.value) {
+      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+    }
 
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase()
@@ -41,7 +70,7 @@ const CurrentAttendence = () => {
     }
 
     setFilteredData(filtered)
-  }, [searchQuery, driverlist])
+  }, [searchQuery, driverlist, selectedName])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -120,8 +149,24 @@ const CurrentAttendence = () => {
     <>
       <ToastContainer />
 
-      <div className="mb-2 d-flex justify-content-end align-items-center">
-        <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          {userRole === 'superadmin' && (
+            <div style={{ width: '150px' }}>
+              {/* <SingleSelectDropdown
+                options={supervisorOptions}
+                value={selectedName}
+                onChange={setSelectedName}
+                isClearable
+                placeholder="Filter by Supervisor Name..."
+              /> */}
+            </div>
+          )}
+        </div>
+
+        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+        </div>
       </div>
 
       <Table

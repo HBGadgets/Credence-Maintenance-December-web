@@ -51,8 +51,9 @@ const AllDailyLogbook = () => {
   // Fetch Data
   const { data: alldailylog, isFetching } = useQuery({
     queryKey: ['alldailylog'],
-    queryFn: getAllDriverDailyLogbookApi,
+    queryFn: () => getAllDriverDailyLogbookApi(null, token), // ✅ token passed here
     staleTime: 1000 * 60 * 30,
+    enabled: !!token, //  only run if token is available
     onError: (err) => {
       console.error('Error fetching logbook data:', err)
     },
@@ -112,6 +113,8 @@ const AllDailyLogbook = () => {
   })
 
   useEffect(() => {
+    if (!alldailylog || alldailylog.length === 0) return
+
     let filtered = alldailylog || []
 
     // Filter by supervisor if selected

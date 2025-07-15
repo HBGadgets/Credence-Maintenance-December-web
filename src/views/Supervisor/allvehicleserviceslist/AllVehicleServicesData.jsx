@@ -32,12 +32,13 @@ const AllVehicleServicesData = () => {
   // fetch data
   const { data: serviceLogs, isFetching } = useQuery({
     queryKey: ['vehicleServiceLogs'],
-    queryFn: getAllServiceHistoryApi,
+    queryFn: () => getAllServiceHistoryApi(null, token),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
     cacheTime: 1000 * 60 * 60,
+    enabled: !!token, //  only run if token is available
   })
 
   // supervisor fetch
@@ -50,6 +51,8 @@ const AllVehicleServicesData = () => {
   // useeffect
   useEffect(() => {
     if (!Array.isArray(serviceLogs)) return
+
+    if (!serviceLogs || serviceLogs.length === 0) return
 
     // Step 1: Start with full data
     let filtered = [...serviceLogs]

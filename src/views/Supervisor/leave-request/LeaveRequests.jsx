@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useContext } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import { FaArrowUp, FaCheck, FaPrint, FaRegFilePdf, FaTimes } from 'react-icons/fa'
 import SearchInput from '../../components/SearchInput'
@@ -13,6 +13,8 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../IconDropdown'
+import { TokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const LeaveRequests = () => {
   const queryClient = useQueryClient()
@@ -40,6 +42,14 @@ const LeaveRequests = () => {
     return <span className={badgeClass}>{status}</span>
   }
 
+  // for supervisor select
+  const [selectedName, setSelectedName] = useState(null)
+
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   // Fetch driver leave requests with useQuery
   const {
     data: responseData = [],
@@ -47,8 +57,9 @@ const LeaveRequests = () => {
     error,
   } = useQuery({
     queryKey: ['driverleaveRequests'],
-    queryFn: getLeaveResquestDriverApi,
+    queryFn: () => getLeaveResquestDriverApi(null, token),
     staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
+    enabled: !!token, //  only run if token is available
   })
 
   // Approve function

@@ -69,8 +69,9 @@ const AllVehicleInpection = () => {
   // Fetch Data
   const { data: allvehicleinpection, isFetching } = useQuery({
     queryKey: ['allvehicleinpection'],
-    queryFn: getAllVehicleInpectionApi,
+    queryFn: () => getAllVehicleInpectionApi(null, token),
     staleTime: 1000 * 60 * 30,
+    enabled: !!token, //  only run if token is available
     onError: (err) => {
       console.error('Error fetching logbook data:', err)
     },

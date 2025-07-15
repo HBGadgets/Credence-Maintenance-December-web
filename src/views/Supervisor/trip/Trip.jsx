@@ -55,8 +55,9 @@ const Trip = () => {
     refetch,
   } = useQuery({
     queryKey: ['TripsList'],
-    queryFn: getTripListApi,
+    queryFn: () => getTripListApi(null, token),
     staleTime: 1000 * 60 * 30,
+    enabled: !!token, //  only run if token is available
   })
 
   // supervisor fetch
@@ -64,9 +65,12 @@ const Trip = () => {
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
     staleTime: 1000 * 60 * 10,
+    enabled: !!token && !!decodedToken,
   })
 
   useEffect(() => {
+    if (!TripsList || TripsList.length === 0) return
+
     let filtered = TripsList
 
     // Filter by supervisor if selected
