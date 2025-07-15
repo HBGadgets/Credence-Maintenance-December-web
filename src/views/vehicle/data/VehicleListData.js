@@ -44,6 +44,7 @@ export const fetchVehicles = async () => {
 // Vehicle Profile Section
 
 import { useQuery } from '@tanstack/react-query'
+import { formatDateToDDMMYYYY } from "../../customhooks/useFormattedDate";
 
 
 export const useVehicleProfileData = () => {
@@ -834,3 +835,55 @@ export const getVehicleServiceBillApi = async (serviceImg) => {
         throw error
     }
 }
+
+// get vehicle expery
+
+export const fetchDocAlerts = async () => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found');
+
+        const { data } = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/vehicle-documents/get-expiring-documents`,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        const docTypes = ['Insurance', 'fitnessCertificate', 'puc', 'rc'];
+        const flattenedData = [];
+
+        data.expiringDocuments.forEach((docAlert) => {
+            docTypes.forEach((type) => {
+                const doc = docAlert.documents?.[type];
+                if (doc && Object.keys(doc).length > 0) {
+                    flattenedData.push({
+                        id: `${docAlert._id}_${type}`,
+                        vehicleId: docAlert.vehicleId,
+                        vehicleName: docAlert.vehicleName,
+                        documentNames: type,
+                        issueDate: formatDateToDDMMYYYY(doc.issueDate),
+                        expiryDate: formatDateToDDMMYYYY(doc.expiryDate),
+                        status: getStatus(doc.expiryDate),
+                        supervisor: docAlert.users,
+                    });
+                }
+            });
+        });
+
+        return flattenedData;
+    } catch (error) {
+        alert(error.message);
+        throw error;
+    }
+};
+
+const getStatus = (expiryDate) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysLeft = (expiry - today) / (1000 * 60 * 60 * 24);
+
+    if (daysLeft < 0) return 'Expired';
+    if (daysLeft <= 30) return 'Expiring Soon';
+    return 'Valid';
+};
+
