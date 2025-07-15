@@ -213,24 +213,30 @@ export const patchDriverSalaryApi = async (id, updatedData) => {
 // -------------------------------------------------------------------------------------------------------------------------------- 
 
 // GET API for Trip List.
-export const getTripListApi = async () => {
+export const getTripListApi = async (userId = null) => {
 
     if (!TOKEN) throw new Error("Authentication token not found");
 
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/trips/get`,
+    const query = userId ? `?id=${userId}` : '';
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/trips/get${query}`,
         {
             headers: {
                 Authorization: `Bearer ${TOKEN}`,
             },
         }
     );
-    console.log("This all drivers list for today mark for present : ", data);
 
-    return data.map((TripsList) => ({
+    console.log("All drivers list for today marked as present: ", data);
+
+    // Sort data by date in descending order (latest date first)
+    const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return sortedData.map((TripsList) => ({
         id: TripsList._id,
         orginalDate: TripsList.date,
         date: formatDateToDDMMYYYY(TripsList.date),
-        driverName: TripsList?.driverId.name,
+        driverName: TripsList?.driverId?.name || 'N/A',
         vehicleName: TripsList.vehicleName,
         startLocation: TripsList.startLocation,
         endLocation: TripsList.endLocation,
@@ -241,10 +247,8 @@ export const getTripListApi = async () => {
         materialType: TripsList.materialType,
         status: TripsList.status,
         updatedAt: TripsList.updatedAt,
-
     }));
-}
-
+};
 
 // POST API for Trip.
 
