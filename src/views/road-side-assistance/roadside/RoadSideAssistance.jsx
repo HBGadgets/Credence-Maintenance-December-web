@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 
-export default function Component() {
+const RoadSideAssistance = () => {
   const keyframes = `
     @keyframes bgMove {
       0% { background-position: 0% 50%; }
@@ -46,10 +46,10 @@ export default function Component() {
             }}
           ></i>
           <h1 className="mt-3 mb-2 fw-bold text-dark">Coming Soon</h1>
-          <h5 className="text-muted mb-3">ChatBot Assitance</h5>
+          <h5 className="text-muted mb-3">Roadside Assistance</h5>
           <p className="text-secondary">
-            This feature is <strong>coming soon</strong>.<br />
-            We're working hard to improve your Chat support experience.
+            We're building a better way to keep you moving — fast, safe, and always there when you
+            need us.
           </p>
           <button className="btn btn-primary mt-3" disabled>
             Launching Soon
@@ -59,3 +59,5 @@ export default function Component() {
     </>
   )
 }
+
+export default RoadSideAssistance

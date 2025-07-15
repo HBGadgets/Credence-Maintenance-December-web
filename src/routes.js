@@ -52,6 +52,8 @@ const BudgetAllocation = React.lazy(
 
 const ServiceCall = React.lazy(() => import('./views/road-side-assistance/asstiance/ServiceCall.jsx'))
 
+const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance/roadside/RoadSideAssistance.jsx'))
+
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
@@ -124,6 +126,9 @@ const routes = [
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
   { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
+  { path: '/RoadSideAssistance', name: 'Roadside Assistances Services', element: RoadSideAssistance },
+
+
   //new
   { path: '/ServiceCall', name: 'Roadside Assitance Services', element: ServiceCall },
 

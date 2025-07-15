@@ -1,7 +1,6 @@
 import React from 'react'
 
 const ServiceCall = () => {
-  // Keyframes as style tags in the component
   const keyframes = `
     @keyframes bgMove {
       0% { background-position: 0% 50%; }
