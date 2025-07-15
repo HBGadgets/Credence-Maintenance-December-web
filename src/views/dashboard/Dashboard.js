@@ -391,7 +391,7 @@ const Dashboard = () => {
             {
               label: 'Roadside Assistance',
               icon: <FaHandshakeSimple className="dashboard-icon" />,
-              top: `Used: 5`,
+              top: `Used: 0`,
               bottom: 'Service Calls',
               color: 'text-primary',
               onClick: () => handleRoadside('Roadside Assistance'),
