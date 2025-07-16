@@ -26,7 +26,7 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
   if (!document) {
     return null
   }
-console.log("this is document", document);
+  console.log('this is document', document)
 
   const getFileIcon = () => {
     // Since the document prop doesn't include fileName, we'll infer the type from the image data
@@ -38,7 +38,7 @@ console.log("this is document", document);
     return <FaFile className="text-muted" size={20} />
   }
 
-  const formatDate = dateString => {
+  const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
@@ -51,7 +51,7 @@ console.log("this is document", document);
     }
   }
 
-  const formatFileSize = bytes => {
+  const formatFileSize = (bytes) => {
     if (!bytes) return 'Unknown size'
     const kb = bytes / 1024
     const mb = kb / 1024
@@ -124,16 +124,15 @@ console.log("this is document", document);
                 </div>
 
                 {/* File Name and Icon (not available in current data, but added for future compatibility) */}
-                  <div className="mb-3">
+                <div className="mb-3">
                   <small className="text-muted text-uppercase fw-semibold">File Name</small>
                   <div className="fw-medium d-flex align-items-center">
                     {getFileIcon()}
                     <span className="ms-2">
-                      {document?.fileName || `${document?.name || 'document'}.jpg`}
+                      {document?.fileName || `${document?.name || 'document'}`}
                     </span>
                   </div>
                 </div>
-
 
                 <div className="mb-3">
                   <small className="text-muted text-uppercase fw-semibold">Issue Date</small>
@@ -144,7 +143,6 @@ console.log("this is document", document);
                   <small className="text-muted text-uppercase fw-semibold">Expiry Date</small>
                   <div className="fw-medium">{formatDate(document?.image?.expiryDate)}</div>
                 </div>
-
 
                 {/* Action Buttons */}
                 <div className="mt-4">
