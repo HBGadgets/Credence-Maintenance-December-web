@@ -197,30 +197,30 @@ const DocumentLocker = ({ id }) => {
     setError('')
   }
 
-  const handleDocumentClick = (field) => {
-    setLoadingDocs((prev) => ({ ...prev, [field]: true }))
+  const handleDocumentClick = (documentId) => {
+    setLoadingDocs((prev) => ({ ...prev, [documentId]: true }))
 
     try {
-      const doc = documentsList.find((d) => d.name === field)
+      const doc = documentsList.find((d) => d.value._id === documentId)
 
       if (doc) {
         setSelectedDocument({
           id: doc.value._id,
-          name: field,
-          displayName: doc.displayName || field,
-          fileName: `${field}.jpg`,
+          name: doc.name,
+          displayName: doc.displayName,
+          fileName: `${doc.name}.jpg`,
           uploadDate: new Date().toISOString(),
         })
         setModalType('view')
       } else {
-        setError(`No document data found for ${field}.`)
-        console.error(`No document data found for ${field}.`)
+        setError(`No document found with ID: ${documentId}`)
+        console.error(`No document found with ID: ${documentId}`)
       }
     } catch (error) {
       setError('Error retrieving document.')
       console.error('Error processing document:', error)
     } finally {
-      setLoadingDocs((prev) => ({ ...prev, [field]: false }))
+      setLoadingDocs((prev) => ({ ...prev, [documentId]: false }))
     }
   }
 
@@ -258,7 +258,7 @@ const DocumentLocker = ({ id }) => {
                 <CCol key={doc.name} xs={6} sm={4} md={3} lg={2}>
                   <div
                     className="text-center p-3 rounded border document-card"
-                    onClick={() => handleDocumentClick(doc.name)}
+                    onClick={() => handleDocumentClick(doc.value._id)}
                     style={{
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
