@@ -1,101 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
+import { CCard, CCardBody, CCardHeader, CButton, CSpinner, CRow, CCol } from '@coreui/react'
+import { FaRegFolderClosed, FaUpload } from 'react-icons/fa6'
+import DocumentUploadModal from './components/DocumentUploadModal'
+import DocumentViewModal from './components/DocumentViewModal'
+import Swal from 'sweetalert2'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CButton,
-  CSpinner,
-  CRow,
-  CCol,
-} from '@coreui/react';
-import { FaRegFolderClosed, FaUpload } from 'react-icons/fa6';
-import DocumentUploadModal from './components/DocumentUploadModal';
-import DocumentViewModal from './components/DocumentViewModal';
-import Swal from 'sweetalert2';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDocuments, deleteDocumentAPI, uploadDocuments, getDocumentImage, editDocument } from '../../data/drivers';
+  getDocuments,
+  deleteDocumentAPI,
+  uploadDocuments,
+  getDocumentImage,
+  editDocument,
+} from '../../data/drivers'
 
 const DocumentLocker = ({ id }) => {
-  const [loadingSubmit, setLoadingSubmit] = useState(false);
-  const [loadingDocs, setLoadingDocs] = useState({});
-  const [modalType, setModalType] = useState(null);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [error, setError] = useState('');
+  const [loadingSubmit, setLoadingSubmit] = useState(false)
+  const [loadingDocs, setLoadingDocs] = useState({})
+  const [modalType, setModalType] = useState(null)
+  const [selectedDocument, setSelectedDocument] = useState(null)
+  const [error, setError] = useState('')
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   // Show Swal alert when error changes
   useEffect(() => {
     if (error) {
-      Swal.fire('Error', error, 'error');
-      setError(''); // Clear error after displaying
+      Swal.fire('Error', error, 'error')
+      setError('') // Clear error after displaying
     }
-  }, [error]);
+  }, [error])
 
-  const { data: documentsData, isLoading: loading, error: queryError } = useQuery({
+  const {
+    data: documentsData,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
     queryKey: ['documents', id],
     queryFn: () => getDocuments(id),
     enabled: !!id,
     onError: (error) => {
-      console.error('Error fetching documents:', error);
-      setError('Failed to fetch documents.');
+      console.error('Error fetching documents:', error)
+      setError('Failed to fetch documents.')
     },
-  });
+  })
 
   // React Query mutation for updating document
   const updateDocumentMutation = useMutation({
     mutationFn: ({ documentId, documentData }) => editDocument(documentId, documentData),
     onSuccess: (data) => {
-      console.log('Document updated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['documents', id] });
-      setModalType(null); // Close modal
-      setSelectedDocument(null); // Clear selected document
-      Swal.fire('Success', data.message || 'Document updated successfully!', 'success');
+      console.log('Document updated successfully:', data)
+      queryClient.invalidateQueries({ queryKey: ['documents', id] })
+      setModalType(null) // Close modal
+      setSelectedDocument(null) // Clear selected document
+      Swal.fire('Success', data.message || 'Document updated successfully!', 'success')
     },
     onError: (error) => {
-      console.error('Error updating document:', error);
-      setError(error.message || 'Failed to update document');
+      console.error('Error updating document:', error)
+      setError(error.message || 'Failed to update document')
     },
-  });
+  })
 
-  const documentsList = documentsData?.documents?.map((doc) => ({
-    name: doc.documentName,
-    displayName: doc.documentName,
-    value: doc,
-  })) || [];
+  const documentsList =
+    documentsData?.documents?.map((doc) => ({
+      name: doc.documentName,
+      displayName: doc.documentName,
+      value: doc,
+    })) || []
 
   const handleUploadDocument = async (documentData) => {
     if (!documentData.documentName || !documentData.document) {
-      Swal.fire('Missing Fields', 'Please provide both document name and file.', 'warning');
-      return;
+      Swal.fire('Missing Fields', 'Please provide both document name and file.', 'warning')
+      return
     }
 
-    setLoadingSubmit(true);
+    setLoadingSubmit(true)
     try {
       const formattedData = {
         documentName: documentData.documentName,
         document: documentData.document,
-      };
-      await uploadDocuments(id, formattedData);
-      Swal.fire('Uploaded', 'Document uploaded successfully!', 'success');
-      queryClient.invalidateQueries(['documents', id]);
-      setModalType(null);
+      }
+      await uploadDocuments(id, formattedData)
+      Swal.fire('Uploaded', 'Document uploaded successfully!', 'success')
+      queryClient.invalidateQueries(['documents', id])
+      setModalType(null)
     } catch (error) {
-      console.error('Error uploading document:', error);
-      setError(error.message || 'Document upload failed');
+      console.error('Error uploading document:', error)
+      setError(error.message || 'Document upload failed')
     } finally {
-      setLoadingSubmit(false);
+      setLoadingSubmit(false)
     }
-  };
+  }
 
   const handleDelete = async (doc) => {
     if (!doc || !doc.id) {
-      setError('Invalid document structure.');
-      console.error('Invalid document structure', doc);
-      return;
+      setError('Invalid document structure.')
+      console.error('Invalid document structure', doc)
+      return
     }
 
-    const fieldName = doc.fileName;
+    const fieldName = doc.fileName
 
     const result = await Swal.fire({
       title: `Delete ${fieldName}?`,
@@ -106,72 +109,72 @@ const DocumentLocker = ({ id }) => {
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
-    });
+    })
 
     if (result.isConfirmed) {
       try {
-        await deleteDocumentAPI(doc.id);
-        queryClient.invalidateQueries(['documents', id]);
-        setModalType(null);
-        Swal.fire('Deleted!', `${fieldName} was successfully deleted.`, 'success');
+        await deleteDocumentAPI(doc.id)
+        queryClient.invalidateQueries(['documents', id])
+        setModalType(null)
+        Swal.fire('Deleted!', `${fieldName} was successfully deleted.`, 'success')
       } catch (error) {
-        console.error('Error deleting document:', error.response?.data || error.message);
-        setError(`Failed to delete ${fieldName}.`);
+        console.error('Error deleting document:', error.response?.data || error.message)
+        setError(`Failed to delete ${fieldName}.`)
       }
     }
-  };
+  }
 
   const handleDownload = async (doc) => {
     if (!doc || !doc.id) {
-      setError('Invalid document structure.');
-      console.error('Invalid document structure', doc);
-      return;
+      setError('Invalid document structure.')
+      console.error('Invalid document structure', doc)
+      return
     }
 
     try {
-      const response = await getDocumentImage(doc.id);
-      const base64String = response?.document?.image?.base64Data;
-      const contentType = response?.document?.image?.contentType || 'image/jpeg';
+      const response = await getDocumentImage(doc.id)
+      const base64String = response?.document?.image?.base64Data
+      const contentType = response?.document?.image?.contentType || 'image/jpeg'
 
       if (!base64String) {
-        setError('No image data found for document.');
-        console.error('No image data found for document', doc);
-        return;
+        setError('No image data found for document.')
+        console.error('No image data found for document', doc)
+        return
       }
 
-      const link = document.createElement('a');
-      link.href = `data:${contentType};base64,${base64String}`;
-      link.download = `${doc.name || 'document'}.${contentType.split('/')[1] || 'jpg'}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      Swal.fire('Downloaded!', 'Document downloaded successfully.', 'success');
+      const link = document.createElement('a')
+      link.href = `data:${contentType};base64,${base64String}`
+      link.download = `${doc.name || 'document'}.${contentType.split('/')[1] || 'jpg'}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      Swal.fire('Downloaded!', 'Document downloaded successfully.', 'success')
     } catch (error) {
-      setError('Failed to download document.');
-      console.error('Error downloading document:', error);
+      setError('Failed to download document.')
+      console.error('Error downloading document:', error)
     }
-  };
+  }
 
   const handleEdit = (doc) => {
     setSelectedDocument({
       id: doc.value?._id || doc.id, // Ensure correct ID
       documentName: doc.name || doc.displayName,
       documentUrl: doc.documentUrl || null,
-    });
-    console.log('Set selected document:', doc);
-    setModalType('Edit');
-  };
+    })
+    console.log('Set selected document:', doc)
+    setModalType('Edit')
+  }
 
   const handleupdate = (documentData) => {
-    console.log('Handle edit function executed');
-    console.log('Document data:', documentData);
+    console.log('Handle edit function executed')
+    console.log('Document data:', documentData)
 
     if (!documentData.id) {
-      setError('Document ID is missing');
-      return;
+      setError('Document ID is missing')
+      return
     }
 
-    setLoadingSubmit(true);
+    setLoadingSubmit(true)
     updateDocumentMutation.mutate(
       {
         documentId: documentData.id,
@@ -182,23 +185,23 @@ const DocumentLocker = ({ id }) => {
       },
       {
         onSettled: () => {
-          setLoadingSubmit(false); // Reset loading state
+          setLoadingSubmit(false) // Reset loading state
         },
-      }
-    );
-  };
+      },
+    )
+  }
 
   const openUploadModal = () => {
-    setSelectedDocument(null);
-    setModalType('upload');
-    setError('');
-  };
+    setSelectedDocument(null)
+    setModalType('upload')
+    setError('')
+  }
 
   const handleDocumentClick = (field) => {
-    setLoadingDocs((prev) => ({ ...prev, [field]: true }));
+    setLoadingDocs((prev) => ({ ...prev, [field]: true }))
 
     try {
-      const doc = documentsList.find((d) => d.name === field);
+      const doc = documentsList.find((d) => d.name === field)
 
       if (doc) {
         setSelectedDocument({
@@ -207,27 +210,27 @@ const DocumentLocker = ({ id }) => {
           displayName: doc.displayName || field,
           fileName: `${field}.jpg`,
           uploadDate: new Date().toISOString(),
-        });
-        setModalType('view');
+        })
+        setModalType('view')
       } else {
-        setError(`No document data found for ${field}.`);
-        console.error(`No document data found for ${field}.`);
+        setError(`No document data found for ${field}.`)
+        console.error(`No document data found for ${field}.`)
       }
     } catch (error) {
-      setError('Error retrieving document.');
-      console.error('Error processing document:', error);
+      setError('Error retrieving document.')
+      console.error('Error processing document:', error)
     } finally {
-      setLoadingDocs((prev) => ({ ...prev, [field]: false }));
+      setLoadingDocs((prev) => ({ ...prev, [field]: false }))
     }
-  };
+  }
 
   const handleCloseModal = () => {
-    setModalType(null);
-    setSelectedDocument(null);
-    setError('');
-  };
+    setModalType(null)
+    setSelectedDocument(null)
+    setError('')
+  }
 
-  const hasDocuments = documentsList.length > 0;
+  const hasDocuments = documentsList.length > 0
 
   return (
     <div>
@@ -282,11 +285,7 @@ const DocumentLocker = ({ id }) => {
             <div className="text-center py-5">
               <FaRegFolderClosed size={60} className="text-muted mb-3" />
               <p className="text-muted mb-3">No documents uploaded yet</p>
-              <CButton
-                color="primary"
-                variant="outline"
-                onClick={openUploadModal}
-              >
+              <CButton color="primary" variant="outline" onClick={openUploadModal}>
                 <FaUpload className="me-2" />
                 Upload Your First Document
               </CButton>
@@ -327,7 +326,7 @@ const DocumentLocker = ({ id }) => {
         />
       )}
     </div>
-  );
-};
+  )
+}
 
-export default DocumentLocker;
+export default DocumentLocker

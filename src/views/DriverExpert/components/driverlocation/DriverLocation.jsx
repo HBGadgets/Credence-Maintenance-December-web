@@ -136,6 +136,11 @@ const DriverLocation = () => {
     setDateRange({ startDate, endDate })
   }
 
+  // handle view
+  const handleViewButton = (id) => {
+    console.log(id)
+  }
+
   return (
     <div>
       <div className="mb-3 d-flex justify-content-between align-items-center">
@@ -166,6 +171,8 @@ const DriverLocation = () => {
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
+        viewButton={true}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination
