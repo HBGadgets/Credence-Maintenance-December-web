@@ -146,7 +146,7 @@ const DocumentViewModal = ({
   }
 
   return (
-    <CModal visible={visible} onClose={onClose} size="xl" backdrop="static" keyboard={false}>
+    <CModal visible={visible} onClose={onClose} size="xl" keyboard={false}>
       <CModalHeader>
         <CModalTitle>
           <FaEye className="me-2" />
