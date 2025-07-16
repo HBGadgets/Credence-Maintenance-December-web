@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import HeaderInpection from './HeaderInpection'
 import InpectionCards from './InpectionCards'
@@ -6,15 +6,24 @@ import LoaderBus from '../../../../components/Loader3/LoaderBus'
 import { getAllVehicleInpectionApi } from '../../data/data'
 import InpectionTable from './InpectionTable'
 import PassInpectionCard from './PassInpectionCard'
+import { TokenContext } from '../../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const AnalayisInpection = () => {
   const { id } = useParams()
   const [inspection, setInspection] = useState(null)
 
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   useEffect(() => {
+    if (!token) return // Don't fetch if token is not ready
+
     const fetchInspection = async () => {
       try {
-        const data = await getAllVehicleInpectionApi()
+        const data = await getAllVehicleInpectionApi(null, token)
         const result = data.find((item) => item.id === id)
         setInspection(result)
       } catch (err) {
@@ -23,7 +32,7 @@ const AnalayisInpection = () => {
     }
 
     fetchInspection()
-  }, [id])
+  }, [id, token]) // make sure useEffect re-runs if token becomes available
 
   if (!inspection) {
     return (

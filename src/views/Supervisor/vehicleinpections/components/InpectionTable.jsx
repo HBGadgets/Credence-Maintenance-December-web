@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getAllVehicleInpectionApi, getAllFailInpectionImageApi } from '../../data/data'
@@ -7,6 +7,8 @@ import SmartPagination from '../../../components/SmartPagination'
 import BillShow from '../../../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
 import { Eye } from 'lucide-react'
+import { TokenContext } from '../../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const InpectionTable = () => {
   const { id } = useParams()
@@ -20,10 +22,16 @@ const InpectionTable = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
   const { data: allInspections, isFetching } = useQuery({
     queryKey: ['allvehicleinpection'],
-    queryFn: getAllVehicleInpectionApi,
+    queryFn: () => getAllVehicleInpectionApi(null, token),
     staleTime: 1000 * 60 * 30,
+    enabled: !!token, //  only run if token is available
     onError: (err) => console.error('Error fetching inspection data:', err),
   })
 
