@@ -138,7 +138,13 @@ const DriverLocation = () => {
 
   // handle view
   const handleViewButton = (id) => {
-    console.log(id)
+    const selectedRow = filteredData.find((item) => item.id === id)
+
+    if (selectedRow) {
+      console.log('Attendance Image ID:', selectedRow.attendanceImageId)
+    } else {
+      console.warn('Row not found for ID:', id)
+    }
   }
 
   return (

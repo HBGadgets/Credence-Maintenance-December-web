@@ -554,6 +554,7 @@ export const fetchDriverAttendanceLocation = async () => {
       coordinate: `${attendanceLoc.lat}, ${attendanceLoc.long}` || 'No Co-ordinate',
       status: attendanceLoc.status || 'N/A',
       supervisor: attendanceLoc.driverId?.supervisor || 'N/A',
+      attendanceImageId: attendanceLoc.attendanceImageId,
     }));
 
 
