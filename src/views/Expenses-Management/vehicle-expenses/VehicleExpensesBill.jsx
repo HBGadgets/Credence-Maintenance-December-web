@@ -230,15 +230,56 @@ const VehicleExpensesBill = () => {
       type: 'select',
       required: true,
       options: [
-        { value: 'engineOil', label: 'Engine Oil Change & Filters.' },
-        { value: 'brakeMaintenance', label: 'Brake Maintenance.' },
-        { value: 'tyreWheel', label: 'Tire & Wheel Service.' },
-        { value: 'fuel', label: 'Fuels and Gas Service.' },
-        { value: 'battery', label: 'Battery & Electrical.' },
-        { value: 'newPartService', label: 'Part Changes Or New Parts Buys for vehicle' },
+        {
+          value: 'engineOil',
+          label: 'Engine Service (Oil, filters, spark plugs, timing belt, tuning).',
+        },
+        {
+          value: 'transmissionService',
+          label: 'Transmission & Clutch (Fluid, gearbox, clutch plate, flywheel)',
+        },
+        {
+          value: 'brakeMaintenance',
+          label: 'Brakes System (Pads, discs, fluid, ABS module, handbrake).',
+        },
+        {
+          value: 'suspensionSteeringService',
+          label: 'Suspension & Steering (Shocks, struts, ball joints, alignment)',
+        },
+        {
+          value: 'tyreWheel',
+          label: 'Tyres & Wheels (Replacement, balancing, alignment, rim repair).',
+        },
+        { value: 'fuel', label: 'Fuel System (Pump, filter, injectors, throttle body).' },
+        {
+          value: 'acSystemService',
+          label:
+            'AC & Heating (Compressor, gas refill, condenser, blower, vents,Radiator, coolant flush, thermostat, water pump)',
+        },
+        {
+          value: 'battery',
+          label: 'Battery & Electrical (Battery check, starter, alternator, wiring).',
+        },
+        {
+          value: 'newPartService',
+          label:
+            'Body Part & Paintwork (Dents, repaint, scratches, rust treatment, new parts of vehicle)',
+        },
+        {
+          value: 'interiorCareService',
+          label: 'Interior & Cabin Care (Cleaning, detailing, seat repairs, mats)',
+        },
+        {
+          value: 'lightingHornWipers',
+          label: 'Lights, Horn & Wipers (Bulbs, horns, wipers, washer motor)',
+        },
+        {
+          value: 'diagnosticsAndScan',
+          label: 'Diagnostics & Error Scanning (ECU scan, warning light resolution)',
+        },
         {
           value: 'other',
-          label: 'Major mechanical issues or part replacements or Service Requriment(Other).',
+          label: 'Major mechanical issues or part replacements or Full Service of Vehicle (Other).',
         },
       ],
     },
