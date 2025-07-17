@@ -262,6 +262,7 @@ function DriverExpenses({ id }) {
           isFetching={isFetching}
           viewButton={true}
           handleViewButton={handleViewButton}
+          action="Images"
         />
 
         <BillShow

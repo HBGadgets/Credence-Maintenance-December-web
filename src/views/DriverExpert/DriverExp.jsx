@@ -399,6 +399,7 @@ function DriversPage() {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        viewButtonLabel="Profile"
       />
 
       <SmartPagination

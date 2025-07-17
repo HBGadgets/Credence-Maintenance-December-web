@@ -79,6 +79,7 @@ function Table({
   currentPage,
   itemsPerPage,
   isFetching,
+  action = 'Action',
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -143,7 +144,7 @@ function Table({
                       </CTableHeaderCell>
                     ))}
                   {(editButton || deleteButton || viewButton) && (
-                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
                   )}
                 </CTableRow>
               </CTableHead>

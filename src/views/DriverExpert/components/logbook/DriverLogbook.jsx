@@ -189,6 +189,7 @@ const DriverLogbook = ({ id }) => {
             isError={isError}
             viewButton={true}
             handleViewButton={handleViewButton}
+            action="Images"
           />
         </>
         {/* Modal for displaying signature */}

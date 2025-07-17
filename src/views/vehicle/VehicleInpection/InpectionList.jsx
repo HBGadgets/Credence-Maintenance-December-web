@@ -146,6 +146,7 @@ const InpectionList = () => {
         isError={isError}
         viewButton={true}
         handleViewButton={handleViewButton}
+        action="Details"
       />
       <SmartPagination
         totalPages={totalPages}

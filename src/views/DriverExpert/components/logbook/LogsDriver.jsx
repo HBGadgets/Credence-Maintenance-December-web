@@ -421,6 +421,7 @@ const LogsDriver = () => {
             handleEditButton={handleEditButton}
             deleteButton={true}
             handleDeleteButton={handleDeleteButton}
+            viewButtonLabel="Image"
           />
 
           <SmartPagination

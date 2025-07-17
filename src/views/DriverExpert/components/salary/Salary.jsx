@@ -176,6 +176,7 @@ const Salary = ({ id }) => {
             isError={isError}
             viewButton={true}
             handleViewButton={handleViewButton}
+            action="Images"
           />
 
           {/* <SmartPagination

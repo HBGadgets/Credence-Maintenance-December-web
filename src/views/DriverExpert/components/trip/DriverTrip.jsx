@@ -165,6 +165,7 @@ function DriverTrip({ id }) {
           isFetching={isFetching}
           viewButton={true}
           handleViewButton={handleViewButton}
+          action="Details"
         />
 
         <div className="mt-3 text-end">

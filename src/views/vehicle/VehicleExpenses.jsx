@@ -268,6 +268,7 @@ const MaintenanceLog = () => {
         viewButton={true}
         handleViewButton={handleViewButton}
         isFetching={isFetching}
+        action="Images"
       />
       <SmartPagination
         totalPages={totalPages}

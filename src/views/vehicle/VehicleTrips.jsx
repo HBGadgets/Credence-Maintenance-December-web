@@ -231,6 +231,7 @@ const VehicleTrips = () => {
         viewButton={true}
         handleViewButton={handleViewButton}
         isFetching={isFetching}
+        action="Subtrips"
       />
 
       <SmartPagination

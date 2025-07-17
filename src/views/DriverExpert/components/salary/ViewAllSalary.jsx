@@ -198,6 +198,7 @@ const ViewAllSalary = () => {
             isError={isError}
             viewButton={true}
             handleViewButton={handleViewButton}
+            action="Images"
           />
 
           <SmartPagination

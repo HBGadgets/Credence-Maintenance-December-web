@@ -255,6 +255,7 @@ const ExpensesList = () => {
           isFetching={isFetching}
           viewButton={true}
           handleViewButton={handleViewButton}
+          action="Images"
         />
 
         <SmartPagination
