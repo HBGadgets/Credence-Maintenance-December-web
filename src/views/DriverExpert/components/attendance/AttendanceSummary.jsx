@@ -9,6 +9,11 @@ import { HiOutlineLogout } from 'react-icons/hi'
 function AttendanceSummary({ filterData, id }) {
   const { Present = 0, Absent = 0, Pending = 0, Approved = 0 } = filterData || {}
 
+  const currentMonthYear = new Date().toLocaleString('default', {
+    month: 'long',
+    year: 'numeric',
+  })
+
   const attendanceSummary = [
     { title: 'Present', value: Present, className: 'text-success', cardClass: 'present' },
     { title: 'Absent', value: Absent, className: 'text-danger', cardClass: 'absent' },
@@ -56,7 +61,8 @@ function AttendanceSummary({ filterData, id }) {
 
   return (
     <>
-      <div className="container mt-4">
+      <div className="container ">
+        <h5 className="mb-4 text-center fw-bold">Attendance Summary - {currentMonthYear}</h5>
         <div className="row g-3">
           {attendanceSummary.map(({ title, value, className, cardClass }, index) => (
             <div key={index} className="col-md-3">
