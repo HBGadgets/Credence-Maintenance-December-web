@@ -550,7 +550,7 @@ export const fetchDriverAttendanceLocation = async () => {
       date: formatDateToDDMMYYYY(attendanceLoc.createdAt),
       name: attendanceLoc.driverId?.name || 'N/A',
       lat: attendanceLoc.lat || 'N/A',
-      long: attendanceLoc.long || 'N/A',
+      long: attendanceLoc.long || " ",
       coordinate: `${attendanceLoc.lat}, ${attendanceLoc.long}` || 'No Co-ordinate',
       status: attendanceLoc.status || 'N/A',
       supervisor: attendanceLoc.driverId?.supervisor || 'N/A',

@@ -76,7 +76,8 @@ const DriverLocation = () => {
 
           return {
             ...item,
-            coordinate: `${item.lat}, ${item.long}`,
+            coordinate:
+              item.lat !== 'N/A' ? `${item.lat}, ${item.long}` : 'Co-ordinates not available',
             address: map[key],
           }
         }),
