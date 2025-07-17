@@ -301,6 +301,7 @@ const Trip = () => {
           deleteButton={true}
           handleDeleteButton={handleDeleteButton}
           isFetching={isFetching}
+          viewButtonLabel="Subtrips"
         />
 
         <SmartPagination

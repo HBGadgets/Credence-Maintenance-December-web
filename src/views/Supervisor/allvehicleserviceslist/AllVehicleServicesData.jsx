@@ -226,6 +226,7 @@ const AllVehicleServicesData = () => {
         isFetching={isFetching}
         viewButton={true}
         handleViewButton={handleViewButton}
+        action="Details"
       />
 
       <SmartPagination

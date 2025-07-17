@@ -388,6 +388,7 @@ const AllDailyLogbook = () => {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        viewButtonLabel="Image"
       />
       <SmartPagination
         totalPages={totalPages}

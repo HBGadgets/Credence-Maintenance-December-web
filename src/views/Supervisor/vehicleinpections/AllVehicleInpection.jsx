@@ -624,6 +624,7 @@ const AllVehicleInpection = () => {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        viewButtonLabel="Details"
       />
       <SmartPagination
         totalPages={totalPages}

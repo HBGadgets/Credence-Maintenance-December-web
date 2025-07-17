@@ -499,6 +499,7 @@ const Lr = () => {
           deleteButton={true}
           handleDeleteButton={handleDeleteButton}
           isFetching={isFetching}
+          viewButtonLabel="Recipt"
         />
 
         <SmartPagination
