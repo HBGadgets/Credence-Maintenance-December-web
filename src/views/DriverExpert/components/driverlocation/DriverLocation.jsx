@@ -2,37 +2,49 @@ import React, { useContext, useEffect, useState } from 'react'
 import Table from '../../../components/Table'
 import SmartPagination from '../../../components/SmartPagination'
 import { useQuery } from '@tanstack/react-query'
-import { fetchDriverAttendanceLocation, fetchSupervisor, getAddressApi } from '../../data/drivers'
+import {
+  fetchDriverAttendanceLocation,
+  fetchSupervisor,
+  getAddressApi,
+  getDriverLocationApi,
+} from '../../data/drivers'
 import SingleSelectDropdown from '../../../components/SingleSelectDropdown'
 import SearchInput from '../../../components/SearchInput'
 import DateRangeFilterCredence from '../../../../components/DateRangeFilterCredence'
 import { TokenContext } from '../../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import BillShow from '../../../components/BillModal/BillShow'
+import { toast, ToastContainer } from 'react-toastify'
 
 const DriverLocation = () => {
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
 
-  // for supervisor select
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+
   const [selectedName, setSelectedName] = useState(null)
 
-  // superadmin role
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
-  const userRole = decodedToken?.role
+  const userRole = decodedToken?.role ?? 'user'
 
-  // fetch attendance
-  const { data: attendanceLocData, isFetching } = useQuery({
+  const {
+    data: attendanceLocData = [],
+    isFetching,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['attendanceLoc'],
     queryFn: fetchDriverAttendanceLocation,
     staleTime: 1000 * 60 * 30,
   })
 
-  // supervisor fetch
-  const { data: supervisorOptions = [] } = useQuery({
+  const { data: supervisorOptions = [], isError: isSupervisorError } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
     staleTime: 1000 * 60 * 10,
@@ -40,36 +52,43 @@ const DriverLocation = () => {
 
   useEffect(() => {
     const fetchAddresses = async () => {
-      if (!attendanceLocData || attendanceLocData.length === 0) return
+      if (!attendanceLocData || attendanceLocData.length === 0) {
+        setFilteredData([])
+        return
+      }
 
       const map = {}
 
       const updatedData = await Promise.all(
         attendanceLocData.map(async (item) => {
+          if (!item.lat || !item.long) return { ...item, address: 'N/A' }
+
           const key = `${item.lat},${item.long}`
 
-          let address = map[key]
-          if (!address) {
-            address = await getAddressApi(item.lat, item.long)
-            map[key] = address
+          if (!map[key]) {
+            try {
+              map[key] = await getAddressApi(item.lat, item.long)
+            } catch (err) {
+              console.error('Failed to get address:', err)
+              map[key] = 'Address not found'
+            }
           }
 
           return {
             ...item,
-            address,
+            coordinate: `${item.lat}, ${item.long}`,
+            address: map[key],
           }
         }),
       )
 
-      // filtering
+      // Apply filters
       let filtered = [...updatedData]
 
-      // Filter by supervisor if selected
       if (selectedName?.value) {
-        filtered = filtered.filter((supdrv) => supdrv.supervisor === selectedName.value)
+        filtered = filtered.filter((item) => item.supervisor === selectedName.value)
       }
 
-      // Filter by date range if available
       if (dateRange.startDate && dateRange.endDate) {
         filtered = filtered.filter((item) => {
           const itemDate = new Date(item.originalDate)
@@ -79,17 +98,15 @@ const DriverLocation = () => {
         })
       }
 
-      // Apply search filter
       if (searchQuery) {
-        const lowercasedQuery = searchQuery.toLowerCase()
+        const lower = searchQuery.toLowerCase()
         filtered = filtered.filter((item) =>
           Object.values(item).some(
-            (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+            (val) => typeof val === 'string' && val.toLowerCase().includes(lower),
           ),
         )
       }
 
-      // Add styled status to final filtered data
       const styledData = filtered.map((data) => ({
         ...data,
         status: (
@@ -126,40 +143,66 @@ const DriverLocation = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
-  // Handle Search
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-  }
+  const handleSearch = (query) => setSearchQuery(query)
 
-  // Handle Date Range Change
   const handleDateRangeChange = (startDate, endDate) => {
     setDateRange({ startDate, endDate })
   }
 
-  // handle view
-  const handleViewButton = (id) => {
+  const handleViewButton = async (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
 
-    if (selectedRow) {
-      console.log('Attendance Image ID:', selectedRow.attendanceImageId)
-    } else {
-      console.warn('Row not found for ID:', id)
+    if (!selectedRow?.attendanceImageId) {
+      toast.warning('No image found for selected entry.')
+      return
+    }
+
+    try {
+      const response = await getDriverLocationApi(selectedRow.attendanceImageId)
+      const { base64Data, contentType } = response
+
+      if (!base64Data || !contentType) {
+        toast.error('Invalid image data.')
+        return
+      }
+
+      const fileSrc = `data:${contentType};base64,${base64Data}`
+      setPdfBase64(fileSrc)
+      setModalTitle(
+        contentType.includes('pdf')
+          ? 'Driver Location Image (PDF)'
+          : contentType.includes('image')
+            ? 'Driver Location Image'
+            : 'Driver Location File',
+      )
+      setShowModal(true)
+    } catch (error) {
+      console.error('Image fetch error:', error)
+      toast.error('No image found or failed to load.')
     }
   }
 
   return (
     <div>
+      <ToastContainer />
+
+      {isError && (
+        <div className="alert alert-danger" role="alert">
+          Failed to load driver attendance data.
+        </div>
+      )}
+
       <div className="mb-3 d-flex justify-content-between align-items-center">
         <div className="d-flex flex-wrap align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-          {userRole === 'superadmin' && (
+          {userRole === 'superadmin' && supervisorOptions.length > 0 && (
             <div style={{ width: '150px' }}>
               <SingleSelectDropdown
                 options={supervisorOptions}
                 value={selectedName}
                 onChange={setSelectedName}
                 isClearable
-                placeholder="Filter by Supervisor Name..."
+                placeholder="Filter by Supervisor"
               />
             </div>
           )}
@@ -190,6 +233,13 @@ const DriverLocation = () => {
           setItemsPerPage(newItems)
           setCurrentPage(1)
         }}
+      />
+
+      <BillShow
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
       />
     </div>
   )

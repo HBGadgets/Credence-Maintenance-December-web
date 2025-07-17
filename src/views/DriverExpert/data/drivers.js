@@ -583,3 +583,24 @@ export const getAddressApi = async (latitude, longitude) => {
   }
 };
 
+
+export const getDriverLocationApi = async (attendanceImageId) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendance-img/${attendanceImageId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    return res.data
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message)
+    throw error
+  }
+}
+
+
