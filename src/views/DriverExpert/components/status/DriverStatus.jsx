@@ -137,6 +137,7 @@ const DriverStatus = () => {
         isFetching={isFetching}
         viewButton={true}
         handleViewButton={handleViewButton}
+        action="Profile"
       />
 
       <SmartPagination

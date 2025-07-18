@@ -139,7 +139,7 @@ const DriverLocation = () => {
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'name', sortable: true },
-    { label: 'Co-ordinate', key: 'coordinate', sortable: false },
+    // { label: 'Co-ordinate', key: 'coordinate', sortable: false },
     { label: 'Address', key: 'address', sortable: false },
     { label: 'Status', key: 'status', sortable: true },
   ]

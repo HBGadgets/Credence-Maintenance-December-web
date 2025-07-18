@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { driverProfile, driverAttendance } from '../../data/drivers'
 import { useQuery } from '@tanstack/react-query'
 import AttendanceCard from '../../../components/AttendanceCard/AttendanceCard'
@@ -8,8 +8,13 @@ import DateRangePicker from '../../../components/DateRangePicker'
 import AttendanceCalendar from './AttendanceCalendar'
 
 function Attendance() {
+  const navigate = useNavigate()
   const { id } = useParams()
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
+
+  // pending data pass through AttendanceSummary.jsx
+  const location = useLocation()
+  const pendingFromSummary = location.state?.pendingCount
 
   // Fetch driver details
   const { data: driver, isFetching } = useQuery({
@@ -22,10 +27,7 @@ function Attendance() {
   const { data: driversAttendance } = useQuery({
     queryKey: ['attendance', id, selectedMonth],
     queryFn: () => driverAttendance(id, selectedMonth),
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   })
-
-  console.log('Driver Attendance:', driversAttendance)
 
   return (
     <>
@@ -47,42 +49,98 @@ function Attendance() {
           />
         </div>
       </div>
+
       {/* Attendance Cards */}
-      <div className="d-flex justify-content-between">
-        <AttendanceCard
-          title="Present Days"
-          subtitle="Current month"
-          count={driversAttendance?.presentCount || 0} // Use real data if available
-          status="Present"
-          subStatus="attendance rate"
-          rate={driversAttendance?.presentPercentage || 0} // Use dynamic attendance rate
-          statusColor="#22c55e"
-        />
-        <AttendanceCard
-          title="Absent Days"
-          subtitle="Unplanned absences"
-          count={driversAttendance?.absentCount || 0} // Use real data if available
-          status="Absent"
-          subStatus="absence rate"
-          rate={driversAttendance?.unplannedLeavePercentage || 0} // Use dynamic attendance rate
-          statusColor="#ef4444"
-        />
-        <AttendanceCard
-          title="Approved Leaves"
-          subtitle="Planned leaves"
-          count={driversAttendance?.onLeaveCount || 0} // Use real data if available
-          status="Leave"
-          subStatus="Planned leave rate"
-          rate={driversAttendance?.plannedLeavePercentage || 0} // Use dynamic attendance rate
-          statusColor="#3b82f6"
-        />
-        <AttendanceCard
-          title="Pending Leaves"
-          subtitle="Leave requests"
-          count={driversAttendance?.Pending || 0} // Use real data if available
-          statusColor="#22c55e"
-        />
+      <div className="row g-3">
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div
+            onClick={() =>
+              navigate(`/PresentTable/${id}?month=${selectedMonth}`, {
+                state: {
+                  presentData: driversAttendance?.attendanceDetails?.filter(
+                    (entry) => entry.status === 'Present',
+                  ),
+                },
+              })
+            }
+            style={{ cursor: 'pointer' }}
+          >
+            <AttendanceCard
+              title="Present Days"
+              subtitle="Current month"
+              count={driversAttendance?.presentCount || 0}
+              status="Present"
+              subStatus="attendance rate"
+              rate={driversAttendance?.presentPercentage || 0}
+              statusColor="#22c55e"
+            />
+          </div>
+        </div>
+
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div
+            onClick={() =>
+              navigate(`/AbsentTable/${id}?month=${selectedMonth}`, {
+                state: {
+                  absentData: driversAttendance?.attendanceDetails?.filter(
+                    (entry) => entry.status === 'Absent',
+                  ),
+                },
+              })
+            }
+            style={{ cursor: 'pointer' }}
+          >
+            <AttendanceCard
+              title="Absent Days"
+              subtitle="Unplanned absences"
+              count={driversAttendance?.absentCount || 0}
+              status="Absent"
+              subStatus="absence rate"
+              rate={driversAttendance?.unplannedLeavePercentage || 0}
+              statusColor="#ef4444"
+            />
+          </div>
+        </div>
+
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div
+            onClick={() =>
+              navigate(`/ApprovedLeaveTable/${id}?month=${selectedMonth}`, {
+                state: {
+                  approvedData: driversAttendance?.attendanceDetails?.filter(
+                    (entry) => entry.status === 'On Leave',
+                  ),
+                },
+              })
+            }
+            style={{ cursor: 'pointer' }}
+          >
+            <AttendanceCard
+              title="Approved Leaves"
+              subtitle="Planned leaves"
+              count={driversAttendance?.onLeaveCount || 0}
+              status="Leave"
+              subStatus="Planned leave rate"
+              rate={driversAttendance?.plannedLeavePercentage || 0}
+              statusColor="#3b82f6"
+            />
+          </div>
+        </div>
+
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div onClick={() => navigate(`/LeaveRequests`)} style={{ cursor: 'pointer' }}>
+            <AttendanceCard
+              title="Pending Leaves"
+              subtitle="Leave requests"
+              status="Pending"
+              subStatus="Planned leave rate"
+              count={driversAttendance?.pendingCount || pendingFromSummary || 0}
+              statusColor="#facc15"
+            />
+          </div>
+        </div>
       </div>
+
       {/* Calendar */}
       <div>
         <AttendanceCalendar

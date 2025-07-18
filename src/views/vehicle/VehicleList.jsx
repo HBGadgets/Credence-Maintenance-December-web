@@ -555,6 +555,7 @@ const VehicleList = () => {
         viewButton={true}
         handleViewButton={handleViewButton}
         isFetching={isFetching}
+        action="Details"
       />
 
       <SmartPagination

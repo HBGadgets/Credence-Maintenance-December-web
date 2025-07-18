@@ -24,7 +24,11 @@ function AttendanceSummary({ filterData, id }) {
   const navigate = useNavigate()
 
   const handleViewDetailedReport = (id) => {
-    navigate(`/DriverAttendance/${id}`)
+    navigate(`/DriverAttendance/${id}`, {
+      state: {
+        pendingCount: Pending,
+      },
+    })
   }
 
   // Handle Logout

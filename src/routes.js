@@ -80,6 +80,13 @@ const DriverStatus = React.lazy(() => import('./views/DriverExpert/components/st
 
 const DriverLocation = React.lazy(() => import('./views/DriverExpert/components/driverlocation/DriverLocation.jsx'))
 
+const PresentTable = React.lazy(() => import('./views/DriverExpert/components/attendance/PresentTable.jsx'))
+
+const AbsentTable = React.lazy(() => import('./views/DriverExpert/components/attendance/AbsentTable.jsx'))
+
+const ApprovedLeaveTable = React.lazy(() => import('./views/DriverExpert/components/attendance/ApprovedLeaveTable.jsx'))
+
+
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
 
@@ -146,6 +153,10 @@ const routes = [
   { path: '/ViewAllSalary/:id', name: 'Salary', element: ViewAllSalary },
   { path: '/DriverStatus', name: 'Driver Status', element: DriverStatus },
   { path: '/DriverLocation', name: 'Driver Attendance Location', element: DriverLocation },
+  { path: '/PresentTable/:id', name: 'Driver Attendance Status', element: PresentTable },
+  { path: '/AbsentTable/:id', name: 'Driver Attendance Status', element: AbsentTable },
+  { path: '/ApprovedLeaveTable/:id', name: 'Driver Approved Leaves', element: ApprovedLeaveTable },
+
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
