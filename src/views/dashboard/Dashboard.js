@@ -39,6 +39,7 @@ import SearchInput from '../components/SearchInput';
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom';
 import logo from 'src/assets/brand/fms.jpg'
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const Dashboard = () => {
   const token = useContext(TokenContext);
@@ -381,7 +382,7 @@ const Dashboard = () => {
   return token ? (
     <>
       <style>{`
-      
+
        .hover-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border-radius: 16px;
@@ -519,21 +520,23 @@ const Dashboard = () => {
               style={{ width: '34px', height: '34px' }}
               onClick={() => scrollContainer('left')}
             >
-              ◀
+              <IoIosArrowBack />
             </button>
             <button
               className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
               style={{ width: '34px', height: '34px' }}
               onClick={() => scrollContainer('right')}
             >
-              ▶
+              <IoIosArrowForward />
             </button>
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+              style={{ height: '34px', padding: '0 12px', fontSize: '14px' }}
               onClick={() => setIsStatic((prev) => !prev)}
             >
               {isStatic ? 'Scroll' : 'Expand'}
             </button>
+
           </div>
 
         </div>
