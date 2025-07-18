@@ -116,8 +116,8 @@ function Attendance() {
             style={{ cursor: 'pointer' }}
           >
             <AttendanceCard
-              title="Approved Leaves"
-              subtitle="Planned leaves"
+              title="Approved Leaves Days"
+              subtitle="Planned leaves days"
               count={driversAttendance?.onLeaveCount || 0}
               status="Leave"
               subStatus="Planned leave rate"
@@ -130,7 +130,7 @@ function Attendance() {
         <div className="col-12 col-sm-6 col-lg-3">
           <div onClick={() => navigate(`/LeaveRequests`)} style={{ cursor: 'pointer' }}>
             <AttendanceCard
-              title="Pending Leaves"
+              title="Pending Leaves Requests"
               subtitle="Leave requests"
               status="Pending"
               subStatus="Planned leave rate"

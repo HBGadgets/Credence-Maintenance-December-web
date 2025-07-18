@@ -381,77 +381,36 @@ const Dashboard = () => {
   return token ? (
     <>
       <style>{`
-        .hover-card {
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-          border-radius: 16px;
-        }
-        .hover-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-        }
-        .dashboard-icon { font-size: 26px; color: #000; }
-        .card-label { font-weight: 600; font-size: 16px; }
-        .card-count { font-size: 17px; font-weight: 600; }
-        .card-subtext { font-size: 14px; color: #6c757d; }
+      
+       .hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 16px;
+}
 
-        .table-modern {
-          border-radius: 10px;
-          overflow: hidden;
-          border-collapse: separate;
-          border-spacing: 0;
-          background-color: #fff;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-          font-size: 15px;
-        }
+.hover-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
 
-        .table-modern thead {
-          background-color: #f8f9fa;
-          text-transform: uppercase;
-          font-size: 13px;
-          letter-spacing: 0.03em;
-        }
+.dashboard-icon {
+  font-size: 26px;
+  color: #000;
+}
 
-        .table-modern th,
-        .table-modern td {
-          padding: 14px 16px;
-          vertical-align: middle;
-          border-bottom: 1px solid #e9ecef;
-        }
+.card-label {
+  font-weight: 600;
+  font-size: 16px;
+}
 
-        .table-modern tbody tr:nth-child(odd) {
-          background-color: #fcfcfc;
-        }
+.card-count {
+  font-size: 17px;
+  font-weight: 600;
+}
 
-        .table-modern tbody tr:hover {
-          background-color: #f0f2f5;
-          transition: background-color 0.2s ease-in-out;
-        }
-
-        .badge {
-          font-size: 13px;
-          font-weight: 600;
-          padding: 5px 12px;
-          border-radius: 20px;
-          display: inline-block;
-          text-align: center;
-        }
-
-        .badge.bg-success {
-          background-color: #198754;
-          color: white;
-        }
-
-        .badge.bg-warning {
-          background-color: #ffc107;
-          color: #212529;
-        }
-
-        .table-modern .small.text-muted {
-          font-size: 12px;
-          color: #6c757d;
-        }
-
-       
+.card-subtext {
+  font-size: 14px;
+  color: #6c757d;
+}
 
 .dashboard-scroll-container {
   display: flex;
@@ -461,19 +420,56 @@ const Dashboard = () => {
   gap: 1rem;
 }
 
+.dashboard-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-scroll-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Static mode — grid layout */
 .dashboard-scroll-container.static-mode {
   overflow-x: hidden !important;
   flex-wrap: wrap;
   justify-content: flex-start;
 }
 
-.dashboard-scroll-container::-webkit-scrollbar {
-  display: none;
+/* Responsive card width */
+.dashboard-card-wrapper {
+  flex: 0 0 calc(25% - 1rem);
+  max-width: calc(25% - 1rem);
 }
 
-.dashboard-card-wrapper {
-  flex: 0 0 calc(25% - 0.75rem); /* 4 per row with gap */
-  max-width: calc(25% - 0.75rem);
+@media (max-width: 1200px) {
+  .dashboard-card-wrapper {
+    flex: 0 0 calc(33.333% - 1rem);
+    max-width: calc(33.333% - 1rem);
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-card-wrapper {
+    flex: 0 0 calc(50% - 1rem);
+    max-width: calc(50% - 1rem);
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-card-wrapper {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Button improvements */
+.scroll-buttons .btn {
+  min-width: 34px;
+  height: 34px;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1;
 }
 
 
@@ -536,7 +532,7 @@ const Dashboard = () => {
               className="btn btn-sm btn-primary"
               onClick={() => setIsStatic((prev) => !prev)}
             >
-              {isStatic ? 'Enable Scroll' : 'Show All'}
+              {isStatic ? 'Scroll' : 'Expand'}
             </button>
           </div>
 
@@ -566,22 +562,27 @@ const Dashboard = () => {
 
       {/* trips table */}
 
-      <CCard className="mb-3 shadow-sm border-0" >
+      <CCard className="mb-3 shadow-sm border-0">
         <CCardBody className="p-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+          <div className="row align-items-center gy-3">
 
             {/* Heading */}
-            <h5 className="mb-3 mb-md-0 fw-bold text-dark">Trips Details</h5>
+            <div className="col-12 col-md-3">
+              <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+            </div>
 
             {/* Filters */}
-            <div className="d-flex justify-content-end align-items-center gap-4 w-75">
-              <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-              <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+            <div className="col-12 col-md-9">
+              <div className="d-flex flex-column flex-sm-row justify-content-end align-items-start align-items-sm-center gap-3">
+                <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+                <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+              </div>
             </div>
 
           </div>
         </CCardBody>
       </CCard>
+
 
       <CContainer className="px-2" fluid>
         <Table
