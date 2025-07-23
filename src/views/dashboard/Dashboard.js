@@ -239,7 +239,14 @@ const Dashboard = () => {
     {
       label: 'Drivers',
       icon: <IoPersonSharp className="dashboard-icon" />,
-      top: `Available: ${dashboardData?.availableDrivers} | Unavailable: ${dashboardData?.unavailableDrivers}`,
+      top: (
+        <>
+          Available: {dashboardData?.availableDrivers} |{' '}
+          <span className="text-danger">
+            Unavailable: {dashboardData?.unavailableDrivers}
+          </span>
+        </>
+      ),
       bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
       color: 'text-success',
       onClick: () => handleViewDrives('Drivers'),
@@ -247,7 +254,14 @@ const Dashboard = () => {
     {
       label: 'Vehicles',
       icon: <FaTruckMoving className="dashboard-icon" />,
-      top: `Available: ${dashboardData?.availableVehicles} | Unavailable: ${dashboardData?.unavailableVehicles}`,
+      top: (
+        <>
+          Available: {dashboardData?.availableVehicles} |{' '}
+          <span className="text-danger">
+            Unavailable: {dashboardData?.unavailableVehicles}
+          </span>
+        </>
+      ),
       bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
       color: 'text-success',
       onClick: () => handleViewVehicles('Vehicles'),
@@ -255,7 +269,15 @@ const Dashboard = () => {
     {
       label: 'Maintenance',
       icon: <IoSettingsSharp className="dashboard-icon" />,
-      top: `Good: ${(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} | Need Services: ${dashboardData?.vehiclesUnderMaintenance ?? 0}`,
+      top: (
+        <>
+          Good: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} |{' '}
+          <span className="text-danger">
+            Need Services: {dashboardData?.vehiclesUnderMaintenance ?? 0}
+          </span>
+        </>
+      ),
+
       bottom: (() => {
         const total = dashboardData?.totalVehicles ?? 0;
         const under = dashboardData?.vehiclesUnderMaintenance ?? 0;
@@ -296,7 +318,7 @@ const Dashboard = () => {
       icon: <FaMapLocationDot className="dashboard-icon" />,
       top: `Locations : ${dashboardData?.driverLocations}`,
       bottom: 'Driver Today Attendances',
-      color: 'text-info',
+      color: 'text-primary',
       onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
