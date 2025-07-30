@@ -29,6 +29,7 @@ export const getAllRaiseTicektApi = async () => {
         vehicleName: raiseticket.vehicle || "Not Assigned",
         driverName: raiseticket?.driver?.name || "Created by Supervisor",
         supervisor: raiseticket.supervisor || "Created by Superadmin",
+        supervisorId: raiseticket.supervisorId || "Not Assigned",
         ticketType: raiseticket.ticketType || "Not Assigned",
         status: raiseticket.status || "Not Assigned",
         description: raiseticket.description || "Not Available",

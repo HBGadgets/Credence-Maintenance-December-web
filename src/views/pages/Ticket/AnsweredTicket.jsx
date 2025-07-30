@@ -89,11 +89,11 @@ const AnsweredTicket = () => {
 
   // use effect
   useEffect(() => {
-    let data = [...raiseticket]
+    let data = [...raiseticket].reverse() // latest ticket
 
     // Filter by supervisor if selected
     if (selectedSupervisor?.value) {
-      data = data.filter((ticket) => ticket.supervisor === selectedSupervisor.value)
+      data = data.filter((raiseticket) => raiseticket.supervisorId === selectedSupervisor.value)
     }
 
     // Filter by status
@@ -179,6 +179,7 @@ const AnsweredTicket = () => {
     if (!record) return
 
     const prefill = {
+      id: record.id,
       feedback: record.feedback || '',
       status: record.status,
     }
@@ -247,13 +248,13 @@ const AnsweredTicket = () => {
                 </div>
 
                 <div style={{ minWidth: '200px' }}>
-                  {/* <SingleSelectDropdown
+                  <SingleSelectDropdown
                     options={supervisorOptions}
                     value={selectedSupervisor}
                     onChange={setSelectedSupervisor}
                     isClearable
                     placeholder="Filter by Supervisor Name..."
-                  /> */}
+                  />
                 </div>
               </div>
             </div>
