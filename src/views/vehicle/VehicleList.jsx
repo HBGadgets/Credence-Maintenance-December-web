@@ -526,51 +526,58 @@ const VehicleList = () => {
     <>
       <ToastContainer />
 
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
-          {userRole === 'superadmin' && (
-            <div style={{ width: '330px' }}>
-              <SingleSelectDropdown
-                options={nameOptions}
-                value={selectedName}
-                onChange={setSelectedName}
-                isClearable
-                placeholder="Filter by Supervisor Name..."
-              />
-            </div>
-          )}
-        </div>
-        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
-          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+      {/* Search & Filter Bar */}
+      <div className="row mb-3 align-items-center">
+        {userRole === 'superadmin' && (
+          <div className="col-12 col-md-4 mb-2 mb-md-0">
+            <SingleSelectDropdown
+              options={nameOptions}
+              value={selectedName}
+              onChange={setSelectedName}
+              isClearable
+              placeholder="Filter by Supervisor Name..."
+            />
+          </div>
+        )}
+
+        <div className={`col-12 ${userRole === 'superadmin' ? 'col-md-8' : 'col-md-12'}`}>
+          <div className="d-flex justify-content-end">
+            <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+          </div>
         </div>
       </div>
 
-      <Table
-        title="Vehicle"
-        columns={columns}
-        filteredData={filteredData}
-        setFilteredData={setFilteredData}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        viewButton={true}
-        handleViewButton={handleViewButton}
-        isFetching={isFetching}
-        action="Details"
-      />
+      {/* Responsive Table */}
+      <div className="table-responsive w-100">
+        <Table
+          title="Vehicle"
+          columns={columns}
+          filteredData={filteredData}
+          setFilteredData={setFilteredData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          viewButton={true}
+          handleViewButton={handleViewButton}
+          isFetching={isFetching}
+          action="Details"
+        />
 
-      <SmartPagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(value) => {
-          setItemsPerPage(value)
-          setCurrentPage(1)
-          if (value === -1) {
-            setItemsPerPage(filteredData.length)
-          }
-        }}
-      />
+        {/* Pagination */}
+        <SmartPagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value)
+            setCurrentPage(1)
+            if (value === -1) {
+              setItemsPerPage(filteredData.length)
+            }
+          }}
+        />
+      </div>
 
+      {/* Floating Dropdown */}
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
       </div>

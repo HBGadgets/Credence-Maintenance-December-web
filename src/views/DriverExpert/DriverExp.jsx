@@ -342,31 +342,33 @@ function DriversPage() {
     <>
       <ToastContainer />
 
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
-          {userRole === 'superadmin' && (
-            <div style={{ width: '330px' }}>
-              <SingleSelectDropdown
-                options={supervisorOptions}
-                value={selectedName}
-                onChange={setSelectedName}
-                isClearable
-                placeholder="Filter by Supervisor Name..."
-              />
-            </div>
-          )}
-        </div>
-        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
-          <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-          <AddButton
-            label="Add Driver"
-            onClick={() => {
-              setEditMode(false)
-              setSubmitEdit(false)
-              setEditingUser(null)
-              setShowModalFrom(true)
-            }}
-          />
+      <div className="mb-4">
+        <div className="row g-3 align-items-center justify-content-between">
+          <div className="col-lg-6 col-md-12 d-flex flex-wrap align-items-center gap-2">
+            {userRole === 'superadmin' && (
+              <div>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
+          </div>
+          <div className="col-lg-4 col-md-12 d-flex justify-content-end gap-2">
+            <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+            <AddButton
+              label="Add Driver"
+              onClick={() => {
+                setEditMode(false)
+                setSubmitEdit(false)
+                setEditingUser(null)
+                setShowModalFrom(true)
+              }}
+            />
+          </div>
         </div>
       </div>
 
