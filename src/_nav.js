@@ -91,12 +91,6 @@ const _nav = [
         name: 'Drivers Leave Requests',
         to: '/LeaveRequests',
       },
-      // {
-      //   component: CNavItem,
-      //   name: 'Drivers Salary',
-      //   to: '/Salary',
-      // },
-
     ],
   },
 
@@ -177,11 +171,17 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Tickets Raised',
-        to: '/HelpAndSupport',
+        to: '/RaiseTicket',
       },
       {
         component: CNavItem,
-        name: 'Chat Bot',
+        name: 'Tickets Answered',
+        to: '/AnsweredTicket',
+        role: 'superadmin',
+      },
+      {
+        component: CNavItem,
+        name: 'Chat Box',
         to: '/ChatBot',
       },
     ],

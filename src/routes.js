@@ -57,6 +57,8 @@ const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
+const RaiseTicket = React.lazy(() => import('./views/pages/Ticket/RaiseTicket.jsx'))
+const AnsweredTicket = React.lazy(() => import('./views/pages/Ticket/AnsweredTicket.jsx'))
 
 // DriverExperts
 const DriverExp = React.lazy(() => import('./views/DriverExpert/DriverExp.jsx'))
@@ -141,7 +143,9 @@ const routes = [
 
   /**HELP AND SUPPORT */
   { path: '/HelpAndSupport', name: 'Help And Support', element: HelpAndSupport },
-  { path: '/ChatBot', name: 'Chat Bot', element: ChatBot },
+  { path: '/ChatBot', name: 'Chat Box', element: ChatBot },
+  { path: '/RaiseTicket', name: 'Raise Ticket', element: RaiseTicket },
+  { path: '/AnsweredTicket', name: 'Answered Ticket', element: AnsweredTicket },
 
   //  /**DRIVER EXPERTS */
   { path: '/DriverExp', name: 'DriverExperts', element: DriverExp },
@@ -160,6 +164,7 @@ const routes = [
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
+
 ]
 
 export default routes

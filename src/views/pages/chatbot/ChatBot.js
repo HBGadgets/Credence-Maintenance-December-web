@@ -46,7 +46,7 @@ export default function Component() {
             }}
           ></i>
           <h1 className="mt-3 mb-2 fw-bold text-dark">Coming Soon</h1>
-          <h5 className="text-muted mb-3">ChatBot Assitance</h5>
+          <h5 className="text-muted mb-3">ChatBox Assitance</h5>
           <p className="text-secondary">
             This feature is <strong>coming soon</strong>.<br />
             We're working hard to improve your Chat support experience.

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import {
@@ -20,11 +20,38 @@ import logo1 from 'src/assets/credenceLoader/Maintenance_Logo.gif'
 
 // sidebar nav config
 import navigation from '../_nav'
+import { TokenContext } from '../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+
+// Helper: Recursively filter items by role
+const filterNavByRole = (items, role) => {
+  return items
+    .map(item => {
+      if (item.items) {
+        // Recursively filter nested items
+        const filteredItems = filterNavByRole(item.items, role)
+        return filteredItems.length ? { ...item, items: filteredItems } : null
+      }
+      // Show item if no role is required OR matches userRole
+      if (!item.role || item.role === role) return item
+      return null
+    })
+    .filter(Boolean)
+}
+
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  // superadmin role filter
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
+  const filteredNav = filterNavByRole(navigation, userRole)
+
 
   return (
     <CSidebar
@@ -54,7 +81,7 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={filteredNav} />
       {/* <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}

@@ -8,6 +8,7 @@ const SearchInput = ({
   setSearchQuery,
   placeholder = 'Search Here...',
   debounceDelay = 700,
+  width = '300px', // default width
 }) => {
   const [inputValue, setInputValue] = useState(searchQuery)
 
@@ -24,7 +25,7 @@ const SearchInput = ({
   }, [searchQuery])
 
   return (
-    <CInputGroup className="w-25">
+    <CInputGroup style={{ width }}>
       {/* Search Icon */}
       <CInputGroupText>
         <CIcon icon={cilSearch} />

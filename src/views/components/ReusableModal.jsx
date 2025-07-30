@@ -124,6 +124,11 @@ const ReusableModal = ({
                     options={field.options || []}
                     value={formData[field.name]}
                     onChange={(selected) => handleSelectChange(selected, field.name)}
+                    menuPortalTarget={document.body}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                   />
                 </>
               ) : field.type === 'select' ? (
@@ -132,6 +137,11 @@ const ReusableModal = ({
                     options={field.options || []}
                     value={formData[field.name]}
                     onChange={(selected) => handleSelectChange(selected, field.name)}
+                    menuPortalTarget={document.body}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                   />
                 </>
               ) : field.type === 'file' ? (
