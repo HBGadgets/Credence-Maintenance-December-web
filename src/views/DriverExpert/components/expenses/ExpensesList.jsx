@@ -236,15 +236,15 @@ const ExpensesList = () => {
 
   return (
     <>
-      <CContainer className="px-2" fluid>
-        <ToastContainer />
+      <ToastContainer />
 
+      <CContainer className="px-2" fluid>
+        {' '}
         <div className="mb-2 d-flex justify-content-between align-items-center">
           {/* Left: Date Range Filter */}
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
         </div>
-
         <Table
           title="Driver Expenses"
           columns={columns}
@@ -257,7 +257,6 @@ const ExpensesList = () => {
           handleViewButton={handleViewButton}
           action="Images"
         />
-
         <SmartPagination
           totalPages={totalPages}
           currentPage={currentPage}
@@ -272,7 +271,6 @@ const ExpensesList = () => {
             }
           }}
         />
-
         <BillShow
           showModal={showModal}
           setShowModal={setShowModal}

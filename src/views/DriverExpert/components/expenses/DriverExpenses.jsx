@@ -249,9 +249,9 @@ function DriverExpenses({ id }) {
 
   return (
     <>
-      <CContainer className="px-2" fluid>
-        <ToastContainer />
+      <ToastContainer />
 
+      <CContainer className="px-2" fluid>
         <Table
           title="Driver Expenses"
           columns={columns}
