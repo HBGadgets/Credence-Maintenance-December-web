@@ -105,6 +105,7 @@ const LeaveRequests = () => {
   // Process and format data for display
   const displayData = useMemo(() => {
     return responseData
+      .reverse()
       .filter((item) => {
         if (!searchQuery) return true
         const driverName = item.driverId?.name || 'Unknown'
