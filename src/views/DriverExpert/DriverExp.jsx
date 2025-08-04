@@ -112,7 +112,7 @@ function DriversPage() {
   })
 
   useEffect(() => {
-    let filtered = drivers
+    let filtered = drivers.reverse()
 
     // Filter by supervisor if selected
     if (selectedName?.value) {

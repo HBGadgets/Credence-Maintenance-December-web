@@ -433,7 +433,7 @@ const VehicleList = () => {
 
   // Filtering logic
   useEffect(() => {
-    let updatedData = [...vehicles]
+    let updatedData = [...vehicles].reverse()
 
     if (searchQuery) {
       const lower = searchQuery.toLowerCase()
