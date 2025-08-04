@@ -73,6 +73,7 @@ function Attendance() {
               subStatus="attendance rate"
               rate={driversAttendance?.presentPercentage || 0}
               statusColor="#22c55e"
+              backgroundColor="#dcfce7"
             />
           </div>
         </div>
@@ -98,6 +99,7 @@ function Attendance() {
               subStatus="absence rate"
               rate={driversAttendance?.unplannedLeavePercentage || 0}
               statusColor="#ef4444"
+              backgroundColor="#f8d7da"
             />
           </div>
         </div>
@@ -123,6 +125,7 @@ function Attendance() {
               subStatus="Planned leave rate"
               rate={driversAttendance?.plannedLeavePercentage || 0}
               statusColor="#3b82f6"
+              backgroundColor="#fff3cd"
             />
           </div>
         </div>
@@ -136,6 +139,7 @@ function Attendance() {
               subStatus="Planned leave rate"
               count={driversAttendance?.pendingCount || pendingFromSummary || 0}
               statusColor="#facc15"
+              backgroundColor="#d1ecf1"
             />
           </div>
         </div>

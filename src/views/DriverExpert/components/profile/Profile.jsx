@@ -126,9 +126,13 @@ function Profile({ filterData }) {
             </div>
           </div>
 
-          {/* Created Date */}
+          {/* Created Date anad vehicle name */}
           <hr />
-          <div className="d-flex justify-content-end">
+          <div className="d-flex justify-content-end flex-column flex-md-row justify-content-md-between">
+            <small>
+              <b> Current Vehicle: {filterData?.currentVehicleName || 'N/A'} </b>
+            </small>
+
             <small className="text-muted">
               ID Created on{' '}
               {filterData?.createdAt

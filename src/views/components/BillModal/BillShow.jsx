@@ -139,7 +139,7 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
 
       <CModalFooter className="custom-footer-modern">
         {pdfBase64 && isImage(pdfBase64) && (
-          <CButton color="secondary" onClick={rotateImage}>
+          <CButton className="btn btn-modern-download" onClick={rotateImage}>
             Rotate Image
           </CButton>
         )}
