@@ -113,6 +113,30 @@ const TyreAssignModal = ({
   }
   // ------
 
+  // tyre brand name
+  const tyreOptions = [
+    { value: 'MRF', label: 'MRF' },
+    { value: 'Apollo', label: 'Apollo' },
+    { value: 'CEAT', label: 'CEAT' },
+    { value: 'JK Tyre', label: 'JK Tyre' },
+    { value: 'Birla Tyres', label: 'Birla Tyres' },
+    { value: 'TVS Eurogrip', label: 'TVS Eurogrip' },
+    { value: 'BKT', label: 'BKT (Balkrishna Industries)' },
+    { value: 'Goodyear', label: 'Goodyear' },
+    { value: 'Bridgestone', label: 'Bridgestone' },
+    { value: 'Michelin', label: 'Michelin' },
+    { value: 'Continental', label: 'Continental' },
+    { value: 'Pirelli', label: 'Pirelli' },
+    { value: 'Yokohama', label: 'Yokohama' },
+    { value: 'Maxxis', label: 'Maxxis' },
+    { value: 'Ralco', label: 'Ralco' },
+    { value: 'Metro Tyres', label: 'Metro Tyres' },
+    { value: 'Indus Tyres', label: 'Indus Tyres' },
+    { value: 'ATG', label: 'ATG (Alliance Tyre Group)' },
+    { value: 'Firestone', label: 'Firestone' },
+    { value: 'OtherBrand', label: 'Other Brand' },
+  ]
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -273,15 +297,22 @@ const TyreAssignModal = ({
             <Form.Label>
               Brand Name <span className="text-danger">*</span>
             </Form.Label>
-            <Form.Control
-              type="text"
+            <Select
               name="brandName"
-              value={formData.brandName}
-              onChange={handleChange}
-              isInvalid={!!errors.brandName}
-              aria-invalid={!!errors.brandName}
+              options={tyreOptions}
+              value={tyreOptions.find((opt) => opt.value === formData.brandName)}
+              onChange={(selected) =>
+                handleChange({
+                  target: { name: 'brandName', value: selected?.value },
+                })
+              }
+              className={errors.brandName ? 'is-invalid' : ''}
+              classNamePrefix="react-select"
+              placeholder="-- Select Tyre Brand --"
             />
-            <Form.Control.Feedback type="invalid">Brand name is required.</Form.Control.Feedback>
+            {errors.brandName && (
+              <div className="invalid-feedback d-block">Brand name is required.</div>
+            )}
           </Form.Group>
 
           {/* <Form.Group className="mb-2">
@@ -322,10 +353,10 @@ const TyreAssignModal = ({
               <option value="" disabled hidden>
                 -- Select Status --
               </option>
-              <option value="new">New</option>
-              <option value="in-use">In Use</option>
-              <option value="need-replacement">Need Replacement</option>
-              <option value="second-hand">Second Hand</option>
+              <option value="new">New Tyre</option>
+              <option value="RepairedTyre">Reparired Tyre</option>
+              {/* <option value="need-replacement">Need Replacement</option> */}
+              <option value="second-hand-Tyre">Second Hand Tyre</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">Status is required.</Form.Control.Feedback>
           </Form.Group>
