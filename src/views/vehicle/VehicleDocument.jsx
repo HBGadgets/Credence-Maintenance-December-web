@@ -21,10 +21,10 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [imageSrc, setImageSrc] = useState(null)
   const [documentData, setDocumentData] = useState({
-    Insurance: { issueDate: '', expiryDate: '', file: null },
-    rc: { issueDate: '', expiryDate: '', file: null },
-    puc: { issueDate: '', expiryDate: '', file: null },
-    fitnessCertificate: { issueDate: '', expiryDate: '', file: null },
+    Insurance: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+    rc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+    puc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+    fitnessCertificate: { issueDate: '', expiryDate: '', file: null, companyName: '' },
   })
   const [loadingDocs, setLoadingDocs] = useState({})
 
@@ -34,15 +34,15 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     queryFn: async () => {
       const fields = ['Insurance', 'rc', 'puc', 'fitnessCertificate']
       const results = {}
-      
+
       for (const field of fields) {
         const response = await getDocuments(id, field)
         results[field] = response || {}
       }
-      
+
       return results
     },
-    staleTime: 5 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
   })
 
   // Mutations for document operations
@@ -56,7 +56,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     onError: (error) => {
       console.error('Error uploading document:', error)
       toast.error('Failed to upload document.')
-    }
+    },
   })
 
   const editMutation = useMutation({
@@ -69,7 +69,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     onError: (error) => {
       console.error('Error editing document:', error)
       toast.error('Failed to update document.')
-    }
+    },
   })
 
   const deleteMutation = useMutation({
@@ -82,7 +82,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     onError: (error) => {
       console.error('Error deleting document:', error)
       toast.error('Failed to delete document.')
-    }
+    },
   })
 
   const handleSaveChanges = async (documents) => {
@@ -114,6 +114,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
     const formData = new FormData()
     formData.append(`documents[${documentType}][issueDate]`, documentData.issueDate)
     formData.append(`documents[${documentType}][expiryDate]`, documentData.expiryDate)
+    formData.append(`documents[${documentType}][companyName]`, documentData.companyName || '')
 
     const documentFieldMapping = {
       rc: 'rcImage',
@@ -142,6 +143,7 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
       [doc.name]: {
         issueDate: doc.issueDate || '',
         expiryDate: doc.expiryDate || '',
+        companyName: doc.companyName || '',
         file: doc.file || null,
       },
     })
@@ -190,10 +192,10 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const openAddModal = () => {
     setSelectedDocument(null)
     setDocumentData({
-      Insurance: { issueDate: '', expiryDate: '', file: null },
-      rc: { issueDate: '', expiryDate: '', file: null },
-      puc: { issueDate: '', expiryDate: '', file: null },
-      fitnessCertificate: { issueDate: '', expiryDate: '', file: null },
+      Insurance: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      rc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      puc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      fitnessCertificate: { issueDate: '', expiryDate: '', file: null, companyName: '' },
     })
     setModalType('add')
   }
@@ -220,19 +222,19 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
   const handleCloseModal = () => {
     setModalType(null)
     setDocumentData({
-      Insurance: { issueDate: '', expiryDate: '', file: null },
-      rc: { issueDate: '', expiryDate: '', file: null },
-      puc: { issueDate: '', expiryDate: '', file: null },
-      fitnessCertificate: { issueDate: '', expiryDate: '', file: null },
+      Insurance: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      rc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      puc: { issueDate: '', expiryDate: '', file: null, companyName: '' },
+      fitnessCertificate: { issueDate: '', expiryDate: '', file: null, companyName: '' },
     })
   }
 
-   const documentsList = [
+  const documentsList = [
     { name: 'Insurance', value: Insurance },
     { name: 'fitnessCertificate', value: fitnessCertificate },
     { name: 'rc', value: rc },
     { name: 'puc', value: puc },
-  ].filter(doc => doc.value); 
+  ].filter((doc) => doc.value)
 
   const hasDocuments = documentsList.some((doc) => doc.value)
 
@@ -302,9 +304,10 @@ const VehicleDocuments = ({ Insurance, fitnessCertificate, rc, puc }) => {
           visible={modalType === 'add' || modalType === 'edit'}
           onClose={handleCloseModal}
           onSubmit={modalType === 'add' ? handleSaveChanges : handleEditSubmit}
-           loadingSubmit={modalType === 'add' ? uploadMutation.isPending : editMutation.isPending}
+          loadingSubmit={modalType === 'add' ? uploadMutation.isPending : editMutation.isPending}
           type={modalType}
           initialData={documentData}
+          selectedDocument={selectedDocument}
         />
       )}
 

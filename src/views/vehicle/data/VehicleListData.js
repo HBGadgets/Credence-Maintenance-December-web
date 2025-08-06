@@ -138,6 +138,7 @@ export const getDocuments = async (id, field) => {
                 issueDate: document.issueDate || null,
                 imageBase64: document.image?.base64Data || null, // Image Base64
                 contentType: document.image?.contentType || null, // Image Content Type
+                companyName: document.companyName || null, // Company name if available
             };
 
             console.log(`Formatted Document Data for ${field}:`, documentDetails);
@@ -186,6 +187,8 @@ export const uploadDocuments = async (vehicleId, documents) => {
 
     formData.append(`documents[${documentType}][issueDate]`, documentData.issueDate || "");
     formData.append(`documents[${documentType}][expiryDate]`, documentData.expiryDate || "");
+    formData.append(`documents[${documentType}][companyName]`, documentData.companyName || '');
+
     formData.append(mappedFieldName, documentData.file); // Append correct field name
 
     console.log("Uploading Document:", mappedFieldName);

@@ -59,7 +59,7 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
   }
 
   return (
-    <CModal visible={visible} onClose={onClose} size="xl" backdrop="static" keyboard={false}>
+    <CModal visible={visible} onClose={onClose} size="xl" keyboard={false}>
       <CModalHeader className="bg-primary text-white">
         <CModalTitle>
           <FaEye className="me-2" />
@@ -119,8 +119,10 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
                 <h6 className="fw-bold mb-3 text-primary">Document Information</h6>
 
                 <div className="mb-3">
-                  <small className="text-muted text-uppercase fw-semibold">Name</small>
-                  <div className="fw-medium">{document?.name || 'Unknown Document'}</div>
+                  <small className="text-muted text-uppercase fw-semibold">Company Name</small>
+                  <div className="fw-medium">
+                    {document?.image?.companyName || 'Unknown Company Name'}
+                  </div>
                 </div>
 
                 {/* File Name and Icon (not available in current data, but added for future compatibility) */}
