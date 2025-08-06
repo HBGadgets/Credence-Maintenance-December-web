@@ -2,6 +2,9 @@ import { element } from 'prop-types'
 import React from 'react'
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
+// pending trips on dashboard section
+const TripPending = React.lazy(() => import('./views/dashboard/componet/TripPending.jsx'))
+
 // Vehicle
 const Vehicle = React.lazy(() => import('./views/vehicle/Vehicle.jsx'))
 const VehicleProfile = React.lazy(() => import('./views/vehicle/VehicleProfile.jsx'))
@@ -96,6 +99,7 @@ const routes = [
   // Dashboard
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
+  { path: '/TripPending', name: 'Live On Duty Trips', element: TripPending },
 
   /**VEHICLE */
   { path: '/Vehicle', name: 'Vehicles', element: Vehicle },
@@ -160,7 +164,6 @@ const routes = [
   { path: '/PresentTable/:id', name: 'Driver Attendance Status', element: PresentTable },
   { path: '/AbsentTable/:id', name: 'Driver Attendance Status', element: AbsentTable },
   { path: '/ApprovedLeaveTable/:id', name: 'Driver Approved Leaves', element: ApprovedLeaveTable },
-
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },

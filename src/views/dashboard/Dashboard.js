@@ -178,7 +178,7 @@ const Dashboard = () => {
 
   //handle navigate driver
   const handleViewDrives = () => {
-    navigate('/DriverExp')
+    navigate('/TripPending')
   }
 
   //handle navigate vehicle
@@ -249,7 +249,7 @@ const Dashboard = () => {
       ),
       bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
       color: 'text-success',
-      onClick: () => handleViewDrives('Drivers'),
+      onClick: () => handleDriveStatus('Drivers Aavailablity'),
     },
     {
       label: 'Vehicles',
@@ -290,6 +290,14 @@ const Dashboard = () => {
       onClick: () => handleViewServicelog('Maintenance'),
     },
     {
+      label: 'Driver Locations',
+      icon: <FaMapLocationDot className="dashboard-icon" />,
+      top: `Locations : ${dashboardData?.driverLocations}`,
+      bottom: 'Driver Today Attendances',
+      color: 'text-primary',
+      onClick: () => handleDriverLoc('Driver Attendance Location'),
+    },
+    {
       label: 'Expenses',
       icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
       top: `Today Expenses: ₹${dashboardData?.expenses?.total.toLocaleString()}`,
@@ -303,7 +311,7 @@ const Dashboard = () => {
       top: `On Duty: ${dashboardData?.driversLiveOnWork}`,
       bottom: `Total Marked: ${dashboardData?.totalDrivers}`,
       color: 'text-primary',
-      onClick: () => handleDriveStatus('Live on Work'),
+      onClick: () => handleViewDrives('Live on Work'),
     },
     {
       label: 'Document Alert',
@@ -312,14 +320,6 @@ const Dashboard = () => {
       bottom: 'Expiring Soon',
       color: 'text-danger',
       onClick: () => handleDocExp('Insurance Alert'),
-    },
-    {
-      label: 'Driver Locations',
-      icon: <FaMapLocationDot className="dashboard-icon" />,
-      top: `Locations : ${dashboardData?.driverLocations}`,
-      bottom: 'Driver Today Attendances',
-      color: 'text-primary',
-      onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
       label: 'Roadside Assistance',
@@ -395,9 +395,6 @@ const Dashboard = () => {
       }
     };
   }, []);
-
-
-
 
 
 
