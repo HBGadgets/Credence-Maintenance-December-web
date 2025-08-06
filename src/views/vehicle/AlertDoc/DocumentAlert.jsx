@@ -9,6 +9,7 @@ import SearchInput from '../../components/SearchInput'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import DocumentStatusCard from './DocumentStatusCard'
 
 const DocumentAlert = () => {
   const navigate = useNavigate()
@@ -16,23 +17,25 @@ const DocumentAlert = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
-
-  // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
+  const [selectedStatus, setSelectedStatus] = useState(null)
 
-  // superadmin role
+  const [statusCounts, setStatusCounts] = useState({
+    Valid: 0,
+    'Expiring Soon': 0,
+    Expired: 0,
+  })
+
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
-  // fetch data
   const { data: docAlertData, isFetching } = useQuery({
     queryKey: ['docAlert'],
     queryFn: fetchDocAlerts,
     staleTime: 1000 * 60 * 30,
   })
 
-  // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
@@ -42,20 +45,36 @@ const DocumentAlert = () => {
   useEffect(() => {
     if (!docAlertData || docAlertData.length === 0) return
 
+    let counts = { Valid: 0, 'Expiring Soon': 0, Expired: 0 }
+
+    // First calculate full status counts (from full docAlertData)
+    docAlertData.forEach((item) => {
+      if (item.status === 'Valid') counts.Valid++
+      else if (item.status === 'Expiring Soon') counts['Expiring Soon']++
+      else if (item.status === 'Expired') counts.Expired++
+    })
+
+    setStatusCounts(counts)
+
+    // Then apply filters
     let filtered = [...docAlertData]
 
-    // Filter by supervisor if selected
     if (selectedName?.value) {
       filtered = filtered.filter((item) => item.supervisor?.includes(selectedName.value))
     }
 
+    if (selectedStatus) {
+      filtered = filtered.filter((item) => item.status === selectedStatus)
+    }
+
+    // Then map styled data
     const styledData = filtered.map((data) => {
-      let bgColor = '#28a745' // Default: green for 'Valid'
+      let bgColor = '#28a745'
 
       if (data.status === 'Expiring Soon') {
-        bgColor = '#ffc107' // Yellow
+        bgColor = '#ffc107'
       } else if (data.status === 'Expired') {
-        bgColor = '#dc3545' // Red
+        bgColor = '#dc3545'
       }
 
       return {
@@ -80,32 +99,23 @@ const DocumentAlert = () => {
     })
 
     setFilteredData(styledData)
-  }, [docAlertData, selectedName])
+    setStatusCounts(counts)
+  }, [docAlertData, selectedName, selectedStatus])
 
   const totalPages = Math.ceil(itemsPerPage === -1 ? 1 : (filteredData?.length || 0) / itemsPerPage)
 
   const columns = [
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Document Type', key: 'documentNames', sortable: true },
-    {
-      label: 'Issue Date',
-      key: 'issueDate',
-      sortable: true,
-    },
-    {
-      label: 'Expiry Date',
-      key: 'expiryDate',
-      sortable: true,
-    },
+    { label: 'Issue Date', key: 'issueDate', sortable: true },
+    { label: 'Expiry Date', key: 'expiryDate', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]
 
-  // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
   }
 
-  // handle view
   const handleViewButton = (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
     if (selectedRow?.vehicleId) {
@@ -115,27 +125,65 @@ const DocumentAlert = () => {
     }
   }
 
+  const handleStatusClick = (status) => {
+    setSelectedStatus((prev) => (prev === status ? null : status))
+  }
+
   return (
     <div>
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="d-flex flex-wrap align-items-center gap-2">
+      {/* Status Pills */}
+      <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+        {/* Left: Pills + Dropdown */}
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <DocumentStatusCard
+            label="ALL"
+            count={statusCounts.Valid + statusCounts['Expiring Soon'] + statusCounts.Expired}
+            status={null}
+            isSelected={selectedStatus === null}
+            onClick={handleStatusClick}
+          />
+          <DocumentStatusCard
+            label="Valid"
+            count={statusCounts.Valid}
+            status="Valid"
+            isSelected={selectedStatus === 'Valid'}
+            onClick={handleStatusClick}
+          />
+          <DocumentStatusCard
+            label="Expiring Soon"
+            count={statusCounts['Expiring Soon']}
+            status="Expiring Soon"
+            isSelected={selectedStatus === 'Expiring Soon'}
+            onClick={handleStatusClick}
+          />
+          <DocumentStatusCard
+            label="Expired"
+            count={statusCounts.Expired}
+            status="Expired"
+            isSelected={selectedStatus === 'Expired'}
+            onClick={handleStatusClick}
+          />
+
           {userRole === 'superadmin' && (
-            <div style={{ width: '150px' }}>
+            <div style={{ width: '160px' }}>
               <SingleSelectDropdown
                 options={supervisorOptions}
                 value={selectedName}
                 onChange={setSelectedName}
                 isClearable
-                placeholder="Filter by Supervisor Name..."
+                placeholder="Supervisor"
               />
             </div>
           )}
         </div>
-        <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+
+        {/* Right: Search bar */}
+        <div className="d-flex align-items-center" style={{ width: '250px' }}>
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
         </div>
       </div>
 
+      {/* Table */}
       <Table
         title="Vehicle Document Expiring"
         columns={columns}
@@ -149,6 +197,7 @@ const DocumentAlert = () => {
         action="Details"
       />
 
+      {/* Pagination */}
       <SmartPagination
         totalPages={totalPages}
         currentPage={currentPage}
