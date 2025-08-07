@@ -14,7 +14,7 @@ import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import logo from 'src/assets/brand/mantlog2.svg'
+import logo from 'src/assets/brand/fmslogo.svg'
 import logo1 from 'src/assets/credenceLoader/Maintenance_Logo.gif'
 // import { sygnet } from 'src/assets/brand/sygnet'
 
