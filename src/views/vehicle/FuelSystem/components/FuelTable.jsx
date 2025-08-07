@@ -12,21 +12,30 @@ import { ToastContainer } from 'react-toastify'
 const FuelRecords = ({ records = [] }) => {
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
+
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Consumption (L)', key: 'consumption', sortable: true },
     { label: 'Distance (km)', key: 'distance', sortable: true },
+    { label: 'Fuel Efficiency (km/L)', key: 'efficiency', sortable: true },
     { label: 'Driver By Fuel Cost (₹)', key: 'cost', sortable: true },
   ]
 
   // Transform raw API records to match table format
-  const transformedRecords = records.map((r) => ({
-    date: r.date,
-    consumption: r.dailyFuelConsumption || 0,
-    efficiency: r.efficiency || 0,
-    distance: r.distance || 0,
-    cost: r.fuelExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0,
-  }))
+  const transformedRecords = records.map((r) => {
+    const consumption = r.dailyFuelConsumption || 0
+    const distance = r.distance || 0
+    const efficiency = consumption > 0 ? (distance / consumption).toFixed(2) : '0.00'
+    const cost = r.fuelExpenses?.reduce((sum, e) => sum + e.amount, 0) || 0
+
+    return {
+      date: r.date,
+      consumption,
+      distance,
+      efficiency,
+      cost,
+    }
+  })
 
   const [filteredData, setFilteredData] = useState(records)
   const [currentPage, setCurrentPage] = useState(1)
@@ -40,19 +49,13 @@ const FuelRecords = ({ records = [] }) => {
 
   // Handle Logout
   const handleLogout = () => {
-    // Clear sessionStorage and localStorage
     sessionStorage.clear()
     localStorage.clear()
-
-    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
     document.cookie.split(';').forEach((c) => {
       const base = c.trim().split('=')[0]
       document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
     })
-
-    // Redirect to Credence
     window.history.replaceState(null, '', '/')
-    // window.location.href = 'http://localhost:3000'
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
   }
 
@@ -73,14 +76,13 @@ const FuelRecords = ({ records = [] }) => {
       {
         icon: PiMicrosoftExcelLogo,
         label: 'Download Excel',
-        onClick: () => {
+        onClick: () =>
           exportToExcel({
             title: 'Vehicle Fuels Report',
             columns,
             data: transformedRecords,
             fileName: 'Vehicle_Fuels_Report',
-          })
-        },
+          }),
       },
       {
         icon: FaPrint,
