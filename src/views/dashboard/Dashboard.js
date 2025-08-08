@@ -38,7 +38,7 @@ import Table from '../components/Table';
 import SearchInput from '../components/SearchInput';
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom';
-import logo from 'src/assets/brand/fms.jpg'
+import logo from 'src/assets/brand/fmslogo.svg'
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const Dashboard = () => {
@@ -500,11 +500,26 @@ const Dashboard = () => {
         <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
           {/* Left side: icon and title */}
           <div className="d-flex align-items-center gap-3">
-            <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '70px', height: '70px', overflow: 'hidden' }}>
+            <div
+              className="rounded-circle d-flex align-items-center justify-content-center"
+              style={{
+                width: '70px',
+                height: '70px',
+                backgroundColor: '#fff',
+                border: '2px solid #eee',
+                overflow: 'hidden'
+              }}
+            >
               <img
                 src={logo}
                 alt="Fleet Logo"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain', // keeps the image ratio
+                  padding: '6px',       // space inside the circle
+                  backgroundColor: '#fff'
+                }}
               />
             </div>
             <div>
@@ -534,28 +549,38 @@ const Dashboard = () => {
         <div className="d-flex justify-content-between align-items-center mb-3 px-3">
           <h5 className="fw-bold text-dark">Fleet Overview</h5>
           <div className="scroll-buttons d-flex gap-2">
+            {!isStatic && (
+              <>
+                <button
+                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                  style={{ width: '34px', height: '34px' }}
+                  onClick={() => scrollContainer('left')}
+                >
+                  <IoIosArrowBack />
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                  style={{ width: '34px', height: '34px' }}
+                  onClick={() => scrollContainer('right')}
+                >
+                  <IoIosArrowForward />
+                </button>
+              </>
+            )}
             <button
-              className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-              style={{ width: '34px', height: '34px' }}
-              onClick={() => scrollContainer('left')}
-            >
-              <IoIosArrowBack />
-            </button>
-            <button
-              className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-              style={{ width: '34px', height: '34px' }}
-              onClick={() => scrollContainer('right')}
-            >
-              <IoIosArrowForward />
-            </button>
-            <button
-              className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
-              style={{ height: '34px', padding: '0 12px', fontSize: '14px' }}
+              className="btn btn-sm d-flex align-items-center justify-content-center"
+              style={{
+                height: '34px',
+                padding: '0 12px',
+                fontSize: '14px',
+                backgroundColor: '#0a2d63',
+                color: '#fff',
+                border: '1px solid #0a2d63'
+              }}
               onClick={() => setIsStatic((prev) => !prev)}
             >
               {isStatic ? 'Scroll' : 'Expand'}
             </button>
-
           </div>
 
         </div>
