@@ -104,7 +104,7 @@ const PresentTable = () => {
         ),
       }))
 
-      setFilteredData(styledData)
+      setFilteredData([...styledData].reverse()) // reverse order
     }
 
     fetchAddresses()
