@@ -183,7 +183,7 @@ const Dashboard = () => {
 
   //handle navigate vehicle
   const handleViewVehicles = () => {
-    navigate('/Vehicle')
+    navigate('/VehicleAssign')
   }
 
   //handle navigate servicelogs

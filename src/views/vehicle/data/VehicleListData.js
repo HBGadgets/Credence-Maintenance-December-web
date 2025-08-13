@@ -864,6 +864,7 @@ export const fetchDocAlerts = async () => {
                         vehicleId: docAlert.vehicleId,
                         vehicleName: docAlert.vehicleName,
                         documentNames: type,
+                        companyName: doc.companyName,
                         issueDate: formatDateToDDMMYYYY(doc.issueDate),
                         expiryDate: formatDateToDDMMYYYY(doc.expiryDate),
                         status: getStatus(doc.expiryDate),
@@ -889,4 +890,40 @@ const getStatus = (expiryDate) => {
     if (daysLeft <= 30) return 'Expiring Soon';
     return 'Valid';
 };
+
+
+// Status of vehicle assign to driver
+
+export const fetchVehicleStatus = async () => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found');
+
+        const { data } = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/dashboard/get-available-unavailable-vehicles`,
+            { headers: { Authorization: `Bearer ${TOKEN}` } }
+        );
+
+        const mapDriver = (vehicleStatus, status) => ({
+            id: vehicleStatus._id,
+            name: vehicleStatus.name,
+            model: vehicleStatus.model,
+            category: vehicleStatus.category ?? '',
+            driverName: vehicleStatus.driverName ?? 'Not Assign',
+            supervisor: vehicleStatus.users?.[0]?.username || 'N/A',
+            status, // <-- add status label
+        });
+
+        // Merge into a single array
+        const mergedList = [
+            ...data.unavailableVehicles.map((v) => mapDriver(v, 'Unavailable')),
+            ...data.availableVehicles.map((v) => mapDriver(v, 'Available')),
+        ];
+
+        return mergedList;
+    } catch (error) {
+        alert(error.message);
+        throw error;
+    }
+};
+
 

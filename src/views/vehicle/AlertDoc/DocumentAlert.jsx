@@ -109,6 +109,7 @@ const DocumentAlert = () => {
     { label: 'Document Type', key: 'documentNames', sortable: true },
     { label: 'Issue Date', key: 'issueDate', sortable: true },
     { label: 'Expiry Date', key: 'expiryDate', sortable: true },
+    { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]
 

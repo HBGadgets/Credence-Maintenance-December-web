@@ -16,6 +16,7 @@ const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/S
 const InpectionList = React.lazy(() => import('./views/vehicle/VehicleInpection/InpectionList.jsx'))
 const AllVehicleInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/AllVehicleInpection.jsx'))
 const DocumentAlert = React.lazy(() => import('./views/vehicle/AlertDoc/DocumentAlert.jsx'))
+const VehicleAssign = React.lazy(() => import('./views/vehicle/AssignVehicle/AssignVehicle.jsx'))
 
 // Supervisor
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
@@ -59,7 +60,12 @@ const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance
 
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
+
+// old chat box hone k bad is remove kro lo
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
+// new
+// const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBox.jsx'))
+
 const RaiseTicket = React.lazy(() => import('./views/pages/Ticket/RaiseTicket.jsx'))
 const AnsweredTicket = React.lazy(() => import('./views/pages/Ticket/AnsweredTicket.jsx'))
 
@@ -115,6 +121,7 @@ const routes = [
   { path: 'VehicleProfile/:id/Servicelist', name: 'Service List', element: Servicelist },
   { path: 'VehicleProfile/:id/InpectionList', name: 'Vehicle Inpection', element: InpectionList },
   { path: '/DocumentAlert', name: 'Document Expering', element: DocumentAlert },
+  { path: '/VehicleAssign', name: 'Vehicle Assign To Driver', element: VehicleAssign },
 
   /**SUPERVISOR */
 
