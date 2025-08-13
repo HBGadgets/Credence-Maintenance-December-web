@@ -30,7 +30,12 @@ const SubTripMain = () => {
         <LoaderBus />{' '}
       </div>
     )
-  if (isError) return <div className="text-danger text-center py-5">Error loading SubTrip data</div>
+  if (isError)
+    return (
+      <div className="text-danger text-center py-5">
+        <b>Error loading SubTrip data Please Refresh The Page</b>
+      </div>
+    )
 
   const { mainTrip, subTrips } = data
 
