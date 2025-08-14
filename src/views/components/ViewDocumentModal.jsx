@@ -60,7 +60,7 @@ const ViewDocumentModal = ({ visible, onClose, document, onEdit, onDelete, onDow
 
   return (
     <CModal visible={visible} onClose={onClose} size="xl" keyboard={false}>
-      <CModalHeader className="bg-primary text-white">
+      <CModalHeader>
         <CModalTitle>
           <FaEye className="me-2" />
           View Document
