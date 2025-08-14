@@ -119,7 +119,7 @@ const Trip = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   const columns = [
-    { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
+    // { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
     { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
@@ -191,9 +191,13 @@ const Trip = () => {
       icon: FaRegFilePdf,
       label: 'Download PDF',
       onClick: () => {
-        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+        const cleanedData = filteredData.map(({ status, remainingAmount, ...rest }) => ({
           ...rest,
-          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract text if it's a React element
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+          remainingAmount:
+            typeof remainingAmount === 'string' || typeof remainingAmount === 'number'
+              ? remainingAmount
+              : remainingAmount?.props?.children || '',
         }))
 
         exportToPDF({
@@ -209,9 +213,13 @@ const Trip = () => {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
       onClick: () => {
-        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+        const cleanedData = filteredData.map(({ status, remainingAmount, ...rest }) => ({
           ...rest,
-          status: typeof status === 'string' ? status : status?.props?.children || '', // fallback if styled span
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+          remainingAmount:
+            typeof remainingAmount === 'string' || typeof remainingAmount === 'number'
+              ? remainingAmount
+              : remainingAmount?.props?.children || '',
         }))
 
         exportToExcel({

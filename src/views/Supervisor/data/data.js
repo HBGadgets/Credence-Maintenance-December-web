@@ -243,7 +243,7 @@ export const getTripListApi = async (userId = null, token) => {
         budgetAllocated: TripsList.budgetAllocated,
         subTripBudgetAllocated: TripsList.subTripBudgetAllocated,
         supervisorId: TripsList.supervisorId,
-        spentAmount: TripsList.spentAmount,
+        spentAmount: TripsList.spentAmount || '0',
         materialType: TripsList.materialType,
         status: TripsList.status,
         updatedAt: TripsList.updatedAt,
