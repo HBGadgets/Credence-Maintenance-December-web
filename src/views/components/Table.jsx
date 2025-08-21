@@ -60,6 +60,22 @@ const skeletonStyles = `
     align-items: center;
     gap: 4px;
   }
+
+  /* 🔹 Thin horizontal scrollbar */
+  .table-responsive::-webkit-scrollbar {
+    height: 6px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+  }
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .table-responsive {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #c1c1c1 #f1f1f1;
+  }
 `
 
 function Table({
