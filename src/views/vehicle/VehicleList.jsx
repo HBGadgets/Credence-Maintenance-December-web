@@ -548,7 +548,7 @@ const VehicleList = () => {
       </div>
 
       {/* Responsive Table */}
-      <div className="table-responsive w-100">
+      <div className="w-100 overflow-hidden">
         <Table
           title="Vehicle"
           columns={columns}
