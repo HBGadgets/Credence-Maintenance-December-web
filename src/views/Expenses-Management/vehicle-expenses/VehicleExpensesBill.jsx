@@ -325,7 +325,7 @@ const VehicleExpensesBill = () => {
   // Table Columns
 
   const columns = [
-    { label: 'Service Date', key: 'date', sortable: true },
+    { label: 'Date', key: 'date', sortable: true },
     { label: 'Current Vehicle', key: 'currentVehicleName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Shop Name', key: 'shopName', sortable: true },
