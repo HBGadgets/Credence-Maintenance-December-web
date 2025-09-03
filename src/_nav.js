@@ -1,6 +1,6 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car, Headset } from 'lucide-react'
+import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car, Headset, LucideClipboardList } from 'lucide-react'
 import { MdOutlineSupervisorAccount, MdOutlineSupportAgent } from 'react-icons/md'
 
 
@@ -120,10 +120,29 @@ const _nav = [
         name: 'Drivers Salary',
         to: '/Salary',
       },
+    ],
+  },
+
+  // Transport Pass
+  {
+    component: CNavGroup,
+    name: 'Transport Pass',
+    icon: (
+      <LucideClipboardList
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
       {
         component: CNavItem,
-        name: 'LR',
+        name: 'TP Pass',
         to: '/LR',
+      },
+      {
+        component: CNavItem,
+        name: 'Worker Details',
+        to: '/Worker',
       },
     ],
   },

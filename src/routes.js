@@ -1,5 +1,6 @@
 import { element } from 'prop-types'
 import React from 'react'
+
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
 // pending trips on dashboard section
@@ -45,6 +46,10 @@ const VehicleExpensesBill = React.lazy(
 )
 const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 
+const AllExpenses = React.lazy(() => import('./views/Expenses-Management/AllExpenses.jsx'))
+
+const Worker = React.lazy(() => import('./views/TransportPass/Worker.jsx'))
+
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -62,9 +67,9 @@ const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 
 // old chat box hone k bad is remove kro lo
-const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
+// const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
 // new
-// const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBox.jsx'))
+const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBox.jsx'))
 
 const RaiseTicket = React.lazy(() => import('./views/pages/Ticket/RaiseTicket.jsx'))
 const AnsweredTicket = React.lazy(() => import('./views/pages/Ticket/AnsweredTicket.jsx'))
@@ -140,7 +145,9 @@ const routes = [
 
   { path: '/DriverExpenseBill', name: 'All Drivers Expenses', element: DriverExpenses },
   { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
-  { path: '/LR', name: 'Lorry Recipt', element: LR },
+  { path: '/LR', name: 'TP Pass', element: LR },
+  { path: '/AllExpenses', name: 'All Expenses', element: AllExpenses },
+  { path: '/Worker', name: 'Worker Details', element: Worker },
 
 
   /**ROAD SIDE ASSISTANCE */

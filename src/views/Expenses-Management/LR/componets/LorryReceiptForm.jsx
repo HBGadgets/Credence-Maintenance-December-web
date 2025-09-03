@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 // import { fetchVehicles } from '../../../../slices/vehicleSlice'
-import { fetchDrivers } from '../../../DriverExpert/data/drivers'
+import { fetchDrivers, fetchSupervisor } from '../../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../../vehicle/data/VehicleListData'
+import { TokenContext } from '../../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
+import { useQuery } from '@tanstack/react-query'
+import { getWorkerApi } from '../../../TransportPass/data/data'
+import Select from 'react-select'
 
 const defaultFormData = {
+  supervisorId: '',
+  workerId: '',
   companyName: '',
   companyEmail: '',
   companyMobileNumber: '',
@@ -48,6 +55,27 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
 
+  // superadmin role
+  const token = useContext(TokenContext)
+  const decodedToken = token ? jwtDecode(token) : null
+  const userRole = decodedToken?.role
+
+  // supervisor fetch
+  const { data: supervisorOptions = [] } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisor,
+    staleTime: 1000 * 60 * 10,
+  })
+
+  // Fetch workers
+  const { data: workerList = [], isFetching } = useQuery({
+    queryKey: ['workerList'],
+    queryFn: getWorkerApi,
+    staleTime: 1000 * 60 * 30,
+  })
+
+  console.log('worker listttttttttttt', workerList)
+
   // const dispatch = useDispatch()
   // const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
   console.log('vehiclesssssssssssssss', vehicles)
@@ -57,7 +85,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     const loadDrivers = async () => {
       try {
         const data = await fetchDrivers()
-        setDrivers(data)
+        setDrivers(data || [])
         console.log('Fetched drivers:', data) // Debugging
       } catch (error) {
         console.error('Error fetching drivers:', error)
@@ -67,29 +95,23 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     loadDrivers()
   }, [])
 
-  // Fetch vehicle
-  // useEffect(() => {
-  //   if (vehicleStatus === 'idle') {
-  //     dispatch(fetchVehicles())
-  //   }
-  // }, [dispatch, vehicleStatus])
-
   useEffect(() => {
     const loadVehicles = async () => {
       try {
         const data = await fetchVehicles()
-        setVehicles(data)
+        setVehicles(data || [])
         console.log('All vehicles', data)
       } catch (error) {
         console.error('Error fetching vehicles:', error)
       }
     }
-    loadVehicles() // Add parentheses to execute the function
+    loadVehicles()
   }, [])
 
   // Set form data when in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
+      console.log('formdata WWWWWWWWWWWWWWWWWWWWWWWWWWW', initialData)
       setFormData({
         ...defaultFormData,
         ...initialData,
@@ -106,7 +128,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     console.log('valueee all this driver and vehicle', value)
 
     if (name === 'vehicleId') {
-      const selectedVehicle = vehicles.find((v) => v._id === value)
+      const selectedVehicle = vehicles.find((v) => v.id === value || v._id === value) // handle both cases
       setFormData((prev) => ({
         ...prev,
         vehicleId: value,
@@ -124,15 +146,31 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     }
   }
 
-  // In LorryReceiptForm.jsx (onSubmit)
+  // In LorryReceiptForm.jsx
   const onSubmit = (e) => {
     e.preventDefault()
-    const payload = {
+    let payload = {
       ...formData,
       date: formData.date ? new Date(formData.date).toISOString() : '', // Handle date
     }
+
+    // Remove supervisor fields if not superadmin
+    if (userRole !== 'superadmin') {
+      delete payload.supervisorId
+      delete payload.supervisorName
+    }
+
     handleSubmit(payload)
   }
+
+  // console.log(
+  //   'Prefiled data',
+  //   workerList,
+  //   'formData',
+  //   formData,
+  //   'initialData',
+  //   initialData,
+  // )
 
   return (
     <Modal show={show} onHide={handleClose} size="xl" centered>
@@ -148,6 +186,64 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
         </div>
 
         <Form onSubmit={onSubmit}>
+          {/* Select Users */}
+          <h5 className="fw-semibold border-bottom pb-2 mb-3">Select Users</h5>
+          <div className="row g-3 mb-4">
+            {/* Show Supervisor dropdown only if role === superadmin */}
+            {/* Supervisor dropdown (only for superadmin) */}
+            {userRole === 'superadmin' && (
+              <div className="col-md-4">
+                <Form.Label>Supervisor</Form.Label>
+                <Select
+                  name="supervisorId"
+                  value={
+                    supervisorOptions.find((sup) => sup.value === formData.supervisorId) || null
+                  }
+                  onChange={(selected) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      supervisorId: selected ? selected.value : '',
+                      supervisorName: selected ? selected.label : '', // optional
+                    }))
+                  }
+                  options={supervisorOptions}
+                  placeholder="Select Supervisor"
+                  isClearable
+                />
+              </div>
+            )}
+
+            {/* Worker dropdown */}
+            <div className="col-md-4">
+              <Form.Label>Worker</Form.Label>
+              <Select
+                name="workerId"
+                value={
+                  workerList
+                    .map((w) => ({ value: w.id, label: w.name, supervisorId: w.supervisorId }))
+                    .find((w) => w.value === formData.workerId) || null
+                }
+                onChange={(selected) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    workerId: selected ? selected.value : '',
+                    workerName: selected ? selected.label : '', // optional
+                  }))
+                }
+                options={workerList
+                  .filter((w) =>
+                    userRole === 'superadmin' ? w.supervisorId === formData.supervisorId : true,
+                  )
+                  .map((w) => ({
+                    value: w.id,
+                    label: w.name,
+                  }))}
+                placeholder="Select Worker"
+                isClearable
+              />
+            </div>
+          </div>
+
           {/* Company Details */}
           <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
           <div className="row g-3 mb-4">
@@ -215,7 +311,12 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
               <Form.Label>
                 Date <span style={{ color: 'red' }}>*</span>
               </Form.Label>
-              <Form.Control type="date" name="date" value={formData.date} onChange={handleChange} />
+              <Form.Control
+                type="date"
+                name="date"
+                value={formData.originalDate ? formData.originalDate.split('T')[0] : ''}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="col-md-4">
@@ -230,7 +331,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
               >
                 <option value="">Select Vehicle</option>
                 {vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
+                  <option key={vehicle.id || vehicle._id} value={vehicle.id || vehicle._id}>
                     {vehicle.name}
                   </option>
                 ))}

@@ -40,9 +40,35 @@ import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom';
 import logo from 'src/assets/brand/fmslogo.svg'
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { socket } from '../customhooks/useSocket';
+import { NotificationContext } from '../../context/NotificationContext';
+import notificationSound from '../../../mario_up.mp3'
+
+
 
 const Dashboard = () => {
   const token = useContext(TokenContext);
+  // if (!socket.connected) socket.connect();
+  console.log('Socket connected:', socket.connected);
+
+  const [messages, setMessages] = useState({})
+  const { notifications, addNotification, unreadCounts, setUnreadCounts } = useContext(NotificationContext)
+  const [selectedContact, setSelectedContact] = useState(null)
+
+  const [userInteracted, setUserInteracted] = useState(false);
+
+
+  console.log(unreadCounts, notifications)
+
+
+
+  // Function to clear notifications
+  const handleClearNotifications = () => {
+    setNotifications([]) // Clears all notifications
+  }
+
+
+
   const navigate = useNavigate()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -93,6 +119,68 @@ const Dashboard = () => {
       console.log('token', token);
     }
   }, [token]);
+
+  // Add this useEffect for initial interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      setUserInteracted(true);
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
+
+  // notification alerts
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveMessage = (msg) => {
+      // Add notification
+      addNotification(msg);
+
+      // Play sound only if user interacted
+      if (userInteracted) {
+        const audio = new Audio(notificationSound);
+        audio.play().catch((e) =>
+          console.log("Audio play error:", e)
+        );
+      }
+
+      // Update unread counts only if the message is from another contact
+      setUnreadCounts((prev) => {
+        if (selectedContact?.id === msg.senderId) return prev;
+        return {
+          ...prev,
+          [msg.senderId]: (prev[msg.senderId] || 0) + 1,
+        };
+      });
+
+      // Append message
+      setMessages((prev) => {
+        const prevMsgs = prev[msg.senderId] || [];
+        return {
+          ...prev,
+          [msg.senderId]: [...prevMsgs, msg],
+        };
+      });
+    };
+
+    socket.on("receiveMessage", handleReceiveMessage);
+
+    return () => {
+      socket.off("receiveMessage", handleReceiveMessage);
+    };
+
+    //  Only depend on things that won't change on every render
+  }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts]);
+
 
 
   useEffect(() => {
@@ -193,7 +281,7 @@ const Dashboard = () => {
 
   //handle navigate Expenses
   const handleExpenses = () => {
-    navigate('/VehicleExpensesBill')
+    navigate('/AllExpenses')
   }
 
   //handle navigate Expenses

@@ -30,6 +30,7 @@
     "core-js": "^3.37.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
+    "emoji-picker-react": "^4.13.2",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.0.6",
@@ -56,6 +57,7 @@
     "recharts": "^2.15.2",
     "redux": "5.0.1",
     "simplebar-react": "^3.2.5",
+    "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.17.2",
     "xlsx": "^0.18.5"
   },

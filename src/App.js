@@ -69,6 +69,7 @@ import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import { TokenProvider } from './context/TokenContext'
 import LoaderBus from './components/Loader3/LoaderBus'
+import { socket } from './views/customhooks/useSocket'
 
 // Lazy-loaded containers and pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -76,6 +77,7 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
+  if (!socket.connected) socket.connect();
 
   useEffect(() => {
     // Use search instead of parsing href

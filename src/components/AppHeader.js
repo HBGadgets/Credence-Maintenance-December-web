@@ -14,6 +14,7 @@ import {
   CNavLink,
   CNavItem,
   useColorModes,
+  CBadge,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
 import {
@@ -26,18 +27,27 @@ import {
   cilSun,
 } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
-import { User, Headset, LogOut } from 'lucide-react'
+import { User, Headset, LogOut, Volume2, VolumeX } from 'lucide-react'
 import '../index.css'
 import './header.css'
 import routes from '../routes'
 import { TokenContext } from '../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import NotificationDropdown from '../views/components/NotificationDropdown'
+import { NotificationContext } from '../context/NotificationContext'
 
 
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes()
   const [view, setView] = useState(false)
+  const { notifications, setNotifications, unreadCounts, setUnreadCounts } = useContext(NotificationContext)
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0)
+
+  // Function to clear notifications
+  const handleClearNotifications = () => {
+    setUnreadCounts({}) //clear unread counts
+  }
 
   const token = useContext(TokenContext)
   const [username, setUsername] = useState('User')
@@ -106,6 +116,8 @@ const AppHeader = () => {
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
   }
 
+
+
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
@@ -125,16 +137,23 @@ const AppHeader = () => {
         </div>
 
 
-        {/* NOTIFICATION */}
-        <CHeaderNav>
-          <CDropdown>
-            <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
-              <CIcon icon={cilBell} size="lg" style={{ color: 'white' }} />
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem>Notification 1</CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
+        <CHeaderNav className="ms-auto d-flex align-items-center">
+          <div className="position-relative">
+            <NotificationDropdown
+              notifications={notifications}
+              unreadCounts={unreadCounts}
+              onClear={handleClearNotifications}
+            />
+            {totalUnread > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: '0.7rem' }}
+              >
+                {totalUnread}
+              </span>
+            )}
+          </div>
+
           <div className="vr mx-3 bg-white"></div>
 
 
@@ -161,15 +180,6 @@ const AppHeader = () => {
                   <span>{username}</span>
                 </CDropdownItem>
               </CNavItem>
-              {/* <CDropdownItem
-                  className="d-flex align-items-center gap-4"
-                  type="button"
-                  to="/HelpAndSupport"
-                  as={NavLink}
-                >
-                  {' '}
-                  <Headset /> Help & Support
-                </CDropdownItem> */}
               <CNavItem>
                 <CDropdownItem
                   className="d-flex align-items-center gap-4"

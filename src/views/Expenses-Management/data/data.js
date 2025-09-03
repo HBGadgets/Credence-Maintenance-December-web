@@ -296,6 +296,10 @@ export const getLorryReciptApi = async () => {
         id: lorryReciptList._id,
         date: formatDateToDDMMYYYY(lorryReciptList.date),
         originalDate: lorryReciptList.date,
+        supervisorId: lorryReciptList.supervisorId || "Supervisor ID",
+        supervisorName: lorryReciptList.supervisorName || "Supervisor",
+        workerName: lorryReciptList?.workerId.name || "No Worker Found",
+        workerId: lorryReciptList?.workerId._id || "No Worker Found",
         companyName: lorryReciptList.companyName || "Unknown",
         companyAddress: lorryReciptList.companyAddress || "Unknown",
         companyEmail: lorryReciptList.companyEmail || "Unknown",
@@ -304,6 +308,7 @@ export const getLorryReciptApi = async () => {
         companyMobileNumber: lorryReciptList.companyMobileNumber || "Unknown",
         lorryNumber: lorryReciptList.lorryNumber || "Unknown",
         vehicleName: lorryReciptList.vehicleName || "Unknown",
+        vehicleId: lorryReciptList.vehicleId || "Unknown",
         ownerName: lorryReciptList.ownerName || "Unknown",
         consignorName: lorryReciptList.consignorName || "Unknown",
         consignorAddress: lorryReciptList.consignorAddress || "Unknown",
@@ -314,6 +319,7 @@ export const getLorryReciptApi = async () => {
         startLocation: lorryReciptList.from || lorryReciptList.startLocation || "Unknown",
         endLocation: lorryReciptList.to || lorryReciptList.endLocation || "Unknown",
         driverName: lorryReciptList.driverId?.name || "N/A",
+        driverId: lorryReciptList.driverId?._id || "N/A",
         supervisor: lorryReciptList.driverId?.supervisor || "N/A",
         driverContact: lorryReciptList.driverId?.contactNumber || "N/A",
         containerNumber: lorryReciptList.containerNumber || "Unknown",
@@ -411,3 +417,37 @@ export const deleteLorryReciptApi = async (id) => {
     }
 }
 
+// ----------------------------------------------------------------------------------- 
+
+// Get Api for all today expense of driver and vehicle
+
+export const getAllTodayExpesesListApi = async () => {
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/vehicleExpense/get-today-expense-of-vehicle-and-driver`,
+        {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Today Expenses Data: ", data);
+
+    return data.map((todayExpense) => ({
+        id: todayExpense._id,
+        originalDate: todayExpense.date,
+        date: formatDateToDDMMYYYY(todayExpense.date),
+        driverName: todayExpense.driverId?.name || "Unknown",
+        supervisor: todayExpense.driverId?.supervisor || "Unknown",
+        currentVehicleName: todayExpense.vehicleName || "N/A",
+        shopName: todayExpense.vendor || todayExpense.shopName || "Unknown",
+        expenseType: todayExpense.expenseType || "No Vehicle Expense",
+        description: todayExpense.description || "No description",
+        location: todayExpense.location || 'No location',
+        lat: todayExpense.lat || 'No latitude',
+        long: todayExpense.long || 'No Longitude',
+        amount: todayExpense.amount || 0,
+        paymentMode: todayExpense.paymentMode || "Unknown",
+        billImg: todayExpense.billImg || "No Bill",
+    }));
+};

@@ -6,6 +6,7 @@ import 'core-js'
 
 import App from './App'
 import store from './store'
+import { NotificationProvider } from './context/NotificationContext'
 // import appStore from './store/redux/appStore'
 
 const queryClient = new QueryClient()
@@ -13,7 +14,9 @@ const queryClient = new QueryClient()
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
     </QueryClientProvider>
   </Provider>,
 )
