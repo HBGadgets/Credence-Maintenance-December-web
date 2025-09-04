@@ -23,6 +23,7 @@ export const getWorkerApi = async () => {
         password: workerList.password || "Unknown",
         supervisorName: workerList.supervisorName || "Unknown",
         supervisorId: workerList.supervisor || "Unknown",
+        profileImage: workerList.profileImage || "Unknown",
     }))
 }
 
@@ -36,6 +37,8 @@ export const postWorkerApi = async (workerData) => {
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+
                 },
             }
         );
@@ -70,6 +73,8 @@ export const patchWorkerApi = async (id, data) => {
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
+                    'Content-Type': 'multipart/form-data',
+
                 },
             },
         )
@@ -103,3 +108,23 @@ export const deleteWorkerApi = async (id) => {
     }
 }
 
+// Profile image
+
+export const getWorkerProfileApi = async (profileImage) => {
+    try {
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/worker/get-profile-image/${profileImage}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+        return res.data
+    } catch (error) {
+        console.error('Error:', error.response?.data || error.message)
+        throw error
+    }
+}

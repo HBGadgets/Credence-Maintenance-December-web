@@ -1,5 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { deleteWorkerApi, getWorkerApi, postWorkerApi, patchWorkerApi } from './data/data'
+import {
+  deleteWorkerApi,
+  getWorkerApi,
+  postWorkerApi,
+  patchWorkerApi,
+  getWorkerProfileApi,
+} from './data/data'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
@@ -12,6 +18,7 @@ import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../DriverExpert/data/drivers'
 import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import BillShow from '../components/BillModal/BillShow'
 
 const Worker = () => {
   const [filteredData, setFilteredData] = useState([])
@@ -19,6 +26,11 @@ const Worker = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+  // Profile Model
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // form state
   const [showModalForm, setShowModalForm] = useState(false)
@@ -123,6 +135,12 @@ const Worker = () => {
   // form fields
   const fields = [
     {
+      name: 'profileImage',
+      label: 'Profile Image',
+      type: 'file',
+      accept: 'image/*',
+    },
+    {
       name: 'name',
       label: 'Name',
       type: 'text',
@@ -209,6 +227,39 @@ const Worker = () => {
     }
   }
 
+  // handle View
+  const handleViewButton = async (id) => {
+    const selectedRow = workerList.find((item) => item.id === id)
+
+    if (selectedRow) {
+      console.log('idzaazz', id)
+      console.log('Profile value:', selectedRow.profileImage)
+
+      try {
+        const response = await getWorkerProfileApi(selectedRow.profileImage)
+        const { base64Data, contentType } = response
+
+        if (base64Data && contentType) {
+          const fileSrc = `data:${contentType};base64,${base64Data}`
+          setPdfBase64(fileSrc)
+          setModalTitle(
+            contentType.startsWith('application/pdf')
+              ? 'Profile Image (PDF)'
+              : contentType.startsWith('image')
+                ? 'Profile Image (Image)'
+                : 'Profile Image (File)',
+          )
+          setShowModal(true)
+        } else {
+          toast.error('Invalid Profile image data.')
+        }
+      } catch (error) {
+        console.error('Failed to fetch bill image:', error)
+        toast.error('No Profile image found.')
+      }
+    }
+  }
+
   console.log('Comparing supervisor:', {
     selectedValue: selectedName?.value,
     selectedLabel: selectedName?.label,
@@ -273,6 +324,8 @@ const Worker = () => {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        viewButton={true}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination
@@ -283,6 +336,13 @@ const Worker = () => {
           setItemsPerPage(value === -1 ? filteredData.length : value)
           setCurrentPage(1)
         }}
+      />
+
+      <BillShow
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
       />
     </>
   )
