@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import {
   deleteWorkerApi,
   getWorkerApi,
@@ -19,8 +19,16 @@ import { fetchSupervisor } from '../DriverExpert/data/drivers'
 import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import BillShow from '../components/BillModal/BillShow'
+import IconDropdown from '../Supervisor/IconDropdown'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
 
 const Worker = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -260,6 +268,69 @@ const Worker = () => {
     }
   }
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+
+  // excel and pdf
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'All Workers List Report',
+            columns,
+            data: filteredData,
+            fileName: 'Workers_List_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Workers List Report',
+            columns,
+            data: filteredData,
+            fileName: 'Workers_List_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   console.log('Comparing supervisor:', {
     selectedValue: selectedName?.value,
     selectedLabel: selectedName?.label,
@@ -345,6 +416,10 @@ const Worker = () => {
         pdfBase64={pdfBase64}
         modalTitle={modalTitle}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
