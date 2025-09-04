@@ -326,6 +326,7 @@ const Worker = () => {
         handleDeleteButton={handleDeleteButton}
         viewButton={true}
         handleViewButton={handleViewButton}
+        viewButtonLabel="Profile"
       />
 
       <SmartPagination
