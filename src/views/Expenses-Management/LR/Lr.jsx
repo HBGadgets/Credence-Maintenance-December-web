@@ -1,5 +1,5 @@
 // Lr.js
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import SmartPagination from '../../components/SmartPagination'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import SearchInput from '../../components/SearchInput'
@@ -16,8 +16,16 @@ import { TokenContext } from '../../../context/TokenContext'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { getWorkerApi } from '../../TransportPass/data/data'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import IconDropdown from '../../Supervisor/IconDropdown'
 
 const Lr = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -195,6 +203,69 @@ const Lr = () => {
     handleFormSubmit(formData, formMode, selectedData, setFilteredData, setShowForm, refetch)
   }
 
+  // Handle Logout
+  const handleLogout = () => {
+    // Clear sessionStorage and localStorage
+    sessionStorage.clear()
+    localStorage.clear()
+
+    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    document.cookie.split(';').forEach((c) => {
+      const base = c.trim().split('=')[0]
+      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+    })
+
+    // Redirect to Credence
+    window.history.replaceState(null, '', '/')
+    // window.location.href = 'http://localhost:3000'
+    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+  }
+
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      // {
+      //   icon: FaRegFilePdf,
+      //   label: 'Download PDF',
+      //   onClick: () =>
+      //     exportToPDF({
+      //       title: 'All Transport Pass Report',
+      //       columns,
+      //       data: filteredData,
+      //       fileName: 'Transport_Pass_Report',
+      //     }),
+      // },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Transport Pass Report',
+            columns,
+            data: filteredData,
+            fileName: 'Transport_Pass_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   console.log('selectedName:', selectedName)
   console.log('Comparing supervisor:', {
     selectedValue: selectedName?.value,
@@ -309,6 +380,10 @@ const Lr = () => {
             )}
           </Modal.Body>
         </Modal>
+      </div>
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
       </div>
     </>
   )
