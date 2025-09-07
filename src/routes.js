@@ -48,6 +48,10 @@ const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 
 const AllExpenses = React.lazy(() => import('./views/Expenses-Management/AllExpenses.jsx'))
 
+// Transport Pass
+
+const CompanyName = React.lazy(() => import('./views/TransportPass/CompanyName.jsx'))
+
 const Worker = React.lazy(() => import('./views/TransportPass/Worker.jsx'))
 
 
@@ -66,8 +70,6 @@ const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
 
-// old chat box hone k bad is remove kro lo
-// const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBot.js'))
 // new
 const ChatBot = React.lazy(() => import('./views/pages/chatbot/ChatBox.jsx'))
 
@@ -147,6 +149,11 @@ const routes = [
   { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
   { path: '/LR', name: 'TP Pass', element: LR },
   { path: '/AllExpenses', name: 'All Expenses', element: AllExpenses },
+
+  // Transport pass
+
+  { path: '/CompanyName', name: 'Company Name', element: CompanyName },
+
   { path: '/Worker', name: 'Worker Details', element: Worker },
 
 

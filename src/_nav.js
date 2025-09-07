@@ -21,6 +21,20 @@ const _nav = [
     name: 'Maintenance',
   },
 
+  // DRIVERS
+  {
+    component: CNavItem,
+    name: 'Drivers',
+    to: '/DriverExp',
+    icon: (
+      <UserRound
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+  },
+
+
   // VEHICLE
 
   {
@@ -35,18 +49,6 @@ const _nav = [
     ),
   },
 
-  // DRIVERS
-  {
-    component: CNavItem,
-    name: 'Drivers',
-    to: '/DriverExp',
-    icon: (
-      <UserRound
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-  },
 
 
   // SUPERVISOR
@@ -136,6 +138,11 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Company Name',
+        to: '/CompanyName',
+      },
+      {
+        component: CNavItem,
         name: 'TP Pass',
         to: '/LR',
       },
@@ -148,33 +155,33 @@ const _nav = [
   },
 
   // ROAD SIDE ASSISTANCE
-  {
-    component: CNavGroup,
-    name: 'Road Side Assistance',
-    icon: (
-      <Handshake
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-    items: [
-      {
-        component: CNavItem,
-        name: 'Roadside Services',
-        to: '/RoadSideAssistance',
-      },
-      // {
-      //   component: CNavItem,
-      //   name: 'Total Expenses',
-      //   to: '/TotalExpenses',
-      // },
-      // {
-      //   component: CNavItem,
-      //   name: 'Budget Allocation',
-      //   to: '/BudgetAllocation',
-      // },
-    ],
-  },
+  // {
+  //   component: CNavGroup,
+  //   name: 'Road Side Assistance',
+  //   icon: (
+  //     <Handshake
+  //       className="nav-icon"
+  //       style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+  //     />
+  //   ),
+  //   items: [
+  //     {
+  //       component: CNavItem,
+  //       name: 'Roadside Services',
+  //       to: '/RoadSideAssistance',
+  //     },
+  //     // {
+  //     //   component: CNavItem,
+  //     //   name: 'Total Expenses',
+  //     //   to: '/TotalExpenses',
+  //     // },
+  //     // {
+  //     //   component: CNavItem,
+  //     //   name: 'Budget Allocation',
+  //     //   to: '/BudgetAllocation',
+  //     // },
+  //   ],
+  // },
 
   // Help and Supports
   {

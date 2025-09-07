@@ -171,8 +171,8 @@ const AppHeader = () => {
               <CNavItem>
                 <CDropdownItem
                   className="d-flex align-items-center gap-4"
-                  type="button"
-                  to="/ProfileSection"
+                  // type="button"
+                  // to="/ProfileSection"
                   as={NavLink}
                 >
                   {' '}
