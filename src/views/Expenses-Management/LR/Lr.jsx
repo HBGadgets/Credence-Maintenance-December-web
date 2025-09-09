@@ -141,7 +141,7 @@ const Lr = () => {
     { label: 'Start Location', key: 'startLocation', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Driver Contact', key: 'driverContact', sortable: true },
+    // { label: 'Driver Contact', key: 'driverContact', sortable: true },
     { label: 'Container Number', key: 'containerNumber', sortable: true },
     { label: 'Seal Number', key: 'sealNumber', sortable: true },
     { label: 'Item Name', key: 'itemName', sortable: true },

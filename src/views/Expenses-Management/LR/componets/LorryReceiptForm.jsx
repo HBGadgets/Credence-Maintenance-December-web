@@ -1,7 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
-import { useDispatch, useSelector } from 'react-redux'
-// import { fetchVehicles } from '../../../../slices/vehicleSlice'
 import { fetchDrivers, fetchSupervisor } from '../../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../../vehicle/data/VehicleListData'
 import { TokenContext } from '../../../../context/TokenContext'
@@ -9,10 +7,13 @@ import { jwtDecode } from 'jwt-decode'
 import { useQuery } from '@tanstack/react-query'
 import { getWorkerApi } from '../../../TransportPass/data/data'
 import Select from 'react-select'
+import { getCompanyNameApi } from '../../../TransportPass/data/data'
+import CreatableSelect from 'react-select/creatable'
 
 const defaultFormData = {
   supervisorId: '',
   workerId: '',
+  companyId: '',
   companyName: '',
   companyEmail: '',
   companyMobileNumber: '',
@@ -74,11 +75,14 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     staleTime: 1000 * 60 * 30,
   })
 
-  console.log('worker listttttttttttt', workerList)
+  // Fetch companies
+  const { data: companyList, isFetch } = useQuery({
+    queryKey: ['companyList'],
+    queryFn: getCompanyNameApi,
+    staleTime: 1000 * 60 * 30,
+  })
 
-  // const dispatch = useDispatch()
-  // const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
-  console.log('vehiclesssssssssssssss', vehicles)
+  console.log('company data', companyList)
 
   // Fetch drives
   useEffect(() => {
@@ -86,7 +90,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
       try {
         const data = await fetchDrivers()
         setDrivers(data || [])
-        console.log('Fetched drivers:', data) // Debugging
+        console.log('Fetched drivers:', data)
       } catch (error) {
         console.error('Error fetching drivers:', error)
       }
@@ -111,12 +115,13 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
   // Set form data when in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      console.log('formdata WWWWWWWWWWWWWWWWWWWWWWWWWWW', initialData)
+      console.log('formdata', initialData)
       setFormData({
         ...defaultFormData,
         ...initialData,
         vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
         driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
+        companyId: initialData.companyId || '',
       })
     } else {
       setFormData(defaultFormData) // Reset for 'add' mode
@@ -151,6 +156,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
     e.preventDefault()
     let payload = {
       ...formData,
+      companyId: formData.companyId || '',
       date: formData.date ? new Date(formData.date).toISOString() : '', // Handle date
     }
 
@@ -162,15 +168,6 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
 
     handleSubmit(payload)
   }
-
-  // console.log(
-  //   'Prefiled data',
-  //   workerList,
-  //   'formData',
-  //   formData,
-  //   'initialData',
-  //   initialData,
-  // )
 
   return (
     <Modal show={show} onHide={handleClose} size="xl" centered>
@@ -193,7 +190,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
             {/* Supervisor dropdown (only for superadmin) */}
             {userRole === 'superadmin' && (
               <div className="col-md-4">
-                <Form.Label>Supervisor</Form.Label>
+                <Form.Label>Supervisors</Form.Label>
                 <Select
                   name="supervisorId"
                   value={
@@ -215,7 +212,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
 
             {/* Worker dropdown */}
             <div className="col-md-4">
-              <Form.Label>Worker</Form.Label>
+              <Form.Label>Employees</Form.Label>
               <Select
                 name="workerId"
                 value={
@@ -238,7 +235,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
                     value: w.id,
                     label: w.name,
                   }))}
-                placeholder="Select Worker"
+                placeholder="Select Employee"
                 isClearable
               />
             </div>
@@ -249,13 +246,50 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
           <div className="row g-3 mb-4">
             <div className="col-md-4">
               <Form.Label>Company Name</Form.Label>
-              <Form.Control
+              <Select
                 name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
+                value={
+                  companyList
+                    ?.map((c) => ({ value: c.id, label: c.companyName }))
+                    .find((c) => c.label === formData.companyName) || null
+                }
+                onChange={(selected) => {
+                  if (selected) {
+                    const selectedCompany = companyList.find((c) => c.id === selected.value)
+                    setFormData((prev) => ({
+                      ...prev,
+                      companyId: selectedCompany?.id || '',
+                      companyName: selectedCompany?.companyName || '',
+                      companyEmail: selectedCompany?.email || '',
+                      companyMobileNumber: selectedCompany?.mobileNumber || '',
+                      companyOfficeNumber: selectedCompany?.officeNumber || '',
+                      companyAddress: selectedCompany?.address || '',
+                      gstIn: selectedCompany?.gstNumber || '',
+                    }))
+                  } else {
+                    // Reset company details if cleared
+                    setFormData((prev) => ({
+                      ...prev,
+                      companyId: '',
+                      companyName: '',
+                      companyEmail: '',
+                      companyMobileNumber: '',
+                      companyOfficeNumber: '',
+                      companyAddress: '',
+                      gstIn: '',
+                    }))
+                  }
+                }}
+                options={companyList?.map((c) => ({
+                  value: c.id,
+                  label: c.companyName,
+                }))}
+                placeholder="Select Company"
+                isClearable
               />
             </div>
-            <div className="col-md-4">
+
+            {/* <div className="col-md-4">
               <Form.Label>Company Address</Form.Label>
               <Form.Control
                 name="companyAddress"
@@ -291,7 +325,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
                 value={formData.companyMobileNumber}
                 onChange={handleChange}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Basic Details */}
@@ -314,7 +348,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
               <Form.Control
                 type="date"
                 name="date"
-                value={formData.originalDate ? formData.originalDate.split('T')[0] : ''}
+                value={formData.date ? formData.date.split('T')[0] : ''}
                 onChange={handleChange}
               />
             </div>
@@ -323,38 +357,92 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
               <Form.Label>
                 Vehicle Name <span style={{ color: 'red' }}>*</span>
               </Form.Label>
-              <Form.Select
+              <CreatableSelect
                 name="vehicleId"
-                value={formData.vehicleId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Vehicle</option>
-                {vehicles.map((vehicle) => (
-                  <option key={vehicle.id || vehicle._id} value={vehicle.id || vehicle._id}>
-                    {vehicle.name}
-                  </option>
-                ))}
-              </Form.Select>
+                value={
+                  vehicles
+                    ?.map((v) => ({ value: v.id || v._id, label: v.name }))
+                    .find((v) => v.value === formData.vehicleId) ||
+                  (formData.vehicleName
+                    ? { value: formData.vehicleId, label: formData.vehicleName }
+                    : null)
+                }
+                onChange={(selected, action) => {
+                  if (selected) {
+                    if (action.action === 'create-option') {
+                      // User created new Vehicle
+                      setFormData((prev) => ({
+                        ...prev,
+                        vehicleId: selected.value,
+                        vehicleName: selected.label,
+                      }))
+                    } else {
+                      // Existing Vehicle selected
+                      const selectedVehicle = vehicles.find(
+                        (v) => v.id === selected.value || v._id === selected.value,
+                      )
+                      setFormData((prev) => ({
+                        ...prev,
+                        vehicleId: selected.value,
+                        vehicleName: selectedVehicle?.name || selected.label,
+                      }))
+                    }
+                  } else {
+                    setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
+                  }
+                }}
+                options={vehicles?.map((v) => ({
+                  value: v.id || v._id,
+                  label: v.name,
+                }))}
+                placeholder="Select or type new vehicle"
+                isClearable
+              />
             </div>
 
             <div className="col-md-4">
               <Form.Label>
                 Driver Name <span style={{ color: 'red' }}>*</span>
               </Form.Label>
-              <Form.Select
-                onChange={handleChange}
+              <CreatableSelect
                 name="driverId"
-                value={formData.driverId}
-                required
-              >
-                <option value="">Select Driver</option>
-                {drivers.map((driver) => (
-                  <option key={driver.id} value={driver.id}>
-                    {driver.name}
-                  </option>
-                ))}
-              </Form.Select>
+                value={
+                  drivers
+                    ?.map((d) => ({ value: d.id, label: d.name }))
+                    .find((d) => d.value === formData.driverId) ||
+                  (formData.driverName
+                    ? { value: formData.driverId, label: formData.driverName }
+                    : null)
+                }
+                onChange={(selected, action) => {
+                  if (selected) {
+                    if (action.action === 'create-option') {
+                      // User created new Driver
+                      setFormData((prev) => ({
+                        ...prev,
+                        driverId: selected.value,
+                        driverName: selected.label,
+                      }))
+                    } else {
+                      // Existing Driver selected
+                      const selectedDriver = drivers.find((d) => d.id === selected.value)
+                      setFormData((prev) => ({
+                        ...prev,
+                        driverId: selected.value,
+                        driverName: selectedDriver?.name || selected.label,
+                      }))
+                    }
+                  } else {
+                    setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
+                  }
+                }}
+                options={drivers?.map((d) => ({
+                  value: d.id,
+                  label: d.name,
+                }))}
+                placeholder="Select or type new driver"
+                isClearable
+              />
             </div>
 
             <div className="col-md-4">

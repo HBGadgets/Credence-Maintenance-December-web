@@ -1,7 +1,8 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, UserRound, Handshake, ReceiptText, Car, Headset, LucideClipboardList } from 'lucide-react'
+import { LayoutDashboard, UserRound, Handshake, Car, Headset, LucideClipboardList } from 'lucide-react'
 import { MdOutlineSupervisorAccount, MdOutlineSupportAgent } from 'react-icons/md'
+import { LuIndianRupee } from "react-icons/lu";
 
 
 const _nav = [
@@ -101,7 +102,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Expenses Management',
     icon: (
-      <ReceiptText
+      <LuIndianRupee
         className="nav-icon"
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
@@ -138,17 +139,17 @@ const _nav = [
     items: [
       {
         component: CNavItem,
-        name: 'Company Name',
-        to: '/CompanyName',
-      },
-      {
-        component: CNavItem,
         name: 'TP Pass',
         to: '/LR',
       },
       {
         component: CNavItem,
-        name: 'Worker Details',
+        name: 'Company Name',
+        to: '/CompanyName',
+      },
+      {
+        component: CNavItem,
+        name: 'Employees Details',
         to: '/Worker',
       },
     ],

@@ -150,7 +150,7 @@ const Worker = () => {
     },
     {
       name: 'name',
-      label: 'Name',
+      label: 'Employee Name',
       type: 'text',
       placeholder: 'Enter Name',
       required: true,
@@ -358,7 +358,7 @@ const Worker = () => {
         <div className="d-flex justify-content-end align-items-center gap-2 w-100 mb-3">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <AddButton
-            label="Add Worker"
+            label="Add Employee"
             onClick={() => {
               setEditMode(false)
               setEditingUser(null)
@@ -377,14 +377,14 @@ const Worker = () => {
           setEditingUser(null)
         }}
         onSubmit={handleFormSubmit}
-        title={editMode ? 'Edit Worker' : 'Add New Worker'}
+        title={editMode ? 'Edit Employee' : 'Add New Employee'}
         size="xl"
         fields={fields}
         isSubmitting={isSubmitting || isUpdating}
       />
 
       <Table
-        title="Workers List"
+        title="Employees List"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
