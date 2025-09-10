@@ -138,14 +138,16 @@ import ChatMessages from './component/ChatMessages'
 import ChatInput from './component/ChatInput'
 import notificationSound from '../../../../mario_up.mp3'
 import { NotificationContext } from '../../../context/NotificationContext'
+import { fetchChatApi } from './data'
 
 const ChatBox = () => {
   const [selectedContact, setSelectedContact] = useState(null)
   const [messages, setMessages] = useState({})
+  const [loading, setLoading] = useState(false)
 
   const { addNotification, unreadCounts, setUnreadCounts } = useContext(NotificationContext)
 
-  // safe decode JWT token
+  // decode userId from token
   let myUserId = null
   try {
     const token = sessionStorage.getItem('crdnsMaintToken')
@@ -156,25 +158,21 @@ const ChatBox = () => {
     console.error('Failed to parse userId from token', err)
   }
 
-  // subscribe once to socket
+  // socket subscription
   useEffect(() => {
     if (!socket) return
 
     const handleReceive = (msg) => {
-      // Add message to local state
       setMessages((prev) => {
         const prevMsgs = prev[msg.senderId] || []
         return { ...prev, [msg.senderId]: [...prevMsgs, msg] }
       })
 
-      // Add notification globally
       addNotification(msg)
 
-      // Play notification sound
       const audio = new Audio(notificationSound)
       audio.play().catch(() => {})
 
-      // Update unread counts
       setUnreadCounts((prev) => ({
         ...prev,
         [msg.senderId]: selectedContact?.id === msg.senderId ? 0 : (prev[msg.senderId] || 0) + 1,
@@ -186,12 +184,28 @@ const ChatBox = () => {
   }, [selectedContact, addNotification, setUnreadCounts])
 
   // handle contact selection
-  const handleSelectContact = (driver) => {
+  const handleSelectContact = async (driver) => {
     setSelectedContact(driver)
+
     setUnreadCounts((prev) => ({
       ...prev,
       [driver.id]: 0, // reset unread count
     }))
+
+    if (!messages[driver.id]) {
+      setLoading(true)
+      try {
+        const history = await fetchChatApi(driver.id)
+        setMessages((prev) => ({
+          ...prev,
+          [driver.id]: Array.isArray(history) ? history : [],
+        }))
+      } catch (err) {
+        console.error('Failed to load chat history', err)
+      } finally {
+        setLoading(false) // ✅ stop loading
+      }
+    }
   }
 
   // send message
@@ -207,7 +221,6 @@ const ChatBox = () => {
       tempId: Date.now().toString(),
     }
 
-    // Add to local state immediately
     setMessages((prev) => {
       const prevMsgs = prev[selectedContact.id] || []
       return { ...prev, [selectedContact.id]: [...prevMsgs, msg] }
@@ -218,7 +231,6 @@ const ChatBox = () => {
 
   return (
     <div className="chatbox-container d-flex border rounded" style={{ height: '80vh' }}>
-      {/* Sidebar with unread counts */}
       <ChatSidebar
         selectedContact={selectedContact}
         onSelectContact={handleSelectContact}
@@ -226,12 +238,15 @@ const ChatBox = () => {
         messages={messages}
       />
 
-      {/* Chat Area */}
       <div className="chat-area flex-grow-1 d-flex flex-column">
         {selectedContact ? (
           <>
             <ChatHeader contact={selectedContact} isConnected={socket?.connected} />
-            <ChatMessages messages={messages[selectedContact?.id] || []} myUserId={myUserId} />
+            <ChatMessages
+              messages={messages[selectedContact?.id] || []}
+              myUserId={myUserId}
+              loading={loading}
+            />
             <ChatInput onSend={handleSendMessage} />
           </>
         ) : (
