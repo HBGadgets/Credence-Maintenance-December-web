@@ -104,12 +104,18 @@ const Trip = () => {
 
       const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount
 
+      // Calculate total running km
+      const startKM = Number(data.startOdometerReading) || 0
+      const endKM = Number(data.endOdometerReading) || 0
+      const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : '0'
+
       return {
         ...data,
         remainingAmount: (
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
         status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
+        totalRunningKM: totalRunning,
       }
     })
 
@@ -123,8 +129,12 @@ const Trip = () => {
     { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Driver CheckIn', key: 'driverCheckIn', sortable: true },
     { label: 'Start Location', key: 'startLocation', sortable: true },
+    { label: 'Start Odometer KM', key: 'startOdometerReading', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
+    { label: 'End Odometer KM', key: 'endOdometerReading', sortable: true },
+    { label: 'Total Running KM', key: 'totalRunningKM', sortable: true },
     { label: 'Supervisor Budget', key: 'budgetAllocated', sortable: true },
     { label: 'SubTrip Amount', key: 'subTripBudgetAllocated', sortable: true },
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },

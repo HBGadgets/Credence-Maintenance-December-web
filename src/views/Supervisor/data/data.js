@@ -232,23 +232,39 @@ export const getTripListApi = async (userId = null, token) => {
 
     const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    return sortedData.map((TripsList) => ({
-        id: TripsList._id,
-        orginalDate: TripsList.date,
-        date: formatDateToDDMMYYYY(TripsList.date),
-        driverName: TripsList?.driverId?.name || 'N/A',
-        vehicleName: TripsList.vehicleName,
-        startLocation: TripsList.startLocation,
-        endLocation: TripsList.endLocation,
-        budgetAllocated: TripsList.budgetAllocated,
-        subTripBudgetAllocated: TripsList.subTripBudgetAllocated,
-        supervisorId: TripsList.supervisorId,
-        spentAmount: TripsList.spentAmount || '0',
-        materialType: TripsList.materialType,
-        status: TripsList.status,
-        updatedAt: TripsList.updatedAt,
-    }));
+    return sortedData.map((TripsList) => {
+        const startKM =
+            typeof TripsList.startOdometerReading === "number"
+                ? TripsList.startOdometerReading.toFixed(2)
+                : "Trip In progress";
+
+        const endKM =
+            typeof TripsList.endOdometerReading === "number"
+                ? TripsList.endOdometerReading.toFixed(2)
+                : "Trip In progress";
+
+        return {
+            id: TripsList._id,
+            orginalDate: TripsList.date,
+            date: formatDateToDDMMYYYY(TripsList.date),
+            driverName: TripsList?.driverId?.name || "N/A",
+            vehicleName: TripsList.vehicleName || "N/A",
+            startLocation: TripsList.startLocation || "N/A",
+            startOdometerReading: startKM,
+            endLocation: TripsList.endLocation || "N/A",
+            endOdometerReading: endKM,
+            driverCheckIn: TripsList.driverCheckIn ? "Yes" : "No",
+            budgetAllocated: TripsList.budgetAllocated || "0",
+            subTripBudgetAllocated: TripsList.subTripBudgetAllocated || "0",
+            supervisorId: TripsList.supervisorId,
+            spentAmount: TripsList.spentAmount || "0",
+            materialType: TripsList.materialType || "Not Assign",
+            status: TripsList.status,
+            updatedAt: TripsList.updatedAt,
+        };
+    });
 };
+
 
 
 // POST API for Trip.
