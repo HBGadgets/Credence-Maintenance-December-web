@@ -1,9 +1,10 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, UserRound, Handshake, Car, Headset, LucideClipboardList } from 'lucide-react'
-import { MdOutlineSupervisorAccount, MdOutlineSupportAgent } from 'react-icons/md'
-import { LuIndianRupee } from "react-icons/lu";
-
+import { LayoutDashboard, LucideClipboardList } from 'lucide-react'
+import { LuMessageSquareQuote } from "react-icons/lu";
+import { PiUserListBold } from "react-icons/pi";
+import { HiOutlineTicket } from "react-icons/hi2";
+import { IoReceiptOutline } from "react-icons/io5";
 
 const _nav = [
   {
@@ -22,43 +23,14 @@ const _nav = [
     name: 'Maintenance',
   },
 
-  // DRIVERS
-  {
-    component: CNavItem,
-    name: 'Drivers',
-    to: '/DriverExp',
-    icon: (
-      <UserRound
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-  },
-
-
-  // VEHICLE
-
-  {
-    component: CNavItem,
-    name: 'Vehicle',
-    to: '/Vehicle',
-    icon: (
-      <Car
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-  },
-
-
 
   // SUPERVISOR
   {
     component: CNavGroup,
-    name: 'Supervisor',
+    name: 'Masters',
     to: '/buttons',
     icon: (
-      <MdOutlineSupervisorAccount
+      <PiUserListBold
         className="nav-icon"
         style={{ color: '#ec7426', marginRight: '10px' }}
       />
@@ -66,23 +38,18 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Drivers',
+        to: '/DriverExp',
+      },
+      {
+        component: CNavItem,
+        name: 'Vehicle',
+        to: '/Vehicle',
+      },
+      {
+        component: CNavItem,
         name: 'Trips',
         to: '/Trip',
-      },
-      {
-        component: CNavItem,
-        name: 'All Drivers Logbooks',
-        to: '/AllDailyLogbook',
-      },
-      {
-        component: CNavItem,
-        name: 'All Vehicle Service Log',
-        to: '/AllVehicleServicesData',
-      },
-      {
-        component: CNavItem,
-        name: 'All Vehicle Inpections',
-        to: '/AllVehicleInpection',
       },
       {
         component: CNavItem,
@@ -100,14 +67,19 @@ const _nav = [
   // EXPENSES MANAGEMENT
   {
     component: CNavGroup,
-    name: 'Expenses Management',
+    name: 'Reports Expenses',
     icon: (
-      <LuIndianRupee
+      <LucideClipboardList
         className="nav-icon"
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
     ),
     items: [
+      {
+        component: CNavItem,
+        name: 'Drivers Salary',
+        to: '/Salary',
+      },
       {
         component: CNavItem,
         name: 'All Drivers Expenses',
@@ -120,8 +92,18 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Drivers Salary',
-        to: '/Salary',
+        name: 'All Drivers Logbooks',
+        to: '/AllDailyLogbook',
+      },
+      {
+        component: CNavItem,
+        name: 'All Vehicle Service Log',
+        to: '/AllVehicleServicesData',
+      },
+      {
+        component: CNavItem,
+        name: 'All Vehicle Inpections',
+        to: '/AllVehicleInpection',
       },
     ],
   },
@@ -131,7 +113,7 @@ const _nav = [
     component: CNavGroup,
     name: 'Transport Pass',
     icon: (
-      <LucideClipboardList
+      <IoReceiptOutline
         className="nav-icon"
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
@@ -187,9 +169,9 @@ const _nav = [
   // Help and Supports
   {
     component: CNavGroup,
-    name: 'Helps & Supports',
+    name: 'Query Ticket',
     icon: (
-      <Headset
+      <HiOutlineTicket
         className="nav-icon"
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
@@ -206,14 +188,21 @@ const _nav = [
         to: '/AnsweredTicket',
         role: 'superadmin',
       },
-      {
-        component: CNavItem,
-        name: 'Chat Box',
-        to: '/ChatBot',
-      },
     ],
   },
 
+
+  {
+    component: CNavItem,
+    name: 'Chat Box',
+    to: '/ChatBot',
+    icon: (
+      <LuMessageSquareQuote
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+  },
 
 
 ]
