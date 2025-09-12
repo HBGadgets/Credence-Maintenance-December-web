@@ -226,6 +226,10 @@ const ServiceList = () => {
           label: 'Diagnostics & Error Scanning (ECU scan, warning light resolution)',
         },
         {
+          value: 'tollAndPraking',
+          label: 'Toll & Parking',
+        },
+        {
           value: 'other',
           label: 'Major mechanical issues or part replacements or Full Service of Vehicle (Other).',
         },
