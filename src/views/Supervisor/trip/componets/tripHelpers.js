@@ -20,30 +20,37 @@ export const fetchTripDataHelper = async (id, setAllData, setFilteredData, setLo
 }
 
 // Add Trip
-export const handleAddHelper = async (formData, fetchTripData, refetch) => {
+export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
     try {
         const payload = {
-            driverId: formData.driverId,
-            vehicleId: formData.vehicleId,
-            vehicleName: formData.vehicleName,
-            startLocation: formData.startLocation,
-            endLocation: formData.endLocation,
-            materialType: formData.materialType,
-            budgetAllocated: Number(formData.budgetAllocated),
-            date: formData.date,
+            transportMode: tripData.transportMode,
+            clientName: tripData.clientName,
+            clientNumber: tripData.clientNumber,
+            companyId: tripData.companyId,
+            companyName: tripData.companyName,
+            date: tripData.date,
+            driverId: tripData.driverId,
+            driverName: tripData.driverName,
+            vehicleId: tripData.vehicleId,
+            vehicleName: tripData.vehicleName,
+            startLocation: tripData.startLocation,
+            endLocation: tripData.endLocation,
+            budgetAllocated: Number(tripData.budgetAllocated) || 0, // ensure number
+            materialType: tripData.materialType,
         }
+
         await postTripApi(payload)
+
         if (typeof fetchTripData === 'function') await fetchTripData()
         if (typeof refetch === 'function') await refetch()
+
         Swal.fire({
             icon: 'success',
             title: 'Trip Added!',
             text: 'Trip added successfully!',
             confirmButtonText: 'OK',
         })
-    } catch (err) {
-        console.error('Add Trip Failed:', err.message)
-    }
+    } catch (err) { console.error('Add Trip Failed:', err.message) }
 }
 
 

@@ -236,17 +236,21 @@ export const getTripListApi = async (userId = null, token) => {
         const startKM =
             typeof TripsList.startOdometerReading === "number"
                 ? TripsList.startOdometerReading.toFixed(2)
-                : "Trip In progress";
+                : "Trip In-Progress";
 
         const endKM =
             typeof TripsList.endOdometerReading === "number"
                 ? TripsList.endOdometerReading.toFixed(2)
-                : "Trip In progress";
+                : "Trip In-Progress";
 
         return {
             id: TripsList._id,
             orginalDate: TripsList.date,
             date: formatDateToDDMMYYYY(TripsList.date),
+            transportMode: TripsList.transportMode || "N/A",
+            clientName: TripsList.clientName || "N/A",
+            clientNumber: TripsList.clientNumber || "N/A",
+            companyName: TripsList.companyName || "N/A",
             driverName: TripsList?.driverId?.name || "N/A",
             vehicleName: TripsList.vehicleName || "N/A",
             startLocation: TripsList.startLocation || "N/A",

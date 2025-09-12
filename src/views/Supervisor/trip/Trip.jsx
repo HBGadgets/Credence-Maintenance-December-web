@@ -107,7 +107,7 @@ const Trip = () => {
       // Calculate total running km
       const startKM = Number(data.startOdometerReading) || 0
       const endKM = Number(data.endOdometerReading) || 0
-      const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : '0'
+      const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : 'Trip In-Progress'
 
       return {
         ...data,
@@ -127,6 +127,10 @@ const Trip = () => {
   const columns = [
     // { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
     { label: 'Start Date', key: 'date', sortable: true },
+    { label: 'Transport Mode', key: 'transportMode', sortable: true },
+    { label: 'Client Name', key: 'clientName', sortable: true },
+    { label: 'Client Contact', key: 'clientNumber', sortable: true },
+    { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Driver CheckIn', key: 'driverCheckIn', sortable: true },
@@ -135,7 +139,7 @@ const Trip = () => {
     { label: 'End Location', key: 'endLocation', sortable: true },
     { label: 'End Odometer KM', key: 'endOdometerReading', sortable: true },
     { label: 'Total Running KM', key: 'totalRunningKM', sortable: true },
-    { label: 'Supervisor Budget', key: 'budgetAllocated', sortable: true },
+    { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'SubTrip Amount', key: 'subTripBudgetAllocated', sortable: true },
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },
     { label: 'Remaining Amount', key: 'remainingAmount', sortable: true },

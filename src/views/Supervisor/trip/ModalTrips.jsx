@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
-import { useDispatch, useSelector } from 'react-redux'
 import { fetchDrivers } from '../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../vehicle/data/VehicleListData'
-// import { fetchVehicles } from '../../../slices/vehicleSlice'
 import { CSpinner } from '@coreui/react'
 import { fetchTripDataHelper, handleAddHelper, handleEditHelper } from './componets/tripHelpers'
 import Select from 'react-select'
 import debounce from 'lodash.debounce'
 import { useQuery } from '@tanstack/react-query'
+import { getCompanyNameApi } from '../../TransportPass/data/data'
 
 const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) => {
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
+  const [transportMode, setTransportMode] = useState()
   const [tripData, setTripData] = useState({
     _id: '', // optional but helpful
     date: '',
@@ -25,11 +25,23 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     budgetAllocated: '',
     materialType: '',
     status: '',
+    clientName: '',
+    clientNumber: '',
+    companyId: '',
+    companyName: '',
+    transportMode: '',
   })
 
-  // const { vehicles, status: vehicleStatus } = useSelector((state) => state.vehicle)
-  // const dispatch = useDispatch()
   const fetchData = fetchTripDataHelper()
+
+  // Fetch companies
+  const { data: companyList, isFetch } = useQuery({
+    queryKey: ['companyList'],
+    queryFn: getCompanyNameApi,
+    staleTime: 1000 * 60 * 30,
+  })
+
+  console.log('company data', companyList)
 
   // Fetch Drivers
   useEffect(() => {
@@ -45,13 +57,6 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
 
     loadDrivers()
   }, [])
-
-  // Fetch Vehicles
-  // useEffect(() => {
-  //   if (vehicleStatus === 'idle') {
-  //     dispatch(fetchVehicles())
-  //   }
-  // }, [dispatch, vehicleStatus])
 
   useEffect(() => {
     const loadVehicles = async () => {
@@ -88,26 +93,33 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
       // Find driver and vehicle by their names
       const driver = drivers.find((d) => d.name === selectedTrip.driverName)
       const vehicle = vehicles.find((v) => v.name === selectedTrip.vehicleName)
-      console.log('drivers', driver)
-      console.log('vehicles', vehicle)
+
+      // Find company by its id or name
+      const company =
+        companyList?.find((c) => c.id === selectedTrip.companyId) ||
+        companyList?.find((c) => c.companyName === selectedTrip.companyName)
 
       setTripData({
         _id: selectedTrip.id || '',
         date: formattedDate,
-        // driverId: selectedTrip.driverId || '',
         driverId: driver?.id || '',
         driverName: selectedTrip.driverName || '',
-        // vehicleId: selectedTrip.vehicleId || '',
-        vehicleId: vehicle?.id || '', // Use found vehicle's ID
+        vehicleId: vehicle?.id || '',
         vehicleName: selectedTrip.vehicleName || '',
         startLocation: selectedTrip.startLocation || '',
         endLocation: selectedTrip.endLocation || '',
         budgetAllocated: selectedTrip.budgetAllocated || '',
         materialType: selectedTrip.materialType || '',
         status: selectedTrip.status || '',
+        // 🔹 Add these missing fields
+        transportMode: selectedTrip.transportMode || '',
+        clientName: selectedTrip.clientName || '',
+        clientNumber: selectedTrip.clientNumber || '',
+        companyId: company?.id || '',
+        companyName: company?.companyName || selectedTrip.companyName || '',
       })
     }
-  }, [mode, selectedTrip, drivers, vehicles])
+  }, [mode, selectedTrip, drivers, vehicles, companyList])
 
   // Handle input changes
   const handleChange = (e) => {
@@ -236,46 +248,157 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           <div className="row">
+            {/* Transport Mode Selector */}
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>Transport Mode</Form.Label>
+                <Select
+                  name="transportMode"
+                  value={
+                    tripData.transportMode
+                      ? { label: tripData.transportMode, value: tripData.transportMode }
+                      : null
+                  }
+                  onChange={(selected) => {
+                    const value = selected?.value || ''
+                    handleChange({ target: { name: 'transportMode', value } }) // update tripData
+                  }}
+                  options={[
+                    { value: 'travel', label: 'Travel' },
+                    { value: 'transport', label: 'Transport' },
+                  ]}
+                  placeholder="Select transport mode"
+                  isClearable
+                />
+              </Form.Group>
+            </div>
+
+            {/* Client Name */}
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>Client Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="clientName"
+                  value={tripData.clientName}
+                  onChange={handleChange}
+                  placeholder="Enter client name"
+                />
+              </Form.Group>
+            </div>
+
+            {/* Client Number */}
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>Client Number</Form.Label>
+                <Form.Control
+                  type="tel"
+                  name="clientNumber"
+                  value={tripData.clientNumber}
+                  onChange={handleChange}
+                  placeholder="Enter client number"
+                  maxLength={10}
+                  pattern="\d{10}"
+                  inputMode="numeric"
+                />
+              </Form.Group>
+            </div>
+
+            {/* Company Name */}
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>Company Name</Form.Label>
+                <Select
+                  name="companyName"
+                  value={
+                    tripData.companyId
+                      ? {
+                          value: tripData.companyId,
+                          label:
+                            companyList?.find((c) => c.id === tripData.companyId)?.companyName ||
+                            tripData.companyName,
+                        }
+                      : null
+                  }
+                  onChange={(selected) => {
+                    if (selected) {
+                      const selectedCompany = companyList.find((c) => c.id === selected.value)
+                      setTripData((prev) => ({
+                        ...prev,
+                        companyId: selectedCompany?.id || '',
+                        companyName: selectedCompany?.companyName || '',
+                      }))
+                    } else {
+                      setTripData((prev) => ({
+                        ...prev,
+                        companyId: '',
+                        companyName: '',
+                      }))
+                    }
+                  }}
+                  options={companyList?.map((c) => ({
+                    value: c.id,
+                    label: c.companyName,
+                  }))}
+                  placeholder="Select Company"
+                  isClearable
+                />
+              </Form.Group>
+            </div>
+
+            {/* Driver Name */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Driver Name</Form.Label>
-                <Form.Select
+                <Select
                   name="driverName"
-                  value={tripData.driverName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading} // Disable while loading
-                >
-                  <option value="">Select driver</option>
-                  {drivers.map((driver) => (
-                    <option key={driver.id} value={driver.name}>
-                      {driver.name}
-                    </option>
-                  ))}
-                </Form.Select>
+                  value={
+                    tripData.driverName
+                      ? { label: tripData.driverName, value: tripData.driverName }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    handleChange({
+                      target: { name: 'driverName', value: selected?.value || '' },
+                    })
+                  }
+                  options={drivers.map((driver) => ({
+                    label: driver.name,
+                    value: driver.name,
+                  }))}
+                  placeholder={isLoading ? 'Loading drivers...' : 'Select driver'}
+                  isClearable
+                />
               </Form.Group>
             </div>
 
+            {/* Vehicle Name */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Vehicle Name</Form.Label>
-                <Form.Select
+                <Select
                   name="vehicleName"
-                  value={tripData.vehicleName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading} // Disable while loading
-                >
-                  <option value="">Select Vehicle</option>
-                  {vehicles.map((vehicle) => (
-                    <option key={vehicle.id} value={vehicle.name}>
-                      {vehicle.name}
-                    </option>
-                  ))}
-                </Form.Select>
+                  value={
+                    tripData.vehicleName
+                      ? { label: tripData.vehicleName, value: tripData.vehicleName }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    handleChange({
+                      target: { name: 'vehicleName', value: selected?.value || '' },
+                    })
+                  }
+                  options={vehicles.map((vehicle) => ({
+                    label: vehicle.name,
+                    value: vehicle.name,
+                  }))}
+                  placeholder={isLoading ? 'Loading vehicles...' : 'Select vehicle'}
+                  isClearable
+                />
               </Form.Group>
             </div>
 
+            {/* Start Location */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Start City Location</Form.Label>
@@ -300,6 +423,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
               </Form.Group>
             </div>
 
+            {/* End Location */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>End City Location</Form.Label>
@@ -312,7 +436,9 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   }
                   onInputChange={(val) => setSearchInput(val)}
                   onChange={(selected) =>
-                    handleChange({ target: { name: 'endLocation', value: selected?.value || '' } })
+                    handleChange({
+                      target: { name: 'endLocation', value: selected?.value || '' },
+                    })
                   }
                   options={filteredCities.map((city) => ({ label: city, value: city }))}
                   placeholder={isLoading ? 'Loading cities...' : 'Select end city'}
@@ -322,6 +448,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
               </Form.Group>
             </div>
 
+            {/* Date */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Date</Form.Label>
@@ -330,12 +457,12 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="date"
                   value={tripData.date}
                   onChange={handleChange}
-                  placeholder="Enter Trip Date"
                   required
                 />
               </Form.Group>
             </div>
 
+            {/* Budget */}
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Budget Allocated</Form.Label>
@@ -349,19 +476,23 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
               </Form.Group>
             </div>
 
-            <div className="col-md-6 mb-3">
-              <Form.Group>
-                <Form.Label>Material Type</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="materialType"
-                  value={tripData.materialType}
-                  onChange={handleChange}
-                  placeholder="Enter material type"
-                />
-              </Form.Group>
-            </div>
+            {/* Material Type - show only if transportMode is 'transport' */}
+            {tripData.transportMode === 'transport' && (
+              <div className="col-md-6 mb-3">
+                <Form.Group>
+                  <Form.Label>Material Type</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="materialType"
+                    value={tripData.materialType}
+                    onChange={handleChange}
+                    placeholder="Enter material type"
+                  />
+                </Form.Group>
+              </div>
+            )}
 
+            {/* Status only in edit mode */}
             {mode === 'edit' && (
               <div className="col-md-6 mb-3">
                 <Form.Group>
@@ -370,7 +501,6 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                     name="status"
                     value={tripData.status}
                     onChange={handleChange}
-                    placeholder="Enter trip status"
                     required
                   >
                     <option value="">Select Status</option>
