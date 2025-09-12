@@ -37,6 +37,8 @@ export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
             endLocation: tripData.endLocation,
             budgetAllocated: Number(tripData.budgetAllocated) || 0, // ensure number
             materialType: tripData.materialType,
+            clientAdvance: tripData.clientAdvance || 0,
+            coastPerKm: tripData.coastPerKm || 0,
         }
 
         await postTripApi(payload)

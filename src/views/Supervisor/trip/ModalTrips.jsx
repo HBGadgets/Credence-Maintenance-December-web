@@ -30,6 +30,8 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     companyId: '',
     companyName: '',
     transportMode: '',
+    coastPerKm: '',
+    clientAdvance: '',
   })
 
   const fetchData = fetchTripDataHelper()
@@ -117,6 +119,8 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         clientNumber: selectedTrip.clientNumber || '',
         companyId: company?.id || '',
         companyName: company?.companyName || selectedTrip.companyName || '',
+        coastPerKm: selectedTrip.coastPerKm || '',
+        clientAdvance: selectedTrip.clientAdvance || '',
       })
     }
   }, [mode, selectedTrip, drivers, vehicles, companyList])
@@ -238,7 +242,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   }, [cities])
 
   return (
-    <Modal show={true} onHide={onClose} centered size="lg" className="trip-modal">
+    <Modal show={true} onHide={onClose} centered size="xl" className="trip-modal">
       <Modal.Header>
         <Modal.Title className="fw-bold">
           {mode === 'add' ? 'Add New Trip' : 'Edit Trip'}
@@ -463,6 +467,33 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
             </div>
 
             {/* Budget */}
+
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label> Charges Coast Kms/Hrs</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="coastPerKm"
+                  value={tripData.coastPerKm}
+                  onChange={handleChange}
+                  placeholder="Enter Coast Kms/Hrs"
+                />
+              </Form.Group>
+            </div>
+
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>Client Advances</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="clientAdvance"
+                  value={tripData.clientAdvance}
+                  onChange={handleChange}
+                  placeholder="Enter Client advance"
+                />
+              </Form.Group>
+            </div>
+
             <div className="col-md-6 mb-3">
               <Form.Group>
                 <Form.Label>Budget Allocated</Form.Label>

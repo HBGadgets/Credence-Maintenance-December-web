@@ -139,6 +139,8 @@ const Trip = () => {
     { label: 'End Location', key: 'endLocation', sortable: true },
     { label: 'End Odometer KM', key: 'endOdometerReading', sortable: true },
     { label: 'Total Running KM', key: 'totalRunningKM', sortable: true },
+    { label: 'Coast Km/Hrs', key: 'coastPerKm', sortable: true },
+    { label: 'Client Advance', key: 'clientAdvance', sortable: true },
     { label: 'Budget Allocated', key: 'budgetAllocated', sortable: true },
     { label: 'SubTrip Amount', key: 'subTripBudgetAllocated', sortable: true },
     { label: 'Spent Amount', key: 'spentAmount', sortable: true },

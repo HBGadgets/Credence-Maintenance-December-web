@@ -258,6 +258,8 @@ export const getTripListApi = async (userId = null, token) => {
             endLocation: TripsList.endLocation || "N/A",
             endOdometerReading: endKM,
             driverCheckIn: TripsList.driverCheckIn ? "Yes" : "No",
+            coastPerKm: TripsList.coastPerKm || "0",
+            clientAdvance: TripsList.clientAdvance || "0",
             budgetAllocated: TripsList.budgetAllocated || "0",
             subTripBudgetAllocated: TripsList.subTripBudgetAllocated || "0",
             supervisorId: TripsList.supervisorId,
