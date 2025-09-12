@@ -48,8 +48,18 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Company Name',
+        to: '/CompanyName',
+      },
+      {
+        component: CNavItem,
         name: 'Trips',
         to: '/Trip',
+      },
+      {
+        component: CNavItem,
+        name: 'Employees Details',
+        to: '/Worker',
       },
       {
         component: CNavItem,
@@ -123,16 +133,6 @@ const _nav = [
         component: CNavItem,
         name: 'TP Pass',
         to: '/LR',
-      },
-      {
-        component: CNavItem,
-        name: 'Company Name',
-        to: '/CompanyName',
-      },
-      {
-        component: CNavItem,
-        name: 'Employees Details',
-        to: '/Worker',
       },
     ],
   },
