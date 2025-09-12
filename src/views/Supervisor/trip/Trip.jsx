@@ -107,7 +107,7 @@ const Trip = () => {
       // Calculate total running km
       const startKM = Number(data.startOdometerReading) || 0
       const endKM = Number(data.endOdometerReading) || 0
-      const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : 'Trip In-Progress'
+      const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : '0'
 
       return {
         ...data,
