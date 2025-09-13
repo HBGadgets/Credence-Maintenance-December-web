@@ -13,7 +13,7 @@ import {
   CTableDataCell,
   CTableRow,
 } from '@coreui/react'
-import { Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Trash2, FileText } from 'lucide-react'
 
 const skeletonStyles = `
   @keyframes pulse {
@@ -95,6 +95,8 @@ function Table({
   currentPage,
   itemsPerPage,
   isFetching,
+  reportButton,
+  handleReportButton,
   action = 'Action',
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
@@ -159,7 +161,7 @@ function Table({
                         {column.label} {column.sortable && getSortIcon(column.key)}
                       </CTableHeaderCell>
                     ))}
-                  {(editButton || deleteButton || viewButton) && (
+                  {(editButton || deleteButton || viewButton || reportButton) && (
                     <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
                   )}
                 </CTableRow>
@@ -176,7 +178,7 @@ function Table({
                           <div className="skeleton-loader" style={{ height: '20px' }} />
                         </CTableDataCell>
                       ))}
-                      {(editButton || deleteButton || viewButton) && (
+                      {(editButton || deleteButton || viewButton || reportButton) && (
                         <CTableDataCell className="action-cell">
                           <div className="action-buttons">
                             {editButton && (
@@ -186,6 +188,12 @@ function Table({
                               />
                             )}
                             {deleteButton && (
+                              <div
+                                className="skeleton-loader"
+                                style={{ width: '20px', height: '20px' }}
+                              />
+                            )}
+                            {reportButton && (
                               <div
                                 className="skeleton-loader"
                                 style={{ width: '20px', height: '20px' }}
@@ -250,7 +258,7 @@ function Table({
                             )}
                           </CTableDataCell>
                         ))}
-                      {(editButton || deleteButton || viewButton) && (
+                      {(editButton || deleteButton || viewButton || reportButton) && (
                         <CTableDataCell className="action-cell">
                           <div className="action-buttons">
                             {editButton && (
@@ -271,6 +279,17 @@ function Table({
                                 <Trash2 color="#2D336B" size={18} />
                               </button>
                             )}
+
+                            {reportButton && (
+                              <button
+                                className="action-button"
+                                onClick={() => handleReportButton(row.id)}
+                                aria-label="Report"
+                              >
+                                <FileText color="#2D336B" size={18} />
+                              </button>
+                            )}
+
                             {viewButton && (
                               <button
                                 className="action-view-button"
@@ -325,6 +344,8 @@ Table.propTypes = {
   currentPage: PropTypes.number,
   itemsPerPage: PropTypes.number,
   isFetching: PropTypes.bool,
+  reportButton: PropTypes.bool,
+  handleReportButton: PropTypes.func,
 }
 
 Table.defaultProps = {

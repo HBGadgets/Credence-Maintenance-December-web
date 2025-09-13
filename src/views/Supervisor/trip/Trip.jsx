@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import { getTripListApi } from '../data/data'
+import { getDutySlipApi, getTripListApi } from '../data/data'
 import {
   fetchTripDataHelper,
   getStatusBadge,
@@ -11,7 +11,7 @@ import {
   handleEditHelper,
 } from './componets/tripHelpers'
 import ModalTrips from './ModalTrips'
-import { Button } from 'react-bootstrap'
+import { Button, Modal } from 'react-bootstrap'
 import SearchInput from '../../components/SearchInput'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom'
@@ -21,11 +21,12 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../IconDropdown'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
+import DutySlip from './DutySlip'
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -39,6 +40,11 @@ const Trip = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
   const navigate = useNavigate()
+
+  // Duty slip model
+  const [dutySlipData, setDutySlipData] = useState(null)
+  const [showDutySlipModal, setShowDutySlipModal] = useState(false)
+  const [loadingDutySlip, setLoadingDutySlip] = useState(false)
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -272,6 +278,22 @@ const Trip = () => {
 
   console.log('Supervisors:', supervisorOptions)
 
+  // Handle reports of duty slip
+  const handleReportButton = async (id) => {
+    try {
+      setLoadingDutySlip(true)
+      const data = await getDutySlipApi(id)
+      setDutySlipData(data)
+      setShowDutySlipModal(true)
+      toast.success('Duty slip loaded successfully!') // success toast
+    } catch (error) {
+      console.error('Failed to fetch duty slip:', error)
+      toast.error('Trip in Progress!') // error toast
+    } finally {
+      setLoadingDutySlip(false)
+    }
+  }
+
   return (
     <>
       <ToastContainer />
@@ -326,6 +348,8 @@ const Trip = () => {
           handleDeleteButton={handleDeleteButton}
           isFetching={isFetching}
           viewButtonLabel="Subtrips"
+          reportButton={true}
+          handleReportButton={handleReportButton}
         />
 
         <SmartPagination
@@ -338,6 +362,23 @@ const Trip = () => {
           }}
         />
       </div>
+
+      {/* DutySlip Modal */}
+      <Modal show={showDutySlipModal} onHide={() => setShowDutySlipModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Duty Slip</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {loadingDutySlip ? (
+            <p>Loading...</p>
+          ) : dutySlipData ? (
+            <DutySlip invoiceData={dutySlipData} />
+          ) : (
+            <p>No duty slip data available.</p>
+          )}
+        </Modal.Body>
+      </Modal>
+
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
       </div>

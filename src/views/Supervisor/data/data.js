@@ -343,6 +343,33 @@ export const deleteTripApi = async (id) => {
 }
 
 
+// --------------------------------------------------------------------------- 
+
+// Duty Slip Api 
+
+export const getDutySlipApi = async (id) => {
+    try {
+
+        if (!TOKEN) throw new Error('Authentication token not found')
+
+        const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/trips/get-dutySlip-by-trip-id/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            },
+        )
+        return res.data
+    } catch (error) {
+        console.error('Error:', error.response?.data || error.message)
+        throw error
+    }
+}
+
+
+// ---------------------------------------------------------------------------------------------
+
 // SubTripList
 
 export const getSubTripsApi = async (id) => {

@@ -35,7 +35,7 @@ export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
             vehicleName: tripData.vehicleName,
             startLocation: tripData.startLocation,
             endLocation: tripData.endLocation,
-            budgetAllocated: Number(tripData.budgetAllocated) || 0, // ensure number
+            budgetAllocated: Number(tripData.budgetAllocated) || 0,
             materialType: tripData.materialType,
             clientAdvance: tripData.clientAdvance || 0,
             coastPerKm: tripData.coastPerKm || 0,

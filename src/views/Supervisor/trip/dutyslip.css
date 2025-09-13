@@ -1,0 +1,161 @@
+.paper-wrap {
+    padding: 20px;
+    background: #f0f2f5;
+}
+
+.bill-box {
+    width: 100%;
+    max-width: 794px;
+    /* A4 width */
+    margin: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 24px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #222;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Header */
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #000;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.company-details h1 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+}
+
+.company-details p {
+    margin: 2px 0;
+    font-size: 12px;
+}
+
+.duty-title {
+    text-align: right;
+}
+
+.duty-title h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    text-transform: uppercase;
+}
+
+.duty-title p {
+    margin: 5px 0 0;
+    font-size: 12px;
+}
+
+/* Sections */
+.slice-zone {
+    margin-bottom: 20px;
+}
+
+.duo-flex {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.duo-flex>div {
+    flex: 1;
+}
+
+/* Card */
+.chunky-card {
+    padding: 12px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.chunky-card h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.chunky-card p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+.chunky-card p strong {
+    font-weight: 600;
+}
+
+
+/* Footer */
+.bottom-bar {
+    margin-top: 30px;
+    border-top: 1px solid #000;
+    padding-top: 15px;
+}
+
+.signature-section {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.sign-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.sign-block {
+    flex: 1;
+    text-align: center;
+}
+
+.signature-line {
+    margin-top: 40px;
+    border-top: 1px solid #000;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Download button */
+.magic-btn {
+    display: block;
+    margin: 12px auto 0;
+    padding: 8px 18px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+}
+
+.magic-btn:hover {
+    background-color: #333;
+}
+
+.flex-rowed {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 8px 0;
+}
+
+.flex-rowed p {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+}
