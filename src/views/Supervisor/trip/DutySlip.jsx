@@ -51,6 +51,7 @@ const DutySlip = ({ invoiceData }) => {
 
     vehicleName,
     driverName: driverId?.name || 'N/A',
+    contactNumber: driverId?.contactNumber || 'N/A',
     startLocation,
     endLocation,
     itemName: materialType || 'N/A',
@@ -114,10 +115,13 @@ const DutySlip = ({ invoiceData }) => {
               <strong>Slip Number:</strong> {mappedData.lorryNumber}
             </p>
             <p>
-              <strong>Vehicle:</strong> {mappedData.vehicleName}
+              <strong>Vehicle Name:</strong> {mappedData.vehicleName}
             </p>
             <p>
-              <strong>Driver:</strong> {mappedData.driverName}
+              <strong>Driver Name:</strong> {mappedData.driverName}
+            </p>
+            <p>
+              <strong>Driver Contact:</strong> {mappedData.contactNumber}
             </p>
           </div>
 
@@ -136,7 +140,7 @@ const DutySlip = ({ invoiceData }) => {
         {invoiceData.transportMode === 'transport' && (
           <div className="slice-zone">
             <div className="chunky-card">
-              <h3>Material</h3>
+              <h3>Materials Details</h3>
               <p>
                 <strong>Type:</strong> {mappedData.itemName}
               </p>
@@ -147,7 +151,7 @@ const DutySlip = ({ invoiceData }) => {
         {/* Client & Charges */}
         <div className="slice-zone duo-flex">
           <div className="chunky-card">
-            <h3>Client</h3>
+            <h3>Client Details</h3>
             <p>
               <strong>Name:</strong> {mappedData.customerName}
             </p>
