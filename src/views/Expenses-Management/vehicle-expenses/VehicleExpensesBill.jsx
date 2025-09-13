@@ -278,7 +278,7 @@ const VehicleExpensesBill = () => {
           label: 'Diagnostics & Error Scanning (ECU scan, warning light resolution)',
         },
         {
-          value: 'tollAndPraking',
+          value: 'tollAndParking',
           label: 'Toll & Parking',
         },
         {
