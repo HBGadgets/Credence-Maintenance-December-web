@@ -433,21 +433,62 @@ export const getAllTodayExpesesListApi = async () => {
 
     console.log("All Today Expenses Data: ", data);
 
-    return data.map((todayExpense) => ({
-        id: todayExpense._id,
-        originalDate: todayExpense.date,
-        date: formatDateToDDMMYYYY(todayExpense.date),
-        driverName: todayExpense.driverId?.name || "Unknown",
-        supervisor: todayExpense.driverId?.supervisor || "Unknown",
-        currentVehicleName: todayExpense.vehicleName || "N/A",
-        shopName: todayExpense.vendor || todayExpense.shopName || "Unknown",
-        expenseType: todayExpense.expenseType || "No Vehicle Expense",
-        description: todayExpense.description || "No description",
-        location: todayExpense.location || 'No location',
-        lat: todayExpense.lat || 'No latitude',
-        long: todayExpense.long || 'No Longitude',
-        amount: todayExpense.amount || 0,
-        paymentMode: todayExpense.paymentMode || "Unknown",
-        billImg: todayExpense.billImg || "No Bill",
-    }));
+    return data.map((todayExpense) => {
+        const isVehicleExpense = !!todayExpense.expenseType;
+
+        return {
+            id: todayExpense._id,
+            originalDate: todayExpense.date,
+            date: formatDateToDDMMYYYY(todayExpense.date),
+            driverName: todayExpense.driverId?.name || "Unknown",
+            supervisor: todayExpense.driverId?.supervisor || "Unknown",
+            currentVehicleName: todayExpense.vehicleName || "N/A",
+            shopName: todayExpense.vendor || todayExpense.shopName || "Unknown",
+
+            // Fix here
+            expenseType: isVehicleExpense
+                ? todayExpense.expenseType || "No vehicle expense"
+                : "Driver Expense",
+
+            description: todayExpense.description || "No description",
+            location: todayExpense.location || "No location",
+            lat: todayExpense.lat || "No latitude",
+            long: todayExpense.long || "No Longitude",
+            amount: todayExpense.amount || 0,
+            paymentMode: todayExpense.paymentMode || "Unknown",
+            billImg: todayExpense.billImg || null,
+
+            // keep the real flag
+            isVehicleExpense,
+        };
+    });
 };
+
+
+
+// Today all driver and vehicle expenses bill
+
+export const getTodayExpensesBillImageApi = async (billImgId, isVehicleExpense) => {
+    try {
+        const type = isVehicleExpense ? "vehicleExpense" : "driverExpense";
+
+        console.log("📤 Bill Image Request →", { billImgId, isVehicleExpense, type });
+
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/vehicleExpense/common-bill-img?imageId=${billImgId}&expenseType=${type}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching bill image:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+
+

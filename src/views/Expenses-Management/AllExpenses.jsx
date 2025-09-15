@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { getAllTodayExpesesListApi, getVehicleBillImageApi } from './data/data'
+import { getAllTodayExpesesListApi, getTodayExpensesBillImageApi } from './data/data'
 import SmartPagination from '../components/SmartPagination'
 import Table from '../components/Table'
 import { useQuery } from '@tanstack/react-query'
@@ -141,20 +141,23 @@ const AllExpenses = () => {
     }
 
     try {
-      const response = await getVehicleBillImageApi(selectedRow.billImg)
+      // ✅ Use the flag from mapping instead of checking expenseType string
+      const isVehicleExpense = selectedRow.isVehicleExpense
+
+      const response = await getTodayExpensesBillImageApi(selectedRow.billImg, isVehicleExpense)
+
       const { base64Data, contentType } = response
 
       if (base64Data && contentType) {
         const fileSrc = `data:${contentType};base64,${base64Data}`
-        console.log('Document bill image:', fileSrc)
         setPdfBase64(fileSrc)
 
         if (contentType.startsWith('application/pdf')) {
-          setModalTitle('Driver Bill (PDF)')
+          setModalTitle(isVehicleExpense ? 'Vehicle Bill (PDF)' : 'Driver Bill (PDF)')
         } else if (contentType.startsWith('image')) {
-          setModalTitle('Driver Bill (Image)')
+          setModalTitle(isVehicleExpense ? 'Vehicle Bill (Image)' : 'Driver Bill (Image)')
         } else {
-          setModalTitle('Driver Bill (File)')
+          setModalTitle(isVehicleExpense ? 'Vehicle Bill (File)' : 'Driver Bill (File)')
         }
 
         setShowModal(true)
