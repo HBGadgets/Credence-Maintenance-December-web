@@ -154,7 +154,7 @@ const routes = [
 
   { path: '/CompanyName', name: 'Company Name', element: CompanyName },
 
-  { path: '/Worker', name: 'Worker Details', element: Worker },
+  { path: '/Worker', name: 'Employees Details', element: Worker },
 
 
   /**ROAD SIDE ASSISTANCE */
