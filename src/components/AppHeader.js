@@ -1,7 +1,6 @@
-// src/AppHeader.js
-import React, { useRef, useEffect, useState, useContext } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
+import React, { useRef, useEffect, useState, useContext } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   CContainer,
   CDropdown,
@@ -11,12 +10,11 @@ import {
   CHeader,
   CHeaderNav,
   CHeaderToggler,
-  CNavLink,
   CNavItem,
   useColorModes,
   CBadge,
-} from '@coreui/react'
-import { CIcon } from '@coreui/icons-react'
+} from '@coreui/react';
+import { CIcon } from '@coreui/icons-react';
 import {
   cilBell,
   cilContrast,
@@ -25,95 +23,117 @@ import {
   cilMenu,
   cilMoon,
   cilSun,
-} from '@coreui/icons'
-import { AppBreadcrumb } from './index'
-import { User, Headset, LogOut, Volume2, VolumeX } from 'lucide-react'
-import '../index.css'
-import './header.css'
-import routes from '../routes'
-import { TokenContext } from '../context/TokenContext'
-import { jwtDecode } from 'jwt-decode'
-import NotificationDropdown from '../views/components/NotificationDropdown'
-import { NotificationContext } from '../context/NotificationContext'
+} from '@coreui/icons';
+import { AppBreadcrumb } from './index';
+import { User, Headset, LogOut, Volume2, VolumeX } from 'lucide-react';
+import '../index.css';
+import './header.css';
+import routes from '../routes';
+import { TokenContext } from '../context/TokenContext';
+import { jwtDecode } from 'jwt-decode';
+import NotificationDropdown from '../views/components/NotificationDropdown';
+import { NotificationContext } from '../context/NotificationContext';
+import { socket } from '../views/customhooks/useSocket';
+import Cookies from 'js-cookie';
 
 
 const AppHeader = () => {
-  const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes()
-  const [view, setView] = useState(false)
-  const { notifications, setNotifications, unreadCounts, setUnreadCounts } = useContext(NotificationContext)
-  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0)
+  const headerRef = useRef();
+  const { colorMode, setColorMode } = useColorModes();
+  const [view, setView] = useState(false);
+  const { notifications, setNotifications, unreadCounts, setUnreadCounts } = useContext(NotificationContext);
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   // Function to clear notifications
   const handleClearNotifications = () => {
-    setUnreadCounts({}) //clear unread counts
-  }
+    setUnreadCounts({}); //clear unread counts
+  };
 
-  const token = useContext(TokenContext)
-  const [username, setUsername] = useState('User')
+  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext);
 
-  const dispatch = useDispatch()
-  const sidebarShow = useSelector((state) => state.sidebarShow)
-  const unfoldable = useSelector((state) => state.sidebarUnfoldable)
+  // Helper to get a cookie by name
+  const getCookie = (name) => {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
+  };
+
+  const [username, setUsername] = useState(() => {
+    const savedToken = sessionStorage.getItem('crdnsMaintToken');
+    if (!savedToken) return 'User';
+    try {
+      const decoded = jwtDecode(savedToken);
+      return decoded?.username || decoded.name || 'User';
+    } catch {
+      return 'User';
+    }
+  });
+
+  const dispatch = useDispatch();
+  const sidebarShow = useSelector((state) => state.sidebarShow);
+  const unfoldable = useSelector((state) => state.sidebarUnfoldable);
 
   useEffect(() => {
-    document.addEventListener('scroll', () => {
-      headerRef.current &&
-        headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
-    })
-  }, [])
+    const handleScroll = () => {
+      headerRef.current && headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0);
+    };
+
+    document.addEventListener('scroll', handleScroll);
+    return () => document.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (token) {
       try {
-        const decoded = jwtDecode(token)
-        setUsername(decoded?.username || decoded.name || 'User') // Adjust based on your token structure
+        const decoded = jwtDecode(token);
+        setUsername(decoded?.username || decoded.name || 'User'); // Adjust based on your token structure
       } catch (error) {
-        console.error('Failed to decode token:', error)
+        console.error('Failed to decode token:', error);
       }
     }
-  }, [token])
+  }, [token]);
 
   const handleView = () => {
-    setView(!view)
-  }
+    setView(!view);
+  };
 
   // Display Route name
-
   const getRouteName = (pathname, routes) => {
-    const currentRoute = routes.find((route) => route.path === pathname)
-    return currentRoute ? currentRoute.name : 'Profile Logs'
-  }
+    const currentRoute = routes.find((route) => route.path === pathname);
+    return currentRoute ? currentRoute.name : 'Profile Logs';
+  };
 
-  // const getRouteName = (pathname) => {
-  //   const segments = pathname.split('/').filter(Boolean)
-  //   return segments.length ? segments[segments.length - 1] : 'Dashboard'
-  // }
-
-  const currentPathname = useLocation().pathname
-  const currentRouteName = getRouteName(currentPathname, routes)
-
-  // const handleBackToCredence = () => {
-  //   window.history.replaceState(null, '', '/')
-  //   // window.location.href = 'http://localhost:3000'
-  //   window.location.href = import.meta.env.VITE_API_CREDENCE_URL
-  // }
+  const currentPathname = useLocation().pathname;
+  const currentRouteName = getRouteName(currentPathname, routes);
 
   const handleBackToCredence = () => {
-    // Clear sessionStorage and localStorage
+    // 1️⃣ Clear session and local storage
     sessionStorage.clear()
     localStorage.clear()
 
-    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
+    // 2️⃣ Remove all JS-accessible cookies
     document.cookie.split(';').forEach((c) => {
-      const base = c.trim().split('=')[0]
-      document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+      const eqPos = c.indexOf('=')
+      const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim()
+
+      // Remove for current path
+      document.cookie = `${name}=; Max-Age=0; path=/`
+
+      // Remove for root domain
+      document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname}`
+
+      // Remove for wildcard subdomain (if hostname has subdomain)
+      const parts = window.location.hostname.split('.')
+      if (parts.length > 2) {
+        const rootDomain = parts.slice(-2).join('.')
+        document.cookie = `${name}=; Max-Age=0; path=/; domain=.${rootDomain}`
+      }
     })
 
-    // Redirect to Credence
-    window.history.replaceState(null, '', '/')
-    // window.location.href = 'http://localhost:3000'
-    window.location.href = import.meta.env.VITE_API_CREDENCE_URL
+    // 3️⃣ Disconnect socket if any
+    if (socket?.connected) socket.disconnect()
+
+    // 4️⃣ Reload / redirect to login
+    window.location.replace('#/login')
   }
 
 
@@ -121,8 +141,6 @@ const AppHeader = () => {
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
-
-
         <div style={{ display: 'flex' }}>
           <CHeaderToggler
             onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
@@ -130,13 +148,10 @@ const AppHeader = () => {
           >
             <CIcon icon={cilMenu} size="lg" style={{ color: 'white' }} />
           </CHeaderToggler>
-
           <span style={{ fontWeight: '700', fontSize: '1.3rem', color: 'white' }}>
             {currentRouteName}
           </span>
         </div>
-
-
         <CHeaderNav className="ms-auto d-flex align-items-center">
           <div className="position-relative">
             <NotificationDropdown
@@ -153,10 +168,7 @@ const AppHeader = () => {
               </span>
             )}
           </div>
-
           <div className="vr mx-3 bg-white"></div>
-
-
           {/* USER PROFILE */}
           <CDropdown>
             <CDropdownToggle className="btn p-0 bg-transparent border-0" caret={false}>
@@ -187,7 +199,8 @@ const AppHeader = () => {
                   onClick={handleBackToCredence}
                 >
                   {' '}
-                  <LogOut /> Credence
+                  <LogOut />
+                  Logout
                 </CDropdownItem>
               </CNavItem>
             </CDropdownMenu>
@@ -195,7 +208,7 @@ const AppHeader = () => {
         </CHeaderNav>
       </CContainer>
     </CHeader>
-  )
-}
+  );
+};
 
-export default AppHeader
+export default AppHeader;

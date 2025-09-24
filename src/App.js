@@ -62,25 +62,43 @@
 // New code
 
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { CSpinner, useColorModes } from '@coreui/react'
+import { useColorModes } from '@coreui/react'
 
 import './scss/style.scss'
 import { TokenProvider } from './context/TokenContext'
 import LoaderBus from './components/Loader3/LoaderBus'
 import { socket } from './views/customhooks/useSocket'
+import Cookies from 'js-cookie';
+
 
 // Lazy-loaded containers and pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
+const Login = React.lazy(() => import('./views/pages/login/Login'))
 
-const App = () => {
+//Token check for dashboard
+const RequireAuth = ({ children }) => {
+  const token =
+    sessionStorage.getItem('crdnsMaintToken') ||
+    localStorage.getItem('crdnsMaintToken') ||
+    Cookies.get('crdnsMaintToken'); // check cookie
+
+  if (!token) {
+    // Redirect to login if token is missing
+    return <Navigate to="/login" replace />
+  }
+
+  return children;
+};
+
+
+const AppContent = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
-  if (!socket.connected) socket.connect();
+  if (!socket.connected) socket.connect()
 
   useEffect(() => {
-    // Use search instead of parsing href
     const urlParams = new URLSearchParams(window.location.search)
     const theme = urlParams.get('theme')?.match(/^[A-Za-z0-9\s]+/)?.[0]
 
@@ -92,25 +110,37 @@ const App = () => {
   }, [isColorModeSet, setColorMode, storedTheme])
 
   return (
-    <HashRouter>
-      <Suspense
-        fallback={
-          <div className="pt-5 d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-            <LoaderBus />
-          </div>
+    <Routes>
+      {/* Public login page */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected dashboard */}
+      <Route
+        path="*"
+        element={
+          <RequireAuth>
+            <DefaultLayout />
+          </RequireAuth>
         }
-      >
-        <TokenProvider>
-          <Routes>
-            <Route path="*" element={<DefaultLayout />} />
-          </Routes>
-        </TokenProvider>
-      </Suspense>
-    </HashRouter>
+      />
+    </Routes>
   )
 }
 
+const App = () => (
+  <HashRouter>
+    <Suspense
+      fallback={
+        <div className="pt-5 d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <LoaderBus />
+        </div>
+      }
+    >
+      <TokenProvider>
+        <AppContent />
+      </TokenProvider>
+    </Suspense>
+  </HashRouter>
+)
+
 export default React.memo(App)
-
-
-

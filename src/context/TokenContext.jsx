@@ -1,11 +1,9 @@
 /* eslint-disable prettier/prettier */
-
 import React, { createContext, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 
 export const TokenContext = createContext(null)
 
-const FALLBACK_URL = `${import.meta.env.VITE_API_CREDENCE_URL}`
 const TOKEN_KEY = 'crdnsMaintToken'
 
 export const TokenProvider = ({ children }) => {
@@ -20,16 +18,13 @@ export const TokenProvider = ({ children }) => {
       sessionStorage.setItem(TOKEN_KEY, extractedToken)
       setToken(extractedToken)
       // Remove token from URL without reload
-      window.history.replaceState(null, '', window.location.pathname)
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
     } else {
       const storedToken = sessionStorage.getItem(TOKEN_KEY)
-      if (storedToken) {
-        setToken(storedToken)
-      } else {
-        window.location.href = FALLBACK_URL
-      }
+      setToken(storedToken || null)
     }
   }, [])
+
   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>
 }
 

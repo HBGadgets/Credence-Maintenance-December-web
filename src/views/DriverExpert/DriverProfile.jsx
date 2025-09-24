@@ -36,7 +36,7 @@ function DriverProfile() {
     { label: 'Logbook Details', content: <DriverLogbook id={id} /> },
     { label: 'Trips Details', content: <DriverTrip id={id} /> },
     { label: 'Salary Slips', content: <Salary id={id} /> },
-    { label: 'Document Locker', content: <DocumentLocker id={id}/> },
+    { label: 'Document Locker', content: <DocumentLocker id={id} /> },
   ]
 
   return (

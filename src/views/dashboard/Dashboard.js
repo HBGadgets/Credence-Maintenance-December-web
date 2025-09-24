@@ -43,11 +43,12 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { socket } from '../customhooks/useSocket';
 import { NotificationContext } from '../../context/NotificationContext';
 import notificationSound from '../../../mario_up.mp3'
+import Cookies from 'js-cookie';
 
 
 
 const Dashboard = () => {
-  const token = useContext(TokenContext);
+  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext);
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected);
 
@@ -113,6 +114,8 @@ const Dashboard = () => {
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {};
   const metadata = data?.metadata || {}
+
+
 
   useEffect(() => {
     if (token) {
