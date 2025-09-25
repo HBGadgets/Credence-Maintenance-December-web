@@ -47,11 +47,12 @@ const Login = () => {
 
         // Set cookie for 7 days if remember is checked, else session cookie
         Cookies.set('crdnsMaintToken', token, {
-          expires: remember ? 1 : undefined, // 1 day for remember
-          sameSite: 'Strict', // optional but recommended
+          expires: remember ? 1 : undefined,
+          sameSite: 'Strict',
         })
 
-        navigate('/')
+        // Use replace instead of navigate to prevent back navigation to login
+        navigate('/', { replace: true })
       } else {
         setError('Invalid login response')
       }
