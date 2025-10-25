@@ -85,7 +85,7 @@ const DailyTrips = () => {
         payload.endDate = formatDateForAPI(dateRange.endDate, true)
       }
 
-      console.log('📡 Sending payload to API:', payload)
+      console.log('Sending payload to API:', payload)
 
       return getAllDailyReadingApi(payload)
     },

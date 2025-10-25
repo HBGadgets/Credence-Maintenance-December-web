@@ -104,6 +104,7 @@ const AbsentTable = React.lazy(() => import('./views/DriverExpert/components/att
 
 const ApprovedLeaveTable = React.lazy(() => import('./views/DriverExpert/components/attendance/ApprovedLeaveTable.jsx'))
 
+const FullDailyReading = React.lazy(() => import('./views/DriverExpert/components/tripReading/FullDailyReading.jsx'))
 
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
@@ -188,6 +189,7 @@ const routes = [
   { path: '/PresentTable/:id', name: 'Driver Attendance Status', element: PresentTable },
   { path: '/AbsentTable/:id', name: 'Driver Attendance Status', element: AbsentTable },
   { path: '/ApprovedLeaveTable/:id', name: 'Driver Approved Leaves', element: ApprovedLeaveTable },
+  { path: '/FullDailyReading/:id', name: 'Daily Reading', element: FullDailyReading },
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },

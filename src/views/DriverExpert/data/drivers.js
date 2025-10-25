@@ -604,3 +604,77 @@ export const getDriverLocationApi = async (attendanceImageId) => {
 }
 
 
+// ------------------------------------------------------------------------------ 
+
+// Get API trip reading
+export const getDailyReadingApi = async ({
+  search = '',
+  startDate = '',
+  endDate = '',
+  status = '',
+  page = 1,
+  limit = 10,
+  driverId = '',
+}) => {
+  try {
+    if (!token) throw new Error('Authentication token not found')
+
+    // Build params
+    const params = { search, status, page, limit }
+    if (driverId && driverId.trim() !== '') params.driverId = driverId
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+
+    console.log('📤 API Params:', params)
+
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver`,
+      {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
+
+    console.log('📦 API Response (Daily Reading):', data)
+
+    // Format date
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A'
+      const date = new Date(dateString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+    }
+
+    const transformedData = (data.data || []).map((item) => ({
+      id: item._id,
+      driverName: item.driverId?.name || 'N/A',
+      driverContact: item.driverId?.contactNumber || 'N/A',
+      vehicleNumber: item.driverId?.currentVehicleName || 'N/A',
+      odometerStart: item.odometerStart ?? '-',
+      odometerEnd: item.odometerEnd ?? '-',
+      totalDistance: item.totalDistance ?? '-',
+      gpsKM: item.gpsKM ?? '-',
+      startTime: formatDate(item.startTime),
+      endTime: formatDate(item.endTime),
+      createdAt: formatDate(item.createdAt),
+      driverId: item.driverId?._id || '',
+      supervisorId: item.supervisorId || '--',
+      status: item.status || 'N/A',
+    }))
+
+    return {
+      data: transformedData,
+      total: data.total,
+      currentPage: data.currentPage,
+      totalPages: data.totalPages,
+    }
+  } catch (error) {
+    console.error('❌ Error fetching daily readings:', error)
+    throw error.response?.data || { message: 'Failed to fetch daily readings' }
+  }
+}
