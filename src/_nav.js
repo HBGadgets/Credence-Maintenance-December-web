@@ -5,6 +5,7 @@ import { LuMessageSquareQuote } from "react-icons/lu";
 import { PiUserListBold } from "react-icons/pi";
 import { HiOutlineTicket } from "react-icons/hi2";
 import { IoReceiptOutline } from "react-icons/io5";
+import { LuChartSpline } from "react-icons/lu";
 
 const _nav = [
   {
@@ -165,6 +166,25 @@ const _nav = [
   //     // },
   //   ],
   // },
+
+  //  Daily Trips KM
+  {
+    component: CNavGroup,
+    name: 'Daily Trips Reading',
+    icon: (
+      <LuChartSpline
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Daily Logs',
+        to: '/DailyTrips',
+      },
+    ],
+  },
 
   // Help and Supports
   {

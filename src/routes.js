@@ -108,6 +108,9 @@ const ApprovedLeaveTable = React.lazy(() => import('./views/DriverExpert/compone
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
 
+//  Daily Reading
+const DailyTrips = React.lazy(() => import('./views/DailyTrips/DailyTrips.jsx'))
+
 const routes = [
   // Dashboard
   { path: '/', exact: true, name: 'Home' },
@@ -188,6 +191,9 @@ const routes = [
 
   // Profile Section
   { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
+
+  //  Daily trips Reading
+  { path: '/DailyTrips', name: 'Daily Trips', element: DailyTrips }
 
 ]
 
