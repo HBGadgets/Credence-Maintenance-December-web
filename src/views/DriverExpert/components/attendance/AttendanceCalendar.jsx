@@ -28,11 +28,21 @@ function AttendanceCalendar({ month, onMonthChange, attendanceData = [] }) {
 
   const getAttendanceStatus = (date) => {
     if (!date) return 'empty'
+
     const formattedDate = format(date, 'yyyy-MM-dd')
+
     return (
       attendanceData.find((entry) => {
-        const parsedDate = parse(entry.createdAt, 'dd/MM/yyyy', new Date())
-        return format(parsedDate, 'yyyy-MM-dd') === formattedDate
+        try {
+          const utcDate = new Date(entry.createdAt)
+          const year = utcDate.getUTCFullYear()
+          const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0')
+          const day = String(utcDate.getUTCDate()).padStart(2, '0')
+          const utcDateStr = `${year}-${month}-${day}`
+          return utcDateStr === formattedDate
+        } catch {
+          return false
+        }
       })?.status || 'Attendance not marked'
     )
   }

@@ -37,10 +37,10 @@ const DriverLocation = () => {
     data: attendanceLocData = [],
     isFetching,
     isError,
-    error,
   } = useQuery({
-    queryKey: ['attendanceLoc'],
-    queryFn: fetchDriverAttendanceLocation,
+    queryKey: ['attendanceLoc', dateRange.startDate, dateRange.endDate],
+    queryFn: () => fetchDriverAttendanceLocation(dateRange.startDate, dateRange.endDate),
+    // enabled: !!token, // only run when token exists
     staleTime: 1000 * 60 * 30,
   })
 
@@ -57,47 +57,65 @@ const DriverLocation = () => {
         return
       }
 
-      const map = {}
+      const addressCache = {}
 
       const updatedData = await Promise.all(
         attendanceLocData.map(async (item) => {
-          if (!item.lat || !item.long) return { ...item, address: 'N/A' }
-
-          const key = `${item.lat},${item.long}`
-
-          if (!map[key]) {
-            try {
-              map[key] = await getAddressApi(item.lat, item.long)
-            } catch (err) {
-              console.error('Failed to get address:', err)
-              map[key] = 'Address not found'
+          // --- START ADDRESS ---
+          let startAddress = 'N/A'
+          if (item.lat && item.long && item.lat !== 'N/A' && item.long !== 'N/A') {
+            const startKey = `${item.lat},${item.long}`
+            if (!addressCache[startKey]) {
+              try {
+                addressCache[startKey] = await getAddressApi(item.lat, item.long)
+              } catch (err) {
+                console.error('Failed to get Start address:', err)
+                addressCache[startKey] = 'Address not found'
+              }
             }
+            startAddress = addressCache[startKey]
+          }
+
+          // --- END ADDRESS ---
+          let endAddress = 'Trip In-Progress'
+          if (item.endLat && item.endLong && item.endLat !== '--' && item.endLong !== '--') {
+            const endKey = `${item.endLat},${item.endLong}`
+            if (!addressCache[endKey]) {
+              try {
+                addressCache[endKey] = await getAddressApi(item.endLat, item.endLong)
+              } catch (err) {
+                console.error('Failed to get End address:', err)
+                addressCache[endKey] = 'Address not found'
+              }
+            }
+            endAddress = addressCache[endKey]
           }
 
           return {
             ...item,
+            Startaddress: startAddress,
+            Endaddress: endAddress,
             coordinate:
-              item.lat !== 'N/A' ? `${item.lat}, ${item.long}` : 'Co-ordinates not available',
-            address: map[key],
+              item.lat && item.long ? `${item.lat}, ${item.long}` : 'Co-ordinates not available',
           }
         }),
       )
 
-      // Apply filters
+      // --- Apply filters ---
       let filtered = [...updatedData]
 
       if (selectedName?.value) {
         filtered = filtered.filter((item) => item.supervisor === selectedName.value)
       }
 
-      if (dateRange.startDate && dateRange.endDate) {
-        filtered = filtered.filter((item) => {
-          const itemDate = new Date(item.originalDate)
-          return (
-            itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
-          )
-        })
-      }
+      // if (dateRange.startDate && dateRange.endDate) {
+      //   filtered = filtered.filter((item) => {
+      //     const itemDate = new Date(item.originalDate)
+      //     return (
+      //       itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      //     )
+      //   })
+      // }
 
       if (searchQuery) {
         const lower = searchQuery.toLowerCase()
@@ -140,7 +158,10 @@ const DriverLocation = () => {
     { label: 'Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'name', sortable: true },
     // { label: 'Co-ordinate', key: 'coordinate', sortable: false },
-    { label: 'Address', key: 'address', sortable: false },
+    { label: 'CheckIn Time', key: 'checkInTime', sortable: true },
+    { label: 'CheckIn Address', key: 'Startaddress', sortable: false },
+    { label: 'CheckOut Time', key: 'checkOutTime', sortable: true },
+    { label: 'CheckOut Address', key: 'Endaddress', sortable: false },
     { label: 'Status', key: 'status', sortable: true },
   ]
 

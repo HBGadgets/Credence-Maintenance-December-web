@@ -3,6 +3,7 @@ import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 import { useFormattedTime } from '../../customhooks/useFormattedTime'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
+import { useDateTime } from '../../customhooks/useDateTime'
 
 
 // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
@@ -522,25 +523,24 @@ export const fetchDriverStatus = async () => {
   }
 };
 
+// Driver Get Location
 
-export const fetchDriverAttendanceLocation = async () => {
+export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
   try {
-    const token = sessionStorage.getItem('crdnsMaintToken');
-
     if (!token) throw new Error('Authentication token not found');
 
+    const params = new URLSearchParams();
+
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
     const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendance-location`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      `${import.meta.env.VITE_API_URL}/api/attendance/get-attendance-location?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     const data = response.data?.attendanceLocations;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid API response: attendanceLocations must be an array');
-    }
+    if (!Array.isArray(data)) throw new Error('Invalid API response: attendanceLocations must be an array');
 
     const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -548,16 +548,18 @@ export const fetchDriverAttendanceLocation = async () => {
       id: attendanceLoc._id,
       originalDate: attendanceLoc.createdAt,
       date: formatDateToDDMMYYYY(attendanceLoc.createdAt),
+      checkInTime: useDateTime(attendanceLoc.createdAt),
+      checkOutTime: useDateTime(attendanceLoc.updatedAt),
       name: attendanceLoc.driverId?.name || 'N/A',
       lat: attendanceLoc.lat || 'N/A',
-      long: attendanceLoc.long || " ",
+      long: attendanceLoc.long || '',
+      endLat: attendanceLoc.endLat || '--',
+      endLong: attendanceLoc.endLong || '--',
       coordinate: `${attendanceLoc.lat}, ${attendanceLoc.long}` || 'No Co-ordinate',
       status: attendanceLoc.status || 'N/A',
       supervisor: attendanceLoc.driverId?.supervisor || 'N/A',
       attendanceImageId: attendanceLoc.attendanceImageId,
     }));
-
-
   } catch (error) {
     alert(error.message);
     throw error;
