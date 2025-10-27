@@ -125,6 +125,7 @@ const ReusableModal = ({
                     value={formData[field.name]}
                     onChange={(selected) => handleSelectChange(selected, field.name)}
                     menuPortalTarget={document.body}
+                    isDisabled={field.disabled || false}
                     styles={{
                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                       menu: (base) => ({ ...base, zIndex: 9999 }),
@@ -138,6 +139,7 @@ const ReusableModal = ({
                     value={formData[field.name]}
                     onChange={(selected) => handleSelectChange(selected, field.name)}
                     menuPortalTarget={document.body}
+                    isDisabled={field.disabled || false}
                     styles={{
                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                       menu: (base) => ({ ...base, zIndex: 9999 }),
