@@ -9,12 +9,16 @@ import { getDailyReadingApi } from '../../data/drivers'
 import { CContainer } from '@coreui/react'
 import IconDropdown from '../../../Supervisor/IconDropdown'
 import { useNavigate, useParams } from 'react-router-dom'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 
 const FullDailyReading = () => {
   const { id } = useParams()
-
   const navigate = useNavigate()
-
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -117,60 +121,100 @@ const FullDailyReading = () => {
     navigate(`/FullDailyReading/${id}`)
   }
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = dailyTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+        }))
+
+        exportToPDF({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = dailyTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+        }))
+
+        exportToExcel({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <ToastContainer />
-      <CContainer className="px-2" fluid>
-        {/* Top filters row */}
-        <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-          <div className="me-2">
-            <DateRangeFilterCredence
-              title="Date Range"
-              onDateRangeChange={handleDateRangeChange}
-              value={dateRange}
-            />
-          </div>
-
-          <div className="ms-2 flex-grow-1" style={{ maxWidth: '300px' }}>
-            <SearchInput
-              searchQuery={searchQuery}
-              setSearchQuery={handleSearch}
-              placeholder="Search by driver name or vehicle number..."
-            />
-          </div>
+      {/* Top filters row */}
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <div className="me-2">
+          <DateRangeFilterCredence
+            title="Date Range"
+            onDateRangeChange={handleDateRangeChange}
+            value={dateRange}
+          />
         </div>
 
-        {/* Table */}
-        <Table
-          title="All Drivers Daily Logs"
-          columns={columns}
-          filteredData={dailyTrips}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={isFetching}
-        />
-
-        <SmartPagination
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value === -1 ? totalItems : value)
-            setCurrentPage(1)
-          }}
-          totalItems={totalItems}
-        />
-
-        {/* Button at bottom right */}
-        <div className="mt-3 text-end">
-          <button
-            onClick={() => handleViewDetailedReport(id)}
-            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
-          >
-            View Detailed Report
-          </button>
+        <div className="ms-2 flex-grow-1" style={{ maxWidth: '300px' }}>
+          <SearchInput
+            searchQuery={searchQuery}
+            setSearchQuery={handleSearch}
+            placeholder="Search by driver name or vehicle number..."
+          />
         </div>
-      </CContainer>
+      </div>
+
+      {/* Table */}
+      <Table
+        title="All Drivers Daily Logs"
+        columns={columns}
+        filteredData={dailyTrips}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        isFetching={isFetching}
+      />
+
+      <SmartPagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value === -1 ? totalItems : value)
+          setCurrentPage(1)
+        }}
+        totalItems={totalItems}
+      />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

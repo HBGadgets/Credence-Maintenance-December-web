@@ -9,10 +9,15 @@ import { getDailyReadingApi } from '../../data/drivers'
 import { CContainer } from '@coreui/react'
 import IconDropdown from '../../../Supervisor/IconDropdown'
 import { useNavigate } from 'react-router-dom'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 
 const DailyReading = ({ id }) => {
   const navigate = useNavigate()
-
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
   const [searchQuery, setSearchQuery] = useState('')
@@ -115,6 +120,54 @@ const DailyReading = ({ id }) => {
     navigate(`/FullDailyReading/${id}`)
   }
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = dailyTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+        }))
+
+        exportToPDF({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = dailyTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+        }))
+
+        exportToExcel({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <ToastContainer />
@@ -158,6 +211,10 @@ const DailyReading = ({ id }) => {
           </button>
         </div>
       </CContainer>
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
