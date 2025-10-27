@@ -223,6 +223,7 @@ const DriverLocation = () => {
         isFetching={isFetching}
         viewButton={true}
         handleViewButton={handleViewButton}
+        action="Image"
       />
 
       <SmartPagination
