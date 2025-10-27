@@ -76,6 +76,26 @@ const skeletonStyles = `
     scrollbar-width: thin; /* Firefox */
     scrollbar-color: #c1c1c1 #f1f1f1;
   }
+
+/*  Table header and cell alignment fix */
+.table th,
+.table td,
+.ctable th,
+.ctable td,
+.ctable-header-cell,
+.ctable-data-cell {
+  vertical-align: middle !important;
+  text-align: center;
+  white-space: nowrap;
+  padding: 10px 8px !important;
+}
+
+/* Ensure header text aligns perfectly */
+.ctable th {
+  line-height: 1.2;
+  height: 45px;
+}
+
 `
 
 function Table({
