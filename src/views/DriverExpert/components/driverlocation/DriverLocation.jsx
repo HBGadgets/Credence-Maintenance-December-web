@@ -15,8 +15,15 @@ import { TokenContext } from '../../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import BillShow from '../../../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
+import usePdfExporter from '../../../customhooks/usePdfExporter'
+import useExcelExporter from '../../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import IconDropdown from '../../../Supervisor/IconDropdown'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 
 const DriverLocation = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -204,6 +211,57 @@ const DriverLocation = () => {
     }
   }
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract text if it's a React element
+        }))
+
+        exportToPDF({
+          title: 'Driver Check In/Out Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Driver_CheckIN/OUT_Report',
+        })
+      },
+    },
+
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = filteredData.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // fallback if styled span
+        }))
+
+        exportToExcel({
+          title: 'Driver Check Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Driver_CheckIN/OUT_Report',
+        })
+      },
+    },
+
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <div>
       <ToastContainer />
@@ -264,6 +322,10 @@ const DriverLocation = () => {
         pdfBase64={pdfBase64}
         modalTitle={modalTitle}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </div>
   )
 }

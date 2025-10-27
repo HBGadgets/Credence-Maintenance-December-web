@@ -12,9 +12,16 @@ import SearchInput from '../components/SearchInput'
 import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../Supervisor/IconDropdown'
 
 const DailyTrips = () => {
   const queryClient = useQueryClient()
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,6 +32,11 @@ const DailyTrips = () => {
   const [editMode, setEditMode] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Use state for modal
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -258,6 +270,54 @@ const DailyTrips = () => {
     },
   ]
 
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () => {
+        const cleanedData = filteredTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract text if styled span
+        }))
+
+        exportToPDF({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        const cleanedData = filteredTrips.map(({ status, ...rest }) => ({
+          ...rest,
+          status: typeof status === 'string' ? status : status?.props?.children || '',
+        }))
+
+        exportToExcel({
+          title: 'Daily Trips Report',
+          columns: columns,
+          data: cleanedData,
+          fileName: 'Daily_Trips_Report',
+        })
+      },
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <ToastContainer />
@@ -337,6 +397,10 @@ const DailyTrips = () => {
         }}
         totalItems={totalItems}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
