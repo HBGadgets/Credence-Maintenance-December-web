@@ -46,15 +46,23 @@ export const getAllDailyReadingApi = async ({
 
         const formatDate = (dateString) => {
             if (!dateString) return "N/A";
+
             const date = new Date(dateString);
+
+            // Subtract 5 hours and 30 minutes
+            date.setHours(date.getHours() - 5);
+            date.setMinutes(date.getMinutes() - 30);
+
             const day = String(date.getDate()).padStart(2, "0");
             const month = String(date.getMonth() + 1).padStart(2, "0");
             const year = date.getFullYear();
             const hours = String(date.getHours()).padStart(2, "0");
             const minutes = String(date.getMinutes()).padStart(2, "0");
             const seconds = String(date.getSeconds()).padStart(2, "0");
+
             return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
         };
+
 
         const transformedData = (data.data || []).map((item) => ({
             id: item._id,
