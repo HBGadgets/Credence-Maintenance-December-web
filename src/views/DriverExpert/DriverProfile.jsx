@@ -11,7 +11,7 @@ import DriverTrip from './components/trip/DriverTrip'
 import DriverExpenses from './components/expenses/DriverExpenses'
 import { ToastContainer } from 'react-toastify'
 import DocumentLocker from './components/documents/DocumentLocker'
-import DailyReading from './components/tripReading/dailyReading'
+import DailyReading from './components/tripReading/DailyReading'
 
 function DriverProfile() {
   const { id } = useParams()
