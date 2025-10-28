@@ -544,12 +544,43 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
 
     const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    // formated time for check out
+    const formatDateTime = (timeString) => {
+      if (!timeString) return 'N/A'
+
+      let date
+      try {
+        date = new Date(timeString)
+        if (isNaN(date)) {
+          const parsed = Date.parse(timeString)
+          if (!isNaN(parsed)) {
+            date = new Date(parsed)
+          } else {
+            return 'Invalid Date'
+          }
+        }
+      } catch (error) {
+        console.error('Date parse error:', error, timeString)
+        return 'Invalid Date'
+      }
+
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+    }
+
     return sortedData.map((attendanceLoc) => ({
       id: attendanceLoc._id,
       originalDate: attendanceLoc.createdAt,
       date: formatDateToDDMMYYYY(attendanceLoc.createdAt),
       checkInTime: useDateTime(attendanceLoc.createdAt),
-      checkOutTime: useDateTime(attendanceLoc.updatedAt),
+      checkOutTime: formatDateTime(attendanceLoc.checkoutTime) || "Trip In-Progress",
       name: attendanceLoc.driverId?.name || 'N/A',
       lat: attendanceLoc.lat || 'N/A',
       long: attendanceLoc.long || '',
