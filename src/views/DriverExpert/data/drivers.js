@@ -632,7 +632,8 @@ export const getDriverLocationApi = async (attendanceImageId) => {
     return res.data
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
-    throw error
+    return 'Data not available';
+
   }
 }
 
