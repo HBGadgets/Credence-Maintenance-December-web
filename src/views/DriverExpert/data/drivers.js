@@ -592,7 +592,7 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
       attendanceImageId: attendanceLoc.attendanceImageId,
     }));
   } catch (error) {
-    alert(error.message);
+    console.error(error.message);
     throw error;
   }
 };
