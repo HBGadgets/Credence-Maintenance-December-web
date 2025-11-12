@@ -129,7 +129,6 @@ const Lr = () => {
     { label: 'GSTIN', key: 'gstIn', sortable: true },
     { label: 'Office Number', key: 'companyOfficeNumber', sortable: true },
     { label: 'Mobile Number', key: 'companyMobileNumber', sortable: true },
-    { label: 'Lorry Receipt No.', key: 'lorryNumber', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Owner Name', key: 'ownerName', sortable: true },
     { label: 'Consignor Name', key: 'consignorName', sortable: true },

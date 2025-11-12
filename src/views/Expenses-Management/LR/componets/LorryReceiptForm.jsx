@@ -20,7 +20,6 @@ const defaultFormData = {
   companyOfficeNumber: '',
   companyAddress: '',
   gstIn: '',
-  lorryNumber: '',
   date: '',
   vehicleId: '',
   vehicleName: '',
@@ -332,16 +331,6 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
           <h5 className="fw-semibold border-bottom pb-2 mb-3">Basic Details</h5>
           <div className="row g-3 mb-4">
             <div className="col-md-6">
-              <Form.Label>Lorry Number</Form.Label>
-              <Form.Control
-                type="number"
-                name="lorryNumber"
-                value={formData.lorryNumber}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="col-md-6">
               <Form.Label>
                 Date <span style={{ color: 'red' }}>*</span>
               </Form.Label>
@@ -355,7 +344,7 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
 
             <div className="col-md-4">
               <Form.Label>
-                Vehicle Name <span style={{ color: 'red' }}>*</span>
+                Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
               </Form.Label>
               <CreatableSelect
                 name="vehicleId"

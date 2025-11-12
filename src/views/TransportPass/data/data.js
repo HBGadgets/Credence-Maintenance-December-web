@@ -153,6 +153,7 @@ export const getCompanyNameApi = async () => {
         address: company.address || 'Unknown',
         gstNumber: company.gstNumber || 'Unknown',
         supervisor: company.supervisorId || 'Unknown',
+        digitalSignatureId: company.digitalSignatureId || null,
     }))
 }
 
@@ -166,7 +167,7 @@ export const postCompanyNameApi = async (companyData) => {
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
-                    // 'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'multipart/form-data',
 
                 },
             }
@@ -202,7 +203,7 @@ export const patchCompanyNameApi = async (id, data) => {
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
-                    // 'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'multipart/form-data',
 
                 },
             },
@@ -232,6 +233,26 @@ export const deleteCompanyNameApi = async (id) => {
 
         return console.log("error", data.message)
     } catch (error) {
+        throw error
+    }
+}
+
+
+// Show Digital signature Images of All Drivers Expenses
+export const getDigitalSignatureApi = async (digitalSignatureId) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/company/signatureimage/${digitalSignatureId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        console.log("This is Digital signature Image : ", response.data)
+        return response.data // contains base64Data and contentType
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
         throw error
     }
 }

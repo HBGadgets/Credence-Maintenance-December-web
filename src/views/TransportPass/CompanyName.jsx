@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react'
 import {
   deleteCompanyNameApi,
   getCompanyNameApi,
+  getDigitalSignatureApi,
   patchCompanyNameApi,
   postCompanyNameApi,
 } from './data/data'
@@ -17,8 +18,16 @@ import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../DriverExpert/data/drivers'
+import BillShow from '../components/BillModal/BillShow'
+import IconDropdown from '../Supervisor/IconDropdown'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import usePdfExporter from '../customhooks/usePdfExporter'
+import useExcelExporter from '../customhooks/useExcelExporter'
 
 const CompanyName = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -38,6 +47,11 @@ const CompanyName = () => {
   const [editingCompany, setEditingCompany] = useState(null)
 
   const queryClient = useQueryClient()
+
+  // Use state for modal img
+  const [pdfBase64, setPdfBase64] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
 
   // Fetch companies
   const { data: companyList, isFetching } = useQuery({
@@ -129,6 +143,12 @@ const CompanyName = () => {
 
   // Form fields
   const fields = [
+    {
+      name: 'signatureImage',
+      label: 'Digital Signature',
+      type: 'file',
+      accept: 'image/*',
+    },
     { name: 'companyName', label: 'Company Name', type: 'text', required: true },
     { name: 'email', label: 'Email', type: 'text', required: true },
     { name: 'mobileNumber', label: 'Mobile', type: 'text', required: true },
@@ -194,6 +214,97 @@ const CompanyName = () => {
     }
   }
 
+  // handler view
+
+  const handleViewButton = async (id) => {
+    try {
+      const selectedRow = filteredData.find((item) => item.id === id)
+
+      if (!selectedRow) {
+        toast.error('Data not found for this ID.')
+        return
+      }
+
+      if (!selectedRow.digitalSignatureId) {
+        toast.warn('No digital signature available for this entry.')
+        return
+      }
+
+      const response = await getDigitalSignatureApi(selectedRow.digitalSignatureId)
+
+      // ✅ Handle response safely
+      const { signatureImage, base64Data, contentType } = response || {}
+
+      // Some APIs return different field names — handle both
+      const rawBase64 = base64Data || signatureImage
+      const mimeType = contentType || 'image/jpeg' // default fallback
+
+      if (!rawBase64) {
+        toast.error('No signature image data found.')
+        return
+      }
+
+      // ✅ Prepend MIME type for correct display
+      const fileSrc = `data:${mimeType};base64,${rawBase64}`
+      console.log('Digital Signature:', fileSrc)
+
+      setPdfBase64(fileSrc)
+
+      // ✅ Set modal title dynamically
+      if (mimeType.startsWith('application/pdf')) {
+        setModalTitle('Digital Signature (PDF)')
+      } else if (mimeType.startsWith('image')) {
+        setModalTitle('Digital Signature (Image)')
+      } else {
+        setModalTitle('Digital Signature (File)')
+      }
+
+      setShowModal(true)
+    } catch (error) {
+      console.error('Failed to fetch digital signature:', error)
+      toast.error('Error fetching digital signature. Please try again.')
+    }
+  }
+
+  // Dropdown items for export
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'All Company List Report',
+          columns,
+          data: filteredData,
+          fileName: 'Company_List_Report',
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () => {
+        exportToExcel({
+          title: 'All Company List Report',
+          columns,
+          data: filteredData,
+          fileName: 'Company_List_Report',
+        })
+      },
+    },
+
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <>
       <ToastContainer />
@@ -253,6 +364,8 @@ const CompanyName = () => {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        viewButton={true}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination
@@ -264,6 +377,18 @@ const CompanyName = () => {
           setCurrentPage(1)
         }}
       />
+
+      {/* Modal Component */}
+      <BillShow
+        showModal={showModal}
+        setShowModal={setShowModal}
+        pdfBase64={pdfBase64}
+        modalTitle={modalTitle}
+      />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
