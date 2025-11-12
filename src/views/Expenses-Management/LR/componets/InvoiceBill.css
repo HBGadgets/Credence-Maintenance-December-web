@@ -1,265 +1,317 @@
+.invoice-wrapper {
+    padding: 10px;
+    background: #f5f5f5;
+}
 
- .header {
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
-     padding: 20px 0;
-     border-bottom: 1px solid #ddd;
- }
+.invoice {
+    width: 100%;
+    max-width: 794px;
+    margin: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.2;
+}
 
-  .header-left {
-     display: flex;
-     align-items: center;
- }
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
 
- 
- .company-logo-name {
-     display: flex;
-     align-items: center;
- }
+.invoice-header h1 {
+    font-size: 20px;
+    margin: 0;
+    color: #007BFF;
+}
 
- .company-logo {
-     max-width: 80px;
-     margin-right: 20px;
- }
+.header-left {
+    display: flex;
+    align-items: center;
+}
 
- .company-logo-name h1 {
-     margin: 0;
-     font-size: 24px;
-     font-weight: bold;
- }
+.company-logo-name {
+    display: flex;
+    align-items: center;
+}
 
- .company-logo-name p {
-     margin: 5px 0;
-     font-size: 14px;
-     color: #777;
- }
+.company-logo {
+    max-width: 60px;
+    margin-right: 15px;
+}
 
- .header-right {
-     text-align: right;
- }
+.company-logo-name h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+}
 
- .header-right p {
-     margin: 5px 0;
-     font-size: 14px;
- }
+.company-logo-name p {
+    margin: 3px 0;
+    font-size: 12px;
+    color: #777;
+}
 
- .header-right strong {
-     font-weight: bold;
- }
+.header-right {
+    text-align: right;
+}
 
- .invoice-wrapper {
-     padding: 10px;
-     background: #f5f5f5;
- }
+.header-right p {
+    margin: 3px 0;
+    font-size: 11px;
+}
 
- .invoice {
-     width: 100%;
-     margin: auto;
-     background: white;
-     border-radius: 8px;
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-     padding: 30px;
-     font-family: 'Segoe UI', sans-serif;
-     color: #333;
-     overflow: hidden;
- }
+.header-right strong {
+    font-weight: bold;
+}
 
- .invoice-header {
-     display: flex;
-     justify-content: space-between;
-     border-bottom: 2px solid #007BFF;
-     padding-bottom: 5px;
-     margin-bottom: 20px;
- }
+.section {
+    margin-bottom: 15px;
+}
 
- .invoice-header h1 {
-     font-size: 24px;
-     margin: 0;
-     color: #007BFF;
- }
+.section.compact {
+    margin-bottom: 12px;
+}
 
- .section {
-     margin-bottom: 25px;
- }
+.two-column {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
 
- .two-column {
-     display: flex;
-     justify-content: space-between;
-     gap: 20px;
- }
+.two-column.compact {
+    gap: 10px;
+}
 
- .two-column>div {
-     flex: 1;
- }
+.two-column>div {
+    flex: 1;
+}
 
- h3 {
-     font-size: 18px;
-     margin-bottom: 10px;
-     border-bottom: 1px solid #ddd;
-     padding-bottom: 5px;
- }
+h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+}
 
- .item-table {
-     width: 100%;
-     border-collapse: collapse;
-     margin-top: 10px;
- }
+.cardtitle {
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 11px;
+}
 
- .item-table th,
- .item-table td {
-     border: 1px solid #ccc;
-     padding: 8px 10px;
-     text-align: left;
- }
+.details-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 8px;
+}
 
- .item-table th {
-     background-color: #f0f0f0;
- }
+.details-row.compact {
+    margin-bottom: 5px;
+    gap: 10px;
+}
 
- ul {
-     margin-left: 20px;
-     list-style: disc;
- }
+.details-row p {
+    flex: 1;
+    margin: 0;
+    word-wrap: break-word;
+    font-size: 11px;
+    line-height: 1.3;
+}
 
- .signature-section {
-     display: flex;
-     justify-content: flex-end;
-     margin-top: 30px;
- }
+.item-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 11px;
+}
 
- .sign {
-     text-align: right;
- }
+.item-table.compact {
+    margin-top: 5px;
+}
 
- .label {
-     font-size: 14px;
-     margin-bottom: 10px;
- }
+.item-table th,
+.item-table td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    text-align: left;
+}
 
- .sign-line {
-     width: 200px;
-     height: 2px;
-     background: black;
-     margin-top: 5px;
- }
+.item-table th {
+    background-color: #f0f0f0;
+    font-size: 11px;
+}
 
- .invoice-footer {
-     text-align: center;
-     margin-top: 40px;
- }
+.invoice-page {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    padding: 8px;
+    margin-top: 15px;
+    border-top: 1px solid #ccc;
+    font-size: 11px;
+}
 
- .stamp {
-     font-size: 13px;
-     font-style: italic;
-     color: #666;
- }
+.invoice-page.compact {
+    margin-top: 12px;
+    padding: 5px;
+}
 
- .download-btn {
-     padding: 8px 16px;
-     background-color: #007BFF;
-     color: white;
-     border: none;
-     font-size: 14px;
-     border-radius: 4px;
-     cursor: pointer;
- }
+.invoice-page ul {
+    padding-left: 15px;
+    margin: 8px 0;
+}
 
- .download-btn:hover {
-     background-color: #0056b3;
- }
+.invoice-page ul.compact-terms {
+    margin: 5px 0;
+}
 
- .cardtitle {
-     padding: 15px;
-     background-color: #fff;
-     border-radius: 8px;
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
- }
+.invoice-page li {
+    margin-bottom: 3px;
+    font-size: 11px;
+    line-height: 1.3;
+}
 
- .details-row {
-     display: flex;
-     justify-content: space-between;
-     gap: 20px;
-     margin-bottom: 10px;
- }
+.signature-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 20px;
+    gap: 30px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
 
- .details-row p {
-     flex: 1;
-     margin: 0;
-     word-wrap: break-word;
- }
+.signature-section.compact {
+    margin-top: 15px;
+    gap: 20px;
+}
 
- .card h3 {
-     font-size: 18px;
-     margin-bottom: 10px;
-     border-bottom: 1px solid #ddd;
-     padding-bottom: 5px;
- }
+.signature-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 11px;
+}
 
- .card p {
-     margin-bottom: 8px;
-     font-size: 14px;
- }
+.signature-block strong {
+    margin-bottom: 5px;
+}
 
- .card p strong {
-     font-weight: bold;
- }
+.signature-image {
+    width: 120px;
+    height: auto;
+    margin-top: 3px;
+    border-bottom: 1px solid #aaa;
+    padding-bottom: 2px;
+}
 
- .card .card-header {
-     background-color: #f8f8f8;
-     padding: 12px;
-     border-radius: 6px;
-     margin-bottom: 15px;
- }
+.signature-line {
+    display: inline-block;
+    margin-top: 3px;
+    border-bottom: 1px solid #000;
+    width: 120px;
+}
 
- .two-column .card {
-     flex: 1;
-     min-width: 250px;
- }
+.signature-names {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    text-align: right;
+    font-size: 11px;
+    flex: 1;
+}
 
- .signature-section {
-     page-break-inside: avoid;
-     break-inside: avoid;
-     margin-top: 20px;
-     display: flex;
-     justify-content: space-between;
-     flex-wrap: nowrap;
- }
+.signature-names p {
+    margin: 0;
+    line-height: 1.5;
+}
 
- .signature-section .sign {
-     display: flex;
-     flex-direction: column;
-     gap: 10px;
-     font-size: 14px;
-     border-top: 1px solid #000;
-     padding-top: 10px;
- }
+.invoice-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
 
- #invoice {
-     width: 100%;
-     max-width: 794px;
-     margin: 0 auto;
- }
+.stamp {
+    font-size: 11px;
+    font-style: italic;
+    color: #666;
+    margin-bottom: 10px;
+}
 
- .invoice-page {
-     page-break-inside: avoid;
-     break-inside: avoid;
-     padding: 10px;
-     margin-top: 20px;
-     border-top: 1px solid #ccc;
-     font-size: 14px;
- }
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
 
- .invoice-page ul {
-     padding-left: 20px;
- }
+.download-btn,
+.print-btn {
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
 
- .signature-section p {
-     flex: 1;
-     margin-right: 20px;
-     white-space: nowrap;
- }
+.print-btn {
+    background-color: #28a745;
+}
 
- .no-print {
-     display: none;
- } 
+.download-btn:hover {
+    background-color: #0056b3;
+}
+
+.print-btn:hover {
+    background-color: #218838;
+}
+
+/* Print Styles */
+@media print {
+    .invoice-wrapper {
+        padding: 0;
+        background: white;
+    }
+
+    .invoice {
+        box-shadow: none;
+        padding: 15px;
+        margin: 0;
+        max-width: none;
+    }
+
+    .action-buttons {
+        display: none;
+    }
+
+    .invoice-footer {
+        margin-top: 15px;
+    }
+
+    .signature-image {
+        border: none;
+    }
+}
+
+/* Ensure single page layout */
+@media screen and (max-height: 900px) {
+    .invoice {
+        transform: scale(0.95);
+        transform-origin: top center;
+    }
+}

@@ -306,6 +306,8 @@ export const getLorryReciptApi = async () => {
         gstIn: lorryReciptList?.companyId?.gstNumber || "Unknown",
         companyOfficeNumber: lorryReciptList?.companyId?.mobileNumber || "Unknown",
         companyMobileNumber: lorryReciptList?.companyId?.officeNumber || "Unknown",
+        digitalSignatureId: lorryReciptList?.companyId?.digitalSignatureId || "Unknown",
+
         lorryNumber: lorryReciptList.lorryNumber || "Unknown",
         vehicleName: lorryReciptList.vehicleName || "Unknown",
         vehicleId: lorryReciptList.vehicleId || "Unknown",

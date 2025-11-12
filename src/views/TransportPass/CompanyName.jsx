@@ -232,7 +232,7 @@ const CompanyName = () => {
 
       const response = await getDigitalSignatureApi(selectedRow.digitalSignatureId)
 
-      // ✅ Handle response safely
+      //  Handle response safely
       const { signatureImage, base64Data, contentType } = response || {}
 
       // Some APIs return different field names — handle both
@@ -244,13 +244,13 @@ const CompanyName = () => {
         return
       }
 
-      // ✅ Prepend MIME type for correct display
+      // Prepend MIME type for correct display
       const fileSrc = `data:${mimeType};base64,${rawBase64}`
       console.log('Digital Signature:', fileSrc)
 
       setPdfBase64(fileSrc)
 
-      // ✅ Set modal title dynamically
+      //  Set modal title dynamically
       if (mimeType.startsWith('application/pdf')) {
         setModalTitle('Digital Signature (PDF)')
       } else if (mimeType.startsWith('image')) {
@@ -366,6 +366,7 @@ const CompanyName = () => {
         handleDeleteButton={handleDeleteButton}
         viewButton={true}
         handleViewButton={handleViewButton}
+        viewButtonLabel="Signature"
       />
 
       <SmartPagination

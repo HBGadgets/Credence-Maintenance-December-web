@@ -15,7 +15,7 @@ import { jwtDecode } from 'jwt-decode'
 import { TokenContext } from '../../../context/TokenContext'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
-import { getWorkerApi } from '../../TransportPass/data/data'
+import { getDigitalSignatureApi, getWorkerApi } from '../../TransportPass/data/data'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
@@ -167,11 +167,41 @@ const Lr = () => {
   }
 
   // Handle View Button
-  const handleViewButton = (id) => {
-    const selectedData = filteredData.find((item) => item.id === id)
-    if (selectedData) {
-      setSelectedInvoiceData(selectedData)
+  const handleViewButton = async (id) => {
+    const selectedRow = filteredData.find((item) => item.id === id)
+
+    if (!selectedRow) {
+      return toast.error('Data not found for this ID')
+    }
+
+    //  Check for digitalSignatureId before calling the API
+    if (!selectedRow.digitalSignatureId || selectedRow.digitalSignatureId === 'Unknown') {
+      console.log('No digitalSignatureId found for this entry:', selectedRow)
+      return toast.warn('No bill image available for this entry.')
+    }
+
+    try {
+      console.log('Fetching Digital Signature for ID:', selectedRow.digitalSignatureId)
+      const response = await getDigitalSignatureApi(selectedRow.digitalSignatureId)
+
+      // Assuming the API returns { signatureImage: "base64..." }
+      const base64Image = response?.signatureImage
+      if (!base64Image) {
+        toast.warn('No signature image found for this entry.')
+        return
+      }
+
+      // Combine invoice data + signature
+      const invoiceWithSignature = {
+        ...selectedRow,
+        digitalSignature: `data:image/jpeg;base64,${base64Image}`,
+      }
+
+      setSelectedInvoiceData(invoiceWithSignature)
       setShow(true)
+    } catch (error) {
+      console.error('Error fetching digital signature:', error)
+      toast.error('Failed to fetch digital signature.')
     }
   }
 

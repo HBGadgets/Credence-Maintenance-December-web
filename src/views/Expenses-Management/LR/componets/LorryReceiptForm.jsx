@@ -287,44 +287,6 @@ const LorryReceiptForm = ({ show, handleClose, handleSubmit, initialData = {}, m
                 isClearable
               />
             </div>
-
-            {/* <div className="col-md-4">
-              <Form.Label>Company Address</Form.Label>
-              <Form.Control
-                name="companyAddress"
-                value={formData.companyAddress}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>GST IN</Form.Label>
-              <Form.Control name="gstIn" value={formData.gstIn} onChange={handleChange} />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Company Email-ID</Form.Label>
-              <Form.Control
-                type="email"
-                name="companyEmail"
-                value={formData.companyEmail}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Company Office Number</Form.Label>
-              <Form.Control
-                name="companyOfficeNumber"
-                value={formData.companyOfficeNumber}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Company Mobile Number</Form.Label>
-              <Form.Control
-                name="companyMobileNumber"
-                value={formData.companyMobileNumber}
-                onChange={handleChange}
-              />
-            </div> */}
           </div>
 
           {/* Basic Details */}
