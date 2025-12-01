@@ -2,10 +2,11 @@ import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 import { LayoutDashboard, LucideClipboardList } from 'lucide-react'
 import { LuMessageSquareQuote } from "react-icons/lu";
-import { PiUserListBold } from "react-icons/pi";
+import { PiUserListBold, PiWarehouseDuotone } from "react-icons/pi";
 import { HiOutlineTicket } from "react-icons/hi2";
 import { IoReceiptOutline } from "react-icons/io5";
 import { LuChartSpline } from "react-icons/lu";
+import { TbBuildingWarehouse } from "react-icons/tb";
 
 const _nav = [
   {
@@ -137,6 +138,31 @@ const _nav = [
       },
     ],
   },
+
+  // Warehouse
+  {
+    component: CNavGroup,
+    name: 'Warehouse Section',
+    icon: (
+      <TbBuildingWarehouse
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Warehouses',
+        to: '/Godown',
+      },
+      {
+        component: CNavItem,
+        name: 'Inventory',
+        to: '/ProductList',
+      },
+    ],
+  },
+
 
   // ROAD SIDE ASSISTANCE
   // {

@@ -98,9 +98,11 @@ function SmartPagination({
             padding: '0.25rem 1.8rem', // Adjust padding
           }}
         >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
+          <option value={10}>20</option>
+          <option value={20}>50</option>
+          <option value={50}>100</option>
+          <option value={50}>500</option>
+          <option value={50}>2000</option>
           <option value={-1}>All</option>
         </select>
         <label className="ms-2 mb-0">entries per page</label>
