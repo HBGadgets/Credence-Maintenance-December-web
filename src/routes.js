@@ -114,7 +114,7 @@ const DailyTrips = React.lazy(() => import('./views/DailyTrips/DailyTrips.jsx'))
 
 // Warehouse Section
 const Godown = React.lazy(() => import('./views/Warehouse Section/Godown/Godown.jsx'))
-const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/ProductList.jsx'))
+const ProductList = React.lazy(() => import('./views/Warehouse Section/ProductList/ProductList.jsx'))
 
 const routes = [
   // Dashboard
@@ -203,7 +203,7 @@ const routes = [
 
   // Warehouse section
   { path: '/Godown', name: 'Godown', element: Godown },
-  { path: '/ProductList', name: 'Inventory', element: Inventory },
+  { path: '/ProductList', name: 'Product List', element: ProductList },
 
 ]
 

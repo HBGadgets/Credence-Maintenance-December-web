@@ -157,7 +157,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Inventory',
+        name: 'Product List',
         to: '/ProductList',
       },
     ],

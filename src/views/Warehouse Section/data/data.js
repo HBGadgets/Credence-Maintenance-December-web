@@ -90,7 +90,7 @@ export const deleteWarehouseApi = async (id) => {
 
 // ----------------------------------------------------------------------------------------------------
 
-// inventory section 
+// Product list section 
 
 
 // Get Warehouse Product List (with search + pagination)

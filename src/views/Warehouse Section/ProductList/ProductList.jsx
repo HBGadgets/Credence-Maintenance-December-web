@@ -186,7 +186,7 @@ const ProductList = () => {
       />
 
       <Table
-        title="Inventory"
+        title="Product List"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
