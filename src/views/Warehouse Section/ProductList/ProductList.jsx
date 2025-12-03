@@ -81,7 +81,6 @@ const ProductList = () => {
   const columns = [
     { label: 'Product Name', key: 'productName', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
-    { label: 'Weight Kg', key: 'weight', sortable: true },
   ]
 
   // Modal form fields
@@ -96,12 +95,6 @@ const ProductList = () => {
       name: 'category',
       label: 'Category',
       type: 'text',
-      required: true,
-    },
-    {
-      name: 'unit',
-      label: 'Weight (KG)',
-      type: 'number',
       required: true,
     },
   ]

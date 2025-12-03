@@ -113,14 +113,15 @@ export const getInventoryApi = async ({ queryKey }) => {
 
     return {
         data: data.data.map((item) => ({
+            _id: item._id,
             id: item._id,
             productName: item.name || 'Unknown',
             category: item.category || 'Unknown',
-            weight: item.unit || 0, // 👈 FIXED: consistent with table key
         })),
         total: data.total,
         totalPages: data.totalPages,
         page: data.page,
+        hasMore: data.page < data.totalPages,
     };
 };
 
@@ -178,3 +179,134 @@ export const deleteInventoryApi = async (id) => {
 };
 
 
+// ----------------------------------------------------------------------------------------------
+
+
+//  inventory section
+
+// get api for warehouse name droplist
+
+export const getWarehouseListApi = async ({ search, page, limit }) => {
+    if (!TOKEN) throw new Error("Authentication token not found");
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/warehouse/dropdown/list`,
+        {
+            params: {
+                search: search || "",
+                page,
+                limit,
+            },
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    return {
+        data: data.data.map((item) => ({
+            _id: item._id,
+            id: item._id,
+            wareHouseName: item.wareHouseName || "Unknown",
+        })),
+        total: data.total,
+        totalPages: data.totalPages,
+        page: data.page,
+        hasMore: data.page < data.totalPages,
+    };
+};
+
+
+//  get api for inventory and warehouse details
+
+export const getInventoryProductListApi = async ({ queryKey }) => {
+
+    const [_key, { search, page, limit }] = queryKey;
+
+
+    if (!TOKEN) throw new Error("Authentication token not found");
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/warehouseproduct/get`,
+        {
+            params: {
+                search: search || "",
+                page,
+                limit,
+            },
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    return {
+        data: data.data.flatMap(item =>
+            item.products.map(p => ({
+                _id: item._id,
+                wareHouseName: item.warehouseId?.wareHouseName || "Unknown",
+                location: item.warehouseId?.location || "",
+                capacityKg: item.warehouseId?.capacityKg || "",
+                totalQuantityKg: item.totalQuantityKg || " ",
+                // product section
+                productId: p.productId?._id,
+                productName: p.productId?.name,
+                quantityKg: p.quantityKg,
+                bagSizeKg: p.bagSizeKg,
+                totalBags: p.totalBags,
+            }))
+        ),
+
+        total: data.totalItems,
+        totalPages: data.totalPages,
+        page: data.page,
+    };
+};
+
+
+// POST Warehouse and product list
+export const postInvenotryProductListApi = async (create) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/warehouseproduct/add`,
+            create,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to create Inventory');
+    }
+};
+
+// PATCH Warehouse and productlist
+export const patchInventoryProductListApi = async (id, data) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/warehouseproduct/update/${id}`,
+            data,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Update failed');
+    }
+};
+
+
+// DELETE Warehouse
+export const deleteInventoryProductListApi = async (id) => {
+    try {
+        const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/warehouseproduct/delete/${id}`,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Delete failed');
+    }
+};
