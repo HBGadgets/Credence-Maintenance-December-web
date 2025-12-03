@@ -145,36 +145,61 @@ const InventoryList = () => {
 
   // Handle edit
   const handleEditButton = (id) => {
-    const record = filteredData.find((item) => item.id === id)
-    if (record) {
-      setEditingData(record)
-      setEditMode(true)
+    // First, check if filteredData has the item
+    let record = filteredData.find((item) => item.id === id)
 
-      // Find warehouse by name from your warehouse list
-      if (getWarehouseList?.data && record.wareHouseName) {
-        const warehouse = getWarehouseList.data.find(
-          (w) => w.wareHouseName === record.wareHouseName,
-        )
-        setSelectedWarehouseId(warehouse?.id || null)
-      } else {
-        setSelectedWarehouseId(null)
-      }
-
-      // Set product (only one for edit mode)
-      setProducts([
-        {
-          productId: record.productId || '',
-          quantityKg: record.quantityKg || '',
-          bagSizeKg: record.bagSizeKg || '',
-        },
-      ])
-
-      setShowModalFrom(true)
+    // If not found in filteredData, try to find it in the original API response
+    if (!record && getInventoryProductList?.data) {
+      record = getInventoryProductList.data.find((item) => item.id === id)
     }
+
+    // If still not found, try by different property names
+    if (!record && getInventoryProductList?.data) {
+      record = getInventoryProductList.data.find(
+        (item) => item._id === id || item.warehouseProductId === id || item.inventoryId === id,
+      )
+    }
+
+    if (!record) {
+      toast.error('Record not found!')
+      return
+    }
+
+    // Use the actual ID from the record (not the parameter if it might be wrong)
+    const actualId = record.id || record._id || record.warehouseProductId || record.inventoryId
+
+    setEditingData({ ...record, actualId })
+    setEditMode(true)
+
+    // Find warehouse by name from your warehouse list
+    if (getWarehouseList?.data && record.wareHouseName) {
+      const warehouse = getWarehouseList.data.find((w) => w.wareHouseName === record.wareHouseName)
+      setSelectedWarehouseId(warehouse?.id || null)
+    } else {
+      setSelectedWarehouseId(null)
+    }
+
+    // Set product (only one for edit mode)
+    setProducts([
+      {
+        productId: record.productId || '',
+        quantityKg: record.quantityKg || '',
+        bagSizeKg: record.bagSizeKg || '',
+      },
+    ])
+
+    setShowModalFrom(true)
   }
 
   // Handle Delete
   const handleDeleteButton = (id) => {
+    console.log('Delete ID received:', id) // Debug log
+
+    if (!id) {
+      toast.error('Cannot delete: ID is undefined')
+      return
+    }
+
     Swal.fire({
       title: 'Are you sure?',
       text: 'You will not be able to recover this data!',
@@ -229,8 +254,16 @@ const InventoryList = () => {
     }
 
     if (editMode && editingData) {
+      // Use the actualId from editingData
+      const idToUpdate = editingData.actualId || editingData.id || editingData._id
+
+      if (!idToUpdate) {
+        toast.error('Cannot update: Record ID not found')
+        return
+      }
+
       patchInventoryProductList({
-        id: editingData.id,
+        id: idToUpdate,
         formData: payload,
       })
     } else {

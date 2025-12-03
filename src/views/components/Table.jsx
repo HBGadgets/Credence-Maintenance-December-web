@@ -241,7 +241,9 @@ function Table({
                             {column.key === 'password' ? (
                               <div className="d-flex align-items-center justify-content-center gap-2">
                                 <span>
-                                  {visiblePasswordRowId === row.id ? row.password : '••••••••'}
+                                  {visiblePasswordRowId === row.id || row._id
+                                    ? row.password
+                                    : '••••••••'}
                                 </span>
                                 <button
                                   onClick={() =>
@@ -251,12 +253,12 @@ function Table({
                                   }
                                   className="btn btn-sm btn-link p-0"
                                   title={
-                                    visiblePasswordRowId === row.id
+                                    visiblePasswordRowId === row.id || row._id
                                       ? 'Show password'
                                       : 'Hide password'
                                   }
                                 >
-                                  {visiblePasswordRowId === row.id ? (
+                                  {visiblePasswordRowId === row.id || row._id ? (
                                     <Eye size={18} />
                                   ) : (
                                     <EyeOff size={18} />
@@ -276,7 +278,7 @@ function Table({
                             {editButton && (
                               <button
                                 className="action-button"
-                                onClick={() => handleEditButton(row.id)}
+                                onClick={() => handleEditButton(row.id || row._id)}
                                 aria-label="Edit"
                               >
                                 <Pencil color="#2D336B" size={18} />
@@ -285,7 +287,7 @@ function Table({
                             {deleteButton && (
                               <button
                                 className="action-button"
-                                onClick={() => handleDeleteButton(row.id)}
+                                onClick={() => handleDeleteButton(row.id || row._id)}
                                 aria-label="Delete"
                               >
                                 <Trash2 color="#2D336B" size={18} />
@@ -295,7 +297,7 @@ function Table({
                             {reportButton && (
                               <button
                                 className="action-button"
-                                onClick={() => handleReportButton(row.id)}
+                                onClick={() => handleReportButton(row.id || row._id)}
                                 aria-label="Report"
                               >
                                 <FileText color="#2D336B" size={18} />
@@ -306,21 +308,23 @@ function Table({
                               <button
                                 className="action-view-button"
                                 onClick={async () => {
-                                  setViewLoadingId(row.id)
-                                  await handleViewButton(row.id)
+                                  setViewLoadingId(row.id || row._id)
+                                  await handleViewButton(row.id || row._id)
                                   setViewLoadingId(null)
                                 }}
-                                disabled={viewLoadingId === row.id}
+                                disabled={viewLoadingId === row.id || row._id}
                                 style={{
                                   backgroundColor: viewButtonColor,
                                   color: 'white',
-                                  opacity: viewLoadingId === row.id ? 0.6 : 1,
+                                  opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
                                   border: 'none',
                                 }}
                               >
                                 {viewButtonIcon}
                                 <span>
-                                  {viewLoadingId === row.id ? 'Loading...' : viewButtonLabel}
+                                  {viewLoadingId === row.id || row._id
+                                    ? 'Loading...'
+                                    : viewButtonLabel}
                                 </span>
                               </button>
                             )}
