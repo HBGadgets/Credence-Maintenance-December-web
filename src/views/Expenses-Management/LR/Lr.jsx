@@ -246,7 +246,6 @@ const Lr = () => {
 
     // Redirect to Credence
     window.history.replaceState(null, '', '/')
-    // window.location.href = 'http://localhost:3000'
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
   }
 

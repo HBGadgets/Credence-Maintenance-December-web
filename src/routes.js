@@ -115,6 +115,7 @@ const DailyTrips = React.lazy(() => import('./views/DailyTrips/DailyTrips.jsx'))
 const Godown = React.lazy(() => import('./views/Warehouse Section/Godown/Godown.jsx'))
 const ProductList = React.lazy(() => import('./views/Warehouse Section/ProductList/ProductList.jsx'))
 const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/InventoryList.jsx'))
+const GodownLR = React.lazy(() => import('./views/Warehouse Section/GodownLR/GodownLr.jsx'))
 
 
 // routes
@@ -207,6 +208,7 @@ const routes = [
   { path: '/Godown', name: 'Godown', element: Godown },
   { path: '/ProductList', name: 'Product List', element: ProductList },
   { path: '/InventoryList', name: 'Inventory List', element: Inventory },
+  { path: '/GodownLR', name: 'Godown TP', element: GodownLR }
 
 ]
 

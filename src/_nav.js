@@ -165,6 +165,11 @@ const _nav = [
         name: 'Inventory',
         to: '/InventoryList',
       },
+      {
+        component: CNavItem,
+        name: 'Godown TP',
+        to: '/GodownLr',
+      },
     ],
   },
 

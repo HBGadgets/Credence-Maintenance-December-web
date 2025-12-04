@@ -1,4 +1,5 @@
 import axios from "axios";
+import { formatDateToDDMMYYYY } from "../../customhooks/useFormattedDate";
 
 const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
@@ -310,3 +311,177 @@ export const deleteInventoryProductListApi = async (id) => {
         throw new Error(error.response?.data?.message || 'Delete failed');
     }
 };
+
+// --------------------------------------------------------------------------------------------------
+
+// Godown LR tp pass
+
+export const getGodownTPApi = async ({ queryKey }) => {
+    const [_key, { search, page, limit }] = queryKey;
+
+    if (!TOKEN) throw new Error('Authentication token not found');
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/get`,
+        {
+            params: {
+                search: search || "",
+                page,
+                limit,
+            },
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    );
+
+    console.log("All Lorry Receipts Data: ", data);
+
+    // return final mapped structure
+    return {
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+
+        receipts: data.receipts.map((item) => ({
+            id: item._id,
+            date: formatDateToDDMMYYYY(item.date),
+            originalDate: item.date,
+            ownerName: item.ownerName,
+            consignorName: item.consignorName,
+            consignorAddress: item.consignorAddress,
+            consigneeName: item.consigneeName,
+            consigneeAddress: item.consigneeAddress,
+            customerName: item.customerName,
+            customerAddress: item.customerAddress,
+            startLocation: item.startLocation,
+            endLocation: item.endLocation,
+
+            vehicleId: item.vehicleId,
+            vehicleName: item.vehicleName,
+
+            workerId: item.workerId?._id || null,
+            workerName: item.workerId?.name || "",
+
+            driverId: item.driverId,
+            driverName: item.driverName,
+            supervisorId: item.supervisorId,
+
+            products: item.products?.map((p) => ({
+                warehouseId: p.warehouseId,
+                warehouseName: p.warehouseName,
+                productId: p.productId,
+                productName: p.productName,
+                quantityKg: p.quantityKg,
+                bags: p.bags,
+                itemUnit: p.itemUnit,
+                itemWeight: p.itemWeight,
+                itemCost: p.itemCost,
+                id: p._id,
+            })) || [],
+
+            customerRate: item.customerRate,
+            totalAmount: item.totalAmount,
+            transporterRate: item.transporterRate,
+            totalTransporterAmount: item.totalTransporterAmount,
+            transporterRateOn: item.transporterRateOn,
+            customerRateOn: item.customerRateOn,
+            customerFreight: item.customerFreight,
+            transporterFreight: item.transporterFreight,
+            status: item.status,
+
+        })),
+    };
+};
+
+// post 
+export const postGodownTPApi = async (create) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/create`,
+            create,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        // If server returns 500 internal error
+        if (error.response?.status === 500) {
+            throw new Error("Server Error (500): Please try again later.");
+        }
+
+        // Other API errors
+        throw new Error(error.response?.data?.message || "Failed to create Inventory");
+    }
+};
+
+
+// PATCH Warehouse and productlist
+export const patchGodownTPApi = async (id, data) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update/${id}`,
+            data,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Update failed');
+    }
+};
+
+// Status update 
+
+export const patchGodownTPStatusApi = async (id, data) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update-status/${id}`,
+            data,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Update failed');
+    }
+};
+
+
+// DELETE Warehouse
+export const deleteGodownTPApi = async (id) => {
+    try {
+        const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/softdelete/${id}`,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Delete failed');
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
