@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   deleteWarehouseApi,
   getWarehouseApi,
@@ -13,10 +13,17 @@ import AddButton from '../../components/AddButton'
 import ReusableModal from '../../components/ReusableModal'
 import { toast, ToastContainer } from 'react-toastify'
 import Swal from 'sweetalert2'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../../Supervisor/IconDropdown'
 
 const Godown = () => {
   const queryClient = useQueryClient()
-
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -108,6 +115,51 @@ const Godown = () => {
       required: true,
     },
   ]
+
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'All Godown Report',
+            columns,
+            data: filteredData,
+            fileName: 'Godown_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Godown Report',
+            columns,
+            data: filteredData,
+            fileName: 'Godown_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
 
   // Submit form (Add + Edit)
   const handleFormSubmit = (formValues) => {
@@ -207,6 +259,9 @@ const Godown = () => {
           setCurrentPage(1)
         }}
       />
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </div>
   )
 }

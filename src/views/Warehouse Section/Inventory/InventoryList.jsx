@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   deleteInventoryProductListApi,
   getInventoryApi,
@@ -15,10 +15,17 @@ import SearchInput from '../../components/SearchInput'
 import { ToastContainer, toast } from 'react-toastify'
 import Swal from 'sweetalert2'
 import InventoryModal from './component/InventoryModal'
+import IconDropdown from '../../Supervisor/IconDropdown'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
 
 const InventoryList = () => {
   const queryClient = useQueryClient()
-
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -290,6 +297,50 @@ const InventoryList = () => {
     setEditingData(null)
   }
 
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'All Product List Report',
+            columns,
+            data: filteredData,
+            fileName: 'Product_List_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Product List Report',
+            columns,
+            data: filteredData,
+            fileName: 'Product_List_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
       <ToastContainer />
@@ -351,6 +402,10 @@ const InventoryList = () => {
           setCurrentPage(1)
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

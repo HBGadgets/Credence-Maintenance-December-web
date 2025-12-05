@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import {
@@ -13,10 +13,17 @@ import { ToastContainer, toast } from 'react-toastify'
 import SearchInput from '../../components/SearchInput'
 import AddButton from '../../components/AddButton'
 import ReusableModal from '../../components/ReusableModal'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../../Supervisor/IconDropdown'
 
 const ProductList = () => {
   const queryClient = useQueryClient()
-
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -146,6 +153,51 @@ const ProductList = () => {
     }
   }
 
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'All Transport Pass Report',
+            columns,
+            data: filteredData,
+            fileName: 'Transport_Pass_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Transport Pass Report',
+            columns,
+            data: filteredData,
+            fileName: 'Transport_Pass_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
       <ToastContainer />
@@ -202,6 +254,10 @@ const ProductList = () => {
           setCurrentPage(1)
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }

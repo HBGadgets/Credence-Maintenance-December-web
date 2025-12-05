@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useMemo } from 'react'
 import {
   deleteGodownTPApi,
   getGodownTPApi,
@@ -12,7 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import TableArray from '../../components/TableArray'
 import AddButton from '../../components/AddButton'
 import GodownLRFrom from './component/GodownLRFrom'
-import { toast } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import Swal from 'sweetalert2'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
@@ -20,8 +20,16 @@ import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import { getWorkerApi } from '../../TransportPass/data/data'
+import { FaArrowUp, FaPrint } from 'react-icons/fa'
+import { HiOutlineLogout } from 'react-icons/hi'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../../Supervisor/IconDropdown'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
 
 const GodownLr = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -367,8 +375,55 @@ const GodownLr = () => {
     },
   ]
 
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      // {
+      //   icon: FaRegFilePdf,
+      //   label: 'Download PDF',
+      //   onClick: () =>
+      //     exportToPDF({
+      //       title: 'All Transport Pass Report',
+      //       columns,
+      //       data: filteredData,
+      //       fileName: 'Transport_Pass_Report',
+      //     }),
+      // },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Godown Transport Pass Report',
+            columns,
+            data: filteredData,
+            fileName: 'Godown_Transport_Pass_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <>
+      <ToastContainer />
+
       <div className="mb-3 d-flex justify-content-between align-items-center gap-2 w-100">
         <div className="d-flex align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
@@ -474,6 +529,10 @@ const GodownLr = () => {
           setCurrentPage(1)
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </>
   )
 }
