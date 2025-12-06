@@ -39,6 +39,8 @@ const ProductList = () => {
     queryKey: ['InvetoryList', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
     queryFn: getInventoryApi,
     keepPreviousData: true,
+    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
   })
 
   // ========== POST ==========

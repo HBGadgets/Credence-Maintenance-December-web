@@ -48,6 +48,8 @@ const InventoryList = () => {
     ],
     queryFn: getInventoryProductListApi,
     keepPreviousData: true,
+    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
   })
 
   // Fetch Product list
