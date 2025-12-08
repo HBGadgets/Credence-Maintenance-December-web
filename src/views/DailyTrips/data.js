@@ -10,8 +10,8 @@ export const getAllDailyReadingApi = async ({
     startDate = "",
     endDate = "",
     status = "",
-    page = 1,
-    limit = 10,
+    page = "",
+    limit = "",
 }) => {
     try {
         if (!TOKEN) throw new Error("Authentication token not found");

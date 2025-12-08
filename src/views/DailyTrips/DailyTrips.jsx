@@ -40,7 +40,6 @@ const DailyTrips = () => {
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
-  const [filteredTrips, setFilteredTrips] = useState([])
 
   // superadmin role
   const token = useContext(TokenContext)
@@ -81,12 +80,14 @@ const DailyTrips = () => {
       searchQuery,
       dateRange.startDate,
       dateRange.endDate,
+      selectedName?.value,
     ],
     queryFn: () => {
       const payload = {
         search: searchQuery,
         page: currentPage,
-        limit: itemsPerPage,
+        // Send limit as is - API should handle -1 or use a large number
+        limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
       }
 
       // Only add date filters if they have values
@@ -97,7 +98,12 @@ const DailyTrips = () => {
         payload.endDate = formatDateForAPI(dateRange.endDate, true)
       }
 
-      console.log('Sending payload to API:', payload)
+      // Add supervisor filter if selected
+      if (selectedName?.value) {
+        payload.supervisorId = selectedName.value
+      }
+
+      console.log('📤 Sending payload to API:', payload)
 
       return getAllDailyReadingApi(payload)
     },
@@ -108,6 +114,9 @@ const DailyTrips = () => {
   const dailyTrips = apiResponse.data || []
   const totalItems = apiResponse.total || 0
   const totalPages = apiResponse.totalPages || 1
+
+  // Calculate actual data to display
+  const displayData = dailyTrips
 
   // Fetch driver list
   const { data: drivers = [] } = useQuery({
@@ -123,17 +132,10 @@ const DailyTrips = () => {
     staleTime: 1000 * 60 * 10,
   })
 
-  // filtered supervisor data
+  // Reset to page 1 when filters change
   useEffect(() => {
-    let filtered = dailyTrips
-
-    // Filter by supervisor if selected
-    if (selectedName?.value) {
-      filtered = filtered.filter((dailyTrip) => dailyTrip.supervisorId === selectedName.value)
-    }
-
-    setFilteredTrips(filtered)
-  }, [selectedName, dailyTrips])
+    setCurrentPage(1)
+  }, [selectedName, searchQuery, dateRange])
 
   // Handle Date Range Change
   const handleDateRangeChange = (start, end) => {
@@ -146,13 +148,13 @@ const DailyTrips = () => {
 
     console.log('📅 Normalized date range:', normalizedRange)
     setDateRange(normalizedRange)
-    setCurrentPage(1)
+    // Note: currentPage is reset in useEffect above
   }
 
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
-    setCurrentPage(1)
+    // Note: currentPage is reset in useEffect above
   }
 
   // Handle Add/Edit Submit
@@ -181,8 +183,9 @@ const DailyTrips = () => {
     }
   }
 
-  // Handle Edit Button
+  // Handle Edit Button - FIXED to handle pagination
   const handleEditButton = (id) => {
+    // We need to find the record in the current page's data
     const record = dailyTrips.find((item) => item.id === id)
     if (record) {
       const driver = drivers.find((d) => d.name === record.driverName)
@@ -193,6 +196,8 @@ const DailyTrips = () => {
         odometerEnd: record.odometerEnd || '',
       })
       setShowModalFrom(true)
+    } else {
+      toast.error('Record not found on current page. Please search for it.')
     }
   }
 
@@ -276,9 +281,9 @@ const DailyTrips = () => {
       icon: FaRegFilePdf,
       label: 'Download PDF',
       onClick: () => {
-        const cleanedData = filteredTrips.map(({ status, ...rest }) => ({
+        const cleanedData = displayData.map(({ status, ...rest }) => ({
           ...rest,
-          status: typeof status === 'string' ? status : status?.props?.children || '', // Extract text if styled span
+          status: typeof status === 'string' ? status : status?.props?.children || '',
         }))
 
         exportToPDF({
@@ -293,7 +298,7 @@ const DailyTrips = () => {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
       onClick: () => {
-        const cleanedData = filteredTrips.map(({ status, ...rest }) => ({
+        const cleanedData = displayData.map(({ status, ...rest }) => ({
           ...rest,
           status: typeof status === 'string' ? status : status?.props?.children || '',
         }))
@@ -378,24 +383,36 @@ const DailyTrips = () => {
       <Table
         title="All Drivers Daily Logs"
         columns={columns}
-        // filteredData={dailyTrips}
-        filteredData={filteredTrips}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
+        filteredData={displayData}
+        setFilteredData={() => {}} // Required prop for Table component
+        currentPage={1} // Always show page 1 since data is already paginated from API
+        itemsPerPage={displayData.length} // Show all items in current page
         isFetching={isFetching}
         editButton={true}
         handleEditButton={handleEditButton}
       />
 
       <SmartPagination
-        totalPages={totalPages}
+        totalPages={itemsPerPage === -1 ? 1 : totalPages}
         currentPage={currentPage}
-        onPageChange={setCurrentPage}
+        onPageChange={(page) => {
+          // When showing all, don't allow page changes
+          if (itemsPerPage === -1) {
+            // If trying to change page while showing all, reset to normal pagination
+            setItemsPerPage(10)
+            setCurrentPage(page)
+          } else {
+            setCurrentPage(page)
+          }
+        }}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? totalItems : value)
+          console.log('Changing items per page to:', value)
+          // Set itemsPerPage (could be -1 for "All")
+          setItemsPerPage(value)
+          // Always reset to page 1 when changing items per page
           setCurrentPage(1)
         }}
-        totalItems={totalItems}
+        totalItems={itemsPerPage === -1 ? displayData.length : totalItems}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
