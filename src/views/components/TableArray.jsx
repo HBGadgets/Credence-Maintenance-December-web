@@ -12,7 +12,7 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-  CFormCheck, // Added for checkbox
+  CFormCheck,
 } from '@coreui/react'
 import {
   Eye,
@@ -22,10 +22,9 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
-  CheckSquare,
   Check,
   Square,
-} from 'lucide-react' // Added CheckSquare icon
+} from 'lucide-react'
 
 const skeletonStyles = `
   @keyframes pulse {
@@ -108,11 +107,11 @@ const skeletonStyles = `
     background: #f1f1f1;
   }
   .table-responsive {
-    scrollbar-width: thin; /* Firefox */
+    scrollbar-width: thin;
     scrollbar-color: #c1c1c1 #f1f1f1;
   }
 
-  /* Table header alignment fix (only for header, not data rows) */
+  /* Table header alignment */
   .table thead th,
   .ctable thead th,
   .ctable-header-cell {
@@ -122,6 +121,15 @@ const skeletonStyles = `
     padding: 10px 8px !important;
     line-height: 1.2;
     height: 45px;
+  }
+
+  /* Table data cell alignment */
+  .table tbody td,
+  .ctable tbody td,
+  .ctable-data-cell {
+    vertical-align: middle !important;
+    text-align: center !important;
+    padding: 12px 8px !important;
   }
 
   /* Expand/Collapse row styles */
@@ -134,15 +142,57 @@ const skeletonStyles = `
     transition: all 0.3s ease;
   }
 
-  .products-table {
-    background-color: white;
+  /* Products section styling */
+  .products-section {
+    padding: 16px !important;
+    margin: 8px 0 !important;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
   }
 
-  .products-table th {
+  .products-section h6 {
+    margin-bottom: 12px !important;
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    padding-left: 8px;
+  }
+
+  .products-table-container {
+    background-color: white;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+  }
+
+  .products-table {
+    margin: 0 !important;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .products-table thead th {
     background-color: #f1f3f4 !important;
     font-weight: 600;
+    font-size: 13px;
+    padding: 10px 12px !important;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+  }
+
+  .products-table tbody td {
+    padding: 8px 12px !important;
+    font-size: 13px;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .products-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .products-table tbody tr:hover {
+    background-color: #f8f9fa;
   }
 
   .expand-icon {
@@ -158,6 +208,35 @@ const skeletonStyles = `
 
   .expand-icon:hover {
     background-color: #dee2e6;
+  }
+
+  /* Column widths for products table */
+  .product-name-col {
+    min-width: 150px;
+    text-align: left !important;
+  }
+
+  .warehouse-col {
+    min-width: 120px;
+    text-align: left !important;
+  }
+
+  .quantity-col,
+  .bags-col,
+  .weight-col,
+  .cost-col {
+    min-width: 100px;
+  }
+
+  /* Empty state styling */
+  .empty-products {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background-color: white;
+    border-radius: 6px;
+    border: 1px dashed #dee2e6;
   }
 `
 
@@ -180,19 +259,20 @@ function TableArray({
   isFetching,
   reportButton,
   handleReportButton,
-  checkButton = false, // Added prop for checkbox button
-  handleCheckboxButton, // Added prop for checkbox handler
-  getCheckboxChecked, // Add this line
+  checkButton = false,
+  handleCheckboxButton,
+  getCheckboxChecked,
   action = 'Action',
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
   const [expandedRows, setExpandedRows] = useState(new Set())
-  const [checkedRows, setCheckedRows] = useState(new Set()) // State for checked rows
+  const [checkedRows, setCheckedRows] = useState(new Set())
 
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage)
+  // FIX: Use filteredData directly since it already contains the current page data
+  // Remove client-side pagination logic
+  const currentData = filteredData
 
   const toggleRowExpansion = (rowId) => {
     const newExpandedRows = new Set(expandedRows)
@@ -215,7 +295,6 @@ function TableArray({
     }
     setCheckedRows(newCheckedRows)
 
-    // Call the external handler if provided
     if (handleCheckboxButton) {
       handleCheckboxButton(rowId, newCheckedRows.has(rowId))
     }
@@ -255,36 +334,50 @@ function TableArray({
 
   const renderProductsTable = (products) => {
     if (!products || products.length === 0) {
-      return <div className="p-3 text-center text-muted">No products found</div>
+      return <div className="empty-products">No products found</div>
     }
 
     return (
-      <div className="p-3">
-        <h6 className="mb-3">Products ({products.length})</h6>
-        <CTable striped hover responsive className="products-table">
-          <CTableHead>
-            <CTableRow>
-              <CTableHeaderCell>Product Name</CTableHeaderCell>
-              <CTableHeaderCell>Warehouse</CTableHeaderCell>
-              <CTableHeaderCell>Quantity (Kg)</CTableHeaderCell>
-              <CTableHeaderCell>Bags</CTableHeaderCell>
-              <CTableHeaderCell>Item Weight</CTableHeaderCell>
-              <CTableHeaderCell>Item Cost</CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {products.map((product, index) => (
-              <CTableRow key={product._id || index}>
-                <CTableDataCell>{product.productName}</CTableDataCell>
-                <CTableDataCell>{product.warehouseName}</CTableDataCell>
-                <CTableDataCell>{product.quantityKg}</CTableDataCell>
-                <CTableDataCell>{product.bags}</CTableDataCell>
-                <CTableDataCell>{product.itemWeight}</CTableDataCell>
-                <CTableDataCell>{product.itemCost}</CTableDataCell>
+      <div className="products-section">
+        <h6>Products ({products.length})</h6>
+        <div className="products-table-container">
+          <CTable striped hover responsive className="products-table">
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell className="product-name-col">Product Name</CTableHeaderCell>
+                <CTableHeaderCell className="warehouse-col">Warehouse</CTableHeaderCell>
+                <CTableHeaderCell className="quantity-col">Quantity (Kg)</CTableHeaderCell>
+                <CTableHeaderCell className="bagSize-col">Bag Size</CTableHeaderCell>
+                <CTableHeaderCell className="totalBags-col">Total Bags</CTableHeaderCell>
+                <CTableHeaderCell className="weight-col">Item Weight</CTableHeaderCell>
+                <CTableHeaderCell className="cost-col">Item Cost</CTableHeaderCell>
               </CTableRow>
-            ))}
-          </CTableBody>
-        </CTable>
+            </CTableHead>
+            <CTableBody>
+              {products.map((product, index) => (
+                <CTableRow key={product._id || index}>
+                  <CTableDataCell className="product-name-col">
+                    {product.productName || '-'}
+                  </CTableDataCell>
+                  <CTableDataCell className="warehouse-col">
+                    {product.warehouseName || '-'}
+                  </CTableDataCell>
+                  <CTableDataCell className="quantity-col">
+                    {product.quantityKg || '0'}
+                  </CTableDataCell>
+                  <CTableDataCell className="bagSize-col">{product.bagSize || '0'}</CTableDataCell>
+                  <CTableDataCell className="totalBags-col">
+                    {product.totalBags || '0'}
+                  </CTableDataCell>
+                  <CTableDataCell className="weight-col">
+                    {product.itemWeight || '0'}
+                  </CTableDataCell>
+                  <CTableDataCell className="cost-col">{product.itemCost || '0'}</CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </div>
       </div>
     )
   }
@@ -301,8 +394,13 @@ function TableArray({
             <CTable striped hover responsive bordered>
               <CTableHead>
                 <CTableRow>
-                  <CTableHeaderCell className="text-center"></CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
+                  <CTableHeaderCell
+                    className="text-center"
+                    style={{ width: '50px' }}
+                  ></CTableHeaderCell>
+                  <CTableHeaderCell className="text-center" style={{ width: '60px' }}>
+                    SN
+                  </CTableHeaderCell>
                   {columns
                     .filter((col) => !col.hidden)
                     .map((column, index) => (
@@ -310,13 +408,18 @@ function TableArray({
                         key={index}
                         className="text-center"
                         onClick={() => column.sortable && handleSort(column.key)}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        style={{
+                          cursor: column.sortable ? 'pointer' : 'default',
+                          minWidth: column.minWidth || 'auto',
+                        }}
                       >
                         {column.label} {column.sortable && getSortIcon(column.key)}
                       </CTableHeaderCell>
                     ))}
                   {(editButton || deleteButton || viewButton || reportButton || checkButton) && (
-                    <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" style={{ width: '200px' }}>
+                      {action}
+                    </CTableHeaderCell>
                   )}
                 </CTableRow>
               </CTableHead>
@@ -380,9 +483,13 @@ function TableArray({
                       )}
                     </CTableRow>
                   ))
-                ) : filteredData.length === 0 ? (
+                ) : currentData.length === 0 ? (
                   <CTableRow>
-                    <CTableDataCell colSpan={columns.length + 3} className="text-center">
+                    <CTableDataCell
+                      colSpan={columns.length + 3}
+                      className="text-center"
+                      style={{ padding: '40px' }}
+                    >
                       No {title} found.
                     </CTableDataCell>
                   </CTableRow>
@@ -396,7 +503,7 @@ function TableArray({
                     return (
                       <React.Fragment key={rowIndex}>
                         <CTableRow className={hasProducts ? 'expandable-row' : ''}>
-                          <CTableDataCell className="text-center">
+                          <CTableDataCell className="text-center" style={{ padding: '8px' }}>
                             {hasProducts && (
                               <button
                                 className="expand-icon action-button"
@@ -411,13 +518,18 @@ function TableArray({
                               </button>
                             )}
                           </CTableDataCell>
-                          <CTableDataCell className="text-center">
+                          <CTableDataCell className="text-center" style={{ padding: '12px 8px' }}>
+                            {/* Calculate serial number based on current page */}
                             {(currentPage - 1) * itemsPerPage + rowIndex + 1}
                           </CTableDataCell>
                           {columns
                             .filter((col) => !col.hidden)
                             .map((column) => (
-                              <CTableDataCell key={column.key} className="text-center">
+                              <CTableDataCell
+                                key={column.key}
+                                className="text-center"
+                                style={{ padding: '12px 8px' }}
+                              >
                                 {column.key === 'password' ? (
                                   <div className="d-flex align-items-center justify-content-center gap-2">
                                     <span>
@@ -455,7 +567,7 @@ function TableArray({
                             viewButton ||
                             reportButton ||
                             checkButton) && (
-                            <CTableDataCell className="action-cell">
+                            <CTableDataCell className="action-cell" style={{ padding: '8px' }}>
                               <div className="action-buttons">
                                 {checkButton && (
                                   <label
@@ -552,7 +664,7 @@ function TableArray({
                         </CTableRow>
                         {isExpanded && hasProducts && (
                           <CTableRow className="expanded-details">
-                            <CTableDataCell colSpan={columns.length + 3}>
+                            <CTableDataCell colSpan={columns.length + 3} style={{ padding: '0' }}>
                               {renderProductsTable(row.products)}
                             </CTableDataCell>
                           </CTableRow>
@@ -589,8 +701,8 @@ TableArray.propTypes = {
   isFetching: PropTypes.bool,
   reportButton: PropTypes.bool,
   handleReportButton: PropTypes.func,
-  checkButton: PropTypes.bool, // Added for checkbox
-  handleCheckboxButton: PropTypes.func, // Added for checkbox handler
+  checkButton: PropTypes.bool,
+  handleCheckboxButton: PropTypes.func,
   getCheckboxChecked: PropTypes.func,
 }
 

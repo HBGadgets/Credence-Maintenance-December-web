@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Modal, Button, Form } from 'react-bootstrap'
+import { Modal, Button, Form, Row, Col, Card } from 'react-bootstrap'
 import { fetchDrivers, fetchSupervisor } from '../../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../../vehicle/data/VehicleListData'
 import { TokenContext } from '../../../../context/TokenContext'
@@ -10,6 +10,7 @@ import Select from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
 import CreatableSelect from 'react-select/creatable'
 import { getInventoryApi, getWarehouseListApi } from '../../data/data'
+import { FaWarehouse, FaTrain, FaBuilding, FaUserFriends, FaExchangeAlt } from 'react-icons/fa'
 
 // Product item structure for form state
 const defaultProduct = {
@@ -24,6 +25,20 @@ const defaultProduct = {
   itemCost: '',
 }
 
+// Helper function to format date as YYYY-MM-DD
+const formatDateForInput = (date) => {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Get today's date in YYYY-MM-DD format
+const getTodayDate = () => {
+  return formatDateForInput(new Date())
+}
+
 const defaultFormData = {
   supervisorId: '',
   workerId: '',
@@ -34,12 +49,11 @@ const defaultFormData = {
   companyOfficeNumber: '',
   companyAddress: '',
   gstIn: '',
-  date: '',
+  date: getTodayDate(), // Set current date as default
   vehicleId: '',
   vehicleName: '',
   driverId: '',
   driverName: '',
-  ownerName: '',
   consignorName: '',
   consignorAddress: '',
   consigneeName: '',
@@ -48,8 +62,6 @@ const defaultFormData = {
   customerAddress: '',
   startLocation: '',
   endLocation: '',
-  sealNumber: '',
-  containerNumber: '',
   customerRate: '',
   totalAmount: '',
   transporterRate: '',
@@ -58,6 +70,13 @@ const defaultFormData = {
   customerRateOn: '',
   customerFreight: '',
   transporterFreight: '',
+  // New fields for TP Pass type
+  tpPassType: '', // 'railhead' or 'warehouse' or 'warehouseToParty'
+  issuedBy: '', // Default based on tpPassType
+  receivedBy: '', // Default based on tpPassType
+  receivedByType: '', // 'warehouse' or 'party'
+  receivedByWarehouseId: '', // Warehouse ID if receivedByType is 'warehouse'
+  receivedByWarehouseName: '', // Warehouse name if receivedByType is 'warehouse'
   products: [defaultProduct], // Initialize with one product
 }
 
@@ -72,6 +91,11 @@ const LorryReceiptForm = ({
   const [formData, setFormData] = useState(defaultFormData)
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
+  const [showTypeSelection, setShowTypeSelection] = useState(mode === 'add') // Show type selection only in add mode
+  const [receivedByOptions, setReceivedByOptions] = useState([
+    { value: 'warehouse', label: 'Warehouse', icon: <FaWarehouse className="me-2" /> },
+    { value: 'party', label: 'Party', icon: <FaUserFriends className="me-2" /> },
+  ])
 
   // superadmin role
   const token = useContext(TokenContext)
@@ -119,7 +143,7 @@ const LorryReceiptForm = ({
   // Extract inventory list from response
   const inventoryList = inventoryResponse?.data || []
 
-  // Fetch drives
+  // Fetch drivers
   useEffect(() => {
     const loadDrivers = async () => {
       try {
@@ -154,7 +178,7 @@ const LorryReceiptForm = ({
       setFormData({
         ...defaultFormData,
         ...initialData,
-        date: initialData.date ? initialData.date.split('T')[0] : '',
+        date: initialData.date ? initialData.date.split('T')[0] : getTodayDate(),
         vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
         driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
         companyId: initialData.companyId || '',
@@ -168,10 +192,23 @@ const LorryReceiptForm = ({
           itemCost: product.itemCost?.toString() || '',
         })) || [defaultProduct],
       })
+      setShowTypeSelection(false) // Hide type selection in edit mode
     } else {
-      setFormData(defaultFormData) // Reset for 'add' mode
+      setFormData(defaultFormData) // Reset for 'add' mode with current date
+      setShowTypeSelection(true) // Show type selection in add mode
     }
   }, [initialData, mode, vehicles, drivers])
+
+  // Reset form data when modal is opened in add mode
+  useEffect(() => {
+    if (show && mode === 'add') {
+      setFormData({
+        ...defaultFormData,
+        date: getTodayDate(), // Always set current date when opening in add mode
+      })
+      setShowTypeSelection(true)
+    }
+  }, [show, mode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -194,6 +231,92 @@ const LorryReceiptForm = ({
       setFormData((prev) => ({ ...prev, [name]: value }))
     }
   }
+
+  // Handle TP Pass type selection
+  const handleTpPassTypeSelect = (type) => {
+    if (type === 'railhead') {
+      setFormData((prev) => ({
+        ...prev,
+        tpPassType: 'railhead',
+        issuedBy: 'Rack',
+        receivedBy: 'Railhead',
+        receivedByType: '',
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    } else if (type === 'warehouse') {
+      setFormData((prev) => ({
+        ...prev,
+        tpPassType: 'warehouse',
+        issuedBy: 'Railhead',
+        receivedBy: 'Warehouse/Party',
+        receivedByType: '',
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    } else if (type === 'warehouseToParty') {
+      setFormData((prev) => ({
+        ...prev,
+        tpPassType: 'warehouseToParty',
+        issuedBy: 'Warehouse',
+        receivedBy: 'Party',
+        receivedByType: 'party',
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    }
+    setShowTypeSelection(false)
+  }
+
+  // Handle received by type change (Warehouse or Party)
+  const handleReceivedByTypeChange = (type) => {
+    if (type === 'warehouse') {
+      setFormData((prev) => ({
+        ...prev,
+        receivedByType: 'warehouse',
+        receivedBy: 'Warehouse',
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    } else if (type === 'party') {
+      setFormData((prev) => ({
+        ...prev,
+        receivedByType: 'party',
+        receivedBy: 'Party',
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    }
+  }
+
+  // Handle warehouse selection for received by
+  const handleWarehouseSelect = (selected) => {
+    if (selected) {
+      const selectedWarehouse = warehouseList.find(
+        (w) => w.id === selected.value || w._id === selected.value,
+      )
+      setFormData((prev) => ({
+        ...prev,
+        receivedByWarehouseId: selected.value,
+        receivedByWarehouseName:
+          selectedWarehouse?.wareHouseName || selectedWarehouse?.name || selected.label,
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        receivedByWarehouseId: '',
+        receivedByWarehouseName: '',
+      }))
+    }
+  }
+
+  // Prepare warehouse options for Received By dropdown
+  const receivedByWarehouseOptions = Array.isArray(warehouseList)
+    ? warehouseList.map((w) => ({
+        value: w.id || w._id,
+        label: w.wareHouseName || w.name || 'Unnamed Warehouse',
+      }))
+    : []
 
   // Handle product changes
   const handleProductChange = (index, field, value) => {
@@ -240,7 +363,7 @@ const LorryReceiptForm = ({
     }
   }
 
-  // Prepare warehouse options for Select component
+  // Prepare warehouse options for Select component (for product warehouse)
   const warehouseOptions = Array.isArray(warehouseList)
     ? warehouseList.map((w) => ({
         value: w.id || w._id,
@@ -295,7 +418,7 @@ const LorryReceiptForm = ({
     let payload = {
       ...formData,
       companyId: formData.companyId || '',
-      date: formData.date ? new Date(formData.date).toISOString() : '',
+      date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
       products: formData.products.map((product) => ({
         ...product,
         quantityKg: parseFloat(product.quantityKg) || 0,
@@ -315,7 +438,7 @@ const LorryReceiptForm = ({
     handleSubmit(payload)
   }
 
-  // Get current warehouse selection value
+  // Get current warehouse selection value for product
   const getWarehouseValue = (product) => {
     if (!product.warehouseId) return null
     return warehouseOptions.find((opt) => opt.value === product.warehouseId) || null
@@ -351,6 +474,14 @@ const LorryReceiptForm = ({
     return driverOptions.find((opt) => opt.value === formData.driverId) || null
   }
 
+  // Get current received by warehouse value
+  const getReceivedByWarehouseValue = () => {
+    if (!formData.receivedByWarehouseId) return null
+    return (
+      receivedByWarehouseOptions.find((opt) => opt.value === formData.receivedByWarehouseId) || null
+    )
+  }
+
   return (
     <Modal
       show={show}
@@ -372,527 +503,770 @@ const LorryReceiptForm = ({
         className="p-4 pt-0"
         style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
       >
-        <Form onSubmit={onSubmit}>
-          {/* Select Users */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Select Users</h5>
-          <div className="row g-3 mb-4">
-            {/* Show Supervisor dropdown only if role === superadmin */}
-            {userRole === 'superadmin' && (
-              <div className="col-md-4">
-                <Form.Label>Supervisors</Form.Label>
-                <Select
-                  name="supervisorId"
-                  value={
-                    supervisorOptions.find((sup) => sup.value === formData.supervisorId) || null
-                  }
-                  onChange={(selected) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      supervisorId: selected ? selected.value : '',
-                      supervisorName: selected ? selected.label : '',
-                    }))
-                  }
-                  options={supervisorOptions}
-                  placeholder="Select Supervisor"
-                  isClearable
-                  isLoading={isLoading}
-                />
+        {/* TP Pass Type Selection (Only show in add mode before type is selected) */}
+        {showTypeSelection && mode === 'add' ? (
+          <div className="text-center py-5">
+            <h5 className="mb-4">Select TP Pass Type</h5>
+            <Row className="justify-content-center g-4">
+              {/* Option 1: Railhead */}
+              <Col md={6} lg={4}>
+                <Card
+                  className="h-100 cursor-pointer border-primary"
+                  onClick={() => handleTpPassTypeSelect('railhead')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Card.Body className="text-center py-4">
+                    <FaTrain className="text-primary mb-3" size={48} />
+                    <Card.Title className="mb-2">TP Pass for Railhead</Card.Title>
+                    <Card.Text className="text-muted small">
+                      Default: Issued by <strong>Rack</strong> • Received by{' '}
+                      <strong>Railhead</strong>
+                    </Card.Text>
+                    <div className="mt-3">
+                      <Button variant="primary">Select This Option</Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              {/* Option 2: Warehouse/Party (Railhead to Warehouse/Party) */}
+              <Col md={6} lg={4}>
+                <Card
+                  className="h-100 cursor-pointer border-success"
+                  onClick={() => handleTpPassTypeSelect('warehouse')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Card.Body className="text-center py-4">
+                    <FaWarehouse className="text-success mb-3" size={48} />
+                    <Card.Title className="mb-2">TP Pass for Warehouse/Party</Card.Title>
+                    <Card.Text className="text-muted small">
+                      Default: Issued by <strong>Railhead</strong> • Received by{' '}
+                      <strong>Warehouse/Party</strong>
+                    </Card.Text>
+                    <div className="mt-3">
+                      <Button variant="success">Select This Option</Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              {/* Option 3: Warehouse to Party */}
+              <Col md={6} lg={4}>
+                <Card
+                  className="h-100 cursor-pointer border-warning"
+                  onClick={() => handleTpPassTypeSelect('warehouseToParty')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Card.Body className="text-center py-4">
+                    <FaExchangeAlt className="text-warning mb-3" size={48} />
+                    <Card.Title className="mb-2">Warehouse to Party</Card.Title>
+                    <Card.Text className="text-muted small">
+                      Default: Issued by <strong>Warehouse</strong> • Received by{' '}
+                      <strong>Party</strong>
+                    </Card.Text>
+                    <div className="mt-3">
+                      <Button variant="warning">Select This Option</Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+            <div className="mt-4">
+              <Button variant="outline-secondary" onClick={handleClose}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Form onSubmit={onSubmit}>
+            {/* Show selected TP Pass type at top */}
+            {formData.tpPassType && mode === 'add' && (
+              <div className="alert alert-info mb-4">
+                <div className="d-flex align-items-center">
+                  {formData.tpPassType === 'railhead' ? (
+                    <FaTrain className="me-2" />
+                  ) : formData.tpPassType === 'warehouse' ? (
+                    <FaWarehouse className="me-2" />
+                  ) : (
+                    <FaExchangeAlt className="me-2" />
+                  )}
+                  <div>
+                    <strong>TP Pass Type:</strong>{' '}
+                    {formData.tpPassType === 'railhead'
+                      ? 'Railhead'
+                      : formData.tpPassType === 'warehouse'
+                        ? 'Warehouse/Party'
+                        : 'Warehouse to Party'}
+                    <div className="small mt-1">
+                      <strong>Issued by:</strong> {formData.issuedBy} •{' '}
+                      <strong>Received by:</strong> {formData.receivedBy}
+                      {formData.receivedByType && ` (${formData.receivedByType})`}
+                      {formData.receivedByType === 'warehouse' &&
+                        formData.receivedByWarehouseName &&
+                        ` • ${formData.receivedByWarehouseName}`}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="ms-auto"
+                    onClick={() => setShowTypeSelection(true)}
+                    disabled={isLoading}
+                  >
+                    Change Type
+                  </Button>
+                </div>
               </div>
             )}
 
-            {/* Worker dropdown */}
-            <div className="col-md-4">
-              <Form.Label>Employees</Form.Label>
-              <Select
-                name="workerId"
-                value={getWorkerValue()}
-                onChange={(selected) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    workerId: selected ? selected.value : '',
-                    workerName: selected ? selected.label : '',
-                  }))
-                }
-                options={workerOptions.filter((w) =>
-                  userRole === 'superadmin' ? w.supervisorId === formData.supervisorId : true,
-                )}
-                placeholder="Select Employee"
-                isClearable
-                isLoading={workersLoading || isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Company Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <Form.Label>Company Name</Form.Label>
-              <Select
-                name="companyId"
-                value={getCompanyValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedCompany = companyList.find((c) => c.id === selected.value)
-                    setFormData((prev) => ({
-                      ...prev,
-                      companyId: selectedCompany?.id || '',
-                      companyName: selectedCompany?.companyName || '',
-                      companyEmail: selectedCompany?.email || '',
-                      companyMobileNumber: selectedCompany?.mobileNumber || '',
-                      companyOfficeNumber: selectedCompany?.officeNumber || '',
-                      companyAddress: selectedCompany?.address || '',
-                      gstIn: selectedCompany?.gstNumber || '',
-                    }))
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      companyId: '',
-                      companyName: '',
-                      companyEmail: '',
-                      companyMobileNumber: '',
-                      companyOfficeNumber: '',
-                      companyAddress: '',
-                      gstIn: '',
-                    }))
-                  }
-                }}
-                options={companyOptions}
-                placeholder="Select Company"
-                isClearable
-                isLoading={companiesLoading || isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Basic Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Basic Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <Form.Label>
-                Date <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <Form.Control
-                type="date"
-                name="date"
-                value={formData.date ? formData.date.split('T')[0] : ''}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="col-md-4">
-              <Form.Label>
-                Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <CreatableSelect
-                name="vehicleId"
-                value={getVehicleValue()}
-                onChange={(selected, action) => {
-                  if (selected) {
-                    if (action.action === 'create-option') {
-                      setFormData((prev) => ({
-                        ...prev,
-                        vehicleId: selected.value,
-                        vehicleName: selected.label,
-                      }))
-                    } else {
-                      const selectedVehicle = vehicles.find(
-                        (v) => v.id === selected.value || v._id === selected.value,
-                      )
-                      setFormData((prev) => ({
-                        ...prev,
-                        vehicleId: selected.value,
-                        vehicleName: selectedVehicle?.name || selected.label,
-                      }))
-                    }
-                  } else {
-                    setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
-                  }
-                }}
-                options={vehicleOptions}
-                placeholder="Select or type new vehicle"
-                isClearable
-                isLoading={isLoading}
-              />
-            </div>
-
-            <div className="col-md-4">
-              <Form.Label>
-                Driver Name <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <CreatableSelect
-                name="driverId"
-                value={getDriverValue()}
-                onChange={(selected, action) => {
-                  if (selected) {
-                    if (action.action === 'create-option') {
-                      setFormData((prev) => ({
-                        ...prev,
-                        driverId: selected.value,
-                        driverName: selected.label,
-                      }))
-                    } else {
-                      const selectedDriver = drivers.find((d) => d.id === selected.value)
-                      setFormData((prev) => ({
-                        ...prev,
-                        driverId: selected.value,
-                        driverName: selectedDriver?.name || selected.label,
-                      }))
-                    }
-                  } else {
-                    setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
-                  }
-                }}
-                options={driverOptions}
-                placeholder="Select or type new driver"
-                isClearable
-                isLoading={isLoading}
-              />
-            </div>
-
-            <div className="col-md-4">
-              <Form.Label>Owner Name</Form.Label>
-              <Form.Control
-                name="ownerName"
-                value={formData.ownerName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Consignor Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Consignor Name</Form.Label>
-              <Form.Control
-                name="consignorName"
-                value={formData.consignorName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Consignor Address</Form.Label>
-              <Form.Control
-                name="consignorAddress"
-                value={formData.consignorAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Consignee Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Consignee Name</Form.Label>
-              <Form.Control
-                name="consigneeName"
-                value={formData.consigneeName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Consignee Address</Form.Label>
-              <Form.Control
-                name="consigneeAddress"
-                value={formData.consigneeAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Customer Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Customer Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Customer Name</Form.Label>
-              <Form.Control
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Customer Address</Form.Label>
-              <Form.Control
-                name="customerAddress"
-                value={formData.customerAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Route Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Route Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Start Location</Form.Label>
-              <Form.Control
-                name="startLocation"
-                value={formData.startLocation}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>End Location</Form.Label>
-              <Form.Control
-                name="endLocation"
-                value={formData.endLocation}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Product Details - Multiple Products */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
-          <div className="mb-4">
-            {formData.products.map((product, index) => (
-              <div key={index} className="border rounded p-3 mb-3">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h6 className="mb-0">Product {index + 1}</h6>
-                  {formData.products.length > 1 && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => removeProduct(index)}
-                      disabled={isLoading}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-                <div className="row g-3">
-                  {/* Warehouse Selection */}
-                  <div className="col-md-6">
-                    <Form.Label>Warehouse</Form.Label>
+            {/* Issued/Received Section */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Issued & Received Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Issued By</Form.Label>
+                {formData.tpPassType === 'warehouseToParty' ? (
+                  <div>
+                    <Form.Label>Select Warehouse</Form.Label>
                     <Select
-                      value={getWarehouseValue(product)}
-                      onChange={(selected) =>
-                        handleProductChange(index, 'warehouseId', selected ? selected.value : '')
+                      value={
+                        warehouseOptions.find(
+                          (opt) => opt.value === formData.issuedByWarehouseId,
+                        ) || null
                       }
+                      onChange={(selected) => {
+                        if (selected) {
+                          const selectedWarehouse = warehouseList.find(
+                            (w) => w.id === selected.value || w._id === selected.value,
+                          )
+                          setFormData((prev) => ({
+                            ...prev,
+                            issuedBy: 'Warehouse',
+                            issuedByWarehouseId: selected.value,
+                            issuedByWarehouseName:
+                              selectedWarehouse?.wareHouseName ||
+                              selectedWarehouse?.name ||
+                              selected.label,
+                          }))
+                        } else {
+                          setFormData((prev) => ({
+                            ...prev,
+                            issuedBy: '',
+                            issuedByWarehouseId: '',
+                            issuedByWarehouseName: '',
+                          }))
+                        }
+                      }}
                       options={warehouseOptions}
                       placeholder="Select Warehouse"
                       isClearable
                       isLoading={warehousesLoading || isLoading}
                     />
+                    {formData.issuedByWarehouseName && (
+                      <Form.Text className="text-success">
+                        Selected: {formData.issuedByWarehouseName}
+                      </Form.Text>
+                    )}
                   </div>
-
-                  {/* Product Selection */}
-                  <div className="col-md-6">
-                    <Form.Label>Product</Form.Label>
-                    <Select
-                      value={getProductValue(product)}
-                      onChange={(selected) =>
-                        handleProductChange(index, 'productId', selected ? selected.value : '')
+                ) : (
+                  <>
+                    <Form.Control
+                      name="issuedBy"
+                      value={formData.issuedBy}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      placeholder="Issued by"
+                    />
+                  </>
+                )}
+              </div>
+              <div className="col-md-6">
+                <Form.Label>Received By</Form.Label>
+                {formData.tpPassType === 'railhead' ? (
+                  <Form.Control
+                    name="receivedBy"
+                    value={formData.receivedBy}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    placeholder="Received by"
+                  />
+                ) : formData.tpPassType === 'warehouseToParty' ? (
+                  <div>
+                    <Form.Label>Party Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={formData.receivedBy}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, receivedBy: e.target.value }))
                       }
-                      options={productOptions}
-                      placeholder="Select Product"
-                      isClearable
-                      isLoading={inventoryLoading || isLoading}
+                      placeholder="Enter party name"
+                      disabled={isLoading}
                     />
                   </div>
+                ) : (
+                  <div>
+                    {/* Received by type selection for Warehouse/Party option */}
+                    <div className="mb-3">
+                      <div className="d-flex gap-2">
+                        {receivedByOptions.map((option) => (
+                          <Button
+                            key={option.value}
+                            variant={
+                              formData.receivedByType === option.value
+                                ? 'primary'
+                                : 'outline-primary'
+                            }
+                            onClick={() => handleReceivedByTypeChange(option.value)}
+                            className="d-flex align-items-center"
+                            disabled={isLoading}
+                          >
+                            {option.icon}
+                            {option.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
 
-                  {/* Quantity and Bags */}
-                  <div className="col-md-3">
-                    <Form.Label>Quantity (Kg)</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.quantityKg}
-                      onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <Form.Label>Bags</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.bags}
-                      onChange={(e) => handleProductChange(index, 'bags', e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
+                    {/* Warehouse selection if received by type is warehouse */}
+                    {formData.receivedByType === 'warehouse' && (
+                      <div className="mt-3">
+                        <Form.Label>Select Warehouse</Form.Label>
+                        <Select
+                          value={getReceivedByWarehouseValue()}
+                          onChange={handleWarehouseSelect}
+                          options={receivedByWarehouseOptions}
+                          placeholder="Select Warehouse"
+                          isClearable
+                          isLoading={warehousesLoading || isLoading}
+                        />
+                        {formData.receivedByWarehouseName && (
+                          <Form.Text className="text-success">
+                            Selected: {formData.receivedByWarehouseName}
+                          </Form.Text>
+                        )}
+                      </div>
+                    )}
 
-                  {/* Unit, Weight, Cost */}
-                  <div className="col-md-2">
-                    <Form.Label>Unit</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.itemUnit}
-                      onChange={(e) => handleProductChange(index, 'itemUnit', e.target.value)}
-                      disabled={isLoading}
-                    />
+                    {/* Party input if received by type is party */}
+                    {formData.receivedByType === 'party' && (
+                      <div className="mt-3">
+                        <Form.Label>Party Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={formData.receivedBy}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, receivedBy: e.target.value }))
+                          }
+                          placeholder="Enter party name"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    )}
+
+                    {/* Show current received by value */}
+                    {formData.receivedByType && (
+                      <div className="mt-2">
+                        <Form.Text className="text-muted">
+                          Current: {formData.receivedBy}
+                          {formData.receivedByType === 'warehouse' &&
+                            formData.receivedByWarehouseName &&
+                            ` (${formData.receivedByWarehouseName})`}
+                        </Form.Text>
+                      </div>
+                    )}
                   </div>
-                  <div className="col-md-2">
-                    <Form.Label>Weight</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.itemWeight}
-                      onChange={(e) => handleProductChange(index, 'itemWeight', e.target.value)}
-                      disabled={isLoading}
-                    />
+                )}
+              </div>
+            </div>
+
+            {/* Select Users */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Select Users</h5>
+            <div className="row g-3 mb-4">
+              {/* Show Supervisor dropdown only if role === superadmin */}
+              {userRole === 'superadmin' && (
+                <div className="col-md-4">
+                  <Form.Label>Supervisors</Form.Label>
+                  <Select
+                    name="supervisorId"
+                    value={
+                      supervisorOptions.find((sup) => sup.value === formData.supervisorId) || null
+                    }
+                    onChange={(selected) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        supervisorId: selected ? selected.value : '',
+                        supervisorName: selected ? selected.label : '',
+                      }))
+                    }
+                    options={supervisorOptions}
+                    placeholder="Select Supervisor"
+                    isClearable
+                    isLoading={isLoading}
+                  />
+                </div>
+              )}
+
+              {/* Worker dropdown */}
+              <div className="col-md-4">
+                <Form.Label>Employees</Form.Label>
+                <Select
+                  name="workerId"
+                  value={getWorkerValue()}
+                  onChange={(selected) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      workerId: selected ? selected.value : '',
+                      workerName: selected ? selected.label : '',
+                    }))
+                  }
+                  options={workerOptions.filter((w) =>
+                    userRole === 'superadmin' ? w.supervisorId === formData.supervisorId : true,
+                  )}
+                  placeholder="Select Employee"
+                  isClearable
+                  isLoading={workersLoading || isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Company Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <Form.Label>Company Name</Form.Label>
+                <Select
+                  name="companyId"
+                  value={getCompanyValue()}
+                  onChange={(selected) => {
+                    if (selected) {
+                      const selectedCompany = companyList.find((c) => c.id === selected.value)
+                      setFormData((prev) => ({
+                        ...prev,
+                        companyId: selectedCompany?.id || '',
+                        companyName: selectedCompany?.companyName || '',
+                        companyEmail: selectedCompany?.email || '',
+                        companyMobileNumber: selectedCompany?.mobileNumber || '',
+                        companyOfficeNumber: selectedCompany?.officeNumber || '',
+                        companyAddress: selectedCompany?.address || '',
+                        gstIn: selectedCompany?.gstNumber || '',
+                      }))
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        companyId: '',
+                        companyName: '',
+                        companyEmail: '',
+                        companyMobileNumber: '',
+                        companyOfficeNumber: '',
+                        companyAddress: '',
+                        gstIn: '',
+                      }))
+                    }
+                  }}
+                  options={companyOptions}
+                  placeholder="Select Company"
+                  isClearable
+                  isLoading={companiesLoading || isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Basic Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <Form.Label>
+                  Date <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  type="date"
+                  name="date"
+                  value={formData.date || getTodayDate()}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                  max={getTodayDate()} // Optional: Prevent future dates
+                />
+              </div>
+
+              <div className="col-md-4">
+                <Form.Label>
+                  Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <CreatableSelect
+                  name="vehicleId"
+                  value={getVehicleValue()}
+                  onChange={(selected, action) => {
+                    if (selected) {
+                      if (action.action === 'create-option') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          vehicleId: selected.value,
+                          vehicleName: selected.label,
+                        }))
+                      } else {
+                        const selectedVehicle = vehicles.find(
+                          (v) => v.id === selected.value || v._id === selected.value,
+                        )
+                        setFormData((prev) => ({
+                          ...prev,
+                          vehicleId: selected.value,
+                          vehicleName: selectedVehicle?.name || selected.label,
+                        }))
+                      }
+                    } else {
+                      setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
+                    }
+                  }}
+                  options={vehicleOptions}
+                  placeholder="Select or type new vehicle"
+                  isClearable
+                  isLoading={isLoading}
+                />
+              </div>
+
+              <div className="col-md-4">
+                <Form.Label>
+                  Driver Name <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <CreatableSelect
+                  name="driverId"
+                  value={getDriverValue()}
+                  onChange={(selected, action) => {
+                    if (selected) {
+                      if (action.action === 'create-option') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          driverId: selected.value,
+                          driverName: selected.label,
+                        }))
+                      } else {
+                        const selectedDriver = drivers.find((d) => d.id === selected.value)
+                        setFormData((prev) => ({
+                          ...prev,
+                          driverId: selected.value,
+                          driverName: selectedDriver?.name || selected.label,
+                        }))
+                      }
+                    } else {
+                      setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
+                    }
+                  }}
+                  options={driverOptions}
+                  placeholder="Select or type new driver"
+                  isClearable
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Consignor Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Consignor Name</Form.Label>
+                <Form.Control
+                  name="consignorName"
+                  value={formData.consignorName}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>Consignor Address</Form.Label>
+                <Form.Control
+                  name="consignorAddress"
+                  value={formData.consignorAddress}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Consignee Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Consignee Name</Form.Label>
+                <Form.Control
+                  name="consigneeName"
+                  value={formData.consigneeName}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>Consignee Address</Form.Label>
+                <Form.Control
+                  name="consigneeAddress"
+                  value={formData.consigneeAddress}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Customer Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Customer Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Customer Name</Form.Label>
+                <Form.Control
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>Customer Address</Form.Label>
+                <Form.Control
+                  name="customerAddress"
+                  value={formData.customerAddress}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Route Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Route Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Start Location</Form.Label>
+                <Form.Control
+                  name="startLocation"
+                  value={formData.startLocation}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>End Location</Form.Label>
+                <Form.Control
+                  name="endLocation"
+                  value={formData.endLocation}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Product Details - Multiple Products */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
+            <div className="mb-4">
+              {formData.products.map((product, index) => (
+                <div key={index} className="border rounded p-3 mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">Product {index + 1}</h6>
+                    {formData.products.length > 1 && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        disabled={isLoading}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                  <div className="col-md-2">
-                    <Form.Label>Cost</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.itemCost}
-                      onChange={(e) => handleProductChange(index, 'itemCost', e.target.value)}
-                      disabled={isLoading}
-                    />
+                  <div className="row g-3">
+                    {/* Warehouse Selection */}
+                    <div className="col-md-6">
+                      <Form.Label>Warehouse</Form.Label>
+                      <Select
+                        value={getWarehouseValue(product)}
+                        onChange={(selected) =>
+                          handleProductChange(index, 'warehouseId', selected ? selected.value : '')
+                        }
+                        options={warehouseOptions}
+                        placeholder="Select Warehouse"
+                        isClearable
+                        isLoading={warehousesLoading || isLoading}
+                      />
+                    </div>
+
+                    {/* Product Selection */}
+                    <div className="col-md-6">
+                      <Form.Label>Product</Form.Label>
+                      <Select
+                        value={getProductValue(product)}
+                        onChange={(selected) =>
+                          handleProductChange(index, 'productId', selected ? selected.value : '')
+                        }
+                        options={productOptions}
+                        placeholder="Select Product"
+                        isClearable
+                        isLoading={inventoryLoading || isLoading}
+                      />
+                    </div>
+
+                    {/* Quantity and Bags */}
+                    <div className="col-md-3">
+                      <Form.Label>Quantity (Kg)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.quantityKg}
+                        onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <Form.Label>Bags</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.bags}
+                        onChange={(e) => handleProductChange(index, 'bags', e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    {/* Unit, Weight, Cost */}
+                    <div className="col-md-2">
+                      <Form.Label>Unit</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.itemUnit}
+                        onChange={(e) => handleProductChange(index, 'itemUnit', e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <Form.Label>Weight</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.itemWeight}
+                        onChange={(e) => handleProductChange(index, 'itemWeight', e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <Form.Label>Cost</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.itemCost}
+                        onChange={(e) => handleProductChange(index, 'itemCost', e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
                 </div>
+              ))}
+
+              <Button
+                variant="outline-primary"
+                onClick={addProduct}
+                className="mb-3"
+                disabled={isLoading}
+              >
+                Add Another Product
+              </Button>
+            </div>
+
+            {/* Freight Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <Form.Label>Customer Rate</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerRate"
+                  value={formData.customerRate}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
               </div>
-            ))}
+              <div className="col-md-4">
+                <Form.Label>Total Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="totalAmount"
+                  value={formData.totalAmount}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Rate</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterRate"
+                  value={formData.transporterRate}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Total Transporter Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="totalTransporterAmount"
+                  value={formData.totalTransporterAmount}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Rate On</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterRateOn"
+                  value={formData.transporterRateOn}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Customer Rate On</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerRateOn"
+                  value={formData.customerRateOn}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Customer Freight</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerFreight"
+                  value={formData.customerFreight}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Freight</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterFreight"
+                  value={formData.transporterFreight}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
-            <Button
-              variant="outline-primary"
-              onClick={addProduct}
-              className="mb-3"
-              disabled={isLoading}
-            >
-              Add Another Product
-            </Button>
-          </div>
-
-          {/* Seal and Container Numbers */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Additional Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Seal Number (Batch)</Form.Label>
-              <Form.Control
-                name="sealNumber"
-                value={formData.sealNumber}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+            <div className="text-end mt-4">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    {mode === 'edit' ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : mode === 'edit' ? (
+                  'Update Receipt'
+                ) : (
+                  'Create Receipt'
+                )}
+              </Button>
             </div>
-            <div className="col-md-6">
-              <Form.Label>Container Number</Form.Label>
-              <Form.Control
-                name="containerNumber"
-                value={formData.containerNumber}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Freight Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <Form.Label>Customer Rate</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerRate"
-                value={formData.customerRate}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Total Amount</Form.Label>
-              <Form.Control
-                type="number"
-                name="totalAmount"
-                value={formData.totalAmount}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Rate</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterRate"
-                value={formData.transporterRate}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Total Transporter Amount</Form.Label>
-              <Form.Control
-                type="number"
-                name="totalTransporterAmount"
-                value={formData.totalTransporterAmount}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Rate On</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterRateOn"
-                value={formData.transporterRateOn}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Customer Rate On</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerRateOn"
-                value={formData.customerRateOn}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Customer Freight</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerFreight"
-                value={formData.customerFreight}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Freight</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterFreight"
-                value={formData.transporterFreight}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div className="text-end mt-4">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  {mode === 'edit' ? 'Updating...' : 'Creating...'}
-                </>
-              ) : mode === 'edit' ? (
-                'Update Receipt'
-              ) : (
-                'Create Receipt'
-              )}
-            </Button>
-          </div>
-        </Form>
+          </Form>
+        )}
       </Modal.Body>
     </Modal>
   )

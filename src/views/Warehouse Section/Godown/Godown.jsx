@@ -19,11 +19,15 @@ import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../../Supervisor/IconDropdown'
+import { useNavigate } from 'react-router-dom'
 
 const Godown = () => {
   const queryClient = useQueryClient()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
+
+  const navigate = useNavigate()
+
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -90,7 +94,6 @@ const Godown = () => {
   const columns = [
     { label: 'WareHouse Name', key: 'wareHouseName', sortable: true },
     { label: 'Location', key: 'location', sortable: true },
-    { label: 'Capacity Kg', key: 'capacityKg', sortable: true },
   ]
 
   // Modal form fields
@@ -107,13 +110,6 @@ const Godown = () => {
       label: 'Location',
       type: 'text',
       placeholder: 'Enter Location',
-      required: true,
-    },
-    {
-      name: 'capacityKg',
-      label: 'Capacity (KG)',
-      type: 'number',
-      placeholder: 'Enter Capacity',
       required: true,
     },
   ]
@@ -205,6 +201,11 @@ const Godown = () => {
     })
   }
 
+  // View handler
+  const handleViewButton = (id) => {
+    navigate(`/InventoryList/${id}`)
+  }
+
   return (
     <div>
       <ToastContainer />
@@ -247,8 +248,10 @@ const Godown = () => {
         isFetching={isFetching}
         editButton={true}
         deleteButton={true}
+        viewButton={true}
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination

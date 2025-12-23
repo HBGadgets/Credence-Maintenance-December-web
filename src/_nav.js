@@ -131,10 +131,15 @@ const _nav = [
       />
     ),
     items: [
+      // {
+      //   component: CNavItem,
+      //   name: 'TP Pass',
+      //   to: '/LR',
+      // },
       {
         component: CNavItem,
-        name: 'TP Pass',
-        to: '/LR',
+        name: 'Transport Pass Recipt',
+        to: '/GodownLr',
       },
     ],
   },
@@ -152,24 +157,27 @@ const _nav = [
     items: [
       {
         component: CNavItem,
-        name: 'Warehouses',
-        to: '/Godown',
-      },
-      {
-        component: CNavItem,
         name: 'Product List',
         to: '/ProductList',
       },
       {
         component: CNavItem,
-        name: 'Inventory',
-        to: '/InventoryList',
+        name: 'Rail Head',
+        to: '/RailHead',
       },
       {
         component: CNavItem,
-        name: 'Godown TP',
-        to: '/GodownLr',
+        name: 'Warehouses Inventory',
+        to: '/Godown',
       },
+
+
+
+      // {
+      //   component: CNavItem,
+      //   name: 'Inventory',
+      //   to: '/InventoryList',
+      // }
     ],
   },
 

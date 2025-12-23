@@ -11,7 +11,6 @@ import SmartPagination from '../../components/SmartPagination'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import TableArray from '../../components/TableArray'
 import AddButton from '../../components/AddButton'
-import GodownLRFrom from './component/GodownLRFrom'
 import { toast, ToastContainer } from 'react-toastify'
 import Swal from 'sweetalert2'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
@@ -20,19 +19,26 @@ import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import { getWorkerApi } from '../../TransportPass/data/data'
-import { FaArrowUp, FaPrint } from 'react-icons/fa'
+import { FaArrowUp, FaExchangeAlt, FaPrint } from 'react-icons/fa'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../../Supervisor/IconDropdown'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 
+// Import the 3 form components
+import RailheadForm from './component/RailheadForm'
+import WarehouseForm from './component/WarehouseForm'
+import WarehouseToPartyForm from './component/WarehouseToPartyForm'
+import { Button, Card, Col, Modal, Row } from 'react-bootstrap'
+import { FaTrain, FaWarehouse } from 'react-icons/fa6'
+
 const GodownLr = () => {
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(20)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
 
   // Date range state
@@ -53,6 +59,7 @@ const GodownLr = () => {
   const [showForm, setShowForm] = useState(false)
   const [formMode, setFormMode] = useState('add')
   const [selectedData, setSelectedData] = useState(null)
+  const [selectedFormType, setSelectedFormType] = useState(null) // 'railhead', 'warehouse', or 'warehouseToParty'
 
   const queryClient = useQueryClient()
 
@@ -61,21 +68,21 @@ const GodownLr = () => {
     queryKey: ['getGodownTP', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
     queryFn: getGodownTPApi,
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 30,
+    cacheTime: 1000 * 60 * 10,
   })
 
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
-    queryFn: fetchSupervisor, // Make sure this function is imported/defined
+    queryFn: fetchSupervisor,
     staleTime: 1000 * 60 * 10,
   })
 
   // Fetch workers
   const { data: workerList = [], isFetch } = useQuery({
     queryKey: ['workerList'],
-    queryFn: getWorkerApi, // Make sure this function is imported/defined
+    queryFn: getWorkerApi,
     staleTime: 1000 * 60 * 30,
   })
 
@@ -93,6 +100,7 @@ const GodownLr = () => {
       toast.success('Lorry receipt added successfully!')
       queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
       setShowForm(false)
+      setSelectedFormType(null)
     },
     onError: (error) => toast.error(error.message),
   })
@@ -106,6 +114,7 @@ const GodownLr = () => {
       setShowForm(false)
       setFormMode('add')
       setSelectedData(null)
+      setSelectedFormType(null)
     },
     onError: (error) => toast.error(error.message),
   })
@@ -119,7 +128,6 @@ const GodownLr = () => {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update status')
-      // Revert local state on error
       queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
     },
   })
@@ -137,16 +145,12 @@ const GodownLr = () => {
   // Handle date range change
   const handleDateRangeChange = (startDate, endDate) => {
     setDateRange({ startDate, endDate })
-    setCurrentPage(1) // Reset to first page when date changes
+    setCurrentPage(1)
   }
 
   // Update filtered data when API data changes
   useEffect(() => {
     if (getGodownTP?.receipts) {
-      console.log('API Response:', getGodownTP.receipts[0]) // Debug log
-      console.log('Selected Supervisor:', selectedName?.value)
-      console.log('Selected Worker:', selectedWorker?.value)
-
       let filtered = [...getGodownTP.receipts]
 
       // Filter by date range if selected
@@ -161,14 +165,7 @@ const GodownLr = () => {
 
       // Filter by supervisor if superadmin and supervisor selected
       if (userRole === 'superadmin' && selectedName?.value) {
-        console.log('Filtering by supervisorId:', selectedName.value)
         filtered = filtered.filter((receipt) => {
-          console.log(
-            'Receipt supervisorId:',
-            receipt.supervisorId,
-            receipt.supervisor_id,
-            receipt.supervisor,
-          )
           return (
             receipt.supervisorId === selectedName.value ||
             receipt.supervisor_id === selectedName.value ||
@@ -179,9 +176,7 @@ const GodownLr = () => {
 
       // Filter by workerId
       if (selectedWorker?.value) {
-        console.log('Filtering by workerId:', selectedWorker.value)
         filtered = filtered.filter((receipt) => {
-          console.log('Receipt workerId:', receipt.workerId, receipt.worker_id, receipt.worker)
           return (
             receipt.workerId === selectedWorker.value ||
             receipt.worker_id === selectedWorker.value ||
@@ -190,7 +185,6 @@ const GodownLr = () => {
         })
       }
 
-      console.log('Filtered results:', filtered.length)
       setFilteredData(filtered)
     }
   }, [getGodownTP, dateRange, selectedName, selectedWorker, userRole])
@@ -216,6 +210,7 @@ const GodownLr = () => {
     if (record) {
       setSelectedData(record)
       setFormMode('edit')
+      setSelectedFormType(record.tpPassType || 'railhead') // Determine form type from record
       setShowForm(true)
     }
   }
@@ -244,13 +239,9 @@ const GodownLr = () => {
 
     const newStatus = isChecked ? 'Completed' : 'Pending'
 
-    // Show confirmation before making changes
-    const currentStatus = record.status
-    const actionText = isChecked ? 'mark as Completed' : 'mark as Pending'
-
     Swal.fire({
       title: `Change Status to ${newStatus}?`,
-      text: `Are you sure you want to ${actionText}?`,
+      text: `Are you sure you want to mark as ${newStatus}?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: `Yes, change to ${newStatus}`,
@@ -258,27 +249,12 @@ const GodownLr = () => {
       confirmButtonColor: newStatus === 'Completed' ? '#28a745' : '#f5a623',
     }).then((result) => {
       if (result.isConfirmed) {
-        // Update local state immediately for instant UI feedback
         const updatedData = filteredData.map((item) =>
           item.id === id ? { ...item, status: newStatus } : item,
         )
         setFilteredData(updatedData)
-
-        // Call API to update status
         updateStatus({ id, status: newStatus })
       }
-      // If cancelled, do nothing - checkbox will remain as is
-    })
-  }
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
     })
   }
 
@@ -310,9 +286,10 @@ const GodownLr = () => {
       label: 'Date',
       key: 'date',
       sortable: true,
-      render: (item) => formatDate(item.date),
     },
-    { label: 'Owner Name', key: 'ownerName', sortable: true },
+
+    { label: 'Issued By', key: 'issuedBy', sortable: true },
+    { label: 'Received By', key: 'receivedBy', sortable: true },
     { label: 'Consignor Name', key: 'consignorName', sortable: true },
     { label: 'Consignor Address', key: 'consignorAddress' },
     { label: 'Consignee Name', key: 'consigneeName', sortable: true },
@@ -380,17 +357,6 @@ const GodownLr = () => {
   // Memoized dropdown items for export
   const dropdownItems = useMemo(
     () => [
-      // {
-      //   icon: FaRegFilePdf,
-      //   label: 'Download PDF',
-      //   onClick: () =>
-      //     exportToPDF({
-      //       title: 'All Transport Pass Report',
-      //       columns,
-      //       data: filteredData,
-      //       fileName: 'Transport_Pass_Report',
-      //     }),
-      // },
       {
         icon: PiMicrosoftExcelLogo,
         label: 'Download Excel',
@@ -419,8 +385,63 @@ const GodownLr = () => {
         onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
-    [filteredData, columns, exportToPDF, exportToExcel],
+    [filteredData, columns, exportToExcel],
   )
+
+  // Handle Add button click - show type selection
+  const handleAddButtonClick = () => {
+    setFormMode('add')
+    setSelectedData(null)
+    setSelectedFormType(null) // Reset form type
+    setShowForm(true)
+  }
+
+  // Render the appropriate form based on selected type
+  const renderForm = () => {
+    if (!showForm) return null
+
+    // In edit mode, use the form type from data
+    const formType =
+      formMode === 'edit' && selectedData?.tpPassType ? selectedData.tpPassType : selectedFormType
+
+    const commonProps = {
+      show: showForm,
+      handleClose: () => {
+        setShowForm(false)
+        setSelectedData(null)
+        setFormMode('add')
+        setSelectedFormType(null)
+      },
+      handleSubmit: handleFormSubmit,
+      initialData: selectedData,
+      mode: formMode,
+      isLoading: isSubmitting || isUpdating,
+      onFormTypeChange: setSelectedFormType, // Only used in add mode
+    }
+
+    switch (formType) {
+      case 'railhead':
+        return <RailheadForm {...commonProps} />
+      case 'warehouse':
+        return <WarehouseForm {...commonProps} />
+      case 'warehouseToParty':
+        return <WarehouseToPartyForm {...commonProps} />
+      default:
+        // Show type selection screen
+        return (
+          <FormTypeSelection
+            show={showForm}
+            handleClose={() => {
+              setShowForm(false)
+              setSelectedData(null)
+              setFormMode('add')
+              setSelectedFormType(null)
+            }}
+            onSelectType={setSelectedFormType}
+          />
+        )
+    }
+  }
 
   return (
     <>
@@ -431,23 +452,20 @@ const GodownLr = () => {
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
 
           {userRole === 'superadmin' ? (
-            // Supervisor + Worker side by side
             <div className="d-flex align-items-center gap-2">
-              {/* Supervisor Select */}
               <div style={{ minWidth: '140px' }}>
                 <SingleSelectDropdown
                   options={supervisorOptions}
                   value={selectedName}
                   onChange={(value) => {
                     setSelectedName(value)
-                    setSelectedWorker(null) // reset worker when supervisor changes
+                    setSelectedWorker(null)
                   }}
                   isClearable
                   placeholder="Supervisor..."
                 />
               </div>
 
-              {/* Worker Select (only when supervisor selected) */}
               {selectedName && (
                 <div style={{ minWidth: '140px' }}>
                   <SingleSelectDropdown
@@ -461,7 +479,6 @@ const GodownLr = () => {
               )}
             </div>
           ) : (
-            // Normal user → only worker select
             <div style={{ minWidth: '140px' }}>
               <SingleSelectDropdown
                 options={workerOptions}
@@ -480,32 +497,14 @@ const GodownLr = () => {
             setSearchQuery={setSearchQuery}
             placeholder="Search by vehicle, driver, consignor..."
           />
-          <AddButton
-            label="Add Lorry Receipt"
-            onClick={() => {
-              setFormMode('add')
-              setSelectedData(null)
-              setShowForm(true)
-            }}
-          />
+          <AddButton label="Add Lorry Receipt" onClick={handleAddButtonClick} />
         </div>
       </div>
 
-      <GodownLRFrom
-        show={showForm}
-        handleClose={() => {
-          setShowForm(false)
-          setSelectedData(null)
-          setFormMode('add')
-        }}
-        handleSubmit={handleFormSubmit}
-        initialData={selectedData}
-        mode={formMode}
-        isLoading={isSubmitting || isUpdating}
-      />
+      {renderForm()}
 
       <TableArray
-        title="Godown Lorry Receipts"
+        title="TP Pass Receipts"
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
@@ -536,6 +535,102 @@ const GodownLr = () => {
         <IconDropdown items={dropdownItems} />
       </div>
     </>
+  )
+}
+
+// Form Type Selection Component
+const FormTypeSelection = ({ show, handleClose, onSelectType }) => {
+  const [isLoading] = useState(false)
+
+  if (!show) return null
+
+  return (
+    <Modal show={show} onHide={handleClose} size="xl" centered>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="w-100">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h4 className="mb-0">Select TP Pass Type</h4>
+          </div>
+        </Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body className="p-4 pt-0">
+        <div className="text-center py-3">
+          <h5 className="mb-4">Choose the type of TP Pass you want to create</h5>
+          <Row className="justify-content-center g-4">
+            <Col md={6} lg={4}>
+              <Card
+                className="h-100 cursor-pointer border-primary"
+                onClick={() => onSelectType('railhead')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Card.Body className="text-center py-4">
+                  <FaTrain className="text-primary mb-3" size={48} />
+                  <Card.Title className="mb-2">Rack to Railhead</Card.Title>
+                  <Card.Text className="text-muted small">
+                    Default: Issued by <strong>Rack</strong> • Received by <strong>Railhead</strong>
+                  </Card.Text>
+                  <div className="mt-3">
+                    <Button variant="primary" disabled={isLoading}>
+                      Select This Option
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={6} lg={4}>
+              <Card
+                className="h-100 cursor-pointer border-success"
+                onClick={() => onSelectType('warehouse')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Card.Body className="text-center py-4">
+                  <FaWarehouse className="text-success mb-3" size={48} />
+                  <Card.Title className="mb-2">Railhead to Warehouse/Party</Card.Title>
+                  <Card.Text className="text-muted small">
+                    Default: Issued by <strong>Railhead</strong> • Received by{' '}
+                    <strong>Warehouse/Party</strong>
+                  </Card.Text>
+                  <div className="mt-3">
+                    <Button variant="success" disabled={isLoading}>
+                      Select This Option
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={6} lg={4}>
+              <Card
+                className="h-100 cursor-pointer border-warning"
+                onClick={() => onSelectType('warehouseToParty')}
+                style={{ cursor: 'pointer' }}
+              >
+                <Card.Body className="text-center py-4">
+                  <FaExchangeAlt className="text-warning mb-3" size={48} />
+                  <Card.Title className="mb-2">Warehouse to Party</Card.Title>
+                  <Card.Text className="text-muted small">
+                    Default: Issued by <strong>Warehouse</strong> • Received by{' '}
+                    <strong>Party</strong>
+                  </Card.Text>
+                  <div className="mt-3">
+                    <Button variant="warning" disabled={isLoading}>
+                      Select This Option
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <div className="mt-4">
+            <Button variant="outline-secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
   )
 }
 

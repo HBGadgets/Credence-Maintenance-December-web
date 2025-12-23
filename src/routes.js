@@ -43,7 +43,7 @@ const DriverExpenses = React.lazy(
 const VehicleExpensesBill = React.lazy(
   () => import('./views/Expenses-Management/vehicle-expenses/VehicleExpensesBill.jsx'),
 )
-const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
+// const LR = React.lazy(() => import('./views/Expenses-Management/LR/Lr.jsx'))
 
 const AllExpenses = React.lazy(() => import('./views/Expenses-Management/AllExpenses.jsx'))
 
@@ -114,8 +114,11 @@ const DailyTrips = React.lazy(() => import('./views/DailyTrips/DailyTrips.jsx'))
 // Warehouse Section
 const Godown = React.lazy(() => import('./views/Warehouse Section/Godown/Godown.jsx'))
 const ProductList = React.lazy(() => import('./views/Warehouse Section/ProductList/ProductList.jsx'))
-const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/InventoryList.jsx'))
 const GodownLR = React.lazy(() => import('./views/Warehouse Section/GodownLR/GodownLr.jsx'))
+const InventoryList = React.lazy(() => import('./views/Warehouse Section/Godown/components/InventoryList.jsx'))
+const RailHead = React.lazy(() => import('./views/Warehouse Section/RailHead/RailHead.jsx'))
+// const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/InventoryList.jsx'))
+
 
 
 // routes
@@ -158,7 +161,7 @@ const routes = [
 
   { path: '/DriverExpenseBill', name: 'All Drivers Expenses', element: DriverExpenses },
   { path: '/VehicleExpensesBill', name: 'All Vehicles Expenses', element: VehicleExpensesBill },
-  { path: '/LR', name: 'TP Pass', element: LR },
+  // { path: '/LR', name: 'TP Pass', element: LR },
   { path: '/AllExpenses', name: 'All Expenses', element: AllExpenses },
 
   // Transport pass
@@ -206,9 +209,12 @@ const routes = [
 
   // Warehouse section
   { path: '/Godown', name: 'Godown', element: Godown },
+  { path: '/InventoryList/:id', name: 'Inventory List', element: InventoryList },
   { path: '/ProductList', name: 'Product List', element: ProductList },
-  { path: '/InventoryList', name: 'Inventory List', element: Inventory },
-  { path: '/GodownLR', name: 'Godown TP', element: GodownLR }
+  { path: '/GodownLr', name: 'Transport Pass Recipt', element: GodownLR },
+  { path: '/RailHead', name: 'Rail Head', element: RailHead },
+  // { path: '/InventoryList', name: 'Inventory List', element: Inventory },
+
 
 ]
 

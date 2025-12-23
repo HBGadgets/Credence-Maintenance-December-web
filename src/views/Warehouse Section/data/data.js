@@ -27,7 +27,6 @@ export const getWarehouseApi = async ({ queryKey }) => {
             id: item._id,
             wareHouseName: item.wareHouseName || "Unknown",
             location: item.location || "Unknown",
-            capacityKg: item.capacityKg || 0
         })),
         total: data.total,
         totalPages: data.totalPages,
@@ -87,6 +86,51 @@ export const deleteWarehouseApi = async (id) => {
         throw new Error(error.response?.data?.message || 'Delete failed');
     }
 };
+
+
+// warehouse profile by id
+
+export const getWarehouseProfileApi = async ({ queryKey }) => {
+    const [_key, { search, page, limit, id }] = queryKey
+
+    if (!TOKEN) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/warehouseproduct/get`,
+        {
+            params: {
+                warehouseId: id,
+                search: search || '',
+                page,
+                limit,
+            },
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    )
+
+    const formattedData = data.data.flatMap((item) =>
+        item.products.map((product) => ({
+            id: `${item._id}-${product._id}`,
+
+            warehouseId: item.warehouseId?._id,
+            wareHouseName: item.warehouseId?.wareHouseName || 'Unknown',
+            location: item.warehouseId?.location || 'Unknown',
+
+            productId: product.productId?._id,
+            productName: product.productId?.name || 'Unknown',
+            quantityKg: product.quantityKg,
+            bagSizeKg: product.bagSizeKg,
+            totalBags: product.totalBags,
+        }))
+    )
+
+    return {
+        data: formattedData,
+        total: data.totalItems,
+        totalPages: data.totalPages,
+        page: data.page,
+    }
+}
 
 
 // ----------------------------------------------------------------------------------------------------
@@ -345,6 +389,8 @@ export const getGodownTPApi = async ({ queryKey }) => {
             id: item._id,
             date: formatDateToDDMMYYYY(item.date),
             originalDate: item.date,
+            issuedBy: item.issuedBy,
+            receivedBy: item.receivedBy,
             ownerName: item.ownerName,
             consignorName: item.consignorName,
             consignorAddress: item.consignorAddress,
@@ -371,7 +417,8 @@ export const getGodownTPApi = async ({ queryKey }) => {
                 productId: p.productId,
                 productName: p.productName,
                 quantityKg: p.quantityKg,
-                bags: p.bags,
+                bagSize: p.bagSize,
+                totalBags: p.totalBags,
                 itemUnit: p.itemUnit,
                 itemWeight: p.itemWeight,
                 itemCost: p.itemCost,
@@ -470,8 +517,41 @@ export const deleteGodownTPApi = async (id) => {
 
 
 
+// ------------------------------------------------------------------------------------------------------ 
 
+// Railhead Get Api 
 
+export const getRailHeadApi = async ({ queryKey }) => {
+    const [_key, { search, page, limit }] = queryKey
+
+    if (!TOKEN) throw new Error('Authentication token not found')
+
+    const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/railhead`,
+        {
+            params: {
+                search: search || '',
+                page,
+                limit,
+            },
+            headers: { Authorization: `Bearer ${TOKEN}` },
+        }
+    )
+
+    return {
+        data: data.map((item) => ({
+            id: item._id,
+            createdAt: formatDateToDDMMYYYY(item.createdAt) || "--",
+            productName: item.productName || 'Unknown',
+            quantityKg: item.quantityKg || 0,
+            bagSize: item.bagSize || 0,
+            totalBags: item.totalBags || 0,
+        })),
+        total: data.totalItems || data.total || 0,
+        totalPages: data.totalPages || 1,
+        page: data.page || 1,
+    }
+}
 
 
 
