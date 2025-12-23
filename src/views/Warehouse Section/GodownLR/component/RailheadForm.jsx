@@ -9,10 +9,10 @@ import { getWorkerApi } from '../../../TransportPass/data/data'
 import Select from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
 import CreatableSelect from 'react-select/creatable'
-import { FaTrain, FaInfoCircle } from 'react-icons/fa'
+import { FaTrain, FaInfoCircle, FaRupeeSign } from 'react-icons/fa'
 import { getInventoryApi } from '../../data/data'
 
-// Updated product structure - removed warehouse and product ID fields
+// Updated product structure
 const defaultProduct = {
   productId: '',
   productName: '',
@@ -20,7 +20,8 @@ const defaultProduct = {
   bagSize: '',
   totalBags: '',
   itemWeight: '',
-  itemCost: '',
+  costPerBag: '', // New field
+  itemCost: '', // Total cost
 }
 
 const getTodayDate = () => {
@@ -155,6 +156,7 @@ const RailheadForm = ({
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
           itemWeight: product.itemWeight?.toString() || '',
+          costPerBag: product.costPerBag?.toString() || '', // New field
           itemCost: product.itemCost?.toString() || '',
         })) || [{ ...defaultProduct }],
       })
@@ -210,6 +212,30 @@ const RailheadForm = ({
           itemWeight: calculatedQuantityKg.toString(),
         }
       }
+
+      // Auto-calculate total cost when costPerBag or totalBags changes
+      if (field === 'costPerBag' || field === 'totalBags') {
+        const costPerBagNum = parseFloat(updatedProducts[index].costPerBag) || 0
+        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
+        const calculatedTotalCost = costPerBagNum * totalBagsNum
+
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          itemCost: calculatedTotalCost.toString(),
+        }
+      }
+
+      // Auto-calculate costPerBag when itemCost or totalBags changes
+      if (field === 'itemCost' || field === 'totalBags') {
+        const itemCostNum = parseFloat(updatedProducts[index].itemCost) || 0
+        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
+        const calculatedCostPerBag = totalBagsNum > 0 ? itemCostNum / totalBagsNum : 0
+
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          costPerBag: calculatedCostPerBag.toString(),
+        }
+      }
     }
 
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
@@ -262,6 +288,7 @@ const RailheadForm = ({
         !product.bagSize ||
         !product.totalBags ||
         !product.itemWeight ||
+        !product.costPerBag ||
         !product.itemCost,
     )
 
@@ -282,6 +309,7 @@ const RailheadForm = ({
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseFloat(product.totalBags) || 0,
         itemWeight: parseFloat(product.itemWeight) || 0,
+        costPerBag: parseFloat(product.costPerBag) || 0, // Include in payload
         itemCost: parseFloat(product.itemCost) || 0,
       })),
     }
@@ -742,6 +770,8 @@ const RailheadForm = ({
               const bagSize = parseFloat(product.bagSize) || 0
               const totalBags = parseFloat(product.totalBags) || 0
               const calculatedQuantity = bagSize * totalBags
+              const costPerBag = parseFloat(product.costPerBag) || 0
+              const calculatedTotalCost = costPerBag * totalBags
 
               return (
                 <div key={index} className="border rounded p-3 mb-3">
@@ -845,77 +875,66 @@ const RailheadForm = ({
                       </Form.Text>
                     </div>
 
-                    {/* Cost - Manual input */}
+                    {/* Cost per bag - Manual input */}
                     <div className="col-md-3">
                       <Form.Label>
-                        Cost <span style={{ color: 'red' }}>*</span>
+                        Cost per Bag (₹) <span style={{ color: 'red' }}>*</span>
                       </Form.Label>
                       <Form.Control
                         type="number"
-                        value={product.itemCost}
-                        onChange={(e) => handleProductChange(index, 'itemCost', e.target.value)}
+                        value={product.costPerBag}
+                        onChange={(e) => handleProductChange(index, 'costPerBag', e.target.value)}
                         disabled={isLoading}
-                        placeholder="Enter cost"
+                        placeholder="Enter cost per bag"
                         required
                         min="0"
                         step="0.01"
                       />
+                      <Form.Text className="text-muted">Cost per single bag</Form.Text>
+                    </div>
+
+                    {/* Total Cost - Auto-calculated and readonly */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Total Cost (₹) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={calculatedTotalCost || product.itemCost}
+                        readOnly
+                        className="bg-light"
+                        required
+                      />
+                      <Form.Text className="text-muted">
+                        Auto-calculated: Cost per Bag × Total Bags
+                      </Form.Text>
                     </div>
 
                     {/* Calculation Display */}
                     {(product.bagSize || product.totalBags) && (
                       <div className="col-md-12 mt-2">
                         <div className="alert alert-info p-2 small">
-                          <strong>Calculation:</strong> {bagSize} kg/bag × {totalBags} bags ={' '}
-                          <strong>{calculatedQuantity} kg</strong>
+                          <div className="row">
+                            <div className="col-md-6">
+                              <strong>Weight Calculation:</strong> {bagSize} kg/bag × {totalBags}{' '}
+                              bags = <strong>{calculatedQuantity} kg</strong>
+                            </div>
+                            {(product.costPerBag || product.itemCost) && (
+                              <div className="col-md-6">
+                                <strong>Cost Calculation:</strong>{' '}
+                                <FaRupeeSign className="d-inline" size={12} /> {costPerBag} per bag
+                                × {totalBags} bags ={' '}
+                                <strong>
+                                  <FaRupeeSign className="d-inline" size={12} />{' '}
+                                  {calculatedTotalCost}
+                                </strong>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Product Details Display from API */}
-                  {productDetail && (
-                    <div className="alert alert-info mb-3 p-3 mt-3">
-                      <div className="d-flex align-items-center mb-2">
-                        <FaInfoCircle className="me-2" />
-                        <strong>Product Details from RailHead Inventory:</strong>
-                      </div>
-                      <div className="row small">
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Product:</span>{' '}
-                          <strong>{productDetail.productName}</strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Quantity (Kg):</span>{' '}
-                          <strong
-                            className={
-                              productDetail.quantityKg === 0 ? 'text-danger' : 'text-success'
-                            }
-                          >
-                            {productDetail.quantityKg}
-                          </strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Bag Size:</span>{' '}
-                          <strong
-                            className={productDetail.bagSize === 0 ? 'text-danger' : 'text-success'}
-                          >
-                            {productDetail.bagSize}
-                          </strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Total Bags:</span>{' '}
-                          <strong
-                            className={
-                              productDetail.totalBags === 0 ? 'text-danger' : 'text-success'
-                            }
-                          >
-                            {productDetail.totalBags}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>{' '}
                 </div>
               )
             })}
