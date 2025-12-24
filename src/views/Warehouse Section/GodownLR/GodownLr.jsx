@@ -287,7 +287,7 @@ const GodownLr = () => {
       key: 'date',
       sortable: true,
     },
-
+    { label: 'Recipt No', key: 'receiptNo', sortable: true },
     { label: 'Issued By', key: 'issuedBy', sortable: true },
     { label: 'Received By', key: 'receivedBy', sortable: true },
     { label: 'Consignor Name', key: 'consignorName', sortable: true },

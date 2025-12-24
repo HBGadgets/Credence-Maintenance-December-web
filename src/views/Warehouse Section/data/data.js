@@ -389,6 +389,7 @@ export const getGodownTPApi = async ({ queryKey }) => {
             id: item._id,
             date: formatDateToDDMMYYYY(item.date),
             originalDate: item.date,
+            receiptNo: item.receiptNo,
             issuedBy: item.issuedBy,
             receivedBy: item.receivedBy,
             ownerName: item.ownerName,
