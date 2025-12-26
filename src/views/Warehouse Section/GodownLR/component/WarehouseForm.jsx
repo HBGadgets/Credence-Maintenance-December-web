@@ -132,6 +132,13 @@ const WarehouseForm = ({
   const warehouseList = warehouseResponse?.data || []
   const inventoryList = railHeadData?.data || [] // Using railHeadData instead of inventoryResponse
 
+  // Add this function to prevent scroll on number inputs
+  const handleNumberInputScroll = (e) => {
+    e.preventDefault()
+    e.target.blur()
+    return false
+  }
+
   // Extract product details from rail head response
   useEffect(() => {
     if (inventoryList.length > 0) {
@@ -1335,6 +1342,7 @@ const WarehouseForm = ({
                         type="number"
                         value={product.totalBags}
                         onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
+                        onWheel={handleNumberInputScroll}
                         disabled={isLoading}
                         placeholder="Enter total bags"
                         required
@@ -1365,6 +1373,7 @@ const WarehouseForm = ({
                         type="number"
                         value={calculatedQuantity || product.quantityKg}
                         onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
+                        onWheel={handleNumberInputScroll}
                         disabled={isLoading}
                         placeholder="Auto-calculated"
                         className="bg-light"
@@ -1403,6 +1412,7 @@ const WarehouseForm = ({
                         type="number"
                         value={product.costPerBag}
                         onChange={(e) => handleProductChange(index, 'costPerBag', e.target.value)}
+                        onWheel={handleNumberInputScroll}
                         disabled={isLoading}
                         required
                         min="0"
@@ -1485,6 +1495,7 @@ const WarehouseForm = ({
                 name="customerRate"
                 value={formData.customerRate}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1495,6 +1506,7 @@ const WarehouseForm = ({
                 name="totalAmount"
                 value={formData.totalAmount}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1505,6 +1517,7 @@ const WarehouseForm = ({
                 name="transporterRate"
                 value={formData.transporterRate}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1515,6 +1528,7 @@ const WarehouseForm = ({
                 name="totalTransporterAmount"
                 value={formData.totalTransporterAmount}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1525,6 +1539,7 @@ const WarehouseForm = ({
                 name="transporterRateOn"
                 value={formData.transporterRateOn}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1535,6 +1550,7 @@ const WarehouseForm = ({
                 name="customerRateOn"
                 value={formData.customerRateOn}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1545,6 +1561,7 @@ const WarehouseForm = ({
                 name="customerFreight"
                 value={formData.customerFreight}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
@@ -1555,6 +1572,7 @@ const WarehouseForm = ({
                 name="transporterFreight"
                 value={formData.transporterFreight}
                 onChange={handleChange}
+                onWheel={handleNumberInputScroll}
                 disabled={isLoading}
               />
             </div>
