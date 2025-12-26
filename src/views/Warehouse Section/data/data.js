@@ -543,6 +543,7 @@ export const getRailHeadApi = async ({ queryKey }) => {
         data: data.map((item) => ({
             id: item._id,
             createdAt: formatDateToDDMMYYYY(item.createdAt) || "--",
+            productId: item.productId || "",
             productName: item.productName || 'Unknown',
             quantityKg: item.quantityKg || 0,
             bagSize: item.bagSize || 0,
