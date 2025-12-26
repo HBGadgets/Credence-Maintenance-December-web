@@ -10,7 +10,14 @@ import Select from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
 import CreatableSelect from 'react-select/creatable'
 import { getWarehouseListApi, getWarehouseProfileApi } from '../../data/data'
-import { FaExchangeAlt, FaWarehouse } from 'react-icons/fa'
+import {
+  FaExchangeAlt,
+  FaWarehouse,
+  FaWeight,
+  FaRupeeSign,
+  FaCalculator,
+  FaBox,
+} from 'react-icons/fa'
 
 const defaultProduct = {
   warehouseId: '',
@@ -22,6 +29,7 @@ const defaultProduct = {
   totalBags: '',
   itemUnit: '',
   itemWeight: '',
+  costPerBag: '', // New field for cost per bag
   itemCost: '',
 }
 
@@ -38,6 +46,7 @@ const defaultFormData = {
   issuedBy: 'Warehouse',
   issuedByWarehouseId: '',
   issuedByWarehouseName: '',
+  warehouseId: '',
   receivedBy: 'Party',
   receivedByType: 'party',
   supervisorId: '',
@@ -157,7 +166,7 @@ const WarehouseToPartyForm = ({
     return warehouseProductsResponse.data || []
   }, [warehouseProductsResponse])
 
-  // Create product options
+  // Create product options - REMOVED THE FILTER
   const productOptions = useMemo(() => {
     console.log('Creating product options from inventory list:', inventoryList)
 
@@ -226,6 +235,7 @@ const WarehouseToPartyForm = ({
             totalBags: product.totalBags?.toString() || '',
             itemUnit: product.itemUnit?.toString() || '',
             itemWeight: product.itemWeight?.toString() || '',
+            costPerBag: product.costPerBag?.toString() || '', // Add costPerBag
             itemCost: product.itemCost?.toString() || '',
           }
 
@@ -289,7 +299,11 @@ const WarehouseToPartyForm = ({
         warehouseName: selectedWarehouse?.wareHouseName || selectedWarehouse?.name || '',
       }
     } else if (field === 'productId') {
+      console.log('=== PRODUCT SELECTION DEBUG ===')
+      console.log('Selected value:', value)
       const selectedProduct = inventoryList.find((p) => p.productId === value)
+      console.log('Found product data:', selectedProduct)
+
       updatedProducts[index] = {
         ...updatedProducts[index],
         productId: value,
@@ -298,10 +312,48 @@ const WarehouseToPartyForm = ({
         bagSizeKg: selectedProduct?.bagSizeKg || '',
         totalBags: selectedProduct?.totalBags || '',
       }
+      console.log('Updated product after selection:', updatedProducts[index])
     } else {
       updatedProducts[index] = {
         ...updatedProducts[index],
         [field]: value,
+      }
+
+      // Auto-calculate quantityKg and itemWeight when bagSizeKg or totalBags changes
+      if (field === 'bagSizeKg' || field === 'totalBags') {
+        const bagSizeNum = parseFloat(updatedProducts[index].bagSizeKg) || 0
+        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
+        const calculatedQuantityKg = bagSizeNum * totalBagsNum
+
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          quantityKg: calculatedQuantityKg > 0 ? calculatedQuantityKg.toString() : '',
+          itemWeight: calculatedQuantityKg > 0 ? calculatedQuantityKg.toString() : '',
+        }
+      }
+
+      // Auto-calculate total cost when costPerBag or totalBags changes
+      if (field === 'costPerBag' || field === 'totalBags') {
+        const costPerBagNum = parseFloat(updatedProducts[index].costPerBag) || 0
+        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
+        const calculatedTotalCost = costPerBagNum * totalBagsNum
+
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          itemCost: calculatedTotalCost > 0 ? calculatedTotalCost.toString() : '',
+        }
+      }
+
+      // Auto-calculate costPerBag when itemCost or totalBags changes
+      if (field === 'itemCost' || field === 'totalBags') {
+        const itemCostNum = parseFloat(updatedProducts[index].itemCost) || 0
+        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
+        const calculatedCostPerBag = totalBagsNum > 0 ? itemCostNum / totalBagsNum : 0
+
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          costPerBag: calculatedCostPerBag > 0 ? calculatedCostPerBag.toString() : '',
+        }
       }
     }
 
@@ -348,15 +400,37 @@ const WarehouseToPartyForm = ({
       return
     }
 
-    // Validate products
-    const invalidProducts = formData.products.filter(
-      (product) =>
+    // Validate products - with detailed logging
+    console.log('=== VALIDATING PRODUCTS ===')
+    const invalidProducts = formData.products.filter((product, index) => {
+      const isInvalid =
         !product.productId ||
         !product.quantityKg ||
+        product.quantityKg === '0' ||
         !product.bagSizeKg ||
+        product.bagSizeKg === '0' ||
         !product.itemWeight ||
-        !product.itemCost,
-    )
+        product.itemWeight === '0' ||
+        !product.costPerBag ||
+        product.costPerBag === '0' ||
+        !product.itemCost ||
+        product.itemCost === '0'
+
+      if (isInvalid) {
+        console.log(`Product ${index + 1} is invalid:`, {
+          productId: product.productId,
+          quantityKg: product.quantityKg,
+          bagSizeKg: product.bagSizeKg,
+          itemWeight: product.itemWeight,
+          costPerBag: product.costPerBag,
+          itemCost: product.itemCost,
+        })
+      }
+      return isInvalid
+    })
+
+    console.log('Invalid products count:', invalidProducts.length)
+    console.log('All products:', formData.products)
 
     if (invalidProducts.length > 0) {
       alert('Please fill all required fields for all products')
@@ -368,6 +442,8 @@ const WarehouseToPartyForm = ({
       ...formData,
       tpPassType: 'warehouseToParty',
       companyId: formData.companyId || '',
+      warehouseId: formData.issuedByWarehouseId || '',
+
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
       products: formData.products.map((product) => {
         // Create transformed product object
@@ -378,6 +454,7 @@ const WarehouseToPartyForm = ({
           totalBags: parseFloat(product.totalBags) || 0,
           itemUnit: parseFloat(product.itemUnit) || 0,
           itemWeight: parseFloat(product.itemWeight) || 0,
+          costPerBag: parseFloat(product.costPerBag) || 0,
           itemCost: parseFloat(product.itemCost) || 0,
         }
 
@@ -913,238 +990,282 @@ const WarehouseToPartyForm = ({
               </div>
             </div>
 
-            {formData.products.map((product, index) => (
-              <div key={index} className="border rounded p-3 mb-3">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h6 className="mb-0">Product {index + 1}</h6>
-                  {formData.products.length > 1 && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => removeProduct(index)}
-                      disabled={isLoading}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <Form.Label>Warehouse</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={product.warehouseName || formData.issuedByWarehouseName || ''}
-                      disabled
-                      readOnly
-                      className="bg-light"
-                    />
-                    <Form.Text className="text-muted">
-                      Auto-selected from "Issued By" warehouse
-                    </Form.Text>
-                    <Form.Control
-                      type="hidden"
-                      value={product.warehouseId || formData.issuedByWarehouseId}
-                      readOnly
-                    />
-                  </div>
+            {formData.products.map((product, index) => {
+              const bagSize = parseFloat(product.bagSizeKg) || 0
+              const totalBags = parseFloat(product.totalBags) || 0
+              const costPerBag = parseFloat(product.costPerBag) || 0
+              const calculatedQuantity = bagSize * totalBags
+              const calculatedTotalCost = costPerBag * totalBags
 
-                  <div className="col-md-6">
-                    <Form.Label>
-                      Product <span style={{ color: 'red' }}>*</span>
-                    </Form.Label>
-                    <Select
-                      key={`product-select-${index}-${product.productId || 'empty'}`}
-                      value={getProductValue(product)}
-                      onChange={(selected) => {
-                        console.log('Product selected:', selected)
-                        console.log('Current formData.products:', formData.products)
-
-                        if (selected) {
-                          const selectedProduct = inventoryList.find(
-                            (p) => p.productId === selected.value,
-                          )
-                          console.log('Found product in inventory:', selectedProduct)
-
-                          // Create updated product
-                          const updatedProduct = {
-                            ...product,
-                            productId: selected.value,
-                            productName: selectedProduct?.productName || 'Unknown Product',
-                            quantityKg: selectedProduct?.quantityKg || '',
-                            bagSizeKg: selectedProduct?.bagSizeKg || '',
-                            totalBags: selectedProduct?.totalBags || '',
-                          }
-
-                          // Update the products array
-                          const updatedProducts = [...formData.products]
-                          updatedProducts[index] = updatedProduct
-
-                          // Update form data
-                          setFormData((prev) => ({
-                            ...prev,
-                            products: updatedProducts,
-                          }))
-                        } else {
-                          // Clear the product
-                          const updatedProducts = [...formData.products]
-                          updatedProducts[index] = {
-                            ...product,
-                            productId: '',
-                            productName: '',
-                            quantityKg: '',
-                            bagSizeKg: '',
-                            totalBags: '',
-                          }
-
-                          setFormData((prev) => ({
-                            ...prev,
-                            products: updatedProducts,
-                          }))
-                        }
-                      }}
-                      options={productOptions}
-                      placeholder={
-                        isLoadingWarehouseProducts
-                          ? 'Loading products...'
-                          : !formData.issuedByWarehouseId
-                            ? 'Select a warehouse first'
-                            : isError
-                              ? 'Error loading products'
-                              : productOptions.length === 0
-                                ? 'No products available in this warehouse'
-                                : 'Select Product'
-                      }
-                      isClearable
-                      isLoading={isLoadingWarehouseProducts || isLoading}
-                      isDisabled={
-                        !formData.issuedByWarehouseId ||
-                        isLoadingWarehouseProducts ||
-                        isLoading ||
-                        isError
-                      }
-                      required
-                    />
-                    {!formData.issuedByWarehouseId && (
-                      <Form.Text className="text-danger">
-                        Please select a warehouse in the "Issued By" section first
-                      </Form.Text>
+              return (
+                <div key={index} className="border rounded p-3 mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">Product {index + 1}</h6>
+                    {formData.products.length > 1 && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        disabled={isLoading}
+                      >
+                        Remove
+                      </Button>
                     )}
-                    {formData.issuedByWarehouseId &&
-                      productOptions.length === 0 &&
-                      !isLoadingWarehouseProducts && (
+                  </div>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <Form.Label>Warehouse</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={product.warehouseName || formData.issuedByWarehouseName || ''}
+                        disabled
+                        readOnly
+                        className="bg-light"
+                      />
+                      <Form.Text className="text-muted">
+                        Auto-selected from "Issued By" warehouse
+                      </Form.Text>
+                      <Form.Control
+                        type="hidden"
+                        value={product.warehouseId || formData.issuedByWarehouseId}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="col-md-6">
+                      <Form.Label>
+                        Product <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Select
+                        key={`product-select-${index}-${product.productId || 'empty'}`}
+                        value={getProductValue(product)}
+                        onChange={(selected) => {
+                          console.log('Product selected:', selected)
+                          console.log('Current formData.products:', formData.products)
+
+                          if (selected) {
+                            const selectedProduct = inventoryList.find(
+                              (p) => p.productId === selected.value,
+                            )
+                            console.log('Found product in inventory:', selectedProduct)
+
+                            // Create updated product
+                            const updatedProduct = {
+                              ...product,
+                              productId: selected.value,
+                              productName: selectedProduct?.productName || 'Unknown Product',
+                              quantityKg: selectedProduct?.quantityKg || '',
+                              bagSizeKg: selectedProduct?.bagSizeKg || '',
+                              totalBags: selectedProduct?.totalBags || '',
+                            }
+
+                            // Update the products array
+                            const updatedProducts = [...formData.products]
+                            updatedProducts[index] = updatedProduct
+
+                            // Update form data
+                            setFormData((prev) => ({
+                              ...prev,
+                              products: updatedProducts,
+                            }))
+                          } else {
+                            // Clear the product
+                            const updatedProducts = [...formData.products]
+                            updatedProducts[index] = {
+                              ...product,
+                              productId: '',
+                              productName: '',
+                              quantityKg: '',
+                              bagSizeKg: '',
+                              totalBags: '',
+                            }
+
+                            setFormData((prev) => ({
+                              ...prev,
+                              products: updatedProducts,
+                            }))
+                          }
+                        }}
+                        options={productOptions}
+                        placeholder={
+                          isLoadingWarehouseProducts
+                            ? 'Loading products...'
+                            : !formData.issuedByWarehouseId
+                              ? 'Select a warehouse first'
+                              : isError
+                                ? 'Error loading products'
+                                : productOptions.length === 0
+                                  ? 'No products available in this warehouse'
+                                  : 'Select Product'
+                        }
+                        isClearable
+                        isLoading={isLoadingWarehouseProducts || isLoading}
+                        isDisabled={
+                          !formData.issuedByWarehouseId ||
+                          isLoadingWarehouseProducts ||
+                          isLoading ||
+                          isError
+                        }
+                        required
+                      />
+                      {!formData.issuedByWarehouseId && (
                         <Form.Text className="text-danger">
-                          No products found in the selected warehouse
+                          Please select a warehouse in the "Issued By" section first
                         </Form.Text>
                       )}
+                      {formData.issuedByWarehouseId &&
+                        productOptions.length === 0 &&
+                        !isLoadingWarehouseProducts && (
+                          <Form.Text className="text-danger">
+                            No products found in the selected warehouse
+                          </Form.Text>
+                        )}
+                    </div>
+
+                    {/* Total Bags */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Total Bags <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.totalBags}
+                        onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
+                        disabled={isLoading}
+                        placeholder="Enter total bags"
+                        required
+                      />
+                    </div>
+
+                    {/* Bag Size */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.bagSizeKg}
+                        onChange={(e) => handleProductChange(index, 'bagSizeKg', e.target.value)}
+                        disabled={isLoading}
+                        required
+                        min="0"
+                        step="0.01"
+                      />
+                      <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
+                    </div>
+
+                    {/* Quantity (Kg) - Auto-calculated */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Quantity (Kg) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={calculatedQuantity || product.quantityKg}
+                        onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
+                        disabled={isLoading}
+                        placeholder="Auto-calculated"
+                        required
+                        min="0"
+                        step="0.01"
+                      />
+                      <Form.Text className="text-muted">
+                        Auto-calculated: Bag Size × Total Bags
+                      </Form.Text>
+                    </div>
+
+                    {/* Weight - Auto-calculated */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Weight (Kg) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={calculatedQuantity || product.itemWeight}
+                        onChange={(e) => handleProductChange(index, 'itemWeight', e.target.value)}
+                        disabled={isLoading}
+                        required
+                        min="0"
+                        step="0.01"
+                      />
+                      <Form.Text className="text-muted">
+                        Auto-calculated: Same as Quantity
+                      </Form.Text>
+                    </div>
+
+                    {/* Cost per Bag */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Cost per Bag (₹) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={product.costPerBag}
+                        onChange={(e) => handleProductChange(index, 'costPerBag', e.target.value)}
+                        disabled={isLoading}
+                        required
+                        min="0"
+                        step="0.01"
+                      />
+                      <Form.Text className="text-muted">Cost per single bag</Form.Text>
+                    </div>
+
+                    {/* Total Cost - Auto-calculated */}
+                    <div className="col-md-3">
+                      <Form.Label>
+                        Total Cost (₹) <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={calculatedTotalCost || product.itemCost}
+                        onChange={(e) => handleProductChange(index, 'itemCost', e.target.value)}
+                        disabled={isLoading}
+                        required
+                        min="0"
+                        step="0.01"
+                      />
+                      <Form.Text className="text-muted">
+                        Auto-calculated: Cost per Bag × Total Bags
+                      </Form.Text>
+                    </div>
                   </div>
 
-                  <div className="col-md-3">
-                    <Form.Label>
-                      Quantity (Kg) <span style={{ color: 'red' }}>*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.quantityKg}
-                      onChange={(e) => {
-                        const updatedProducts = [...formData.products]
-                        updatedProducts[index] = {
-                          ...product,
-                          quantityKg: e.target.value,
-                        }
-                        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-                      }}
-                      disabled={isLoading}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div className="col-md-3">
-                    <Form.Label>
-                      Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.bagSizeKg}
-                      onChange={(e) => {
-                        const updatedProducts = [...formData.products]
-                        updatedProducts[index] = {
-                          ...product,
-                          bagSizeKg: e.target.value,
-                        }
-                        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-                      }}
-                      disabled={isLoading}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div className="col-md-3">
-                    <Form.Label>Total Bags</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.totalBags}
-                      onChange={(e) => {
-                        const updatedProducts = [...formData.products]
-                        updatedProducts[index] = {
-                          ...product,
-                          totalBags: e.target.value,
-                        }
-                        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-                      }}
-                      disabled={isLoading}
-                      min="0"
-                    />
-                  </div>
-
-                  <div className="col-md-3">
-                    <Form.Label>
-                      Weight (kg) <span style={{ color: 'red' }}>*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.itemWeight}
-                      onChange={(e) => {
-                        const updatedProducts = [...formData.products]
-                        updatedProducts[index] = {
-                          ...product,
-                          itemWeight: e.target.value,
-                        }
-                        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-                      }}
-                      disabled={isLoading}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <Form.Label>
-                      Cost (₹) <span style={{ color: 'red' }}>*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={product.itemCost}
-                      onChange={(e) => {
-                        const updatedProducts = [...formData.products]
-                        updatedProducts[index] = {
-                          ...product,
-                          itemCost: e.target.value,
-                        }
-                        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-                      }}
-                      disabled={isLoading}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
+                  {/* Calculation Display */}
+                  {(product.bagSizeKg || product.totalBags) && (
+                    <div className="mt-3 p-3 bg-light rounded">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="alert alert-primary p-2 mb-2">
+                            <h6 className="mb-1">Weight Calculation:</h6>
+                            <div className="d-flex align-items-center">
+                              <FaWeight className="me-2" />
+                              <span>
+                                {bagSize} kg/bag × {totalBags} bags ={' '}
+                                <strong>{calculatedQuantity} kg</strong>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {(product.costPerBag || product.itemCost) && (
+                          <div className="col-md-6">
+                            <div className="alert alert-success p-2 mb-2">
+                              <h6 className="mb-1">Cost Calculation:</h6>
+                              <div className="d-flex align-items-center">
+                                <FaRupeeSign className="me-2" />
+                                <span>
+                                  ₹ {costPerBag} per bag × {totalBags} bags ={' '}
+                                  <strong>₹ {calculatedTotalCost}</strong>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             <Button
               variant="outline-primary"
