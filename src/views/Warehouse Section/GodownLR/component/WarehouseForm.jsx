@@ -104,34 +104,27 @@ const WarehouseForm = ({
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
-    staleTime: 1000 * 60 * 10,
   })
 
   const { data: workerList = [] } = useQuery({
     queryKey: ['workerList'],
     queryFn: getWorkerApi,
-    staleTime: 1000 * 60 * 30,
   })
 
   const { data: companyList = [] } = useQuery({
     queryKey: ['companyList'],
     queryFn: getCompanyNameApi,
-    staleTime: 1000 * 60 * 30,
   })
 
   const { data: warehouseResponse = {} } = useQuery({
     queryKey: ['getWarehouseList', { page: 1, limit: 100 }],
     queryFn: ({ queryKey }) => getWarehouseListApi(queryKey[1]),
-    staleTime: 1000 * 60 * 30,
   })
 
   // Updated API call using getRailHeadApi
   const { data: railHeadData = {}, isFetching: isRailHeadFetching } = useQuery({
     queryKey: ['RailHead', { search: '', page: 1, limit: 100 }],
     queryFn: getRailHeadApi,
-    keepPreviousData: true,
-    staleTime: 1000 * 60 * 30,
-    cacheTime: 1000 * 60 * 10,
   })
 
   const warehouseList = warehouseResponse?.data || []
@@ -359,14 +352,16 @@ const WarehouseForm = ({
 
       if (selectedProduct) {
         const productName = selectedProduct.productName || selectedProduct.name || 'Unknown Product'
+        const productId = selectedProduct.productId // Get the actual productId field
+        const inventoryId = selectedProduct._id || selectedProduct.id // This is the inventory ID
 
         // Get product details from productDetails state or directly from selectedProduct
-        let productDetail = productDetails[selectedProduct._id]
+        let productDetail = productDetails[inventoryId]
         if (!productDetail) {
           // Extract from rail head API structure
           productDetail = {
-            _id: selectedProduct._id,
-            productId: selectedProduct.productId, // This is the actual product ID
+            productId: productId, // Store actual productId
+            inventoryId: inventoryId, // Store inventory ID separately
             productName: productName,
             quantityKg: selectedProduct.quantityKg || selectedProduct.quantity || 0,
             bagSize: selectedProduct.bagSize || selectedProduct.bagWeight || 0,
@@ -376,26 +371,27 @@ const WarehouseForm = ({
 
         console.log('Product details for form:', productDetail)
 
-        // Update the product in the form - send productId, not _id
+        // Update the product in the form
         updatedProducts[index] = {
           ...updatedProducts[index],
-          productId: selectedProduct.productId, // Send productId from API, not _id
-          railheadId: selectedProduct._id, // Store railhead _id separately if needed
+          // Store inventory ID for lookup
+          inventoryId: inventoryId,
+          // Use actual productId for the payload
+          productId: productId,
           productName: productName,
           // Auto-fill the quantityKg, bagSize, and totalBags from the selected product
           quantityKg: (selectedProduct.quantityKg || selectedProduct.quantity || '').toString(),
           bagSize: (selectedProduct.bagSize || selectedProduct.bagWeight || '').toString(),
-          totalBags: (selectedProduct.totalBags || selectedProduct.totalbags || '').toString(),
+          totalBags: (selectedProduct.totalBags || selectedProduct.totalags || '').toString(),
         }
 
         console.log('Updated product:', updatedProducts[index])
-        console.log('Sending productId:', selectedProduct.productId)
       } else {
         // If no product found, clear the fields
         updatedProducts[index] = {
           ...updatedProducts[index],
-          productId: '',
-          railheadId: '',
+          inventoryId: '',
+          productId: value,
           productName: '',
           quantityKg: '',
           bagSize: '',
@@ -461,6 +457,8 @@ const WarehouseForm = ({
       }
     }
 
+    // Don't auto-fill if manually changing warehouse for a specific product
+    // Only auto-fill when receivedByType is 'warehouse' and it's not a manual change
     if (
       field !== 'warehouseId' &&
       formData.receivedByType === 'warehouse' &&
@@ -541,10 +539,21 @@ const WarehouseForm = ({
 
     // Prepare products based on receivedByType
     const preparedProducts = formData.products.map((product) => {
+      // Get the actual product from inventory list to get the correct productId
+      const productFromInventory = inventoryList.find(
+        (p) => p._id === product.productId || p.id === product.productId,
+      )
+
+      const actualProductId = productFromInventory?.productId || product.productId
+      const actualProductName =
+        productFromInventory?.productName || productFromInventory?.name || product.productName
+
       const baseProduct = {
         ...product,
+        // Use the actual productId from the inventory item, not the _id
+        productId: actualProductId,
+        productName: actualProductName,
         quantityKg: parseFloat(product.quantityKg) || 0,
-        bags: parseFloat(product.bags) || 0,
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseFloat(product.totalBags) || 0,
         itemWeight: parseFloat(product.itemWeight) || 0,
@@ -589,6 +598,9 @@ const WarehouseForm = ({
       delete payload.supervisorName
     }
 
+    console.log('=== FINAL PAYLOAD ===', payload)
+    console.log('=== PRODUCTS DETAIL ===', payload.products)
+
     handleSubmit(payload)
   }
 
@@ -602,21 +614,26 @@ const WarehouseForm = ({
     label: w.wareHouseName || w.name || 'Unnamed Warehouse',
   }))
 
-  const productOptions = inventoryList.map((p) => {
-    const productId = p.productId // Use productId, not _id
-    const railheadId = p._id // Store railhead _id separately
-    const productName = p.productName || p.name || 'Unnamed Product'
-    const quantityKg = p.quantityKg || p.quantity || 0
-    const bagSize = p.bagSize || p.bagWeight || 0
-    const totalBags = p.totalBags || p.bags || 0
+  const productOptions = inventoryList
+    .filter((p) => {
+      // Check if totalBags is not 0
+      const totalBags = p.totalBags || p.bags || 0
+      return totalBags > 0
+    })
+    .map((p) => {
+      const inventoryId = p._id || p.id
+      const productId = p.productId || inventoryId
+      const productName = p.productName || p.name || 'Unnamed Product'
+      const quantityKg = p.quantityKg || p.quantity || 0
+      const bagSize = p.bagSize || p.bagWeight || 0
+      const totalBags = p.totalBags || p.bags || 0
 
-    return {
-      value: railheadId, // Use railhead _id as value for selection
-      label: `${productName} (${quantityKg}kg, ${bagSize}/bag, ${totalBags} bags)`,
-      data: p,
-      productId: productId, // Store the actual productId
-    }
-  })
+      return {
+        value: inventoryId, // Use inventory ID for selection
+        label: `${productName} ( ${quantityKg}kg, ${bagSize}/bag, ${totalBags} bags)`,
+        data: p,
+      }
+    })
 
   const companyOptions = companyList.map((c) => ({
     value: c.id || c._id,
@@ -645,14 +662,10 @@ const WarehouseForm = ({
   }
 
   const getProductValue = (product) => {
-    // Find the option by railhead _id
-    if (!product.railheadId && !product.productId) return null
-
-    return (
-      productOptions.find(
-        (opt) => opt.value === product.railheadId || opt.data.productId === product.productId,
-      ) || null
-    )
+    // Use inventoryId for selection if available, otherwise fallback to productId
+    const value = product.inventoryId || product.productId
+    if (!value) return null
+    return productOptions.find((opt) => opt.value === value) || null
   }
 
   const getCompanyValue = () => {
@@ -698,24 +711,29 @@ const WarehouseForm = ({
 
   // Get product details for display
   const getProductDetailForDisplay = (product) => {
-    let productDetail = productDetails[product.productId]
+    // First try to find by inventoryId if available
+    let productDetail
+    if (product.inventoryId) {
+      productDetail = productDetails[product.inventoryId]
+    }
 
-    // If not found in productDetails, try to find in inventoryList
-    if (!productDetail && product.productId) {
+    // If not found, try to find by productId in inventoryList
+    if (!productDetail && (product.productId || product.inventoryId)) {
       const productFromList = inventoryList.find(
         (p) =>
-          p._id === product.productId ||
-          p.id === product.productId ||
+          p._id === product.inventoryId ||
+          p.id === product.inventoryId ||
           p.productId === product.productId,
       )
       if (productFromList) {
         productDetail = {
+          productId: productFromList.productId, // Actual productId
+          inventoryId: productFromList._id || productFromList.id, // Inventory ID
           productName: productFromList.productName || productFromList.name || 'Unknown Product',
           quantityKg: productFromList.quantityKg || productFromList.quantity || 0,
           bagSize: productFromList.bagSize || productFromList.bagWeight || 0,
           totalBags: productFromList.totalBags || productFromList.bags || 0,
           bags: productFromList.bags || 0,
-          _id: productFromList._id,
         }
       }
     }
