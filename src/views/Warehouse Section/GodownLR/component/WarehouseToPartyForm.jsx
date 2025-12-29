@@ -25,11 +25,11 @@ const defaultProduct = {
   productId: '',
   productName: '',
   quantityKg: '',
-  bagSizeKg: '', // Form field name
+  bagSizeKg: '',
   totalBags: '',
   itemUnit: '',
   itemWeight: '',
-  costPerBag: '', // New field for cost per bag
+  costPerBag: '',
   itemCost: '',
 }
 
@@ -315,6 +315,56 @@ const WarehouseToPartyForm = ({
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Vehicle handler with CreatableSelect support
+  const handleVehicleChange = (selected, action) => {
+    if (selected) {
+      if (action.action === 'create-option') {
+        // User created new Vehicle
+        setFormData((prev) => ({
+          ...prev,
+          vehicleId: selected.value,
+          vehicleName: selected.label,
+        }))
+      } else {
+        // Existing Vehicle selected
+        const selectedVehicle = vehicles.find(
+          (v) => v.id === selected.value || v._id === selected.value,
+        )
+        setFormData((prev) => ({
+          ...prev,
+          vehicleId: selected.value,
+          vehicleName: selectedVehicle?.name || selectedVehicle?.vehicleNumber || selected.label,
+        }))
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
+    }
+  }
+
+  // Driver handler with CreatableSelect support
+  const handleDriverChange = (selected, action) => {
+    if (selected) {
+      if (action.action === 'create-option') {
+        // User created new Driver
+        setFormData((prev) => ({
+          ...prev,
+          driverId: selected.value,
+          driverName: selected.label,
+        }))
+      } else {
+        // Existing Driver selected
+        const selectedDriver = drivers.find((d) => d.id === selected.value)
+        setFormData((prev) => ({
+          ...prev,
+          driverId: selected.value,
+          driverName: selectedDriver?.name || selected.label,
+        }))
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
+    }
+  }
+
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...formData.products]
 
@@ -468,7 +518,7 @@ const WarehouseToPartyForm = ({
       return
     }
 
-    // Transform form data for API submission
+    // Transform form data for API submission - convert null/empty strings to 0 for freight fields
     const payload = {
       ...formData,
       tpPassType: 'warehouseToParty',
@@ -476,6 +526,17 @@ const WarehouseToPartyForm = ({
       warehouseId: formData.issuedByWarehouseId || '',
 
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+
+      // Convert freight fields from null/empty strings to 0
+      customerRate: parseFloat(formData.customerRate) || 0,
+      totalAmount: parseFloat(formData.totalAmount) || 0,
+      transporterRate: parseFloat(formData.transporterRate) || 0,
+      totalTransporterAmount: parseFloat(formData.totalTransporterAmount) || 0,
+      transporterRateOn: parseFloat(formData.transporterRateOn) || 0,
+      customerRateOn: parseFloat(formData.customerRateOn) || 0,
+      customerFreight: parseFloat(formData.customerFreight) || 0,
+      transporterFreight: parseFloat(formData.transporterFreight) || 0,
+
       products: formData.products.map((product) => {
         // Create transformed product object
         const transformedProduct = {
@@ -524,15 +585,55 @@ const WarehouseToPartyForm = ({
     supervisorId: w.supervisorId,
   }))
 
-  const vehicleOptions = vehicles.map((v) => ({
-    value: v.id || v._id,
-    label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
-  }))
+  // Prepare vehicle options for CreatableSelect
+  const vehicleOptions = Array.isArray(vehicles)
+    ? vehicles.map((v) => ({
+        value: v.id || v._id,
+        label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
+      }))
+    : []
 
-  const driverOptions = drivers.map((d) => ({
-    value: d.id || d._id,
-    label: d.name || 'Unnamed Driver',
-  }))
+  // Prepare driver options for CreatableSelect
+  const driverOptions = Array.isArray(drivers)
+    ? drivers.map((d) => ({
+        value: d.id || d._id,
+        label: d.name || 'Unnamed Driver',
+      }))
+    : []
+
+  // Get current vehicle selection value for CreatableSelect
+  const getVehicleValue = () => {
+    if (formData.vehicleId) {
+      // Check if it's a newly created vehicle (not in the options)
+      const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
+      if (existingVehicle) {
+        return existingVehicle
+      }
+      // If not found in options, it's a newly created one
+      return {
+        value: formData.vehicleId,
+        label: formData.vehicleName || formData.vehicleId,
+      }
+    }
+    return null
+  }
+
+  // Get current driver selection value for CreatableSelect
+  const getDriverValue = () => {
+    if (formData.driverId) {
+      // Check if it's a newly created driver (not in the options)
+      const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
+      if (existingDriver) {
+        return existingDriver
+      }
+      // If not found in options, it's a newly created one
+      return {
+        value: formData.driverId,
+        label: formData.driverName || formData.driverId,
+      }
+    }
+    return null
+  }
 
   const getWarehouseValue = (product) => {
     if (!product.warehouseId) return null
@@ -563,16 +664,6 @@ const WarehouseToPartyForm = ({
   const getWorkerValue = () => {
     if (!formData.workerId) return null
     return workerOptions.find((opt) => opt.value === formData.workerId) || null
-  }
-
-  const getVehicleValue = () => {
-    if (!formData.vehicleId) return null
-    return vehicleOptions.find((opt) => opt.value === formData.vehicleId) || null
-  }
-
-  const getDriverValue = () => {
-    if (!formData.driverId) return null
-    return driverOptions.find((opt) => opt.value === formData.driverId) || null
   }
 
   const getIssuedByWarehouseValue = () => {
@@ -844,26 +935,14 @@ const WarehouseToPartyForm = ({
               />
             </div>
 
+            {/* Updated Vehicle section with CreatableSelect */}
             <div className="col-md-4">
               <Form.Label>
                 Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
               </Form.Label>
               <CreatableSelect
                 value={getVehicleValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedVehicle = vehicles.find(
-                      (v) => v.id === selected.value || v._id === selected.value,
-                    )
-                    setFormData((prev) => ({
-                      ...prev,
-                      vehicleId: selected.value,
-                      vehicleName: selectedVehicle?.name || selected.label,
-                    }))
-                  } else {
-                    setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
-                  }
-                }}
+                onChange={handleVehicleChange}
                 options={vehicleOptions}
                 placeholder="Select or type new vehicle"
                 isClearable
@@ -872,24 +951,14 @@ const WarehouseToPartyForm = ({
               />
             </div>
 
+            {/* Updated Driver section with CreatableSelect */}
             <div className="col-md-4">
               <Form.Label>
                 Driver Name <span style={{ color: 'red' }}>*</span>
               </Form.Label>
               <CreatableSelect
                 value={getDriverValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedDriver = drivers.find((d) => d.id === selected.value)
-                    setFormData((prev) => ({
-                      ...prev,
-                      driverId: selected.value,
-                      driverName: selectedDriver?.name || selected.label,
-                    }))
-                  } else {
-                    setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
-                  }
-                }}
+                onChange={handleDriverChange}
                 options={driverOptions}
                 placeholder="Select or type new driver"
                 isClearable
@@ -1171,11 +1240,9 @@ const WarehouseToPartyForm = ({
                       <Form.Control
                         type="number"
                         value={product.bagSizeKg}
-                        onChange={(e) => handleProductChange(index, 'bagSizeKg', e.target.value)}
-                        disabled={isLoading}
+                        readOnly
+                        className="bg-light"
                         required
-                        min="0"
-                        step="0.01"
                       />
                       <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
                     </div>
@@ -1189,11 +1256,9 @@ const WarehouseToPartyForm = ({
                         type="number"
                         value={calculatedQuantity || product.quantityKg}
                         onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
-                        disabled={isLoading}
                         placeholder="Auto-calculated"
+                        className="bg-light"
                         required
-                        min="0"
-                        step="0.01"
                       />
                       <Form.Text className="text-muted">
                         Auto-calculated: Bag Size × Total Bags
@@ -1208,11 +1273,9 @@ const WarehouseToPartyForm = ({
                       <Form.Control
                         type="number"
                         value={calculatedQuantity || product.itemWeight}
-                        onChange={(e) => handleProductChange(index, 'itemWeight', e.target.value)}
-                        disabled={isLoading}
+                        readOnly
+                        className="bg-light"
                         required
-                        min="0"
-                        step="0.01"
                       />
                       <Form.Text className="text-muted">
                         Auto-calculated: Same as Quantity

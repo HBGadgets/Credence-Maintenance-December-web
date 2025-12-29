@@ -737,27 +737,21 @@ const RailheadForm = ({
           <h5 className="fw-semibold border-bottom pb-2 mb-3">Route Details</h5>
           <div className="row g-3 mb-4">
             <div className="col-md-6">
-              <Form.Label>
-                Start Location <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
+              <Form.Label>Start Location</Form.Label>
               <Form.Control
                 name="startLocation"
                 value={formData.startLocation}
                 onChange={handleChange}
                 disabled={isLoading}
-                required
               />
             </div>
             <div className="col-md-6">
-              <Form.Label>
-                End Location <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
+              <Form.Label>End Location</Form.Label>
               <Form.Control
                 name="endLocation"
                 value={formData.endLocation}
                 onChange={handleChange}
                 disabled={isLoading}
-                required
               />
             </div>
           </div>

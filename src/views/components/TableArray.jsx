@@ -12,7 +12,6 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-  CFormCheck,
 } from '@coreui/react'
 import {
   Eye,
@@ -24,6 +23,8 @@ import {
   ChevronRight,
   Check,
   Square,
+  X,
+  CheckCircle,
 } from 'lucide-react'
 
 const skeletonStyles = `
@@ -72,8 +73,8 @@ const skeletonStyles = `
     gap: 4px;
   }
 
-  /* Checkbox styling */
-  .checkbox-button {
+  /* Status icon styling */
+  .status-icon-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -83,16 +84,8 @@ const skeletonStyles = `
     transition: all 0.2s ease;
   }
 
-  .checkbox-button:hover {
+  .status-icon-button:hover {
     background-color: #e9ecef;
-  }
-
-  .checkbox-button.checked {
-    background-color: rgba(45, 51, 107, 0.1);
-  }
-
-  .checkbox-button input[type="checkbox"] {
-    display: none;
   }
 
   /* 🔹 Thin horizontal scrollbar */
@@ -259,19 +252,18 @@ function TableArray({
   isFetching,
   reportButton,
   handleReportButton,
-  checkButton = false,
-  handleCheckboxButton,
-  getCheckboxChecked,
+  statusButton = false,
+  handleStatusButton,
+  statusButtonLabel = 'Status',
+  statusButtonIcon = <CheckCircle size={18} />,
   action = 'Action',
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
   const [expandedRows, setExpandedRows] = useState(new Set())
-  const [checkedRows, setCheckedRows] = useState(new Set())
 
-  // FIX: Use filteredData directly since it already contains the current page data
-  // Remove client-side pagination logic
+  // Use filteredData directly since it already contains the current page data
   const currentData = filteredData
 
   const toggleRowExpansion = (rowId) => {
@@ -286,21 +278,19 @@ function TableArray({
 
   const isRowExpanded = (rowId) => expandedRows.has(rowId)
 
-  const handleCheckboxChange = (rowId) => {
-    const newCheckedRows = new Set(checkedRows)
-    if (newCheckedRows.has(rowId)) {
-      newCheckedRows.delete(rowId)
-    } else {
-      newCheckedRows.add(rowId)
-    }
-    setCheckedRows(newCheckedRows)
+  // Function to determine status icon based on status
+  const getStatusIcon = (row) => {
+    const status = row?.status?.toLowerCase()
 
-    if (handleCheckboxButton) {
-      handleCheckboxButton(rowId, newCheckedRows.has(rowId))
+    if (status === 'completed') {
+      return <Check color="#28a745" size={18} />
+    } else if (status === 'cancelled') {
+      return <X color="#dc3545" size={18} />
+    } else {
+      // Pending or any other status
+      return <Square color="#6c757d" size={18} />
     }
   }
-
-  const isRowChecked = (rowId) => checkedRows.has(rowId)
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -416,7 +406,7 @@ function TableArray({
                         {column.label} {column.sortable && getSortIcon(column.key)}
                       </CTableHeaderCell>
                     ))}
-                  {(editButton || deleteButton || viewButton || reportButton || checkButton) && (
+                  {(editButton || deleteButton || viewButton || reportButton || statusButton) && (
                     <CTableHeaderCell className="text-center" style={{ width: '200px' }}>
                       {action}
                     </CTableHeaderCell>
@@ -445,10 +435,10 @@ function TableArray({
                         deleteButton ||
                         viewButton ||
                         reportButton ||
-                        checkButton) && (
+                        statusButton) && (
                         <CTableDataCell className="action-cell">
                           <div className="action-buttons">
-                            {checkButton && (
+                            {statusButton && (
                               <div
                                 className="skeleton-loader"
                                 style={{ width: '20px', height: '20px' }}
@@ -498,7 +488,9 @@ function TableArray({
                     const rowId = row.id || row._id
                     const isExpanded = isRowExpanded(rowId)
                     const hasProducts = row.products && row.products.length > 0
-                    const isChecked = isRowChecked(rowId)
+                    const statusIcon = getStatusIcon(row)
+                    const status = row?.status?.toLowerCase()
+                    const isCompletedOrCancelled = status === 'completed' || status === 'cancelled'
 
                     return (
                       <React.Fragment key={rowIndex}>
@@ -566,45 +558,19 @@ function TableArray({
                             deleteButton ||
                             viewButton ||
                             reportButton ||
-                            checkButton) && (
+                            statusButton) && (
                             <CTableDataCell className="action-cell" style={{ padding: '8px' }}>
                               <div className="action-buttons">
-                                {checkButton && (
-                                  <label
-                                    className={`checkbox-button action-button ${isRowChecked(rowId) ? 'checked' : ''}`}
-                                    title={isRowChecked(rowId) ? 'Completed' : 'Pending'}
+                                {/* Status Icon Button */}
+                                {statusButton && (
+                                  <button
+                                    className="status-icon-button action-button"
+                                    onClick={() => handleStatusButton(rowId)}
+                                    aria-label={`Status: ${row?.status || 'Pending'}`}
+                                    title={`Status: ${row?.status || 'Pending'}`}
                                   >
-                                    <CFormCheck
-                                      type="checkbox"
-                                      checked={
-                                        getCheckboxChecked
-                                          ? getCheckboxChecked(row)
-                                          : isRowChecked(rowId)
-                                      }
-                                      onChange={() => {
-                                        if (handleCheckboxButton) {
-                                          const currentChecked = getCheckboxChecked
-                                            ? getCheckboxChecked(row)
-                                            : isRowChecked(rowId)
-                                          handleCheckboxButton(rowId, !currentChecked)
-                                        } else {
-                                          handleCheckboxChange(rowId)
-                                        }
-                                      }}
-                                      aria-label="Toggle status"
-                                    />
-                                    {getCheckboxChecked ? (
-                                      getCheckboxChecked(row) ? (
-                                        <Check color="#28a745" size={18} />
-                                      ) : (
-                                        <Square color="#6c757d" size={18} />
-                                      )
-                                    ) : isRowChecked(rowId) ? (
-                                      <Check color="#28a745" size={18} />
-                                    ) : (
-                                      <Square color="#6c757d" size={18} />
-                                    )}
-                                  </label>
+                                    {statusIcon}
+                                  </button>
                                 )}
 
                                 {editButton && (
@@ -612,8 +578,17 @@ function TableArray({
                                     className="action-button"
                                     onClick={() => handleEditButton(rowId)}
                                     aria-label="Edit"
+                                    disabled={isCompletedOrCancelled}
+                                    title={
+                                      isCompletedOrCancelled
+                                        ? 'Cannot edit completed/cancelled records'
+                                        : 'Edit'
+                                    }
                                   >
-                                    <Pencil color="#2D336B" size={18} />
+                                    <Pencil
+                                      color={isCompletedOrCancelled ? '#6c757d' : '#2D336B'}
+                                      size={18}
+                                    />
                                   </button>
                                 )}
                                 {deleteButton && (
@@ -621,8 +596,17 @@ function TableArray({
                                     className="action-button"
                                     onClick={() => handleDeleteButton(rowId)}
                                     aria-label="Delete"
+                                    disabled={isCompletedOrCancelled}
+                                    title={
+                                      isCompletedOrCancelled
+                                        ? 'Cannot delete completed/cancelled records'
+                                        : 'Delete'
+                                    }
                                   >
-                                    <Trash2 color="#2D336B" size={18} />
+                                    <Trash2
+                                      color={isCompletedOrCancelled ? '#6c757d' : '#2D336B'}
+                                      size={18}
+                                    />
                                   </button>
                                 )}
 
@@ -701,14 +685,16 @@ TableArray.propTypes = {
   isFetching: PropTypes.bool,
   reportButton: PropTypes.bool,
   handleReportButton: PropTypes.func,
-  checkButton: PropTypes.bool,
-  handleCheckboxButton: PropTypes.func,
-  getCheckboxChecked: PropTypes.func,
+  statusButton: PropTypes.bool,
+  handleStatusButton: PropTypes.func,
+  statusButtonLabel: PropTypes.string,
+  statusButtonIcon: PropTypes.node,
+  action: PropTypes.string,
 }
 
 TableArray.defaultProps = {
   isFetching: false,
-  checkButton: false,
+  statusButton: false,
 }
 
 export default TableArray

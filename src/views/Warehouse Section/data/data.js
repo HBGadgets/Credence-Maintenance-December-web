@@ -517,6 +517,26 @@ export const deleteGodownTPApi = async (id) => {
 };
 
 
+// acknowledgementImage
+
+export const patchAcknowledgementsApi = async (id, formData) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update-status/${id}`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${TOKEN}`,
+                },
+            }
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error:", error.response?.data || error.message)
+        throw error
+    }
+}
 
 // ------------------------------------------------------------------------------------------------------ 
 

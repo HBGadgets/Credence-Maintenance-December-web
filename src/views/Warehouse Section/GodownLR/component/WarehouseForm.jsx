@@ -138,6 +138,54 @@ const WarehouseForm = ({
     e.target.blur()
     return false
   }
+  // Vehicle and Driver handlers with CreatableSelect support
+  const handleVehicleChange = (selected, action) => {
+    if (selected) {
+      if (action.action === 'create-option') {
+        // User created new Vehicle
+        setFormData((prev) => ({
+          ...prev,
+          vehicleId: selected.value,
+          vehicleName: selected.label,
+        }))
+      } else {
+        // Existing Vehicle selected
+        const selectedVehicle = vehicles.find(
+          (v) => v.id === selected.value || v._id === selected.value,
+        )
+        setFormData((prev) => ({
+          ...prev,
+          vehicleId: selected.value,
+          vehicleName: selectedVehicle?.name || selectedVehicle?.vehicleNumber || selected.label,
+        }))
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
+    }
+  }
+
+  const handleDriverChange = (selected, action) => {
+    if (selected) {
+      if (action.action === 'create-option') {
+        // User created new Driver
+        setFormData((prev) => ({
+          ...prev,
+          driverId: selected.value,
+          driverName: selected.label,
+        }))
+      } else {
+        // Existing Driver selected
+        const selectedDriver = drivers.find((d) => d.id === selected.value)
+        setFormData((prev) => ({
+          ...prev,
+          driverId: selected.value,
+          driverName: selectedDriver?.name || selected.label,
+        }))
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
+    }
+  }
 
   // Extract product details from rail head response
   useEffect(() => {
@@ -643,15 +691,19 @@ const WarehouseForm = ({
     supervisorId: w.supervisorId,
   }))
 
-  const vehicleOptions = vehicles.map((v) => ({
-    value: v.id || v._id,
-    label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
-  }))
+  const vehicleOptions = Array.isArray(vehicles)
+    ? vehicles.map((v) => ({
+        value: v.id || v._id,
+        label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
+      }))
+    : []
 
-  const driverOptions = drivers.map((d) => ({
-    value: d.id || d._id,
-    label: d.name || 'Unnamed Driver',
-  }))
+  const driverOptions = Array.isArray(drivers)
+    ? drivers.map((d) => ({
+        value: d.id || d._id,
+        label: d.name || 'Unnamed Driver',
+      }))
+    : []
 
   const getWarehouseValue = (product) => {
     if (!product.warehouseId) return null
@@ -676,13 +728,35 @@ const WarehouseForm = ({
   }
 
   const getVehicleValue = () => {
-    if (!formData.vehicleId) return null
-    return vehicleOptions.find((opt) => opt.value === formData.vehicleId) || null
+    if (formData.vehicleId) {
+      // Check if it's a newly created vehicle (not in the options)
+      const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
+      if (existingVehicle) {
+        return existingVehicle
+      }
+      // If not found in options, it's a newly created one
+      return {
+        value: formData.vehicleId,
+        label: formData.vehicleName || formData.vehicleId,
+      }
+    }
+    return null
   }
 
   const getDriverValue = () => {
-    if (!formData.driverId) return null
-    return driverOptions.find((opt) => opt.value === formData.driverId) || null
+    if (formData.driverId) {
+      // Check if it's a newly created driver (not in the options)
+      const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
+      if (existingDriver) {
+        return existingDriver
+      }
+      // If not found in options, it's a newly created one
+      return {
+        value: formData.driverId,
+        label: formData.driverName || formData.driverId,
+      }
+    }
+    return null
   }
 
   const getReceivedByWarehouseValue = () => {
@@ -1036,24 +1110,12 @@ const WarehouseForm = ({
               </Form.Label>
               <CreatableSelect
                 value={getVehicleValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedVehicle = vehicles.find(
-                      (v) => v.id === selected.value || v._id === selected.value,
-                    )
-                    setFormData((prev) => ({
-                      ...prev,
-                      vehicleId: selected.value,
-                      vehicleName: selectedVehicle?.name || selected.label,
-                    }))
-                  } else {
-                    setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
-                  }
-                }}
+                onChange={handleVehicleChange}
                 options={vehicleOptions}
                 placeholder="Select or type new vehicle"
                 isClearable
                 isLoading={isLoading || isRailHeadFetching}
+                required
               />
             </div>
 
@@ -1063,22 +1125,12 @@ const WarehouseForm = ({
               </Form.Label>
               <CreatableSelect
                 value={getDriverValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedDriver = drivers.find((d) => d.id === selected.value)
-                    setFormData((prev) => ({
-                      ...prev,
-                      driverId: selected.value,
-                      driverName: selectedDriver?.name || selected.label,
-                    }))
-                  } else {
-                    setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
-                  }
-                }}
+                onChange={handleDriverChange}
                 options={driverOptions}
                 placeholder="Select or type new driver"
                 isClearable
                 isLoading={isLoading || isRailHeadFetching}
+                required
               />
             </div>
           </div>

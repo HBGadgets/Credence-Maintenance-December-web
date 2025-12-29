@@ -5,6 +5,7 @@ import {
   patchGodownTPApi,
   postGodownTPApi,
   patchGodownTPStatusApi,
+  patchAcknowledgementsApi,
 } from '../data/data'
 import SearchInput from '../../components/SearchInput'
 import SmartPagination from '../../components/SmartPagination'
@@ -32,6 +33,7 @@ import WarehouseForm from './component/WarehouseForm'
 import WarehouseToPartyForm from './component/WarehouseToPartyForm'
 import { Button, Card, Col, Modal, Row } from 'react-bootstrap'
 import { FaTrain, FaWarehouse } from 'react-icons/fa6'
+import StatusUpdateModal from './component/StatusUpdateModal'
 
 const GodownLr = () => {
   const { exportToPDF } = usePdfExporter()
@@ -62,6 +64,11 @@ const GodownLr = () => {
   const [selectedFormType, setSelectedFormType] = useState(null) // 'railhead', 'warehouse', or 'warehouseToParty'
 
   const queryClient = useQueryClient()
+
+  // Add these state variables at the top of the component:
+  const [showStatusModal, setShowStatusModal] = useState(false)
+  const [selectedStatusRecord, setSelectedStatusRecord] = useState(null)
+  const [statusModalLoading, setStatusModalLoading] = useState(false)
 
   // Fetch godown lorry receipts
   const { data: getGodownTP, isFetching } = useQuery({
@@ -129,6 +136,21 @@ const GodownLr = () => {
     onError: (error) => {
       toast.error(error.message || 'Failed to update status')
       queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
+    },
+  })
+
+  const { mutate: updateStatusWithImage, isLoading: isStatus } = useMutation({
+    mutationFn: ({ id, formData }) => patchAcknowledgementsApi(id, formData),
+    onSuccess: () => {
+      toast.success('Status updated successfully!')
+      queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
+      setShowStatusModal(false)
+      setSelectedStatusRecord(null)
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update status')
+      queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
+      setStatusModalLoading(false)
     },
   })
 
@@ -233,28 +255,23 @@ const GodownLr = () => {
   }
 
   // Handle checkbox status change
-  const handleCheckboxChange = (id, isChecked) => {
+  const handleStatusButtonClick = (id) => {
     const record = filteredData.find((item) => item.id === id)
     if (!record) return
 
-    const newStatus = isChecked ? 'Completed' : 'Pending'
+    setSelectedStatusRecord(record)
+    setShowStatusModal(true)
+  }
 
-    Swal.fire({
-      title: `Change Status to ${newStatus}?`,
-      text: `Are you sure you want to mark as ${newStatus}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: `Yes, change to ${newStatus}`,
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: newStatus === 'Completed' ? '#28a745' : '#f5a623',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const updatedData = filteredData.map((item) =>
-          item.id === id ? { ...item, status: newStatus } : item,
-        )
-        setFilteredData(updatedData)
-        updateStatus({ id, status: newStatus })
-      }
+  // Update the handleStatusSubmit function:
+  const handleStatusSubmit = (formData) => {
+    if (!selectedStatusRecord) return
+
+    setStatusModalLoading(true)
+    // Use the correct mutation function that handles FormData
+    updateStatusWithImage({
+      id: selectedStatusRecord.id,
+      formData,
     })
   }
 
@@ -446,7 +463,6 @@ const GodownLr = () => {
   return (
     <>
       <ToastContainer />
-
       <div className="mb-3 d-flex justify-content-between align-items-center gap-2 w-100">
         <div className="d-flex align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
@@ -502,7 +518,6 @@ const GodownLr = () => {
       </div>
 
       {renderForm()}
-
       <TableArray
         title="TP Pass Receipts"
         columns={columns}
@@ -513,11 +528,10 @@ const GodownLr = () => {
         isFetching={isFetching}
         editButton={true}
         deleteButton={true}
-        checkButton={true}
+        statusButton={true} // Enable status button
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
-        handleCheckboxButton={handleCheckboxChange}
-        getCheckboxChecked={(row) => row.status === 'Completed'}
+        handleStatusButton={handleStatusButtonClick} // Handler for status button
       />
 
       <SmartPagination
@@ -529,6 +543,20 @@ const GodownLr = () => {
           setItemsPerPage(newItems)
           setCurrentPage(1)
         }}
+      />
+
+      {/* // Add the StatusUpdateModal at the bottom of the component's return statement: */}
+      <StatusUpdateModal
+        show={showStatusModal}
+        onHide={() => {
+          setShowStatusModal(false)
+          setSelectedStatusRecord(null)
+          setStatusModalLoading(false)
+        }}
+        onSubmit={handleStatusSubmit}
+        isLoading={isStatus} // Use the correct loading state from updateStatusWithImage mutation
+        currentStatus={selectedStatusRecord?.status || 'Pending'}
+        recordData={selectedStatusRecord}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
