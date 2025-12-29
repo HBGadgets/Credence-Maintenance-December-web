@@ -147,7 +147,6 @@ const WarehouseToPartyForm = ({
   })
 
   const warehouseList = warehouseResponse?.data || []
-  const warehouseProducts = warehouseProductsResponse?.data || []
 
   // Extract products from warehouse response
   const inventoryList = useMemo(() => {
@@ -156,17 +155,23 @@ const WarehouseToPartyForm = ({
     if (
       !warehouseProductsResponse ||
       !warehouseProductsResponse.data ||
-      !Array.isArray(warehouseProductsResponse.data) ||
-      warehouseProductsResponse.data.length === 0
+      !Array.isArray(warehouseProductsResponse.data)
     ) {
       console.log('No warehouse products data found')
       return []
     }
 
+    console.log('API returned data:', {
+      totalItems: warehouseProductsResponse.total,
+      dataLength: warehouseProductsResponse.data.length,
+      sampleData: warehouseProductsResponse.data[0],
+    })
+
+    // The API already returns formatted data as an array of product objects
     return warehouseProductsResponse.data || []
   }, [warehouseProductsResponse])
 
-  // Create product options - REMOVED THE FILTER
+  // Create product options - DIFFERENTIATE BY BAG SIZE
   const productOptions = useMemo(() => {
     console.log('Creating product options from inventory list:', inventoryList)
 
@@ -174,21 +179,45 @@ const WarehouseToPartyForm = ({
       return []
     }
 
-    return inventoryList.map((p) => {
-      const label =
-        p.productName === 'Unknown Product'
-          ? `Unnamed Product (Available: ${p.quantityKg || 0} kg, Bag Size: ${p.bagSizeKg || 0} kg, Total Bags: ${p.totalBags || 0})`
-          : `${p.productName} (Available: ${p.quantityKg || 0} kg, Bag Size: ${p.bagSizeKg || 0} kg, Total Bags: ${p.totalBags || 0})`
+    const options = []
+    const seenCombinations = new Set()
 
-      return {
-        value: p.productId,
-        label: label,
-        quantityKg: p.quantityKg,
-        bagSizeKg: p.bagSizeKg,
-        totalBags: p.totalBags,
-        productName: p.productName,
+    inventoryList.forEach((product) => {
+      const productId = product.productId
+      const productName = product.productName || 'Unknown Product'
+      const bagSizeKg = product.bagSizeKg
+      const quantityKg = product.quantityKg
+      const totalBags = product.totalBags
+
+      // Skip if no productId or bagSizeKg
+      if (!productId || bagSizeKg === undefined) {
+        console.log('Skipping product due to missing data:', product)
+        return
+      }
+
+      // Create a unique key for product + bag size combination
+      const uniqueKey = `${productId}_${bagSizeKg}`
+
+      if (!seenCombinations.has(uniqueKey)) {
+        seenCombinations.add(uniqueKey)
+
+        const label = `${productName} (Bag Size: ${bagSizeKg} kg, Available: ${quantityKg} kg, Total Bags: ${totalBags})`
+
+        options.push({
+          value: uniqueKey, // Use unique combination as value
+          label: label,
+          productId: productId,
+          productName: productName,
+          bagSizeKg: bagSizeKg,
+          quantityKg: quantityKg,
+          totalBags: totalBags,
+          originalProductData: product,
+        })
       }
     })
+
+    console.log('Generated product options:', options)
+    return options
   }, [inventoryList])
 
   useEffect(() => {
@@ -226,20 +255,18 @@ const WarehouseToPartyForm = ({
         companyId: initialData.companyId || '',
         products: initialData.products?.map((product) => {
           // Transform API data to form data
-          // Map bagSize from API to bagSizeKg for form
           const formProduct = {
             ...defaultProduct,
             ...product,
             quantityKg: product.quantityKg?.toString() || '',
-            bagSizeKg: product.bagSize?.toString() || product.bagSizeKg?.toString() || '', // Handle both bagSize and bagSizeKg
+            bagSizeKg: product.bagSize?.toString() || product.bagSizeKg?.toString() || '',
             totalBags: product.totalBags?.toString() || '',
             itemUnit: product.itemUnit?.toString() || '',
             itemWeight: product.itemWeight?.toString() || '',
-            costPerBag: product.costPerBag?.toString() || '', // Add costPerBag
+            costPerBag: product.costPerBag?.toString() || '',
             itemCost: product.itemCost?.toString() || '',
           }
 
-          // Remove bagSize if it exists (we're using bagSizeKg in the form)
           if (formProduct.bagSize) {
             delete formProduct.bagSize
           }
@@ -301,16 +328,20 @@ const WarehouseToPartyForm = ({
     } else if (field === 'productId') {
       console.log('=== PRODUCT SELECTION DEBUG ===')
       console.log('Selected value:', value)
-      const selectedProduct = inventoryList.find((p) => p.productId === value)
-      console.log('Found product data:', selectedProduct)
 
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        productId: value,
-        productName: selectedProduct?.productName || 'Unknown Product',
-        quantityKg: selectedProduct?.quantityKg || '',
-        bagSizeKg: selectedProduct?.bagSizeKg || '',
-        totalBags: selectedProduct?.totalBags || '',
+      // Find the selected product option
+      const selectedOption = productOptions.find((opt) => opt.value === value)
+      console.log('Found product option:', selectedOption)
+
+      if (selectedOption) {
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          productId: selectedOption.productId,
+          productName: selectedOption.productName || 'Unknown Product',
+          quantityKg: selectedOption.quantityKg?.toString() || '',
+          bagSizeKg: selectedOption.bagSizeKg?.toString() || '',
+          totalBags: selectedOption.totalBags?.toString() || '',
+        }
       }
       console.log('Updated product after selection:', updatedProducts[index])
     } else {
@@ -400,7 +431,7 @@ const WarehouseToPartyForm = ({
       return
     }
 
-    // Validate products - with detailed logging
+    // Validate products
     console.log('=== VALIDATING PRODUCTS ===')
     const invalidProducts = formData.products.filter((product, index) => {
       const isInvalid =
@@ -450,7 +481,7 @@ const WarehouseToPartyForm = ({
         const transformedProduct = {
           ...product,
           quantityKg: parseFloat(product.quantityKg) || 0,
-          bagSize: parseFloat(product.bagSizeKg) || 0, // Transform bagSizeKg to bagSize for API
+          bagSize: parseFloat(product.bagSizeKg) || 0,
           totalBags: parseFloat(product.totalBags) || 0,
           itemUnit: parseFloat(product.itemUnit) || 0,
           itemWeight: parseFloat(product.itemWeight) || 0,
@@ -511,13 +542,15 @@ const WarehouseToPartyForm = ({
   const getProductValue = (product) => {
     console.log('getProductValue called with:', product)
 
-    if (!product.productId) {
-      console.log('No productId, returning null')
+    if (!product.productId || !product.bagSizeKg) {
+      console.log('No productId or bagSizeKg, returning null')
       return null
     }
 
-    const foundOption = productOptions.find((opt) => opt.value === product.productId)
-    console.log('Found option:', foundOption)
+    // Create unique key to match with options
+    const uniqueKey = `${product.productId}_${product.bagSizeKg}`
+    const foundOption = productOptions.find((opt) => opt.value === uniqueKey)
+    console.log('Unique key:', uniqueKey, 'Found option:', foundOption)
 
     return foundOption || null
   }
@@ -1037,26 +1070,19 @@ const WarehouseToPartyForm = ({
                         Product <span style={{ color: 'red' }}>*</span>
                       </Form.Label>
                       <Select
-                        key={`product-select-${index}-${product.productId || 'empty'}`}
+                        key={`product-select-${index}-${product.productId || 'empty'}-${product.bagSizeKg || 'empty'}`}
                         value={getProductValue(product)}
                         onChange={(selected) => {
                           console.log('Product selected:', selected)
-                          console.log('Current formData.products:', formData.products)
 
                           if (selected) {
-                            const selectedProduct = inventoryList.find(
-                              (p) => p.productId === selected.value,
-                            )
-                            console.log('Found product in inventory:', selectedProduct)
-
-                            // Create updated product
                             const updatedProduct = {
                               ...product,
-                              productId: selected.value,
-                              productName: selectedProduct?.productName || 'Unknown Product',
-                              quantityKg: selectedProduct?.quantityKg || '',
-                              bagSizeKg: selectedProduct?.bagSizeKg || '',
-                              totalBags: selectedProduct?.totalBags || '',
+                              productId: selected.productId,
+                              productName: selected.productName || 'Unknown Product',
+                              quantityKg: selected.quantityKg?.toString() || '',
+                              bagSizeKg: selected.bagSizeKg?.toString() || '',
+                              totalBags: selected.totalBags?.toString() || '',
                             }
 
                             // Update the products array
@@ -1096,7 +1122,7 @@ const WarehouseToPartyForm = ({
                                 ? 'Error loading products'
                                 : productOptions.length === 0
                                   ? 'No products available in this warehouse'
-                                  : 'Select Product'
+                                  : `Select Product`
                         }
                         isClearable
                         isLoading={isLoadingWarehouseProducts || isLoading}
