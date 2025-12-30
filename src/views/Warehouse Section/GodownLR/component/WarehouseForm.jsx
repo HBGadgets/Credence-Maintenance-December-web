@@ -29,8 +29,8 @@ const defaultProduct = {
   bagSize: '',
   totalBags: '',
   itemWeight: '',
-  costPerBag: '', // New field
-  itemCost: '',
+  costPerBag: '0', // Initialize with '0' instead of empty string
+  itemCost: '0', // Initialize with '0' instead of empty string
 }
 
 const getTodayDate = () => {
@@ -413,21 +413,10 @@ const WarehouseForm = ({
         const productId = selectedProduct.productId // Get the actual productId field
         const inventoryId = selectedProduct._id || selectedProduct.id // This is the inventory ID
 
-        // Get product details from productDetails state or directly from selectedProduct
-        let productDetail = productDetails[inventoryId]
-        if (!productDetail) {
-          // Extract from rail head API structure
-          productDetail = {
-            productId: productId, // Store actual productId
-            inventoryId: inventoryId, // Store inventory ID separately
-            productName: productName,
-            quantityKg: selectedProduct.quantityKg || selectedProduct.quantity || 0,
-            bagSize: selectedProduct.bagSize || selectedProduct.bagWeight || 0,
-            totalBags: selectedProduct.totalBags || selectedProduct.totalbags || 0,
-          }
-        }
-
-        console.log('Product details for form:', productDetail)
+        // Calculate quantity based on railhead data
+        const bagSize = selectedProduct.bagSize || selectedProduct.bagWeight || 0
+        const totalBags = selectedProduct.totalBags || selectedProduct.totalags || 0
+        const quantityKg = bagSize * totalBags
 
         // Update the product in the form
         updatedProducts[index] = {
@@ -438,9 +427,14 @@ const WarehouseForm = ({
           productId: productId,
           productName: productName,
           // Auto-fill the quantityKg, bagSize, and totalBags from the selected product
-          quantityKg: (selectedProduct.quantityKg || selectedProduct.quantity || '').toString(),
-          bagSize: (selectedProduct.bagSize || selectedProduct.bagWeight || '').toString(),
-          totalBags: (selectedProduct.totalBags || selectedProduct.totalags || '').toString(),
+          quantityKg: quantityKg.toString(),
+          bagSize: bagSize.toString(),
+          totalBags: totalBags.toString(),
+          // Auto-calculate itemWeight from quantity
+          itemWeight: quantityKg.toString(),
+          // Initialize cost fields with default values if empty
+          costPerBag: updatedProducts[index].costPerBag || '0',
+          itemCost: updatedProducts[index].itemCost || '0',
         }
 
         console.log('Updated product:', updatedProducts[index])
@@ -454,6 +448,8 @@ const WarehouseForm = ({
           quantityKg: '',
           bagSize: '',
           totalBags: '',
+          itemWeight: '',
+          // Keep existing cost values if any
         }
       }
     } else {
@@ -519,7 +515,12 @@ const WarehouseForm = ({
   }
 
   const addProduct = () => {
-    const newProduct = { ...defaultProduct }
+    const newProduct = {
+      ...defaultProduct,
+      // Ensure cost fields are initialized
+      costPerBag: '0',
+      itemCost: '0',
+    }
 
     // Auto-fill warehouse if conditions are met
     if (
@@ -548,6 +549,21 @@ const WarehouseForm = ({
   const onSubmit = (e) => {
     e.preventDefault()
 
+    // Debug: Log all product data before validation
+    console.log('=== PRODUCTS BEFORE VALIDATION ===')
+    formData.products.forEach((product, index) => {
+      console.log(`Product ${index + 1}:`, {
+        productId: product.productId,
+        productName: product.productName,
+        quantityKg: product.quantityKg,
+        bagSize: product.bagSize,
+        totalBags: product.totalBags,
+        itemWeight: product.itemWeight,
+        costPerBag: product.costPerBag,
+        itemCost: product.itemCost,
+      })
+    })
+
     // Basic validation
     if (!formData.workerId) {
       alert('Please select an employee')
@@ -564,20 +580,93 @@ const WarehouseForm = ({
       return
     }
 
-    // Validate products
-    const invalidProducts = formData.products.filter(
-      (product) =>
-        !product.productId ||
-        !product.quantityKg ||
-        !product.bagSize ||
-        !product.totalBags ||
-        !product.itemWeight ||
-        !product.costPerBag ||
-        !product.itemCost,
-    )
+    // Validate products - UPDATED LOGIC
+    const invalidProducts = formData.products.reduce((acc, product, index) => {
+      let isValid = true
+      const errorMessages = []
+
+      // Check required fields
+      if (!product.productId) {
+        errorMessages.push('Missing product selection')
+        isValid = false
+      }
+
+      // Check quantityKg
+      const quantityKg = parseFloat(product.quantityKg)
+      if (isNaN(quantityKg) || quantityKg <= 0) {
+        errorMessages.push('Invalid quantity (must be greater than 0)')
+        isValid = false
+      }
+
+      // Check bagSize
+      const bagSize = parseFloat(product.bagSize)
+      if (isNaN(bagSize) || bagSize <= 0) {
+        errorMessages.push('Invalid bag size (must be greater than 0)')
+        isValid = false
+      }
+
+      // Check totalBags
+      const totalBags = parseFloat(product.totalBags)
+      if (isNaN(totalBags) || totalBags <= 0) {
+        errorMessages.push('Invalid total bags (must be greater than 0)')
+        isValid = false
+      }
+
+      // Check itemWeight - if empty, auto-calculate it
+      let itemWeight = parseFloat(product.itemWeight)
+      if (isNaN(itemWeight) || itemWeight <= 0) {
+        // Auto-calculate itemWeight from quantityKg if it's invalid
+        itemWeight = quantityKg
+        if (!isNaN(itemWeight) && itemWeight > 0) {
+          console.log(`Auto-calculated itemWeight for product ${index + 1}: ${itemWeight}`)
+          // Update the form data with calculated itemWeight
+          const updatedProducts = [...formData.products]
+          updatedProducts[index] = {
+            ...updatedProducts[index],
+            itemWeight: itemWeight.toString(),
+          }
+          setFormData((prev) => ({ ...prev, products: updatedProducts }))
+        } else {
+          errorMessages.push('Invalid item weight')
+          isValid = false
+        }
+      }
+
+      // Check costPerBag - allow 0
+      const costPerBag = parseFloat(product.costPerBag)
+      if (isNaN(costPerBag)) {
+        errorMessages.push('Invalid cost per bag (must be a number)')
+        isValid = false
+      }
+
+      // Check itemCost - allow 0
+      const itemCost = parseFloat(product.itemCost)
+      if (isNaN(itemCost)) {
+        errorMessages.push('Invalid total cost (must be a number)')
+        isValid = false
+      }
+
+      // Check warehouse if required
+      if (warehouseDisplayMode !== 'hidden' && !product.warehouseId) {
+        errorMessages.push('Warehouse selection required')
+        isValid = false
+      }
+
+      if (!isValid) {
+        console.log(`Product ${index + 1} validation failed:`, errorMessages)
+        acc.push({ index, errors: errorMessages })
+      }
+
+      return acc
+    }, [])
 
     if (invalidProducts.length > 0) {
-      alert('Please fill all required fields for all products')
+      // Show detailed error message
+      const firstError = invalidProducts[0]
+      const productNumber = firstError.index + 1
+      const errorDetails = firstError.errors.join(', ')
+
+      alert(`Product ${productNumber} has validation errors: ${errorDetails}`)
       return
     }
 
@@ -592,17 +681,23 @@ const WarehouseForm = ({
       const actualProductName =
         productFromInventory?.productName || productFromInventory?.name || product.productName
 
+      // Calculate itemWeight if not set
+      const quantityKg = parseFloat(product.quantityKg) || 0
+      const itemWeight = parseFloat(product.itemWeight) || quantityKg
+
+      // Parse values to ensure they are numbers
       const baseProduct = {
         ...product,
         // Use the actual productId from the inventory item, not the _id
         productId: actualProductId,
         productName: actualProductName,
-        quantityKg: parseFloat(product.quantityKg) || 0,
+        quantityKg: quantityKg,
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseFloat(product.totalBags) || 0,
-        itemWeight: parseFloat(product.itemWeight) || 0,
-        costPerBag: parseFloat(product.costPerBag),
-        itemCost: parseFloat(product.itemCost),
+        itemWeight: itemWeight,
+        // Convert cost fields to numbers
+        costPerBag: parseFloat(product.costPerBag) || 0,
+        itemCost: parseFloat(product.itemCost) || 0,
       }
 
       // If issued by Railhead and received by party, don't include warehouse fields
