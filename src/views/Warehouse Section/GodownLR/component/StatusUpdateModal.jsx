@@ -215,16 +215,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     // Prevent multiple submissions
     if (isSubmittingRef.current || isLoading || isCompressing) return
 
-    // If status is being changed to Cancelled and no image is uploaded
-    if (status === 'Cancelled' && !image) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Image Required',
-        text: 'Please upload a cancellation proof image for Cancelled status',
-      })
-      return
-    }
-
     // Validate image size (should already be compressed, but double-check)
     if (image && image.type.startsWith('image/') && image.size > 50 * 1024) {
       Swal.fire({
@@ -281,8 +271,9 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   }
 
   // Determine if image upload field should be shown
+  // Now shows for both Completed and Cancelled status
   const shouldShowImageUpload = () => {
-    return status === 'Cancelled'
+    return status === 'Completed' || status === 'Cancelled'
   }
 
   // Combined processing state
@@ -324,9 +315,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </Form.Select>
             <Form.Text className="text-muted mt-2 d-block">
               {status === 'Completed' ? (
-                <span className="text-success">
-                  ✓ No image upload required for Completed status
-                </span>
+                <span className="text-info">* Image proof is optional for Completed status</span>
               ) : status === 'Cancelled' ? (
                 <span className="text-info">* Image proof is required for Cancelled status</span>
               ) : (
@@ -335,26 +324,30 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </Form.Text>
           </Form.Group>
 
-          {/* Show upload field only for Cancelled status */}
+          {/* Show upload field for both Completed and Cancelled status */}
           {shouldShowImageUpload() && (
             <div className="border-top pt-4">
               <Form.Group className="mb-4">
                 <Form.Label className="fw-bold">
-                  Upload Cancellation Proof
-                  <span className="text-danger ms-1">*</span>
+                  {status === 'Completed'
+                    ? 'Upload Completion Proof (Optional)'
+                    : 'Upload Cancellation Proof'}
+                  {status === 'Cancelled' && <span className="text-danger ms-1">*</span>}
                   <small className="text-muted ms-2">(Max: 50KB)</small>
                 </Form.Label>
                 <Form.Control
                   type="file"
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={handleImageChange}
-                  required={status === 'Cancelled'}
+                  required={status === 'Cancelled'} // Only required for Cancelled status
                   disabled={isProcessing}
                   className="py-2"
                 />
                 <Form.Text className="text-muted mt-2 d-block">
                   Images will be automatically compressed to under 50KB. PDFs must already be under
                   50KB.
+                  {status === 'Completed' &&
+                    ' Uploading an image is optional for Completed status.'}
                 </Form.Text>
 
                 {/* Compression progress */}
