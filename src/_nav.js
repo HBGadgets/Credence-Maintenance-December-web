@@ -1,7 +1,7 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 import { LayoutDashboard, LucideClipboardList } from 'lucide-react'
-import { LuMessageSquareQuote } from "react-icons/lu";
+import { LuMessageSquareQuote, LuReceiptText } from "react-icons/lu";
 import { PiUserListBold, PiWarehouseDuotone } from "react-icons/pi";
 import { HiOutlineTicket } from "react-icons/hi2";
 import { IoReceiptOutline } from "react-icons/io5";
@@ -143,6 +143,32 @@ const _nav = [
       },
     ],
   },
+
+  // Good Recipt
+
+  {
+    component: CNavGroup,
+    name: 'Good Recipts',
+    icon: (
+      <LuReceiptText
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Good Recipt Rail',
+        to: '/GrByRail',
+      },
+      {
+        component: CNavItem,
+        name: 'Good Recipt Road',
+        to: '/GrByRoad',
+      },
+    ],
+  },
+
 
   // Warehouse
   {

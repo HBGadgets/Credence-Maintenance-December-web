@@ -119,6 +119,10 @@ const InventoryList = React.lazy(() => import('./views/Warehouse Section/Godown/
 const RailHead = React.lazy(() => import('./views/Warehouse Section/RailHead/RailHead.jsx'))
 // const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/InventoryList.jsx'))
 
+// Good Recipt
+
+const GrByRail = React.lazy(() => import('./views/GoodRecipts/GRByRail/GrByRail.jsx'))
+const GrByRoad = React.lazy(() => import('./views/GoodRecipts/GRByRoad/GrByRoad.jsx'))
 
 
 // routes
@@ -214,6 +218,11 @@ const routes = [
   { path: '/GodownLr', name: 'Transport Pass Recipt', element: GodownLR },
   { path: '/RailHead', name: 'Rail Head', element: RailHead },
   // { path: '/InventoryList', name: 'Inventory List', element: Inventory },
+
+
+  // Good recipt
+  { path: '/GrByRail', name: 'Good Recipt Rail', element: GrByRail },
+  { path: '/GrByRoad', name: 'Good Recipt Road', element: GrByRoad },
 
 
 ]

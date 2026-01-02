@@ -547,7 +547,7 @@ export const getRailHeadApi = async ({ queryKey }) => {
 
     if (!TOKEN) throw new Error('Authentication token not found')
 
-    const { data } = await axios.get(
+    const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/railhead`,
         {
             params: {
@@ -559,8 +559,16 @@ export const getRailHeadApi = async ({ queryKey }) => {
         }
     )
 
-    return {
-        data: data.map((item) => ({
+    // Check if response.data exists and has the expected structure
+    if (!response.data) {
+        throw new Error('No data received from API')
+    }
+
+    const apiData = response.data
+
+    // Transform the data items
+    const transformedData = Array.isArray(apiData.data)
+        ? apiData.data.map((item) => ({
             id: item._id,
             createdAt: formatDateToDDMMYYYY(item.createdAt) || "--",
             productId: item.productId || "",
@@ -568,13 +576,16 @@ export const getRailHeadApi = async ({ queryKey }) => {
             quantityKg: item.quantityKg || 0,
             bagSize: item.bagSize || 0,
             totalBags: item.totalBags || 0,
-        })),
-        total: data.totalItems || data.total || 0,
-        totalPages: data.totalPages || 1,
-        page: data.page || 1,
+        }))
+        : []
+
+    return {
+        data: transformedData,
+        total: apiData.totalItems || apiData.total || 0,
+        totalPages: apiData.totalPages || 1,
+        page: apiData.page || 1,
     }
 }
-
 
 
 
