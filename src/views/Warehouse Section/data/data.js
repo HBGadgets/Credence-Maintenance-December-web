@@ -412,6 +412,8 @@ export const getGodownTPApi = async ({ queryKey }) => {
             driverName: item.driverName,
             supervisorId: item.supervisorId,
 
+            acknowledgementImage: item.acknowledgementImage,
+
             products: item.products?.map((p) => ({
                 warehouseId: p.warehouseId,
                 warehouseName: p.warehouseName,

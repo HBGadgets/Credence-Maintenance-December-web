@@ -20,7 +20,7 @@ import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import { getWorkerApi } from '../../TransportPass/data/data'
-import { FaArrowUp, FaExchangeAlt, FaPrint } from 'react-icons/fa'
+import { FaArrowUp, FaExchangeAlt, FaPrint, FaEye } from 'react-icons/fa'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../../Supervisor/IconDropdown'
@@ -34,6 +34,7 @@ import WarehouseToPartyForm from './component/WarehouseToPartyForm'
 import { Button, Card, Col, Modal, Row } from 'react-bootstrap'
 import { FaTrain, FaWarehouse } from 'react-icons/fa6'
 import StatusUpdateModal from './component/StatusUpdateModal'
+import AcknowledgementImage from './component/AcknowledgementImage' // Import the new component
 
 const GodownLr = () => {
   const { exportToPDF } = usePdfExporter()
@@ -62,6 +63,10 @@ const GodownLr = () => {
   const [formMode, setFormMode] = useState('add')
   const [selectedData, setSelectedData] = useState(null)
   const [selectedFormType, setSelectedFormType] = useState(null) // 'railhead', 'warehouse', or 'warehouseToParty'
+
+  // Add these state variables for image viewer
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null)
 
   const queryClient = useQueryClient()
 
@@ -297,7 +302,34 @@ const GodownLr = () => {
     }
   }
 
-  // table columns
+  // Add a render function for image preview in table
+  const renderImagePreview = (item) => {
+    if (!item.acknowledgementImage) {
+      return <span className="text-muted">No Image</span>
+    }
+
+    const fullImageUrl = `${import.meta.env.VITE_API_URL}${item.acknowledgementImage}`
+
+    return (
+      <div className="d-flex justify-content-center">
+        <Button
+          variant="outline-primary"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            setSelectedImageUrl(item.acknowledgementImage)
+            setShowImageModal(true)
+            setShowImageModal(true)
+          }}
+          className="d-flex align-items-center gap-2"
+        >
+          <FaEye /> View Image
+        </Button>
+      </div>
+    )
+  }
+
+  // table columns - Add a column for acknowledgement image
   const columns = [
     {
       label: 'Date',
@@ -368,6 +400,11 @@ const GodownLr = () => {
       label: 'Status',
       key: 'status',
       render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
+    },
+    {
+      label: 'Acknowledgement',
+      key: 'acknowledgementImage',
+      render: renderImagePreview,
     },
   ]
 
@@ -529,6 +566,7 @@ const GodownLr = () => {
         editButton={true}
         deleteButton={true}
         statusButton={true} // Enable status button
+        viewButtonLabel="Image"
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
         handleStatusButton={handleStatusButtonClick} // Handler for status button
@@ -545,7 +583,17 @@ const GodownLr = () => {
         }}
       />
 
-      {/* // Add the StatusUpdateModal at the bottom of the component's return statement: */}
+      {/* Image Viewer Modal */}
+      <AcknowledgementImage
+        show={showImageModal}
+        onHide={() => {
+          setShowImageModal(false)
+          setSelectedImageUrl(null)
+        }}
+        imageUrl={selectedImageUrl}
+      />
+
+      {/* Status Update Modal */}
       <StatusUpdateModal
         show={showStatusModal}
         onHide={() => {
@@ -586,7 +634,7 @@ const FormTypeSelection = ({ show, handleClose, onSelectType }) => {
         <div className="text-center py-3">
           <h5 className="mb-4">Choose the type of TP Pass you want to create</h5>
           <Row className="justify-content-center g-4">
-            <Col md={6} lg={4}>
+            {/* <Col md={6} lg={4}>
               <Card
                 className="h-100 cursor-pointer border-primary"
                 onClick={() => onSelectType('railhead')}
@@ -605,7 +653,7 @@ const FormTypeSelection = ({ show, handleClose, onSelectType }) => {
                   </div>
                 </Card.Body>
               </Card>
-            </Col>
+            </Col> */}
 
             <Col md={6} lg={4}>
               <Card
