@@ -28,9 +28,7 @@ const defaultProduct = {
   quantityKg: '',
   bagSize: '',
   totalBags: '',
-  itemWeight: '',
-  costPerBag: '0', // Initialize with '0' instead of empty string
-  itemCost: '0', // Initialize with '0' instead of empty string
+  // Removed itemWeight field
 }
 
 const getTodayDate = () => {
@@ -275,9 +273,7 @@ const WarehouseForm = ({
           quantityKg: product.quantityKg?.toString() || '',
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
-          itemWeight: product.itemWeight?.toString() || '',
-          costPerBag: product.costPerBag?.toString() || '', // New field
-          itemCost: product.itemCost?.toString() || '',
+          // Removed itemWeight field
         })) || [{ ...defaultProduct }],
       })
     } else {
@@ -430,11 +426,6 @@ const WarehouseForm = ({
           quantityKg: quantityKg.toString(),
           bagSize: bagSize.toString(),
           totalBags: totalBags.toString(),
-          // Auto-calculate itemWeight from quantity
-          itemWeight: quantityKg.toString(),
-          // Initialize cost fields with default values if empty
-          costPerBag: updatedProducts[index].costPerBag || '0',
-          itemCost: updatedProducts[index].itemCost || '0',
         }
 
         console.log('Updated product:', updatedProducts[index])
@@ -448,8 +439,6 @@ const WarehouseForm = ({
           quantityKg: '',
           bagSize: '',
           totalBags: '',
-          itemWeight: '',
-          // Keep existing cost values if any
         }
       }
     } else {
@@ -458,7 +447,7 @@ const WarehouseForm = ({
         [field]: value,
       }
 
-      // Auto-calculate quantityKg and itemWeight when bagSize or totalBags changes
+      // Auto-calculate quantityKg when bagSize or totalBags changes
       if (field === 'bagSize' || field === 'totalBags') {
         const bagSizeNum = parseFloat(updatedProducts[index].bagSize) || 0
         const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
@@ -467,31 +456,6 @@ const WarehouseForm = ({
         updatedProducts[index] = {
           ...updatedProducts[index],
           quantityKg: calculatedQuantityKg.toString(),
-          itemWeight: calculatedQuantityKg.toString(),
-        }
-      }
-
-      // Auto-calculate total cost when costPerBag or totalBags changes
-      if (field === 'costPerBag' || field === 'totalBags') {
-        const costPerBagNum = parseFloat(updatedProducts[index].costPerBag)
-        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
-        const calculatedTotalCost = costPerBagNum * totalBagsNum
-
-        updatedProducts[index] = {
-          ...updatedProducts[index],
-          itemCost: calculatedTotalCost.toString(),
-        }
-      }
-
-      // Auto-calculate costPerBag when itemCost or totalBags changes
-      if (field === 'itemCost' || field === 'totalBags') {
-        const itemCostNum = parseFloat(updatedProducts[index].itemCost)
-        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
-        const calculatedCostPerBag = totalBagsNum > 0 ? itemCostNum / totalBagsNum : 0
-
-        updatedProducts[index] = {
-          ...updatedProducts[index],
-          costPerBag: calculatedCostPerBag.toString(),
         }
       }
     }
@@ -517,9 +481,6 @@ const WarehouseForm = ({
   const addProduct = () => {
     const newProduct = {
       ...defaultProduct,
-      // Ensure cost fields are initialized
-      costPerBag: '0',
-      itemCost: '0',
     }
 
     // Auto-fill warehouse if conditions are met
@@ -558,18 +519,10 @@ const WarehouseForm = ({
         quantityKg: product.quantityKg,
         bagSize: product.bagSize,
         totalBags: product.totalBags,
-        itemWeight: product.itemWeight,
-        costPerBag: product.costPerBag,
-        itemCost: product.itemCost,
       })
     })
 
     // Basic validation
-    if (!formData.workerId) {
-      alert('Please select an employee')
-      return
-    }
-
     if (!formData.companyId) {
       alert('Please select a company')
       return
@@ -580,7 +533,7 @@ const WarehouseForm = ({
       return
     }
 
-    // Validate products - UPDATED LOGIC
+    // Validate products
     const invalidProducts = formData.products.reduce((acc, product, index) => {
       let isValid = true
       const errorMessages = []
@@ -609,40 +562,6 @@ const WarehouseForm = ({
       const totalBags = parseFloat(product.totalBags)
       if (isNaN(totalBags) || totalBags <= 0) {
         errorMessages.push('Invalid total bags (must be greater than 0)')
-        isValid = false
-      }
-
-      // Check itemWeight - if empty, auto-calculate it
-      let itemWeight = parseFloat(product.itemWeight)
-      if (isNaN(itemWeight) || itemWeight <= 0) {
-        // Auto-calculate itemWeight from quantityKg if it's invalid
-        itemWeight = quantityKg
-        if (!isNaN(itemWeight) && itemWeight > 0) {
-          console.log(`Auto-calculated itemWeight for product ${index + 1}: ${itemWeight}`)
-          // Update the form data with calculated itemWeight
-          const updatedProducts = [...formData.products]
-          updatedProducts[index] = {
-            ...updatedProducts[index],
-            itemWeight: itemWeight.toString(),
-          }
-          setFormData((prev) => ({ ...prev, products: updatedProducts }))
-        } else {
-          errorMessages.push('Invalid item weight')
-          isValid = false
-        }
-      }
-
-      // Check costPerBag - allow 0
-      const costPerBag = parseFloat(product.costPerBag)
-      if (isNaN(costPerBag)) {
-        errorMessages.push('Invalid cost per bag (must be a number)')
-        isValid = false
-      }
-
-      // Check itemCost - allow 0
-      const itemCost = parseFloat(product.itemCost)
-      if (isNaN(itemCost)) {
-        errorMessages.push('Invalid total cost (must be a number)')
         isValid = false
       }
 
@@ -681,23 +600,15 @@ const WarehouseForm = ({
       const actualProductName =
         productFromInventory?.productName || productFromInventory?.name || product.productName
 
-      // Calculate itemWeight if not set
-      const quantityKg = parseFloat(product.quantityKg) || 0
-      const itemWeight = parseFloat(product.itemWeight) || quantityKg
-
       // Parse values to ensure they are numbers
       const baseProduct = {
         ...product,
         // Use the actual productId from the inventory item, not the _id
         productId: actualProductId,
         productName: actualProductName,
-        quantityKg: quantityKg,
+        quantityKg: parseFloat(product.quantityKg) || 0,
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseFloat(product.totalBags) || 0,
-        itemWeight: itemWeight,
-        // Convert cost fields to numbers
-        costPerBag: parseFloat(product.costPerBag) || 0,
-        itemCost: parseFloat(product.itemCost) || 0,
       }
 
       // If issued by Railhead and received by party, don't include warehouse fields
@@ -1072,7 +983,7 @@ const WarehouseForm = ({
 
                 {formData.receivedByType === 'party' && (
                   <div className="mt-3">
-                    <Form.Label>Party Name</Form.Label>
+                    <Form.Label>Party</Form.Label>
                     <Form.Control
                       type="text"
                       value={formData.receivedBy}
@@ -1081,6 +992,8 @@ const WarehouseForm = ({
                       }
                       placeholder="Enter party name"
                       disabled={isLoading}
+                      readOnly
+                      className="bg-light"
                     />
                   </div>
                 )}
@@ -1114,9 +1027,7 @@ const WarehouseForm = ({
             )}
 
             <div className="col-md-6">
-              <Form.Label>
-                Employees <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
+              <Form.Label>Employees</Form.Label>
               <Select
                 value={getWorkerValue()}
                 onChange={(selected) =>
@@ -1132,7 +1043,6 @@ const WarehouseForm = ({
                 placeholder="Select Employee"
                 isClearable
                 isLoading={isLoading || isRailHeadFetching}
-                required
               />
             </div>
           </div>
@@ -1336,9 +1246,7 @@ const WarehouseForm = ({
               const productDetail = getProductDetailForDisplay(product)
               const bagSize = parseFloat(product.bagSize) || 0
               const totalBags = parseFloat(product.totalBags) || 0
-              const costPerBag = parseFloat(product.costPerBag)
               const calculatedQuantity = bagSize * totalBags
-              const calculatedTotalCost = costPerBag * totalBags
 
               return (
                 <div key={index} className="border rounded p-3 mb-3">
@@ -1481,7 +1389,7 @@ const WarehouseForm = ({
                     </div>
 
                     {/* Total Bags */}
-                    <div className="col-md-3">
+                    <div className="col-md-4">
                       <Form.Label>
                         Total Bags <span style={{ color: 'red' }}>*</span>
                       </Form.Label>
@@ -1497,7 +1405,7 @@ const WarehouseForm = ({
                     </div>
 
                     {/* Bag Size */}
-                    <div className="col-md-3">
+                    <div className="col-md-4">
                       <Form.Label>
                         Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
                       </Form.Label>
@@ -1512,7 +1420,7 @@ const WarehouseForm = ({
                     </div>
 
                     {/* Quantity (Kg) - Auto-calculated */}
-                    <div className="col-md-3">
+                    <div className="col-md-4">
                       <Form.Label>
                         Quantity (Kg) <span style={{ color: 'red' }}>*</span>
                       </Form.Label>
@@ -1532,92 +1440,7 @@ const WarehouseForm = ({
                         Auto-calculated: Bag Size × Total Bags
                       </Form.Text>
                     </div>
-
-                    {/* Weight - Auto-calculated */}
-                    <div className="col-md-3">
-                      <Form.Label>
-                        Weight (Kg) <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={calculatedQuantity || product.itemWeight}
-                        readOnly
-                        className="bg-light"
-                        required
-                      />
-                      <Form.Text className="text-muted">
-                        Auto-calculated: Same as Quantity
-                      </Form.Text>
-                    </div>
-
-                    {/* Cost per Bag */}
-                    <div className="col-md-3">
-                      <Form.Label>
-                        Cost per Bag (₹) <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={product.costPerBag}
-                        onChange={(e) => handleProductChange(index, 'costPerBag', e.target.value)}
-                        onWheel={handleNumberInputScroll}
-                        disabled={isLoading}
-                        required
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-
-                    {/* Total Cost - Auto-calculated */}
-                    <div className="col-md-3">
-                      <Form.Label>
-                        Total Cost (₹) <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={calculatedTotalCost || product.itemCost}
-                        readOnly
-                        className="bg-light"
-                        required
-                      />
-                      <Form.Text className="text-muted">
-                        Auto-calculated: Cost per Bag × Total Bags
-                      </Form.Text>
-                    </div>
                   </div>
-
-                  {/* Calculation Display */}
-                  {(product.bagSize || product.totalBags) && (
-                    <div className="mt-3 p-3 bg-light rounded">
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="alert alert-primary p-2 mb-2">
-                            <h6 className="mb-1">Weight Calculation:</h6>
-                            <div className="d-flex align-items-center">
-                              <FaWeight className="me-2" />
-                              <span>
-                                {bagSize} kg/bag × {totalBags} bags ={' '}
-                                <strong>{calculatedQuantity} kg</strong>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        {(product.costPerBag || product.itemCost) && (
-                          <div className="col-md-6">
-                            <div className="alert alert-success p-2 mb-2">
-                              <h6 className="mb-1">Cost Calculation:</h6>
-                              <div className="d-flex align-items-center">
-                                <FaRupeeSign className="me-2" />
-                                <span>
-                                  ₹ {costPerBag} per bag × {totalBags} bags ={' '}
-                                  <strong>₹ {calculatedTotalCost}</strong>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })}

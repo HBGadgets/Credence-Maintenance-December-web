@@ -125,6 +125,12 @@ const GrByRail = React.lazy(() => import('./views/GoodRecipts/GRByRail/GrByRail.
 const GrByRoad = React.lazy(() => import('./views/GoodRecipts/GRByRoad/GrByRoad.jsx'))
 
 
+// Consignor / Consignee
+
+const Consignor = React.lazy(() => import('./views/Consignee_Consignor/Consignor/Consignor'))
+const Consignee = React.lazy(() => import('./views/Consignee_Consignor/Consignee/Consignee'))
+
+
 // routes
 const routes = [
   // Dashboard
@@ -224,6 +230,9 @@ const routes = [
   { path: '/GrByRail', name: 'Good Recipt Rail', element: GrByRail },
   { path: '/GrByRoad', name: 'Good Recipt Road', element: GrByRoad },
 
+  // Consignee / Consignor
+  { path: '/Consignor', name: 'Consignor', element: Consignor },
+  { path: '/Consignee', name: 'Consignee', element: Consignee },
 
 ]
 

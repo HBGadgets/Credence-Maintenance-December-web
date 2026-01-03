@@ -120,6 +120,11 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
     },
   })
 
+  // Function to handle wheel event and prevent scrolling from changing number values
+  const handleWheel = (e) => {
+    e.target.blur()
+  }
+
   const handleNewProductChange = (e) => {
     const { name, value } = e.target
     setNewProductData((prev) => ({ ...prev, [name]: value }))
@@ -640,6 +645,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'bagSize', e.target.value)
                                   }
+                                  onWheel={handleWheel} // Added to disable scroll wheel
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 50"
                                   min="0.01"
@@ -666,6 +672,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'totalBags', e.target.value)
                                   }
+                                  onWheel={handleWheel} // Added to disable scroll wheel
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 100"
                                   min="1"
@@ -680,7 +687,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                               </Form.Group>
                             </Col>
 
-                            {/* Quantity (Metric Tons) */}
+                            {/* Quantity (Metric Tons) - Read Only */}
                             <Col md={3}>
                               <Form.Group>
                                 <Form.Label>
@@ -692,11 +699,12 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'quantityKg', e.target.value)
                                   }
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 5"
-                                  min="0.001"
-                                  step="0.001"
                                   isInvalid={!!formErrors[`quantityKg_${index}`]}
+                                  className="bg-light"
+                                  readOnly
                                 />
                                 {formErrors[`quantityKg_${index}`] && (
                                   <div className="text-danger small mt-1">
@@ -705,8 +713,6 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                                 )}
                               </Form.Group>
                             </Col>
-
-                            {/* Total Weight in Kg (Read-only display) */}
                           </Row>
                         </Card.Body>
                       </Card>
@@ -762,7 +768,6 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
       <Modal
         show={showNewProductModal}
         onHide={() => !isAddingProduct && setShowNewProductModal(false)}
-        backdrop="static"
         centered
       >
         <Modal.Header closeButton={!isAddingProduct} className="bg-primary text-white">

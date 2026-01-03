@@ -1,4 +1,3 @@
-// StatusUpdateModal.jsx
 import React, { useState, useEffect, useRef } from 'react'
 import { Modal, Button, Form, Badge, ProgressBar } from 'react-bootstrap'
 import Swal from 'sweetalert2'
@@ -102,7 +101,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
               // Reduce quality and try again
               setTimeout(() => compressAttempt(currentQuality - 0.1), 50)
             } else {
-              // Create file from blob
+              // Create a proper File object from blob
               const compressedFile = new File([blob], file.name, {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
@@ -225,18 +224,28 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
+    // Validate required image for Cancelled status
+    if (status === 'Cancelled' && !image) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Image Required',
+        text: 'Cancellation proof image is required for Cancelled status',
+      })
+      return
+    }
+
     // Set submitting state
     setIsSubmitting(true)
     isSubmittingRef.current = true
 
-    const formData = new FormData()
-    formData.append('status', status)
-    if (image) {
-      formData.append('acknowledgementImage', image)
+    // Prepare data to submit
+    const dataToSubmit = {
+      status: status,
+      image: image, // This is the File object
     }
 
     try {
-      await onSubmit(formData)
+      await onSubmit(dataToSubmit)
     } catch (error) {
       // Reset submitting state on error
       setIsSubmitting(false)
@@ -264,7 +273,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       if (hasExistingImage.startsWith('data:') || hasExistingImage.startsWith('http')) {
         window.open(hasExistingImage, '_blank')
       } else {
-        const imageUrl = `${import.meta.env.VITE_API_URL || ''}/uploads/${hasExistingImage}`
+        const imageUrl = `${import.meta.env.VITE_API_URL || ''}${hasExistingImage}`
         window.open(imageUrl, '_blank')
       }
     }

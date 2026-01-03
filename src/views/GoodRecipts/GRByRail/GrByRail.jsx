@@ -53,6 +53,11 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
   const queryClient = useQueryClient()
 
+  // Function to handle wheel event and prevent scrolling from changing number values
+  const handleWheel = (e) => {
+    e.target.blur()
+  }
+
   // Fetch Product list - with proper pagination
   const { data: inventoryResponse = {}, isFetching: inventoryLoading } = useQuery({
     queryKey: ['inventoryList', { page: 1, limit: 100 }],
@@ -562,6 +567,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'bagSize', e.target.value)
                                   }
+                                  onWheel={handleWheel} // Added to disable scroll wheel
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 50"
                                   min="0.01"
@@ -591,6 +597,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'totalBags', e.target.value)
                                   }
+                                  onWheel={handleWheel} // Added to disable scroll wheel
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 100"
                                   min="1"
@@ -613,7 +620,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                               </Form.Group>
                             </Col>
 
-                            {/* Quantity (Metric Tons) */}
+                            {/* Quantity (Metric Tons) - Read Only */}
                             <Col md={3}>
                               <Form.Group>
                                 <Form.Label>
@@ -625,11 +632,14 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'quantityKg', e.target.value)
                                   }
+                                  onWheel={handleWheel} // Added to disable scroll wheel
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 5"
                                   min="0.001"
                                   step="0.001"
                                   isInvalid={!!formErrors[`quantityKg_${index}`]}
+                                  className="bg-light"
+                                  readOnly
                                 />
                                 {formErrors[`quantityKg_${index}`] && (
                                   <div className="text-danger small mt-1">

@@ -65,6 +65,16 @@ const _nav = [
       },
       {
         component: CNavItem,
+        name: 'Consignor',
+        to: '/Consignor',
+      },
+      {
+        component: CNavItem,
+        name: 'Consignee',
+        to: '/Consignee',
+      },
+      {
+        component: CNavItem,
         name: 'Driver Attendence Mark',
         to: '/Attendence'
       },
