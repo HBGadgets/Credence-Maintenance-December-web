@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { Modal, Button, Form, Row, Col, Card } from 'react-bootstrap'
 import { fetchDrivers, fetchSupervisor } from '../../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../../vehicle/data/VehicleListData'
 import { TokenContext } from '../../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getWorkerApi } from '../../../TransportPass/data/data'
 import Select from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
@@ -18,7 +18,16 @@ import {
   FaWeight,
   FaInfoCircle,
   FaRupeeSign,
+  FaUserPlus,
 } from 'react-icons/fa'
+import {
+  getConsigneeApi,
+  getConsignorApi,
+  postConsignorApi,
+  postConsigneeApi,
+} from '../../../Consignee_Consignor/data/data'
+import { toast } from 'react-toastify'
+import AddConsignorConsigneeModal from './AddConsignorConsigneeModal' // Adjust the path as needed
 
 const defaultProduct = {
   warehouseId: '',
@@ -28,7 +37,6 @@ const defaultProduct = {
   quantityKg: '',
   bagSize: '',
   totalBags: '',
-  // Removed itemWeight field
 }
 
 const getTodayDate = () => {
@@ -47,7 +55,6 @@ const defaultFormData = {
   receivedByWarehouseId: '',
   receivedByWarehouseName: '',
   supervisorId: '',
-  workerId: '',
   companyId: '',
   companyName: '',
   companyEmail: '',
@@ -60,8 +67,10 @@ const defaultFormData = {
   vehicleName: '',
   driverId: '',
   driverName: '',
+  consignorId: '',
   consignorName: '',
   consignorAddress: '',
+  consigneeId: '',
   consigneeName: '',
   consigneeAddress: '',
   customerName: '',
@@ -79,6 +88,23 @@ const defaultFormData = {
   products: [{ ...defaultProduct }],
 }
 
+// Debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 const WarehouseForm = ({
   show,
   handleClose,
@@ -91,24 +117,93 @@ const WarehouseForm = ({
   const [formData, setFormData] = useState(defaultFormData)
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
-  const [productDetails, setProductDetails] = useState({}) // Store product details by productId
+  const [productDetails, setProductDetails] = useState({})
   const [receivedByOptions] = useState([
     { value: 'warehouse', label: 'Warehouse', icon: <FaWarehouse className="me-2" /> },
     { value: 'party', label: 'Party', icon: <FaUserFriends className="me-2" /> },
   ])
 
+  // Search and pagination states for consignor/consignee
+  const [consignorSearchInput, setConsignorSearchInput] = useState('')
+  const [consigneeSearchInput, setConsigneeSearchInput] = useState('')
+
+  // Debounced search values (300ms delay)
+  const debouncedConsignorSearch = useDebounce(consignorSearchInput, 300)
+  const debouncedConsigneeSearch = useDebounce(consigneeSearchInput, 300)
+
+  const [consignorPage, setConsignorPage] = useState(1)
+  const [consigneePage, setConsigneePage] = useState(1)
+  const itemsPerPage = 20
+
+  // State for create new modals
+  const [showConsignorModal, setShowConsignorModal] = useState(false)
+  const [showConsigneeModal, setShowConsigneeModal] = useState(false)
+  const [isCreatingConsignor, setIsCreatingConsignor] = useState(false)
+  const [isCreatingConsignee, setIsCreatingConsignee] = useState(false)
+
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
+  const queryClient = useQueryClient()
+
+  // API Mutations for creating consignor/consignee
+  const { mutate: postConsignor } = useMutation({
+    mutationFn: postConsignorApi,
+    onSuccess: (response) => {
+      setIsCreatingConsignor(false)
+      setShowConsignorModal(false)
+      queryClient.invalidateQueries({ queryKey: ['Consignor'] })
+      // Set the newly created consignor in the form with the ID
+      setFormData((prev) => ({
+        ...prev,
+        consignorId: response.data?.id || response.data?._id || '',
+        consignorName: response.data?.name || '',
+        consignorAddress: response.data?.address || '',
+      }))
+      toast.success('Consignor added successfully!')
+    },
+    onError: (error) => {
+      setIsCreatingConsignor(false)
+      toast.error(error.message || 'Failed to create consignor')
+    },
+  })
+
+  const { mutate: postConsignee } = useMutation({
+    mutationFn: postConsigneeApi,
+    onSuccess: (response) => {
+      setIsCreatingConsignee(false)
+      setShowConsigneeModal(false)
+      queryClient.invalidateQueries({ queryKey: ['Consignee'] })
+      // Set the newly created consignee in the form with the ID
+      setFormData((prev) => ({
+        ...prev,
+        consigneeId: response.data?.id || response.data?._id || '',
+        consigneeName: response.data?.name || '',
+        consigneeAddress: response.data?.address || '',
+      }))
+      toast.success('Consignee added successfully!')
+    },
+    onError: (error) => {
+      setIsCreatingConsignee(false)
+      toast.error(error.message || 'Failed to create consignee')
+    },
+  })
+
+  // Handler for creating new consignor
+  const handleCreateConsignor = (payload) => {
+    setIsCreatingConsignor(true)
+    postConsignor(payload)
+  }
+
+  // Handler for creating new consignee
+  const handleCreateConsignee = (payload) => {
+    setIsCreatingConsignee(true)
+    postConsignee(payload)
+  }
 
   const { data: supervisorOptions = [] } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchSupervisor,
-  })
-
-  const { data: workerList = [] } = useQuery({
-    queryKey: ['workerList'],
-    queryFn: getWorkerApi,
   })
 
   const { data: companyList = [] } = useQuery({
@@ -121,14 +216,47 @@ const WarehouseForm = ({
     queryFn: ({ queryKey }) => getWarehouseListApi(queryKey[1]),
   })
 
-  // Updated API call using getRailHeadApi
   const { data: railHeadData = {}, isFetching: isRailHeadFetching } = useQuery({
     queryKey: ['RailHead', { search: '', page: 1, limit: 100 }],
     queryFn: getRailHeadApi,
   })
 
+  // Fetch Consignor data with debounced search
+  const { data: consignorData = { data: [], total: 0 }, isFetching: isFetchingConsignor } =
+    useQuery({
+      queryKey: [
+        'Consignor',
+        {
+          search: debouncedConsignorSearch,
+          page: consignorPage,
+          limit: itemsPerPage,
+        },
+      ],
+      queryFn: getConsignorApi,
+      keepPreviousData: true,
+      staleTime: 1000 * 60 * 5,
+    })
+
+  // Fetch Consignee data with debounced search
+  const { data: consigneeData = { data: [], total: 0 }, isFetching: isFetchingConsignee } =
+    useQuery({
+      queryKey: [
+        'Consignee',
+        {
+          search: debouncedConsigneeSearch,
+          page: consigneePage,
+          limit: itemsPerPage,
+        },
+      ],
+      queryFn: getConsigneeApi,
+      keepPreviousData: true,
+      staleTime: 1000 * 60 * 5,
+    })
+
   const warehouseList = warehouseResponse?.data || []
-  const inventoryList = railHeadData?.data || [] // Using railHeadData instead of inventoryResponse
+  const inventoryList = railHeadData?.data || []
+  const consignorList = consignorData?.data || []
+  const consigneeList = consigneeData?.data || []
 
   // Add this function to prevent scroll on number inputs
   const handleNumberInputScroll = (e) => {
@@ -136,18 +264,17 @@ const WarehouseForm = ({
     e.target.blur()
     return false
   }
+
   // Vehicle and Driver handlers with CreatableSelect support
   const handleVehicleChange = (selected, action) => {
     if (selected) {
       if (action.action === 'create-option') {
-        // User created new Vehicle
         setFormData((prev) => ({
           ...prev,
           vehicleId: selected.value,
           vehicleName: selected.label,
         }))
       } else {
-        // Existing Vehicle selected
         const selectedVehicle = vehicles.find(
           (v) => v.id === selected.value || v._id === selected.value,
         )
@@ -165,14 +292,12 @@ const WarehouseForm = ({
   const handleDriverChange = (selected, action) => {
     if (selected) {
       if (action.action === 'create-option') {
-        // User created new Driver
         setFormData((prev) => ({
           ...prev,
           driverId: selected.value,
           driverName: selected.label,
         }))
       } else {
-        // Existing Driver selected
         const selectedDriver = drivers.find((d) => d.id === selected.value)
         setFormData((prev) => ({
           ...prev,
@@ -185,6 +310,72 @@ const WarehouseForm = ({
     }
   }
 
+  // Handle Consignor selection - FIXED: Now sets consignorId too
+  const handleConsignorChange = (selected) => {
+    if (selected && selected.value !== 'create-new') {
+      setFormData((prev) => ({
+        ...prev,
+        consignorId: selected.value, // Set the ID
+        consignorName: selected.name,
+        consignorAddress: selected.address,
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        consignorId: '',
+        consignorName: '',
+        consignorAddress: '',
+      }))
+    }
+  }
+
+  // Handle Consignee selection - FIXED: Now sets consigneeId too
+  const handleConsigneeChange = (selected) => {
+    if (selected && selected.value !== 'create-new') {
+      setFormData((prev) => ({
+        ...prev,
+        consigneeId: selected.value, // Set the ID
+        consigneeName: selected.name,
+        consigneeAddress: selected.address,
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        consigneeId: '',
+        consigneeName: '',
+        consigneeAddress: '',
+      }))
+    }
+  }
+
+  // Handle consignor search input change with debouncing
+  const handleConsignorInputChange = useCallback((value) => {
+    setConsignorSearchInput(value)
+    setConsignorPage(1) // Reset to first page on new search
+  }, [])
+
+  // Handle consignee search input change with debouncing
+  const handleConsigneeInputChange = useCallback((value) => {
+    setConsigneeSearchInput(value)
+    setConsigneePage(1) // Reset to first page on new search
+  }, [])
+
+  // Handle infinite scroll for consignor
+  const handleConsignorMenuScrollToBottom = useCallback(() => {
+    const totalPages = Math.ceil(consignorData.total / itemsPerPage)
+    if (consignorPage < totalPages) {
+      setConsignorPage((prev) => prev + 1)
+    }
+  }, [consignorData.total, consignorPage])
+
+  // Handle infinite scroll for consignee
+  const handleConsigneeMenuScrollToBottom = useCallback(() => {
+    const totalPages = Math.ceil(consigneeData.total / itemsPerPage)
+    if (consigneePage < totalPages) {
+      setConsigneePage((prev) => prev + 1)
+    }
+  }, [consigneeData.total, consigneePage])
+
   // Extract product details from rail head response
   useEffect(() => {
     if (inventoryList.length > 0) {
@@ -192,45 +383,26 @@ const WarehouseForm = ({
 
       const details = {}
       inventoryList.forEach((item) => {
-        // Use _id as the primary identifier
         const productId = item._id || item.id || item.productId
 
         if (productId) {
-          // Extract data from rail head API response structure
-          // Adjust these property names based on your actual API response structure
           details[productId] = {
-            // Basic product info
             _id: item._id,
             id: item.id,
             productId: item.productId || item._id,
             productName: item.productName || item.name || 'Unknown Product',
-
-            // Product details from RailHead API
-            // Adjust property names based on your actual API response
             quantityKg: item.quantityKg || item.quantity || item.totalQuantity || 0,
             bagSize: item.bagSize || item.bagWeight || 0,
             totalBags: item.totalBags || item.bags || item.totalBagsCount || 0,
-
-            // Other metadata
             __v: item.__v,
-
-            // Calculate derived values
             bagsPerQuantity:
               (item.bagSize || item.bagWeight) > 0
                 ? (item.quantityKg || item.quantity || 0) / (item.bagSize || item.bagWeight)
                 : 0,
           }
-
-          console.log(`Extracted for ${productId}:`, {
-            name: details[productId].productName,
-            quantityKg: details[productId].quantityKg,
-            bagSize: details[productId].bagSize,
-            totalBags: details[productId].totalBags,
-          })
         }
       })
 
-      console.log('=== ALL EXTRACTED DETAILS ===', details)
       setProductDetails(details)
     }
   }, [inventoryList])
@@ -260,22 +432,28 @@ const WarehouseForm = ({
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      setFormData({
+      const editedFormData = {
         ...defaultFormData,
         ...initialData,
         date: initialData.date ? initialData.date.split('T')[0] : getTodayDate(),
         vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
         driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
         companyId: initialData.companyId || '',
+        consignorId: initialData.consignorId || '',
+        consignorName: initialData.consignorName || '',
+        consignorAddress: initialData.consignorAddress || '',
+        consigneeId: initialData.consigneeId || '',
+        consigneeName: initialData.consigneeName || '',
+        consigneeAddress: initialData.consigneeAddress || '',
         products: initialData.products?.map((product) => ({
           ...defaultProduct,
           ...product,
           quantityKg: product.quantityKg?.toString() || '',
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
-          // Removed itemWeight field
         })) || [{ ...defaultProduct }],
-      })
+      }
+      setFormData(editedFormData)
     } else {
       setFormData(defaultFormData)
     }
@@ -294,7 +472,6 @@ const WarehouseForm = ({
         warehouseName: formData.receivedByWarehouseName,
       }))
 
-      // Only update if there's a change to prevent infinite loop
       if (JSON.stringify(updatedProducts) !== JSON.stringify(formData.products)) {
         setFormData((prev) => ({
           ...prev,
@@ -341,7 +518,6 @@ const WarehouseForm = ({
         receivedBy: 'Warehouse',
         receivedByWarehouseId: '',
         receivedByWarehouseName: '',
-        // Reset warehouse in products when switching to warehouse type
         products: prev.products.map((product) => ({
           ...product,
           warehouseId: '',
@@ -355,7 +531,6 @@ const WarehouseForm = ({
         receivedBy: 'Party',
         receivedByWarehouseId: '',
         receivedByWarehouseName: '',
-        // Clear warehouse in products when switching to party type
         products: prev.products.map((product) => ({
           ...product,
           warehouseId: '',
@@ -396,41 +571,27 @@ const WarehouseForm = ({
         warehouseName: selectedWarehouse?.wareHouseName || selectedWarehouse?.name || '',
       }
     } else if (field === 'productId') {
-      console.log('=== PRODUCT SELECTION ===')
-      console.log('Selected value:', value)
-
-      // Find the product from rail head list
       const selectedProduct = inventoryList.find((p) => p._id === value || p.id === value)
-
-      console.log('Found product:', selectedProduct)
 
       if (selectedProduct) {
         const productName = selectedProduct.productName || selectedProduct.name || 'Unknown Product'
-        const productId = selectedProduct.productId // Get the actual productId field
-        const inventoryId = selectedProduct._id || selectedProduct.id // This is the inventory ID
+        const productId = selectedProduct.productId
+        const inventoryId = selectedProduct._id || selectedProduct.id
 
-        // Calculate quantity based on railhead data
         const bagSize = selectedProduct.bagSize || selectedProduct.bagWeight || 0
         const totalBags = selectedProduct.totalBags || selectedProduct.totalags || 0
         const quantityKg = bagSize * totalBags
 
-        // Update the product in the form
         updatedProducts[index] = {
           ...updatedProducts[index],
-          // Store inventory ID for lookup
           inventoryId: inventoryId,
-          // Use actual productId for the payload
           productId: productId,
           productName: productName,
-          // Auto-fill the quantityKg, bagSize, and totalBags from the selected product
           quantityKg: quantityKg.toString(),
           bagSize: bagSize.toString(),
           totalBags: totalBags.toString(),
         }
-
-        console.log('Updated product:', updatedProducts[index])
       } else {
-        // If no product found, clear the fields
         updatedProducts[index] = {
           ...updatedProducts[index],
           inventoryId: '',
@@ -447,7 +608,6 @@ const WarehouseForm = ({
         [field]: value,
       }
 
-      // Auto-calculate quantityKg when bagSize or totalBags changes
       if (field === 'bagSize' || field === 'totalBags') {
         const bagSizeNum = parseFloat(updatedProducts[index].bagSize) || 0
         const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
@@ -460,8 +620,6 @@ const WarehouseForm = ({
       }
     }
 
-    // Don't auto-fill if manually changing warehouse for a specific product
-    // Only auto-fill when receivedByType is 'warehouse' and it's not a manual change
     if (
       field !== 'warehouseId' &&
       formData.receivedByType === 'warehouse' &&
@@ -483,7 +641,6 @@ const WarehouseForm = ({
       ...defaultProduct,
     }
 
-    // Auto-fill warehouse if conditions are met
     if (
       formData.receivedByType === 'warehouse' &&
       formData.receivedByWarehouseId &&
@@ -510,7 +667,6 @@ const WarehouseForm = ({
   const onSubmit = (e) => {
     e.preventDefault()
 
-    // Debug: Log all product data before validation
     console.log('=== PRODUCTS BEFORE VALIDATION ===')
     formData.products.forEach((product, index) => {
       console.log(`Product ${index + 1}:`, {
@@ -533,39 +689,33 @@ const WarehouseForm = ({
       return
     }
 
-    // Validate products
     const invalidProducts = formData.products.reduce((acc, product, index) => {
       let isValid = true
       const errorMessages = []
 
-      // Check required fields
       if (!product.productId) {
         errorMessages.push('Missing product selection')
         isValid = false
       }
 
-      // Check quantityKg
       const quantityKg = parseFloat(product.quantityKg)
       if (isNaN(quantityKg) || quantityKg <= 0) {
         errorMessages.push('Invalid quantity (must be greater than 0)')
         isValid = false
       }
 
-      // Check bagSize
       const bagSize = parseFloat(product.bagSize)
       if (isNaN(bagSize) || bagSize <= 0) {
         errorMessages.push('Invalid bag size (must be greater than 0)')
         isValid = false
       }
 
-      // Check totalBags
       const totalBags = parseFloat(product.totalBags)
       if (isNaN(totalBags) || totalBags <= 0) {
         errorMessages.push('Invalid total bags (must be greater than 0)')
         isValid = false
       }
 
-      // Check warehouse if required
       if (warehouseDisplayMode !== 'hidden' && !product.warehouseId) {
         errorMessages.push('Warehouse selection required')
         isValid = false
@@ -580,7 +730,6 @@ const WarehouseForm = ({
     }, [])
 
     if (invalidProducts.length > 0) {
-      // Show detailed error message
       const firstError = invalidProducts[0]
       const productNumber = firstError.index + 1
       const errorDetails = firstError.errors.join(', ')
@@ -589,9 +738,22 @@ const WarehouseForm = ({
       return
     }
 
-    // Prepare products based on receivedByType
+    // Check if vehicle exists in database (has a valid ID from vehicleOptions)
+    const vehicleExistsInDb = vehicleOptions.some((vehicle) => vehicle.value === formData.vehicleId)
+
+    // Check if driver exists in database (has a valid ID from driverOptions)
+    const driverExistsInDb = driverOptions.some((driver) => driver.value === formData.driverId)
+
+    // Process number fields - convert empty strings to 0
+    const processNumberField = (value) => {
+      if (value === '' || value === null || value === undefined) {
+        return 0
+      }
+      const num = parseFloat(value)
+      return isNaN(num) ? 0 : num
+    }
+
     const preparedProducts = formData.products.map((product) => {
-      // Get the actual product from inventory list to get the correct productId
       const productFromInventory = inventoryList.find(
         (p) => p._id === product.productId || p.id === product.productId,
       )
@@ -600,10 +762,8 @@ const WarehouseForm = ({
       const actualProductName =
         productFromInventory?.productName || productFromInventory?.name || product.productName
 
-      // Parse values to ensure they are numbers
       const baseProduct = {
         ...product,
-        // Use the actual productId from the inventory item, not the _id
         productId: actualProductId,
         productName: actualProductName,
         quantityKg: parseFloat(product.quantityKg) || 0,
@@ -611,7 +771,6 @@ const WarehouseForm = ({
         totalBags: parseFloat(product.totalBags) || 0,
       }
 
-      // If issued by Railhead and received by party, don't include warehouse fields
       if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'party') {
         const { warehouseId, warehouseName, ...rest } = baseProduct
         return rest
@@ -620,15 +779,38 @@ const WarehouseForm = ({
       return baseProduct
     })
 
+    // Build the payload
     const payload = {
       ...formData,
       tpPassType: 'warehouse',
       companyId: formData.companyId || '',
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
       products: preparedProducts,
+      // Process all number fields in the main form data
+      customerRate: processNumberField(formData.customerRate),
+      totalAmount: processNumberField(formData.totalAmount),
+      transporterRate: processNumberField(formData.transporterRate),
+      totalTransporterAmount: processNumberField(formData.totalTransporterAmount),
+      transporterRateOn: processNumberField(formData.transporterRateOn),
+      customerRateOn: processNumberField(formData.customerRateOn),
+      customerFreight: processNumberField(formData.customerFreight),
+      transporterFreight: processNumberField(formData.transporterFreight),
     }
 
-    // Remove empty warehouseId from products if received by party
+    // Remove vehicleId if vehicle doesn't exist in database
+    if (!vehicleExistsInDb && payload.vehicleId) {
+      console.log('Vehicle not found in DB, removing vehicleId from payload')
+      payload.vehicleName = payload.vehicleId // Keep the name as what user entered
+      delete payload.vehicleId
+    }
+
+    // Remove driverId if driver doesn't exist in database
+    if (!driverExistsInDb && payload.driverId) {
+      console.log('Driver not found in DB, removing driverId from payload')
+      payload.driverName = payload.driverId // Keep the name as what user entered
+      delete payload.driverId
+    }
+
     if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'party') {
       payload.products = payload.products.map((product) => {
         const { warehouseId, warehouseName, ...rest } = product
@@ -636,7 +818,6 @@ const WarehouseForm = ({
       })
     }
 
-    // Ensure warehouseId is not empty string for warehouse type
     if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'warehouse') {
       payload.products = payload.products.map((product) => ({
         ...product,
@@ -650,9 +831,19 @@ const WarehouseForm = ({
     }
 
     console.log('=== FINAL PAYLOAD ===', payload)
+    console.log('=== VEHICLE EXISTS IN DB? ===', vehicleExistsInDb)
+    console.log('=== DRIVER EXISTS IN DB? ===', driverExistsInDb)
     console.log('=== PRODUCTS DETAIL ===', payload.products)
 
     handleSubmit(payload)
+  }
+
+  // Add this helper function near the top of your component
+  const formatNumberValue = (value) => {
+    if (value === '' || value === null || value === undefined) {
+      return ''
+    }
+    return value.toString()
   }
 
   const receivedByWarehouseOptions = warehouseList.map((w) => ({
@@ -667,7 +858,6 @@ const WarehouseForm = ({
 
   const productOptions = inventoryList
     .filter((p) => {
-      // Check if totalBags is not 0
       const totalBags = p.totalBags || p.bags || 0
       return totalBags > 0
     })
@@ -680,7 +870,7 @@ const WarehouseForm = ({
       const totalBags = p.totalBags || p.bags || 0
 
       return {
-        value: inventoryId, // Use inventory ID for selection
+        value: inventoryId,
         label: `${productName} ( Available: ${quantityKg}kg, Bag Size: ${bagSize}/kg, Total Bags: ${totalBags} )`,
         data: p,
       }
@@ -689,12 +879,6 @@ const WarehouseForm = ({
   const companyOptions = companyList.map((c) => ({
     value: c.id || c._id,
     label: c.companyName || c.name || 'Unnamed Company',
-  }))
-
-  const workerOptions = workerList.map((w) => ({
-    value: w.id || w._id,
-    label: w.name || 'Unnamed Worker',
-    supervisorId: w.supervisorId,
   }))
 
   const vehicleOptions = Array.isArray(vehicles)
@@ -711,13 +895,54 @@ const WarehouseForm = ({
       }))
     : []
 
+  // Consignor Options with create new option - FIXED: Include ID in the option
+  const consignorOptions = [
+    ...consignorList.map((consignor) => ({
+      value: consignor.id, // This is the ID
+      label: consignor.name,
+      name: consignor.name,
+      address: consignor.address,
+    })),
+    {
+      value: 'create-new',
+      label: (
+        <div className="text-primary d-flex align-items-center">
+          <FaUserPlus className="me-2" />
+          Create New Consignor
+        </div>
+      ),
+      name: '',
+      address: '',
+    },
+  ]
+
+  // Consignee Options with create new option - FIXED: Include ID in the option
+  const consigneeOptions = [
+    ...consigneeList.map((consignee) => ({
+      value: consignee.id, // This is the ID
+      label: consignee.name,
+      name: consignee.name,
+      address: consignee.address,
+    })),
+    {
+      value: 'create-new',
+      label: (
+        <div className="text-primary d-flex align-items-center">
+          <FaUserPlus className="me-2" />
+          Create New Consignee
+        </div>
+      ),
+      name: '',
+      address: '',
+    },
+  ]
+
   const getWarehouseValue = (product) => {
     if (!product.warehouseId) return null
     return warehouseOptions.find((opt) => opt.value === product.warehouseId) || null
   }
 
   const getProductValue = (product) => {
-    // Use inventoryId for selection if available, otherwise fallback to productId
     const value = product.inventoryId || product.productId
     if (!value) return null
     return productOptions.find((opt) => opt.value === value) || null
@@ -728,19 +953,12 @@ const WarehouseForm = ({
     return companyOptions.find((opt) => opt.value === formData.companyId) || null
   }
 
-  const getWorkerValue = () => {
-    if (!formData.workerId) return null
-    return workerOptions.find((opt) => opt.value === formData.workerId) || null
-  }
-
   const getVehicleValue = () => {
     if (formData.vehicleId) {
-      // Check if it's a newly created vehicle (not in the options)
       const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
       if (existingVehicle) {
         return existingVehicle
       }
-      // If not found in options, it's a newly created one
       return {
         value: formData.vehicleId,
         label: formData.vehicleName || formData.vehicleId,
@@ -751,12 +969,10 @@ const WarehouseForm = ({
 
   const getDriverValue = () => {
     if (formData.driverId) {
-      // Check if it's a newly created driver (not in the options)
       const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
       if (existingDriver) {
         return existingDriver
       }
-      // If not found in options, it's a newly created one
       return {
         value: formData.driverId,
         label: formData.driverName || formData.driverId,
@@ -770,6 +986,18 @@ const WarehouseForm = ({
     return (
       receivedByWarehouseOptions.find((opt) => opt.value === formData.receivedByWarehouseId) || null
     )
+  }
+
+  // Get consignor value for Select component - FIXED: Find by ID instead of name
+  const getConsignorValue = () => {
+    if (!formData.consignorId) return null
+    return consignorOptions.find((opt) => opt.value === formData.consignorId) || null
+  }
+
+  // Get consignee value for Select component - FIXED: Find by ID instead of name
+  const getConsigneeValue = () => {
+    if (!formData.consigneeId) return null
+    return consigneeOptions.find((opt) => opt.value === formData.consigneeId) || null
   }
 
   // Helper function to check if warehouse section should be shown in products
@@ -788,13 +1016,11 @@ const WarehouseForm = ({
 
   // Get product details for display
   const getProductDetailForDisplay = (product) => {
-    // First try to find by inventoryId if available
     let productDetail
     if (product.inventoryId) {
       productDetail = productDetails[product.inventoryId]
     }
 
-    // If not found, try to find by productId in inventoryList
     if (!productDetail && (product.productId || product.inventoryId)) {
       const productFromList = inventoryList.find(
         (p) =>
@@ -804,8 +1030,8 @@ const WarehouseForm = ({
       )
       if (productFromList) {
         productDetail = {
-          productId: productFromList.productId, // Actual productId
-          inventoryId: productFromList._id || productFromList.id, // Inventory ID
+          productId: productFromList.productId,
+          inventoryId: productFromList._id || productFromList.id,
           productName: productFromList.productName || productFromList.name || 'Unknown Product',
           quantityKg: productFromList.quantityKg || productFromList.quantity || 0,
           bagSize: productFromList.bagSize || productFromList.bagWeight || 0,
@@ -828,747 +1054,764 @@ const WarehouseForm = ({
     const totalBags = parseFloat(product.totalBags) || 0
     const quantityKg = parseFloat(product.quantityKg) || 0
 
-    // Calculations
-    const calculatedTotalBags = bags * bagSize
-    const calculatedBagsFromTotal = bagSize > 0 ? totalBags / bagSize : 0
-    const calculatedQuantityFromBags = bags * bagSize
-    const calculatedBagsFromQuantity = bagSize > 0 ? quantityKg / bagSize : 0
-    const bagsPerQuantity = bagSize > 0 ? quantityKg / bagSize : 0
-
     return {
       productDetail,
       bags,
       bagSize,
       totalBags,
       quantityKg,
-      calculatedTotalBags,
-      calculatedBagsFromTotal,
-      calculatedQuantityFromBags,
-      calculatedBagsFromQuantity,
-      bagsPerQuantity,
+      calculatedTotalBags: bags * bagSize,
+      calculatedBagsFromTotal: bagSize > 0 ? totalBags / bagSize : 0,
+      calculatedQuantityFromBags: bags * bagSize,
+      calculatedBagsFromQuantity: bagSize > 0 ? quantityKg / bagSize : 0,
+      bagsPerQuantity: bagSize > 0 ? quantityKg / bagSize : 0,
     }
   }
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
   return (
-    <Modal
-      show={show}
-      onHide={handleClose}
-      size="xl"
-      centered
-      scrollable
-      dialogClassName="modal-dialog-scrollable"
-    >
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="w-100">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div className="d-flex align-items-center">
-              <FaWarehouse className="me-2 text-success" />
-              <h4 className="mb-0">
-                {mode === 'edit' ? 'Edit' : 'Add'} Railhead to Warehouse/Party TP Pass
-              </h4>
-            </div>
-            {mode === 'add' && (
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => onFormTypeChange(null)}
-                disabled={isLoading}
-              >
-                Change Type
-              </Button>
-            )}
-          </div>
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body
-        className="p-4 pt-0"
-        style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+    <>
+      <Modal
+        show={show}
+        onHide={handleClose}
+        size="xl"
+        centered
+        scrollable
+        dialogClassName="modal-dialog-scrollable"
       >
-        <div className="alert alert-info mb-4">
-          <div className="d-flex align-items-center">
-            <FaWarehouse className="me-2" />
-            <div>
-              <strong>TP Pass Type:</strong> Railhead to Warehouse/Party
-              <div className="small mt-1">
-                <strong>Issued by:</strong> {formData.issuedBy} • <strong>Received by:</strong>{' '}
-                {formData.receivedBy}
-                {formData.receivedByType && ` (${formData.receivedByType})`}
-                {formData.receivedByType === 'warehouse' &&
-                  formData.receivedByWarehouseName &&
-                  ` • ${formData.receivedByWarehouseName}`}
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="w-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="d-flex align-items-center">
+                <FaWarehouse className="me-2 text-success" />
+                <h4 className="mb-0">
+                  {mode === 'edit' ? 'Edit' : 'Add'} Railhead to Warehouse/Party TP Pass
+                </h4>
               </div>
-              {warehouseDisplayMode === 'auto-filled' && (
-                <div className="small text-success mt-1">
-                  <FaWarehouse className="me-1" />
-                  Warehouse in products section will be auto-filled from selected warehouse above
-                </div>
-              )}
-              {warehouseDisplayMode === 'hidden' && (
-                <div className="small text-warning mt-1">
-                  <FaUserFriends className="me-1" />
-                  Warehouse field is hidden in products section when received by party
-                </div>
+              {mode === 'add' && (
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => onFormTypeChange(null)}
+                  disabled={isLoading}
+                >
+                  Change Type
+                </Button>
               )}
             </div>
-          </div>
-        </div>
+          </Modal.Title>
+        </Modal.Header>
 
-        <Form onSubmit={onSubmit}>
-          {/* Issued/Received Section */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Issued & Received Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Issued By</Form.Label>
-              <Form.Control
-                type="text"
-                value="Railhead"
-                readOnly
-                disabled={isLoading}
-                placeholder="Issued by"
-                className="bg-light"
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Received By</Form.Label>
+        <Modal.Body
+          className="p-4 pt-0"
+          style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+        >
+          <div className="alert alert-info mb-4">
+            <div className="d-flex align-items-center">
+              <FaWarehouse className="me-2" />
               <div>
-                <div className="mb-3">
-                  <div className="d-flex gap-2">
-                    {receivedByOptions.map((option) => (
-                      <Button
-                        key={option.value}
-                        variant={
-                          formData.receivedByType === option.value ? 'primary' : 'outline-primary'
-                        }
-                        onClick={() => handleReceivedByTypeChange(option.value)}
-                        className="d-flex align-items-center"
-                        disabled={isLoading}
-                      >
-                        {option.icon}
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
+                <strong>TP Pass Type:</strong> Railhead to Warehouse/Party
+                <div className="small mt-1">
+                  <strong>Issued by:</strong> {formData.issuedBy} • <strong>Received by:</strong>{' '}
+                  {formData.receivedBy}
+                  {formData.receivedByType && ` (${formData.receivedByType})`}
+                  {formData.receivedByType === 'warehouse' &&
+                    formData.receivedByWarehouseName &&
+                    ` • ${formData.receivedByWarehouseName}`}
                 </div>
-
-                {formData.receivedByType === 'warehouse' && (
-                  <div className="mt-3">
-                    <Form.Label>Select Warehouse</Form.Label>
-                    <Select
-                      value={getReceivedByWarehouseValue()}
-                      onChange={handleWarehouseSelect}
-                      options={receivedByWarehouseOptions}
-                      placeholder="Select Warehouse"
-                      isClearable
-                      isLoading={isLoading || isRailHeadFetching}
-                    />
-                    {formData.receivedByWarehouseName && (
-                      <Form.Text className="text-success">
-                        Selected: {formData.receivedByWarehouseName}
-                      </Form.Text>
-                    )}
+                {warehouseDisplayMode === 'auto-filled' && (
+                  <div className="small text-success mt-1">
+                    <FaWarehouse className="me-1" />
+                    Warehouse in products section will be auto-filled from selected warehouse above
                   </div>
                 )}
-
-                {formData.receivedByType === 'party' && (
-                  <div className="mt-3">
-                    <Form.Label>Party</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={formData.receivedBy}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, receivedBy: e.target.value }))
-                      }
-                      placeholder="Enter party name"
-                      disabled={isLoading}
-                      readOnly
-                      className="bg-light"
-                    />
+                {warehouseDisplayMode === 'hidden' && (
+                  <div className="small text-warning mt-1">
+                    <FaUserFriends className="me-1" />
+                    Warehouse field is hidden in products section when received by party
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Select Users */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Select Users</h5>
-          <div className="row g-3 mb-4">
-            {userRole === 'superadmin' && (
+          <Form onSubmit={onSubmit}>
+            {/* Issued/Received Section */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Issued & Received Details</h5>
+            <div className="row g-3 mb-4">
               <div className="col-md-6">
-                <Form.Label>Supervisors</Form.Label>
-                <Select
-                  value={
-                    supervisorOptions.find((sup) => sup.value === formData.supervisorId) || null
-                  }
-                  onChange={(selected) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      supervisorId: selected ? selected.value : '',
-                      supervisorName: selected ? selected.label : '',
-                    }))
-                  }
-                  options={supervisorOptions}
-                  placeholder="Select Supervisor"
-                  isClearable
-                  isLoading={isLoading || isRailHeadFetching}
+                <Form.Label>Issued By</Form.Label>
+                <Form.Control
+                  type="text"
+                  value="Railhead"
+                  readOnly
+                  disabled={isLoading}
+                  placeholder="Issued by"
+                  className="bg-light"
                 />
               </div>
-            )}
-
-            <div className="col-md-6">
-              <Form.Label>Employees</Form.Label>
-              <Select
-                value={getWorkerValue()}
-                onChange={(selected) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    workerId: selected ? selected.value : '',
-                    workerName: selected ? selected.label : '',
-                  }))
-                }
-                options={workerOptions.filter((w) =>
-                  userRole === 'superadmin' ? w.supervisorId === formData.supervisorId : true,
-                )}
-                placeholder="Select Employee"
-                isClearable
-                isLoading={isLoading || isRailHeadFetching}
-              />
-            </div>
-          </div>
-
-          {/* Company Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>
-                Company Name <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <Select
-                value={getCompanyValue()}
-                onChange={(selected) => {
-                  if (selected) {
-                    const selectedCompany = companyList.find((c) => c.id === selected.value)
-                    setFormData((prev) => ({
-                      ...prev,
-                      companyId: selectedCompany?.id || '',
-                      companyName: selectedCompany?.companyName || '',
-                      companyEmail: selectedCompany?.email || '',
-                      companyMobileNumber: selectedCompany?.mobileNumber || '',
-                      companyOfficeNumber: selectedCompany?.officeNumber || '',
-                      companyAddress: selectedCompany?.address || '',
-                      gstIn: selectedCompany?.gstNumber || '',
-                    }))
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      companyId: '',
-                      companyName: '',
-                      companyEmail: '',
-                      companyMobileNumber: '',
-                      companyOfficeNumber: '',
-                      companyAddress: '',
-                      gstIn: '',
-                    }))
-                  }
-                }}
-                options={companyOptions}
-                placeholder="Select Company"
-                isClearable
-                isLoading={isLoading || isRailHeadFetching}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Basic Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Basic Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <Form.Label>
-                Date <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <Form.Control
-                type="date"
-                name="date"
-                value={formData.date || getTodayDate()}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-                max={getTodayDate()}
-              />
-            </div>
-
-            <div className="col-md-4">
-              <Form.Label>
-                Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <CreatableSelect
-                value={getVehicleValue()}
-                onChange={handleVehicleChange}
-                options={vehicleOptions}
-                placeholder="Select or type new vehicle"
-                isClearable
-                isLoading={isLoading || isRailHeadFetching}
-                required
-              />
-            </div>
-
-            <div className="col-md-4">
-              <Form.Label>
-                Driver Name <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <CreatableSelect
-                value={getDriverValue()}
-                onChange={handleDriverChange}
-                options={driverOptions}
-                placeholder="Select or type new driver"
-                isClearable
-                isLoading={isLoading || isRailHeadFetching}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Consignor Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Consignor Name</Form.Label>
-              <Form.Control
-                name="consignorName"
-                value={formData.consignorName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Consignor Address</Form.Label>
-              <Form.Control
-                name="consignorAddress"
-                value={formData.consignorAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Consignee Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Consignee Name</Form.Label>
-              <Form.Control
-                name="consigneeName"
-                value={formData.consigneeName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Consignee Address</Form.Label>
-              <Form.Control
-                name="consigneeAddress"
-                value={formData.consigneeAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Customer Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Customer Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>Customer Name</Form.Label>
-              <Form.Control
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>Customer Address</Form.Label>
-              <Form.Control
-                name="customerAddress"
-                value={formData.customerAddress}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Route Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Route Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <Form.Label>
-                Start Location <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <Form.Control
-                name="startLocation"
-                value={formData.startLocation}
-                onChange={handleChange}
-                disabled={isLoading}
-                required
-              />
-            </div>
-            <div className="col-md-6">
-              <Form.Label>
-                End Location <span style={{ color: 'red' }}>*</span>
-              </Form.Label>
-              <Form.Control
-                name="endLocation"
-                value={formData.endLocation}
-                onChange={handleChange}
-                disabled={isLoading}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Product Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
-          <div className="mb-4">
-            {formData.products.map((product, index) => {
-              const calculations = calculateProductDetails(product, index)
-              const productDetail = getProductDetailForDisplay(product)
-              const bagSize = parseFloat(product.bagSize) || 0
-              const totalBags = parseFloat(product.totalBags) || 0
-              const calculatedQuantity = bagSize * totalBags
-
-              return (
-                <div key={index} className="border rounded p-3 mb-3">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0">Product {index + 1}</h6>
-                    {formData.products.length > 1 && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removeProduct(index)}
-                        disabled={isLoading}
-                      >
-                        Remove
-                      </Button>
-                    )}
+              <div className="col-md-6">
+                <Form.Label>Received By</Form.Label>
+                <div>
+                  <div className="mb-3">
+                    <div className="d-flex gap-2">
+                      {receivedByOptions.map((option) => (
+                        <Button
+                          key={option.value}
+                          variant={
+                            formData.receivedByType === option.value ? 'primary' : 'outline-primary'
+                          }
+                          onClick={() => handleReceivedByTypeChange(option.value)}
+                          className="d-flex align-items-center"
+                          disabled={isLoading}
+                        >
+                          {option.icon}
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Product Details Display from API */}
-                  {productDetail && (
-                    <div className="alert alert-info mb-3 p-3">
-                      <div className="d-flex align-items-center mb-2">
-                        <FaInfoCircle className="me-2" />
-                        <strong>Product Details from RailHead Inventory:</strong>
-                      </div>
-                      <div className="row small">
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Product:</span>{' '}
-                          <strong>{productDetail.productName}</strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Quantity (Kg):</span>{' '}
-                          <strong
-                            className={
-                              productDetail.quantityKg === 0 ? 'text-danger' : 'text-success'
-                            }
-                          >
-                            {productDetail.quantityKg}
-                          </strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Bag Size:</span>{' '}
-                          <strong
-                            className={productDetail.bagSize === 0 ? 'text-danger' : 'text-success'}
-                          >
-                            {productDetail.bagSize}
-                          </strong>
-                        </div>
-                        <div className="col-md-3 mb-1">
-                          <span className="text-muted">Total Bags:</span>{' '}
-                          <strong
-                            className={
-                              productDetail.totalBags === 0 ? 'text-danger' : 'text-success'
-                            }
-                          >
-                            {productDetail.totalBags}
-                          </strong>
-                        </div>
-                      </div>
+                  {formData.receivedByType === 'warehouse' && (
+                    <div className="mt-3">
+                      <Form.Label>Select Warehouse</Form.Label>
+                      <Select
+                        value={getReceivedByWarehouseValue()}
+                        onChange={handleWarehouseSelect}
+                        options={receivedByWarehouseOptions}
+                        placeholder="Select Warehouse"
+                        isClearable
+                        isLoading={isLoading || isRailHeadFetching}
+                      />
+                      {formData.receivedByWarehouseName && (
+                        <Form.Text className="text-success">
+                          Selected: {formData.receivedByWarehouseName}
+                        </Form.Text>
+                      )}
                     </div>
                   )}
 
-                  <div className="row g-3">
-                    {/* Warehouse field - conditionally displayed */}
-                    {warehouseDisplayMode === 'auto-filled' ? (
-                      // When issued by Railhead and received by warehouse - show as read-only
-                      <div className="col-md-6">
-                        <Form.Label>
-                          Warehouse <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={
-                            product.warehouseName ||
-                            formData.receivedByWarehouseName ||
-                            'Select warehouse above'
-                          }
-                          disabled
-                          readOnly
-                          required
-                        />
-                        <Form.Text className="text-success">
-                          <FaWarehouse className="me-1" />
-                          Auto-filled from selected warehouse
-                        </Form.Text>
-                      </div>
-                    ) : warehouseDisplayMode === 'hidden' ? (
-                      // When issued by Railhead and received by party - hide warehouse field
-                      <div className="col-md-6">
-                        <div className="alert alert-warning p-2 mb-0">
-                          <FaUserFriends className="me-2" />
-                          <small>Warehouse not required when received by party</small>
+                  {formData.receivedByType === 'party' && (
+                    <div className="mt-3">
+                      <Form.Label>Party</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={formData.receivedBy}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, receivedBy: e.target.value }))
+                        }
+                        placeholder="Enter party name"
+                        disabled={isLoading}
+                        readOnly
+                        className="bg-light"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Company Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Company Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>
+                  Company Name <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <Select
+                  value={getCompanyValue()}
+                  onChange={(selected) => {
+                    if (selected) {
+                      const selectedCompany = companyList.find((c) => c.id === selected.value)
+                      setFormData((prev) => ({
+                        ...prev,
+                        companyId: selectedCompany?.id || '',
+                        companyName: selectedCompany?.companyName || '',
+                        companyEmail: selectedCompany?.email || '',
+                        companyMobileNumber: selectedCompany?.mobileNumber || '',
+                        companyOfficeNumber: selectedCompany?.officeNumber || '',
+                        companyAddress: selectedCompany?.address || '',
+                        gstIn: selectedCompany?.gstNumber || '',
+                      }))
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        companyId: '',
+                        companyName: '',
+                        companyEmail: '',
+                        companyMobileNumber: '',
+                        companyOfficeNumber: '',
+                        companyAddress: '',
+                        gstIn: '',
+                      }))
+                    }
+                  }}
+                  options={companyOptions}
+                  placeholder="Select Company"
+                  isClearable
+                  isLoading={isLoading || isRailHeadFetching}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Basic Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Basic Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <Form.Label>
+                  Date <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  type="date"
+                  name="date"
+                  value={formData.date || getTodayDate()}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                  max={getTodayDate()}
+                />
+              </div>
+
+              <div className="col-md-4">
+                <Form.Label>
+                  Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <CreatableSelect
+                  value={getVehicleValue()}
+                  onChange={handleVehicleChange}
+                  options={vehicleOptions}
+                  placeholder="Select or type new vehicle"
+                  isClearable
+                  isLoading={isLoading || isRailHeadFetching}
+                  required
+                />
+              </div>
+
+              <div className="col-md-4">
+                <Form.Label>
+                  Driver Name <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <CreatableSelect
+                  value={getDriverValue()}
+                  onChange={handleDriverChange}
+                  options={driverOptions}
+                  placeholder="Select or type new driver"
+                  isClearable
+                  isLoading={isLoading || isRailHeadFetching}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Consignor Details with Create New Option and Debouncing */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-12">
+                <Form.Label>Consignor Name</Form.Label>
+                <Select
+                  value={getConsignorValue()}
+                  onChange={(selected) => {
+                    if (selected && selected.value === 'create-new') {
+                      // Show the create consignor modal
+                      setShowConsignorModal(true)
+                      // Clear the selection
+                      handleConsignorChange(null)
+                    } else {
+                      handleConsignorChange(selected)
+                    }
+                  }}
+                  options={consignorOptions}
+                  placeholder="Select Consignor or Create New"
+                  isClearable
+                  isLoading={isLoading || isFetchingConsignor}
+                  onInputChange={handleConsignorInputChange}
+                  onMenuScrollToBottom={handleConsignorMenuScrollToBottom}
+                  filterOption={null}
+                  noOptionsMessage={({ inputValue }) =>
+                    inputValue
+                      ? `No consignor found for "${inputValue}"`
+                      : 'Type to search consignor'
+                  }
+                  styles={{
+                    option: (provided, state) => ({
+                      ...provided,
+                      backgroundColor:
+                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
+                      '&:hover': {
+                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
+                      },
+                    }),
+                  }}
+                />
+                {isFetchingConsignor && <Form.Text className="text-info">Searching...</Form.Text>}
+                {formData.consignorId && (
+                  <Form.Text className="text-muted">ID: {formData.consignorId}</Form.Text>
+                )}
+              </div>
+              {formData.consignorAddress && (
+                <div className="col-md-12">
+                  <Form.Label>Consignor Address</Form.Label>
+                  <Form.Control value={formData.consignorAddress} readOnly className="bg-light" />
+                  <Form.Text className="text-muted">Auto-filled from selected consignor</Form.Text>
+                </div>
+              )}
+            </div>
+
+            {/* Consignee Details with Create New Option and Debouncing */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-12">
+                <Form.Label>Consignee Name</Form.Label>
+                <Select
+                  value={getConsigneeValue()}
+                  onChange={(selected) => {
+                    if (selected && selected.value === 'create-new') {
+                      // Show the create consignee modal
+                      setShowConsigneeModal(true)
+                      // Clear the selection
+                      handleConsigneeChange(null)
+                    } else {
+                      handleConsigneeChange(selected)
+                    }
+                  }}
+                  options={consigneeOptions}
+                  placeholder="Select Consignee or Create New"
+                  isClearable
+                  isLoading={isLoading || isFetchingConsignee}
+                  onInputChange={handleConsigneeInputChange}
+                  onMenuScrollToBottom={handleConsigneeMenuScrollToBottom}
+                  filterOption={null}
+                  noOptionsMessage={({ inputValue }) =>
+                    inputValue
+                      ? `No consignee found for "${inputValue}"`
+                      : 'Type to search consignee'
+                  }
+                  styles={{
+                    option: (provided, state) => ({
+                      ...provided,
+                      backgroundColor:
+                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
+                      '&:hover': {
+                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
+                      },
+                    }),
+                  }}
+                />
+                {isFetchingConsignee && <Form.Text className="text-info">Searching...</Form.Text>}
+                {formData.consigneeId && (
+                  <Form.Text className="text-muted">ID: {formData.consigneeId}</Form.Text>
+                )}
+              </div>
+              {formData.consigneeAddress && (
+                <div className="col-md-12">
+                  <Form.Label>Consignee Address</Form.Label>
+                  <Form.Control value={formData.consigneeAddress} readOnly className="bg-light" />
+                  <Form.Text className="text-muted">Auto-filled from selected consignee</Form.Text>
+                </div>
+              )}
+            </div>
+
+            {/* Customer Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Customer Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>Customer Name</Form.Label>
+                <Form.Control
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>Customer Address</Form.Label>
+                <Form.Control
+                  name="customerAddress"
+                  value={formData.customerAddress}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Route Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Route Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <Form.Label>
+                  Start Location <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  name="startLocation"
+                  value={formData.startLocation}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+              <div className="col-md-6">
+                <Form.Label>
+                  End Location <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  name="endLocation"
+                  value={formData.endLocation}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
+            <div className="mb-4">
+              {formData.products.map((product, index) => {
+                const calculations = calculateProductDetails(product, index)
+                const productDetail = getProductDetailForDisplay(product)
+                const bagSize = parseFloat(product.bagSize) || 0
+                const totalBags = parseFloat(product.totalBags) || 0
+                const calculatedQuantity = bagSize * totalBags
+
+                return (
+                  <div key={index} className="border rounded p-3 mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6 className="mb-0">Product {index + 1}</h6>
+                      {formData.products.length > 1 && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => removeProduct(index)}
+                          disabled={isLoading}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Product Details Display from API */}
+                    {productDetail && (
+                      <div className="alert alert-info mb-3 p-3">
+                        <div className="d-flex align-items-center mb-2">
+                          <FaInfoCircle className="me-2" />
+                          <strong>Product Details from RailHead Inventory:</strong>
+                        </div>
+                        <div className="row small">
+                          <div className="col-md-3 mb-1">
+                            <span className="text-muted">Product:</span>{' '}
+                            <strong>{productDetail.productName}</strong>
+                          </div>
+                          <div className="col-md-3 mb-1">
+                            <span className="text-muted">Quantity (Kg):</span>{' '}
+                            <strong
+                              className={
+                                productDetail.quantityKg === 0 ? 'text-danger' : 'text-success'
+                              }
+                            >
+                              {productDetail.quantityKg}
+                            </strong>
+                          </div>
+                          <div className="col-md-3 mb-1">
+                            <span className="text-muted">Bag Size:</span>{' '}
+                            <strong
+                              className={
+                                productDetail.bagSize === 0 ? 'text-danger' : 'text-success'
+                              }
+                            >
+                              {productDetail.bagSize}
+                            </strong>
+                          </div>
+                          <div className="col-md-3 mb-1">
+                            <span className="text-muted">Total Bags:</span>{' '}
+                            <strong
+                              className={
+                                productDetail.totalBags === 0 ? 'text-danger' : 'text-success'
+                              }
+                            >
+                              {productDetail.totalBags}
+                            </strong>
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      // Default case - show warehouse dropdown
+                    )}
+
+                    <div className="row g-3">
+                      {/* Warehouse field - conditionally displayed */}
+                      {warehouseDisplayMode === 'auto-filled' ? (
+                        <div className="col-md-6">
+                          <Form.Label>
+                            Warehouse <span style={{ color: 'red' }}>*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              product.warehouseName ||
+                              formData.receivedByWarehouseName ||
+                              'Select warehouse above'
+                            }
+                            disabled
+                            readOnly
+                            required
+                          />
+                          <Form.Text className="text-success">
+                            <FaWarehouse className="me-1" />
+                            Auto-filled from selected warehouse
+                          </Form.Text>
+                        </div>
+                      ) : warehouseDisplayMode === 'hidden' ? (
+                        <div className="col-md-6">
+                          <div className="alert alert-warning p-2 mb-0">
+                            <FaUserFriends className="me-2" />
+                            <small>Warehouse not required when received by party</small>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="col-md-6">
+                          <Form.Label>
+                            Warehouse <span style={{ color: 'red' }}>*</span>
+                          </Form.Label>
+                          <Select
+                            value={getWarehouseValue(product)}
+                            onChange={(selected) =>
+                              handleProductChange(
+                                index,
+                                'warehouseId',
+                                selected ? selected.value : '',
+                              )
+                            }
+                            options={warehouseOptions}
+                            placeholder="Select Warehouse"
+                            isClearable
+                            isLoading={isLoading || isRailHeadFetching}
+                            required
+                          />
+                        </div>
+                      )}
+
                       <div className="col-md-6">
                         <Form.Label>
-                          Warehouse <span style={{ color: 'red' }}>*</span>
+                          Product <span style={{ color: 'red' }}>*</span>
                         </Form.Label>
                         <Select
-                          value={getWarehouseValue(product)}
+                          value={getProductValue(product)}
                           onChange={(selected) =>
-                            handleProductChange(
-                              index,
-                              'warehouseId',
-                              selected ? selected.value : '',
-                            )
+                            handleProductChange(index, 'productId', selected ? selected.value : '')
                           }
-                          options={warehouseOptions}
-                          placeholder="Select Warehouse"
+                          options={productOptions}
+                          placeholder="Select Product"
                           isClearable
                           isLoading={isLoading || isRailHeadFetching}
                           required
                         />
+                        {productDetail && (
+                          <Form.Text className="text-info">
+                            <FaBox className="me-1" />
+                            {productDetail.productName} • Bag Size: {productDetail.bagSize} • Total
+                            Bags: {productDetail.totalBags}
+                          </Form.Text>
+                        )}
                       </div>
-                    )}
 
-                    <div className="col-md-6">
-                      <Form.Label>
-                        Product <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Select
-                        value={getProductValue(product)}
-                        onChange={(selected) =>
-                          handleProductChange(index, 'productId', selected ? selected.value : '')
-                        }
-                        options={productOptions}
-                        placeholder="Select Product"
-                        isClearable
-                        isLoading={isLoading || isRailHeadFetching}
-                        required
-                      />
-                      {productDetail && (
-                        <Form.Text className="text-info">
-                          <FaBox className="me-1" />
-                          {productDetail.productName} • Bag Size: {productDetail.bagSize} • Total
-                          Bags: {productDetail.totalBags}
+                      {/* Total Bags */}
+                      <div className="col-md-4">
+                        <Form.Label>
+                          Total Bags <span style={{ color: 'red' }}>*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={product.totalBags}
+                          onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
+                          onWheel={handleNumberInputScroll}
+                          disabled={isLoading}
+                          placeholder="Enter total bags"
+                          required
+                        />
+                      </div>
+
+                      {/* Bag Size */}
+                      <div className="col-md-4">
+                        <Form.Label>
+                          Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={product.bagSize}
+                          readOnly
+                          className="bg-light"
+                          required
+                        />
+                        <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
+                      </div>
+
+                      {/* Quantity (Kg) - Auto-calculated */}
+                      <div className="col-md-4">
+                        <Form.Label>
+                          Quantity (Kg) <span style={{ color: 'red' }}>*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={calculatedQuantity || product.quantityKg}
+                          onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
+                          onWheel={handleNumberInputScroll}
+                          disabled={isLoading}
+                          placeholder="Auto-calculated"
+                          className="bg-light"
+                          required
+                          min="0"
+                          step="0.01"
+                        />
+                        <Form.Text className="text-muted">
+                          Auto-calculated: Bag Size × Total Bags
                         </Form.Text>
-                      )}
-                    </div>
-
-                    {/* Total Bags */}
-                    <div className="col-md-4">
-                      <Form.Label>
-                        Total Bags <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={product.totalBags}
-                        onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
-                        onWheel={handleNumberInputScroll}
-                        disabled={isLoading}
-                        placeholder="Enter total bags"
-                        required
-                      />
-                    </div>
-
-                    {/* Bag Size */}
-                    <div className="col-md-4">
-                      <Form.Label>
-                        Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={product.bagSize}
-                        readOnly
-                        className="bg-light"
-                        required
-                      />
-                      <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
-                    </div>
-
-                    {/* Quantity (Kg) - Auto-calculated */}
-                    <div className="col-md-4">
-                      <Form.Label>
-                        Quantity (Kg) <span style={{ color: 'red' }}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={calculatedQuantity || product.quantityKg}
-                        onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
-                        onWheel={handleNumberInputScroll}
-                        disabled={isLoading}
-                        placeholder="Auto-calculated"
-                        className="bg-light"
-                        required
-                        min="0"
-                        step="0.01"
-                      />
-                      <Form.Text className="text-muted">
-                        Auto-calculated: Bag Size × Total Bags
-                      </Form.Text>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
 
-            <Button
-              variant="outline-primary"
-              onClick={addProduct}
-              className="mb-3"
-              disabled={isLoading || isRailHeadFetching}
-            >
-              Add Another Product
-            </Button>
-          </div>
+              <Button
+                variant="outline-primary"
+                onClick={addProduct}
+                className="mb-3"
+                disabled={isLoading || isRailHeadFetching}
+              >
+                Add Another Product
+              </Button>
+            </div>
 
-          {/* Freight Details */}
-          <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
-          <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <Form.Label>Customer Rate</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerRate"
-                value={formData.customerRate}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
+            {/* Freight Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <Form.Label>Customer Rate</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerRate"
+                  value={formData.customerRate}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Total Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="totalAmount"
+                  value={formData.totalAmount}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Rate</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterRate"
+                  value={formData.transporterRate}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Total Transporter Amount</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="totalTransporterAmount"
+                  value={formData.totalTransporterAmount}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Rate On</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterRateOn"
+                  value={formData.transporterRateOn}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Customer Rate On</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerRateOn"
+                  value={formData.customerRateOn}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Customer Freight</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="customerFreight"
+                  value={formData.customerFreight}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="col-md-4">
+                <Form.Label>Transporter Freight</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="transporterFreight"
+                  value={formData.transporterFreight}
+                  onChange={handleChange}
+                  onWheel={handleNumberInputScroll}
+                  disabled={isLoading}
+                />
+              </div>
             </div>
-            <div className="col-md-4">
-              <Form.Label>Total Amount</Form.Label>
-              <Form.Control
-                type="number"
-                name="totalAmount"
-                value={formData.totalAmount}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Rate</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterRate"
-                value={formData.transporterRate}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Total Transporter Amount</Form.Label>
-              <Form.Control
-                type="number"
-                name="totalTransporterAmount"
-                value={formData.totalTransporterAmount}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Rate On</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterRateOn"
-                value={formData.transporterRateOn}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Customer Rate On</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerRateOn"
-                value={formData.customerRateOn}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Customer Freight</Form.Label>
-              <Form.Control
-                type="number"
-                name="customerFreight"
-                value={formData.customerFreight}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Transporter Freight</Form.Label>
-              <Form.Control
-                type="number"
-                name="transporterFreight"
-                value={formData.transporterFreight}
-                onChange={handleChange}
-                onWheel={handleNumberInputScroll}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
 
-          <div className="text-end mt-4">
-            <Button type="submit" disabled={isLoading || isRailHeadFetching}>
-              {isLoading ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  {mode === 'edit' ? 'Updating...' : 'Creating...'}
-                </>
-              ) : mode === 'edit' ? (
-                'Update Receipt'
-              ) : (
-                'Create Receipt'
-              )}
-            </Button>
-          </div>
-        </Form>
-      </Modal.Body>
-    </Modal>
+            <div className="text-end mt-4">
+              <Button type="submit" disabled={isLoading || isRailHeadFetching}>
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    {mode === 'edit' ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : mode === 'edit' ? (
+                  'Update Receipt'
+                ) : (
+                  'Create Receipt'
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Create New Consignor Modal */}
+      <AddConsignorConsigneeModal
+        show={showConsignorModal}
+        onHide={() => setShowConsignorModal(false)}
+        type="consignor"
+        onSubmit={handleCreateConsignor}
+        isLoading={isCreatingConsignor}
+      />
+
+      {/* Create New Consignee Modal */}
+      <AddConsignorConsigneeModal
+        show={showConsigneeModal}
+        onHide={() => setShowConsigneeModal(false)}
+        type="consignee"
+        onSubmit={handleCreateConsignee}
+        isLoading={isCreatingConsignee}
+      />
+    </>
   )
 }
 

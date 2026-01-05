@@ -730,6 +730,8 @@
 
 // export default GodownLr
 
+// ----------------------------------------------------------------------------------------------------------------------------
+
 import React, { useEffect, useState, useContext, useMemo } from 'react'
 import {
   deleteGodownTPApi,
@@ -757,7 +759,7 @@ import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../../Supervisor/IconDropdown'
 import usePdfExporter from '../../customhooks/usePdfExporter'
-import useExcelExporter from '../../customhooks/useExcelExporter'
+import useExcelArray from '../../customhooks/useExcelArray'
 
 // Import the 3 form components
 import RailheadForm from './component/RailheadForm'
@@ -770,7 +772,7 @@ import AcknowledgementImage from './component/AcknowledgementImage' // Add this 
 
 const GodownLr = () => {
   const { exportToPDF } = usePdfExporter()
-  const { exportToExcel } = useExcelExporter()
+  const { exportToExcel } = useExcelArray()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -1011,15 +1013,33 @@ const GodownLr = () => {
     setShowStatusModal(true)
   }
 
-  // Update the handleStatusSubmit function:
-  const handleStatusSubmit = (formData) => {
+  //   // Update the handleStatusSubmit function:
+  const handleStatusSubmit = (statusData) => {
     if (!selectedStatusRecord) return
 
     setStatusModalLoading(true)
+
+    // Create FormData object
+    const formData = new FormData()
+
+    // Append status
+    formData.append('status', statusData.status || 'Pending')
+
+    // Append image if it exists
+    if (statusData.image) {
+      formData.append('acknowledgementImage', statusData.image)
+    }
+
+    // Log for debugging
+    console.log('FormData entries:')
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1])
+    }
+
     // Use the correct mutation function that handles FormData
     updateStatusWithImage({
       id: selectedStatusRecord.id,
-      formData,
+      formData: formData,
     })
   }
 
@@ -1159,9 +1179,19 @@ const GodownLr = () => {
         onClick: () => {
           exportToExcel({
             title: 'All Godown Transport Pass Report',
-            columns,
+            columns: columns.filter((col) => !col.hidden),
             data: filteredData,
             fileName: 'Godown_Transport_Pass_Report',
+            metaData: {
+              'Export Date': new Date().toLocaleDateString(),
+              'Total Records': filteredData.length,
+              'Date Range':
+                dateRange.startDate && dateRange.endDate
+                  ? `${dateRange.startDate} to ${dateRange.endDate}`
+                  : 'All Dates',
+            },
+            includeProducts: true,
+            productsLabel: 'Products Details',
           })
         },
       },
@@ -1181,7 +1211,7 @@ const GodownLr = () => {
         onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
-    [filteredData, columns, exportToExcel],
+    [filteredData, columns, exportToExcel, dateRange],
   )
 
   // Handle Add button click - show type selection

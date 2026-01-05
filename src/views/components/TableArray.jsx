@@ -339,8 +339,6 @@ function TableArray({
                 <CTableHeaderCell className="quantity-col">Quantity (Kg)</CTableHeaderCell>
                 <CTableHeaderCell className="bagSize-col">Bag Size</CTableHeaderCell>
                 <CTableHeaderCell className="totalBags-col">Total Bags</CTableHeaderCell>
-                <CTableHeaderCell className="weight-col">Item Weight</CTableHeaderCell>
-                <CTableHeaderCell className="cost-col">Item Cost</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
@@ -359,10 +357,6 @@ function TableArray({
                   <CTableDataCell className="totalBags-col">
                     {product.totalBags || '0'}
                   </CTableDataCell>
-                  <CTableDataCell className="weight-col">
-                    {product.itemWeight || '0'}
-                  </CTableDataCell>
-                  <CTableDataCell className="cost-col">{product.itemCost || '0'}</CTableDataCell>
                 </CTableRow>
               ))}
             </CTableBody>
