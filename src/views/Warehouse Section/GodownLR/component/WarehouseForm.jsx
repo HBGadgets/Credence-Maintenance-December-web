@@ -430,12 +430,59 @@ const WarehouseForm = ({
     loadVehicles()
   }, [])
 
+  // In the useEffect that sets initial data, update it:
   useEffect(() => {
     if (mode === 'edit' && initialData) {
+      console.log('WarehouseForm initialData:', initialData)
+
+      // Helper function to parse date from various formats
+      const parseDate = (dateString) => {
+        if (!dateString) return getTodayDate()
+
+        try {
+          // Try to parse from DD/MM/YYYY format
+          if (dateString.includes('/')) {
+            const parts = dateString.split('/')
+            if (parts.length === 3) {
+              const day = parts[0].padStart(2, '0')
+              const month = parts[1].padStart(2, '0')
+              const year = parts[2]
+              return `${year}-${month}-${day}`
+            }
+          }
+
+          // Try to parse from ISO string
+          if (dateString.includes('T')) {
+            const date = new Date(dateString)
+            if (!isNaN(date.getTime())) {
+              const year = date.getFullYear()
+              const month = String(date.getMonth() + 1).padStart(2, '0')
+              const day = String(date.getDate()).padStart(2, '0')
+              return `${year}-${month}-${day}`
+            }
+          }
+
+          // Return as-is if it already looks like YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return dateString
+          }
+        } catch (error) {
+          console.error('Error parsing date:', error)
+        }
+
+        return getTodayDate()
+      }
+
+      // Determine receivedByType from initialData
+      let receivedByType = 'warehouse' // default
+      if (initialData.receivedBy === 'Party') {
+        receivedByType = 'party'
+      }
+
       const editedFormData = {
         ...defaultFormData,
         ...initialData,
-        date: initialData.date ? initialData.date.split('T')[0] : getTodayDate(),
+        date: parseDate(initialData.date), // Use the parseDate function
         vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
         driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
         companyId: initialData.companyId || '',
@@ -445,14 +492,24 @@ const WarehouseForm = ({
         consigneeId: initialData.consigneeId || '',
         consigneeName: initialData.consigneeName || '',
         consigneeAddress: initialData.consigneeAddress || '',
+        receivedByType: receivedByType,
         products: initialData.products?.map((product) => ({
           ...defaultProduct,
           ...product,
           quantityKg: product.quantityKg?.toString() || '',
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
+          ...(initialData.receivedBy === 'Party'
+            ? {
+                warehouseId: '',
+                warehouseName: '',
+              }
+            : {}),
         })) || [{ ...defaultProduct }],
       }
+
+      console.log('WarehouseForm editedFormData - Date:', editedFormData.date)
+      console.log('WarehouseForm editedFormData:', editedFormData)
       setFormData(editedFormData)
     } else {
       setFormData(defaultFormData)
@@ -943,9 +1000,38 @@ const WarehouseForm = ({
   }
 
   const getProductValue = (product) => {
-    const value = product.inventoryId || product.productId
-    if (!value) return null
-    return productOptions.find((opt) => opt.value === value) || null
+    // Try to find by inventoryId first
+    if (product.inventoryId) {
+      const found = productOptions.find((opt) => opt.value === product.inventoryId)
+      if (found) return found
+    }
+
+    // Try to find by productId
+    if (product.productId) {
+      const found = productOptions.find((opt) => {
+        const productData = opt.data || {}
+        return (
+          productData.productId === product.productId ||
+          productData.id === product.productId ||
+          productData._id === product.productId
+        )
+      })
+      if (found) return found
+    }
+
+    // Try to find by productName
+    if (product.productName) {
+      const found = productOptions.find((opt) => {
+        const productData = opt.data || {}
+        return (
+          productData.productName === product.productName ||
+          productData.name === product.productName
+        )
+      })
+      if (found) return found
+    }
+
+    return null
   }
 
   const getCompanyValue = () => {
@@ -1000,12 +1086,12 @@ const WarehouseForm = ({
     return consigneeOptions.find((opt) => opt.value === formData.consigneeId) || null
   }
 
-  // Helper function to check if warehouse section should be shown in products
+  // In the product rendering section, update to handle party case:
   const shouldShowWarehouseInProducts = () => {
     if (formData.issuedBy === 'Railhead') {
-      if (formData.receivedByType === 'warehouse') {
+      if (formData.receivedByType === 'warehouse' || formData.receivedBy === 'Warehouse') {
         return 'auto-filled'
-      } else if (formData.receivedByType === 'party') {
+      } else if (formData.receivedByType === 'party' || formData.receivedBy === 'Party') {
         return 'hidden'
       }
     }
@@ -1158,7 +1244,11 @@ const WarehouseForm = ({
                         <Button
                           key={option.value}
                           variant={
-                            formData.receivedByType === option.value ? 'primary' : 'outline-primary'
+                            formData.receivedByType === option.value ||
+                            (option.value === 'party' && formData.receivedBy === 'Party') ||
+                            (option.value === 'warehouse' && formData.receivedBy === 'Warehouse')
+                              ? 'primary'
+                              : 'outline-primary'
                           }
                           onClick={() => handleReceivedByTypeChange(option.value)}
                           className="d-flex align-items-center"
@@ -1344,15 +1434,11 @@ const WarehouseForm = ({
                   }}
                 />
                 {isFetchingConsignor && <Form.Text className="text-info">Searching...</Form.Text>}
-                {formData.consignorId && (
-                  <Form.Text className="text-muted">ID: {formData.consignorId}</Form.Text>
-                )}
               </div>
               {formData.consignorAddress && (
                 <div className="col-md-12">
                   <Form.Label>Consignor Address</Form.Label>
                   <Form.Control value={formData.consignorAddress} readOnly className="bg-light" />
-                  <Form.Text className="text-muted">Auto-filled from selected consignor</Form.Text>
                 </div>
               )}
             </div>
@@ -1398,15 +1484,11 @@ const WarehouseForm = ({
                   }}
                 />
                 {isFetchingConsignee && <Form.Text className="text-info">Searching...</Form.Text>}
-                {formData.consigneeId && (
-                  <Form.Text className="text-muted">ID: {formData.consigneeId}</Form.Text>
-                )}
               </div>
               {formData.consigneeAddress && (
                 <div className="col-md-12">
                   <Form.Label>Consignee Address</Form.Label>
                   <Form.Control value={formData.consigneeAddress} readOnly className="bg-light" />
-                  <Form.Text className="text-muted">Auto-filled from selected consignee</Form.Text>
                 </div>
               )}
             </div>

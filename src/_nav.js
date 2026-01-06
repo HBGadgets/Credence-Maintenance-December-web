@@ -89,7 +89,7 @@ const _nav = [
   // EXPENSES MANAGEMENT
   {
     component: CNavGroup,
-    name: 'Reports Expenses',
+    name: 'Reports ',
     icon: (
       <LucideClipboardList
         className="nav-icon"
@@ -130,6 +130,52 @@ const _nav = [
     ],
   },
 
+
+  //  Daily Trips KM
+  {
+    component: CNavGroup,
+    name: 'Daily Trips Reading',
+    icon: (
+      <LuChartSpline
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Daily Logs',
+        to: '/DailyTrips',
+      },
+    ],
+  },
+
+
+  // Good Recipt
+  {
+    component: CNavGroup,
+    name: 'Good Recipts',
+    icon: (
+      <LuReceiptText
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
+    items: [
+      {
+        component: CNavItem,
+        name: 'Good Recipt Rail',
+        to: '/GrByRail',
+      },
+      {
+        component: CNavItem,
+        name: 'Good Recipt Road',
+        to: '/GrByRoad',
+      },
+    ],
+  },
+
+
   // Transport Pass
   {
     component: CNavGroup,
@@ -151,31 +197,7 @@ const _nav = [
         name: 'Transport Pass Recipt',
         to: '/GodownLr',
       },
-    ],
-  },
 
-  // Good Recipt
-
-  {
-    component: CNavGroup,
-    name: 'Good Recipts',
-    icon: (
-      <LuReceiptText
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-    items: [
-      {
-        component: CNavItem,
-        name: 'Good Recipt Rail',
-        to: '/GrByRail',
-      },
-      {
-        component: CNavItem,
-        name: 'Good Recipt Road',
-        to: '/GrByRoad',
-      },
     ],
   },
 
@@ -247,24 +269,7 @@ const _nav = [
   //   ],
   // },
 
-  //  Daily Trips KM
-  {
-    component: CNavGroup,
-    name: 'Daily Trips Reading',
-    icon: (
-      <LuChartSpline
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
-    items: [
-      {
-        component: CNavItem,
-        name: 'Daily Logs',
-        to: '/DailyTrips',
-      },
-    ],
-  },
+
 
   // Help and Supports
   {

@@ -392,11 +392,17 @@ export const getGodownTPApi = async ({ queryKey }) => {
             receiptNo: item.receiptNo,
             issuedBy: item.issuedBy,
             receivedBy: item.receivedBy,
-            ownerName: item.ownerName,
+
+            companyId: item.companyId?._id,
+            companyName: item.companyId?.companyName,
+
+            consignorId: item.consignorId,
             consignorName: item.consignorName,
             consignorAddress: item.consignorAddress,
+            consigneeId: item.consigneeId,
             consigneeName: item.consigneeName,
             consigneeAddress: item.consigneeAddress,
+
             customerName: item.customerName,
             customerAddress: item.customerAddress,
             startLocation: item.startLocation,
@@ -404,9 +410,6 @@ export const getGodownTPApi = async ({ queryKey }) => {
 
             vehicleId: item.vehicleId,
             vehicleName: item.vehicleName,
-
-            workerId: item.workerId?._id || null,
-            workerName: item.workerId?.name || "",
 
             driverId: item.driverId,
             driverName: item.driverName,
@@ -422,9 +425,6 @@ export const getGodownTPApi = async ({ queryKey }) => {
                 quantityKg: p.quantityKg,
                 bagSize: p.bagSize,
                 totalBags: p.totalBags,
-                itemUnit: p.itemUnit,
-                itemWeight: p.itemWeight,
-                itemCost: p.itemCost,
                 id: p._id,
             })) || [],
 
@@ -467,21 +467,21 @@ export const postGodownTPApi = async (create) => {
 
 
 // PATCH Warehouse and productlist
-export const patchGodownTPApi = async (id, data) => {
-    try {
-        const response = await axios.patch(
-            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update/${id}`,
-            data,
-            {
-                headers: { Authorization: `Bearer ${TOKEN}` },
-            }
-        );
+// export const patchGodownTPApi = async (id, data) => {
+//     try {
+//         const response = await axios.patch(
+//             `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update/${id}`,
+//             data,
+//             {
+//                 headers: { Authorization: `Bearer ${TOKEN}` },
+//             }
+//         );
 
-        return response.data;
-    } catch (error) {
-        throw new Error(error.response?.data?.message || 'Update failed');
-    }
-};
+//         return response.data;
+//     } catch (error) {
+//         throw new Error(error.response?.data?.message || 'Update failed');
+//     }
+// };
 
 // Status update 
 
@@ -550,7 +550,7 @@ export const getRailHeadApi = async ({ queryKey }) => {
     if (!TOKEN) throw new Error('Authentication token not found')
 
     const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/railhead`,
+        `${import.meta.env.VITE_API_URL}/api/railhead/get`,
         {
             params: {
                 search: search || '',
@@ -589,14 +589,22 @@ export const getRailHeadApi = async ({ queryKey }) => {
     }
 }
 
+// PATCH Railhead inventory 
+export const patchRailHeadApi = async (id, data) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/railhead/update/${id}`,
+            data,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
 
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Update failed');
+    }
+};
 
-
-
-
-
-
-
-
-
+// ------------------------------------------------------------------------------------------------------------- 
 

@@ -18,7 +18,7 @@ import {
   postConsigneeApi,
 } from '../../../Consignee_Consignor/data/data'
 import { toast } from 'react-toastify'
-import AddConsignorConsigneeModal from './AddConsignorConsigneeModal' // Adjust the path
+import AddConsignorConsigneeModal from './AddConsignorConsigneeModal'
 
 const defaultProduct = {
   warehouseId: '',
@@ -59,10 +59,10 @@ const defaultFormData = {
   vehicleName: '',
   driverId: '',
   driverName: '',
-  consignorId: '', // Added consignorId
+  consignorId: '',
   consignorName: '',
   consignorAddress: '',
-  consigneeId: '', // Added consigneeId
+  consigneeId: '',
   consigneeName: '',
   consigneeAddress: '',
   customerName: '',
@@ -78,6 +78,44 @@ const defaultFormData = {
   customerFreight: '',
   transporterFreight: '',
   products: [{ ...defaultProduct }],
+}
+
+// Date parsing utility
+const parseDateForForm = (dateString) => {
+  if (!dateString) return getTodayDate()
+
+  try {
+    // Try to parse from DD/MM/YYYY format
+    if (dateString.includes('/')) {
+      const parts = dateString.split('/')
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0')
+        const month = parts[1].padStart(2, '0')
+        const year = parts[2]
+        return `${year}-${month}-${day}`
+      }
+    }
+
+    // Try to parse from ISO string
+    if (dateString.includes('T')) {
+      const date = new Date(dateString)
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+    }
+
+    // Return as-is if it already looks like YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString
+    }
+  } catch (error) {
+    console.error('Error parsing date:', error)
+  }
+
+  return getTodayDate()
 }
 
 // Debounce hook
@@ -97,11 +135,6 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
-// Helper function to check if a string is a valid MongoDB ObjectId
-const isValidObjectId = (id) => {
-  return /^[0-9a-fA-F]{24}$/.test(id)
-}
-
 const WarehouseToPartyForm = ({
   show,
   handleClose,
@@ -116,6 +149,7 @@ const WarehouseToPartyForm = ({
   const [vehicles, setVehicles] = useState([])
   const [isCustomVehicle, setIsCustomVehicle] = useState(false)
   const [isCustomDriver, setIsCustomDriver] = useState(false)
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false)
 
   // Search states
   const [consignorSearchInput, setConsignorSearchInput] = useState('')
@@ -147,7 +181,6 @@ const WarehouseToPartyForm = ({
       setIsCreatingConsignor(false)
       setShowConsignorModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignor'] })
-      // Set the newly created consignor in the form with ID
       setFormData((prev) => ({
         ...prev,
         consignorId: response.data?.id || '',
@@ -168,7 +201,6 @@ const WarehouseToPartyForm = ({
       setIsCreatingConsignee(false)
       setShowConsigneeModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignee'] })
-      // Set the newly created consignee in the form with ID
       setFormData((prev) => ({
         ...prev,
         consigneeId: response.data?.id || '',
@@ -227,7 +259,7 @@ const WarehouseToPartyForm = ({
       queryFn: getConsignorApi,
       keepPreviousData: true,
       staleTime: 1000 * 60 * 5,
-      enabled: true, // Always enabled, search can be empty
+      enabled: true,
     })
 
   // Fetch consignee data with debounced search
@@ -244,10 +276,10 @@ const WarehouseToPartyForm = ({
       queryFn: getConsigneeApi,
       keepPreviousData: true,
       staleTime: 1000 * 60 * 5,
-      enabled: true, // Always enabled, search can be empty
+      enabled: true,
     })
 
-  // Fetch warehouse products when a warehouse is selected in issued by section
+  // Fetch warehouse products when a warehouse is selected
   const {
     data: warehouseProductsResponse = {},
     isLoading: isLoadingWarehouseProducts,
@@ -281,12 +313,10 @@ const WarehouseToPartyForm = ({
     ) {
       return []
     }
-
-    // The API already returns formatted data as an array of product objects
     return warehouseProductsResponse.data || []
   }, [warehouseProductsResponse])
 
-  // Create product options - DIFFERENTIATE BY BAG SIZE
+  // Create product options - FILTER OUT PRODUCTS WITH totalBags = 0
   const productOptions = useMemo(() => {
     if (!inventoryList || inventoryList.length === 0) {
       return []
@@ -299,15 +329,16 @@ const WarehouseToPartyForm = ({
       const productId = product.productId
       const productName = product.productName || 'Unknown Product'
       const bagSizeKg = product.bagSizeKg
-      const quantityKg = product.quantityKg
-      const totalBags = product.totalBags
+      const quantityKg = product.quantityKg || 0
+      const totalBags = product.totalBags || 0
 
-      // Skip if no productId or bagSizeKg
-      if (!productId || bagSizeKg === undefined) {
+      // Skip if:
+      // 1. No productId or bagSizeKg
+      // 2. totalBags = 0
+      if (!productId || bagSizeKg === undefined || totalBags === 0) {
         return
       }
 
-      // Create a unique key for product + bag size combination
       const uniqueKey = `${productId}_${bagSizeKg}`
 
       if (!seenCombinations.has(uniqueKey)) {
@@ -316,7 +347,7 @@ const WarehouseToPartyForm = ({
         const label = `${productName} (Bag Size: ${bagSizeKg} kg, Available: ${quantityKg} kg, Total Bags: ${totalBags})`
 
         options.push({
-          value: uniqueKey, // Use unique combination as value
+          value: uniqueKey,
           label: label,
           productId: productId,
           productName: productName,
@@ -328,6 +359,12 @@ const WarehouseToPartyForm = ({
       }
     })
 
+    console.log(
+      'Filtered product options (excluding totalBags=0):',
+      options.length,
+      'of',
+      inventoryList.length,
+    )
     return options
   }, [inventoryList])
 
@@ -354,26 +391,59 @@ const WarehouseToPartyForm = ({
     loadVehicles()
   }, [])
 
+  // Load initial data for edit mode
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
-      // Transform initial data for form
+    if (mode === 'edit' && initialData && !isInitialDataLoaded) {
+      console.log('Loading initial data for edit:', initialData)
+
+      // Get warehouse info from products
+      const firstProduct = initialData.products?.[0]
+      const warehouseId = firstProduct?.warehouseId || ''
+      const warehouseName = firstProduct?.warehouseName || ''
+
+      // Get vehicle name - find in vehicles array OR use vehicleName from data
+      let vehicleName = ''
+      if (initialData.vehicleName) {
+        // If vehicleName is already in data, use it
+        vehicleName = initialData.vehicleName
+      } else if (initialData.vehicleId && vehicles.length > 0) {
+        // Otherwise try to find in vehicles array
+        const vehicle = vehicles.find((v) => v.id === initialData.vehicleId)
+        vehicleName = vehicle?.name || vehicle?.vehicleNumber || ''
+      }
+
+      // Get driver name - find in drivers array OR use driverName from data
+      let driverName = ''
+      if (initialData.driverName) {
+        // If driverName is already in data, use it
+        driverName = initialData.driverName
+      } else if (initialData.driverId && drivers.length > 0) {
+        // Otherwise try to find in drivers array
+        const driver = drivers.find((d) => d.id === initialData.driverId)
+        driverName = driver?.name || ''
+      }
+
       const updatedFormData = {
         ...defaultFormData,
         ...initialData,
-        date: initialData.date ? initialData.date.split('T')[0] : getTodayDate(),
-        vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
-        driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
+        date: parseDateForForm(initialData.date),
+        vehicleName: vehicleName,
+        driverName: driverName,
         companyId: initialData.companyId || '',
-        consignorId: initialData.consignorId || '', // Set consignorId from initialData
-        consigneeId: initialData.consigneeId || '', // Set consigneeId from initialData
+        consignorId: initialData.consignorId || '',
+        consigneeId: initialData.consigneeId || '',
+        // Set warehouse from product data
+        issuedByWarehouseId: warehouseId,
+        issuedByWarehouseName: warehouseName,
         products: initialData.products?.map((product) => {
-          // Transform API data to form data
           const formProduct = {
             ...defaultProduct,
             ...product,
             quantityKg: product.quantityKg?.toString() || '',
             bagSizeKg: product.bagSize?.toString() || product.bagSizeKg?.toString() || '',
             totalBags: product.totalBags?.toString() || '',
+            warehouseId: product.warehouseId || '',
+            warehouseName: product.warehouseName || '',
           }
 
           if (formProduct.bagSize) {
@@ -384,21 +454,24 @@ const WarehouseToPartyForm = ({
         }) || [{ ...defaultProduct }],
       }
 
+      console.log('Updated form data:', updatedFormData)
       setFormData(updatedFormData)
-
-      if (initialData.issuedByWarehouseId && updatedFormData.products.length > 0) {
-        const updatedProducts = updatedFormData.products.map((product) => ({
-          ...product,
-          warehouseId: initialData.issuedByWarehouseId,
-          warehouseName: initialData.issuedByWarehouseName || '',
-        }))
-        setFormData((prev) => ({ ...prev, products: updatedProducts }))
-      }
-    } else {
+      setIsInitialDataLoaded(true)
+    } else if (mode === 'add') {
       setFormData(defaultFormData)
+      setIsInitialDataLoaded(false)
     }
-  }, [initialData, mode, vehicles, drivers])
+  }, [initialData, mode, vehicles, drivers, isInitialDataLoaded])
 
+  // Refetch warehouse products when warehouse ID changes in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && formData.issuedByWarehouseId && isInitialDataLoaded) {
+      console.log('Refetching warehouse products for ID:', formData.issuedByWarehouseId)
+      refetchWarehouseProducts()
+    }
+  }, [formData.issuedByWarehouseId, mode, isInitialDataLoaded, refetchWarehouseProducts])
+
+  // Update product warehouse info when warehouse changes
   useEffect(() => {
     if (formData.issuedByWarehouseId && formData.products.length > 0) {
       const selectedWarehouse = warehouseList.find(
@@ -419,24 +492,47 @@ const WarehouseToPartyForm = ({
     }
   }, [formData.issuedByWarehouseId, formData.issuedByWarehouseName, warehouseList])
 
+  // Update vehicle and driver names when vehicles/drivers arrays are loaded
+  useEffect(() => {
+    if (mode === 'edit' && formData.vehicleId && vehicles.length > 0 && !formData.vehicleName) {
+      const vehicle = vehicles.find((v) => v.id === formData.vehicleId)
+      if (vehicle) {
+        setFormData((prev) => ({
+          ...prev,
+          vehicleName: vehicle.name || vehicle.vehicleNumber || '',
+        }))
+      }
+    }
+  }, [vehicles, formData.vehicleId, mode])
+
+  useEffect(() => {
+    if (mode === 'edit' && formData.driverId && drivers.length > 0 && !formData.driverName) {
+      const driver = drivers.find((d) => d.id === formData.driverId)
+      if (driver) {
+        setFormData((prev) => ({
+          ...prev,
+          driverName: driver.name || '',
+        }))
+      }
+    }
+  }, [drivers, formData.driverId, mode])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Vehicle handler with CreatableSelect support
+  // Vehicle handler
   const handleVehicleChange = (selected, action) => {
     if (selected) {
       if (action.action === 'create-option') {
-        // User created new Vehicle
         setFormData((prev) => ({
           ...prev,
-          vehicleId: '', // Don't store custom text as ID
+          vehicleId: '',
           vehicleName: selected.label,
         }))
         setIsCustomVehicle(true)
       } else {
-        // Existing Vehicle selected
         const selectedVehicle = vehicles.find(
           (v) => v.id === selected.value || v._id === selected.value,
         )
@@ -457,19 +553,17 @@ const WarehouseToPartyForm = ({
     }
   }
 
-  // Driver handler with CreatableSelect support
+  // Driver handler
   const handleDriverChange = (selected, action) => {
     if (selected) {
       if (action.action === 'create-option') {
-        // User created new Driver
         setFormData((prev) => ({
           ...prev,
-          driverId: '', // Don't store custom text as ID
+          driverId: '',
           driverName: selected.label,
         }))
         setIsCustomDriver(true)
       } else {
-        // Existing Driver selected
         const selectedDriver = drivers.find((d) => d.id === selected.value)
         setFormData((prev) => ({
           ...prev,
@@ -493,14 +587,14 @@ const WarehouseToPartyForm = ({
     if (selected && selected.value !== 'create-new') {
       setFormData((prev) => ({
         ...prev,
-        consignorId: selected.value, // Set consignorId
+        consignorId: selected.value,
         consignorName: selected.name,
         consignorAddress: selected.address,
       }))
     } else {
       setFormData((prev) => ({
         ...prev,
-        consignorId: '', // Clear consignorId
+        consignorId: '',
         consignorName: '',
         consignorAddress: '',
       }))
@@ -512,14 +606,14 @@ const WarehouseToPartyForm = ({
     if (selected && selected.value !== 'create-new') {
       setFormData((prev) => ({
         ...prev,
-        consigneeId: selected.value, // Set consigneeId
+        consigneeId: selected.value,
         consigneeName: selected.name,
         consigneeAddress: selected.address,
       }))
     } else {
       setFormData((prev) => ({
         ...prev,
-        consigneeId: '', // Clear consigneeId
+        consigneeId: '',
         consigneeName: '',
         consigneeAddress: '',
       }))
@@ -537,7 +631,6 @@ const WarehouseToPartyForm = ({
         warehouseName: selectedWarehouse?.wareHouseName || selectedWarehouse?.name || '',
       }
     } else if (field === 'productId') {
-      // Find the selected product option
       const selectedOption = productOptions.find((opt) => opt.value === value)
 
       if (selectedOption) {
@@ -556,7 +649,6 @@ const WarehouseToPartyForm = ({
         [field]: value,
       }
 
-      // Auto-calculate quantityKg and itemWeight when bagSizeKg or totalBags changes
       if (field === 'bagSizeKg' || field === 'totalBags') {
         const bagSizeNum = parseFloat(updatedProducts[index].bagSizeKg) || 0
         const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
@@ -597,7 +689,6 @@ const WarehouseToPartyForm = ({
   const onSubmit = (e) => {
     e.preventDefault()
 
-    // Basic validation
     if (!formData.companyId) {
       alert('Please select a company')
       return
@@ -608,18 +699,14 @@ const WarehouseToPartyForm = ({
       return
     }
 
-    // Transform form data for API submission - convert null/empty strings to 0 for freight fields
     const payload = {
       ...formData,
       tpPassType: 'warehouseToParty',
       companyId: formData.companyId || '',
       warehouseId: formData.issuedByWarehouseId || '',
-      consignorId: formData.consignorId || '', // Include consignorId
-      consigneeId: formData.consigneeId || '', // Include consigneeId
-
+      consignorId: formData.consignorId || '',
+      consigneeId: formData.consigneeId || '',
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
-
-      // Convert freight fields from null/empty strings to 0
       customerRate: parseFloat(formData.customerRate) || 0,
       totalAmount: parseFloat(formData.totalAmount) || 0,
       transporterRate: parseFloat(formData.transporterRate) || 0,
@@ -628,9 +715,7 @@ const WarehouseToPartyForm = ({
       customerRateOn: parseFloat(formData.customerRateOn) || 0,
       customerFreight: parseFloat(formData.customerFreight) || 0,
       transporterFreight: parseFloat(formData.transporterFreight) || 0,
-
       products: formData.products.map((product) => {
-        // Create transformed product object
         const transformedProduct = {
           ...product,
           quantityKg: parseFloat(product.quantityKg) || 0,
@@ -638,9 +723,7 @@ const WarehouseToPartyForm = ({
           totalBags: parseFloat(product.totalBags) || 0,
         }
 
-        // Remove bagSizeKg from the product object since we're sending bagSize
         delete transformedProduct.bagSizeKg
-        // Remove cost fields
         delete transformedProduct.costPerBag
         delete transformedProduct.itemCost
 
@@ -648,41 +731,30 @@ const WarehouseToPartyForm = ({
       }),
     }
 
-    // Remove bagSizeKg from the main payload
     delete payload.bagSizeKg
-    // Remove worker related fields
     delete payload.workerId
     delete payload.workerName
-    // Remove cost fields from main payload
     delete payload.costPerBag
     delete payload.itemCost
 
-    // Handle vehicle fields based on whether it's custom or existing
     if (isCustomVehicle) {
-      // Custom vehicle - only send name
       delete payload.vehicleId
       payload.vehicleName = formData.vehicleName
     } else if (formData.vehicleId) {
-      // Existing vehicle - send both id and name
       payload.vehicleId = formData.vehicleId
       payload.vehicleName = formData.vehicleName
     } else {
-      // No vehicle selected
       delete payload.vehicleId
       delete payload.vehicleName
     }
 
-    // Handle driver fields based on whether it's custom or existing
     if (isCustomDriver) {
-      // Custom driver - only send name
       delete payload.driverId
       payload.driverName = formData.driverName
     } else if (formData.driverId) {
-      // Existing driver - send both id and name
       payload.driverId = formData.driverId
       payload.driverName = formData.driverName
     } else {
-      // No driver selected
       delete payload.driverId
       delete payload.driverName
     }
@@ -692,7 +764,7 @@ const WarehouseToPartyForm = ({
       delete payload.supervisorName
     }
 
-    console.log('Submitting payload:', JSON.stringify(payload, null, 2))
+    console.log('Submitting payload:', payload)
     handleSubmit(payload)
   }
 
@@ -706,7 +778,6 @@ const WarehouseToPartyForm = ({
     label: c.companyName || c.name || 'Unnamed Company',
   }))
 
-  // Prepare consignor options with create new option
   const consignorOptions = [
     ...consignorData.data.map((consignor) => ({
       value: consignor.id,
@@ -727,7 +798,6 @@ const WarehouseToPartyForm = ({
     },
   ]
 
-  // Prepare consignee options with create new option
   const consigneeOptions = [
     ...consigneeData.data.map((consignee) => ({
       value: consignee.id,
@@ -748,7 +818,6 @@ const WarehouseToPartyForm = ({
     },
   ]
 
-  // Prepare vehicle options for CreatableSelect
   const vehicleOptions = Array.isArray(vehicles)
     ? vehicles.map((v) => ({
         value: v.id || v._id,
@@ -756,7 +825,6 @@ const WarehouseToPartyForm = ({
       }))
     : []
 
-  // Prepare driver options for CreatableSelect
   const driverOptions = Array.isArray(drivers)
     ? drivers.map((d) => ({
         value: d.id || d._id,
@@ -764,39 +832,53 @@ const WarehouseToPartyForm = ({
       }))
     : []
 
-  // Get current vehicle selection value for CreatableSelect
   const getVehicleValue = () => {
+    // First check if we have a vehicleName set
     if (formData.vehicleName) {
+      // If we have a vehicleId, try to find it in the options
       if (formData.vehicleId && !isCustomVehicle) {
-        // Existing vehicle
         const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
         if (existingVehicle) {
           return existingVehicle
         }
       }
-      // Custom vehicle or not found in options
+      // Otherwise, return a custom option with the vehicleName
       return {
         value: formData.vehicleName,
         label: formData.vehicleName,
       }
     }
+    // If vehicleId exists but no name, try to find it
+    if (formData.vehicleId && vehicleOptions.length > 0) {
+      const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
+      if (existingVehicle) {
+        return existingVehicle
+      }
+    }
     return null
   }
 
-  // Get current driver selection value for CreatableSelect
   const getDriverValue = () => {
+    // First check if we have a driverName set
     if (formData.driverName) {
+      // If we have a driverId, try to find it in the options
       if (formData.driverId && !isCustomDriver) {
-        // Existing driver
         const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
         if (existingDriver) {
           return existingDriver
         }
       }
-      // Custom driver or not found in options
+      // Otherwise, return a custom option with the driverName
       return {
         value: formData.driverName,
         label: formData.driverName,
+      }
+    }
+    // If driverId exists but no name, try to find it
+    if (formData.driverId && driverOptions.length > 0) {
+      const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
+      if (existingDriver) {
+        return existingDriver
       }
     }
     return null
@@ -808,15 +890,30 @@ const WarehouseToPartyForm = ({
   }
 
   const getProductValue = (product) => {
-    if (!product.productId || !product.bagSizeKg) {
-      return null
+    if (!product.productId) return null
+
+    if (product.bagSizeKg) {
+      const uniqueKey = `${product.productId}_${product.bagSizeKg}`
+      const foundOption = productOptions.find((opt) => opt.value === uniqueKey)
+      if (foundOption) return foundOption
     }
 
-    // Create unique key to match with options
-    const uniqueKey = `${product.productId}_${product.bagSizeKg}`
-    const foundOption = productOptions.find((opt) => opt.value === uniqueKey)
+    const foundOption = productOptions.find((opt) => opt.productId === product.productId)
+    if (foundOption) return foundOption
 
-    return foundOption || null
+    if (product.productId && product.productName && product.bagSizeKg) {
+      return {
+        value: `${product.productId}_${product.bagSizeKg}`,
+        label: `${product.productName} (Bag Size: ${product.bagSizeKg} kg)`,
+        productId: product.productId,
+        productName: product.productName,
+        bagSizeKg: product.bagSizeKg,
+        quantityKg: product.quantityKg || '',
+        totalBags: product.totalBags || '',
+      }
+    }
+
+    return null
   }
 
   const getCompanyValue = () => {
@@ -829,31 +926,26 @@ const WarehouseToPartyForm = ({
     return warehouseOptions.find((opt) => opt.value === formData.issuedByWarehouseId) || null
   }
 
-  // Get current consignor selection value
   const getConsignorValue = () => {
     if (!formData.consignorName) return null
     return consignorOptions.find((opt) => opt.name === formData.consignorName) || null
   }
 
-  // Get current consignee selection value
   const getConsigneeValue = () => {
     if (!formData.consigneeName) return null
     return consigneeOptions.find((opt) => opt.name === formData.consigneeName) || null
   }
 
-  // Handle consignor search input change with debouncing
   const handleConsignorInputChange = useCallback((value) => {
     setConsignorSearchInput(value)
-    setConsignorPage(1) // Reset to first page on new search
+    setConsignorPage(1)
   }, [])
 
-  // Handle consignee search input change with debouncing
   const handleConsigneeInputChange = useCallback((value) => {
     setConsigneeSearchInput(value)
-    setConsigneePage(1) // Reset to first page on new search
+    setConsigneePage(1)
   }, [])
 
-  // Handle infinite scroll for consignor
   const handleConsignorMenuScrollToBottom = useCallback(() => {
     const totalPages = Math.ceil(consignorData.total / itemsPerPage)
     if (consignorPage < totalPages) {
@@ -861,7 +953,6 @@ const WarehouseToPartyForm = ({
     }
   }, [consignorData.total, consignorPage])
 
-  // Handle infinite scroll for consignee
   const handleConsigneeMenuScrollToBottom = useCallback(() => {
     const totalPages = Math.ceil(consigneeData.total / itemsPerPage)
     if (consigneePage < totalPages) {
@@ -948,17 +1039,13 @@ const WarehouseToPartyForm = ({
                           issuedByWarehouseName: warehouseName,
                         }
 
-                        // Update products with the new warehouse
                         if (prevState.products.length > 0) {
                           updatedState.products = prevState.products.map((product) => ({
                             ...product,
                             warehouseId: selected.value,
                             warehouseName: warehouseName,
-                            productId: '', // Clear product selection when warehouse changes
-                            productName: '',
-                            quantityKg: '',
-                            bagSizeKg: '',
-                            totalBags: '',
+                            productId: product.productId || '',
+                            productName: product.productName || '',
                           }))
                         }
 
@@ -974,11 +1061,6 @@ const WarehouseToPartyForm = ({
                           ...product,
                           warehouseId: '',
                           warehouseName: '',
-                          productId: '',
-                          productName: '',
-                          quantityKg: '',
-                          bagSizeKg: '',
-                          totalBags: '',
                         })),
                       }))
                     }
@@ -1087,7 +1169,6 @@ const WarehouseToPartyForm = ({
                 />
               </div>
 
-              {/* Updated Vehicle section with CreatableSelect */}
               <div className="col-md-4">
                 <Form.Label>
                   Vehicle Name (Lorry Number) <span style={{ color: 'red' }}>*</span>
@@ -1103,7 +1184,6 @@ const WarehouseToPartyForm = ({
                 />
               </div>
 
-              {/* Updated Driver section with CreatableSelect */}
               <div className="col-md-4">
                 <Form.Label>
                   Driver Name <span style={{ color: 'red' }}>*</span>
@@ -1120,7 +1200,7 @@ const WarehouseToPartyForm = ({
               </div>
             </div>
 
-            {/* Consignor Details with Create New Option */}
+            {/* Consignor Details */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
@@ -1131,9 +1211,7 @@ const WarehouseToPartyForm = ({
                   value={getConsignorValue()}
                   onChange={(selected) => {
                     if (selected && selected.value === 'create-new') {
-                      // Show the create consignor modal
                       setShowConsignorModal(true)
-                      // Clear the selection
                       handleConsignorChange(null)
                     } else {
                       handleConsignorChange(selected)
@@ -1169,12 +1247,11 @@ const WarehouseToPartyForm = ({
                 <div className="col-md-12">
                   <Form.Label>Consignor Address</Form.Label>
                   <Form.Control value={formData.consignorAddress} readOnly className="bg-light" />
-                  <Form.Text className="text-muted">Auto-filled from selected consignor</Form.Text>
                 </div>
               )}
             </div>
 
-            {/* Consignee Details with Create New Option */}
+            {/* Consignee Details */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
@@ -1185,9 +1262,7 @@ const WarehouseToPartyForm = ({
                   value={getConsigneeValue()}
                   onChange={(selected) => {
                     if (selected && selected.value === 'create-new') {
-                      // Show the create consignee modal
                       setShowConsigneeModal(true)
-                      // Clear the selection
                       handleConsigneeChange(null)
                     } else {
                       handleConsigneeChange(selected)
@@ -1223,7 +1298,6 @@ const WarehouseToPartyForm = ({
                 <div className="col-md-12">
                   <Form.Label>Consignee Address</Form.Label>
                   <Form.Control value={formData.consigneeAddress} readOnly className="bg-light" />
-                  <Form.Text className="text-muted">Auto-filled from selected consignee</Form.Text>
                 </div>
               )}
             </div>
@@ -1339,11 +1413,6 @@ const WarehouseToPartyForm = ({
                         <Form.Text className="text-muted">
                           Auto-selected from "Issued By" warehouse
                         </Form.Text>
-                        <Form.Control
-                          type="hidden"
-                          value={product.warehouseId || formData.issuedByWarehouseId}
-                          readOnly
-                        />
                       </div>
 
                       <div className="col-md-6">
@@ -1351,7 +1420,7 @@ const WarehouseToPartyForm = ({
                           Product <span style={{ color: 'red' }}>*</span>
                         </Form.Label>
                         <Select
-                          key={`product-select-${index}-${product.productId || 'empty'}-${product.bagSizeKg || 'empty'}`}
+                          key={`product-select-${index}-${product.productId || 'empty'}`}
                           value={getProductValue(product)}
                           onChange={(selected) => {
                             if (selected) {
@@ -1364,17 +1433,14 @@ const WarehouseToPartyForm = ({
                                 totalBags: selected.totalBags?.toString() || '',
                               }
 
-                              // Update the products array
                               const updatedProducts = [...formData.products]
                               updatedProducts[index] = updatedProduct
 
-                              // Update form data
                               setFormData((prev) => ({
                                 ...prev,
                                 products: updatedProducts,
                               }))
                             } else {
-                              // Clear the product
                               const updatedProducts = [...formData.products]
                               updatedProducts[index] = {
                                 ...product,
@@ -1400,7 +1466,7 @@ const WarehouseToPartyForm = ({
                                 : isError
                                   ? 'Error loading products'
                                   : productOptions.length === 0
-                                    ? 'No products available in this warehouse'
+                                    ? 'No available products in this warehouse'
                                     : `Select Product`
                           }
                           isClearable
@@ -1413,21 +1479,42 @@ const WarehouseToPartyForm = ({
                           }
                           required
                         />
+
+                        {/* Add message when no products available (all have totalBags=0) */}
+                        {formData.issuedByWarehouseId &&
+                          productOptions.length === 0 &&
+                          !isLoadingWarehouseProducts &&
+                          inventoryList.length > 0 && (
+                            <Form.Text className="text-danger">
+                              No products available (all products have 0 total bags in this
+                              warehouse)
+                            </Form.Text>
+                          )}
+
+                        {formData.issuedByWarehouseId &&
+                          productOptions.length === 0 &&
+                          !isLoadingWarehouseProducts &&
+                          inventoryList.length === 0 && (
+                            <Form.Text className="text-danger">
+                              No products found in this warehouse
+                            </Form.Text>
+                          )}
+
                         {!formData.issuedByWarehouseId && (
                           <Form.Text className="text-danger">
                             Please select a warehouse in the "Issued By" section first
                           </Form.Text>
                         )}
-                        {formData.issuedByWarehouseId &&
-                          productOptions.length === 0 &&
-                          !isLoadingWarehouseProducts && (
-                            <Form.Text className="text-danger">
-                              No products found in the selected warehouse
+                        {mode === 'edit' &&
+                          product.productId &&
+                          product.productName &&
+                          !getProductValue(product) && (
+                            <Form.Text className="text-warning">
+                              Product "{product.productName}" loaded from original data
                             </Form.Text>
                           )}
                       </div>
 
-                      {/* Total Bags */}
                       <div className="col-md-4">
                         <Form.Label>
                           Total Bags <span style={{ color: 'red' }}>*</span>
@@ -1442,7 +1529,6 @@ const WarehouseToPartyForm = ({
                         />
                       </div>
 
-                      {/* Bag Size */}
                       <div className="col-md-4">
                         <Form.Label>
                           Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
@@ -1457,7 +1543,6 @@ const WarehouseToPartyForm = ({
                         <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
                       </div>
 
-                      {/* Quantity (Kg) - Auto-calculated */}
                       <div className="col-md-4">
                         <Form.Label>
                           Quantity (Kg) <span style={{ color: 'red' }}>*</span>
@@ -1474,44 +1559,7 @@ const WarehouseToPartyForm = ({
                           Auto-calculated: Bag Size × Total Bags
                         </Form.Text>
                       </div>
-
-                      {/* Weight - Auto-calculated */}
-                      <div className="col-md-6">
-                        <Form.Label>
-                          Weight (Kg) <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={calculatedQuantity || product.itemWeight}
-                          readOnly
-                          className="bg-light"
-                          required
-                        />
-                        <Form.Text className="text-muted">
-                          Auto-calculated: Same as Quantity
-                        </Form.Text>
-                      </div>
                     </div>
-
-                    {/* Calculation Display - Removed cost calculation */}
-                    {(product.bagSizeKg || product.totalBags) && (
-                      <div className="mt-3 p-3 bg-light rounded">
-                        <div className="row">
-                          <div className="col-md-12">
-                            <div className="alert alert-primary p-2 mb-2">
-                              <h6 className="mb-1">Weight Calculation:</h6>
-                              <div className="d-flex align-items-center">
-                                <FaWeight className="me-2" />
-                                <span>
-                                  {bagSize} kg/bag × {totalBags} bags ={' '}
-                                  <strong>{calculatedQuantity} kg</strong>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )
               })}
