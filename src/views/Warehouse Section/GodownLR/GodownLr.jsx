@@ -52,6 +52,12 @@ const GodownLr = () => {
   // for worker select
   const [selectedWorker, setSelectedWorker] = useState(null)
 
+  // for consignor select
+  const [selectedConsignor, setSelectedConsignor] = useState(null)
+
+  // for consignee select
+  const [selectedConsignee, setSelectedConsignee] = useState(null)
+
   // superadmin role
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
@@ -66,6 +72,10 @@ const GodownLr = () => {
   // Image modal state
   const [showImageModal, setShowImageModal] = useState(false)
   const [selectedImageUrl, setSelectedImageUrl] = useState(null)
+
+  // Consignor and consignee options state
+  const [consignorOptions, setConsignorOptions] = useState([])
+  const [consigneeOptions, setConsigneeOptions] = useState([])
 
   const queryClient = useQueryClient()
 
@@ -105,9 +115,18 @@ const GodownLr = () => {
     return 'warehouse'
   }
 
-  // Fetch godown lorry receipts
+  // Fetch godown lorry receipts with all filters
   const { data: getGodownTP, isFetching } = useQuery({
-    queryKey: ['getGodownTP', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
+    queryKey: [
+      'getGodownTP',
+      {
+        search: searchQuery,
+        page: currentPage,
+        limit: itemsPerPage,
+        consignorId: selectedConsignor?.value || null,
+        consigneeId: selectedConsignee?.value || null,
+      },
+    ],
     queryFn: getGodownTPApi,
     keepPreviousData: true,
     staleTime: 1000 * 60 * 30,
@@ -127,6 +146,36 @@ const GodownLr = () => {
     queryFn: getWorkerApi,
     staleTime: 1000 * 60 * 30,
   })
+
+  // Extract consignor and consignee options from fetched data
+  useEffect(() => {
+    if (getGodownTP?.receipts) {
+      // Extract unique consignors
+      const consignorsMap = {}
+      const consigneesMap = {}
+
+      getGodownTP.receipts.forEach((item) => {
+        // Add consignor
+        if (item.consignorId && item.consignorName) {
+          consignorsMap[item.consignorId] = {
+            value: item.consignorId,
+            label: item.consignorName,
+          }
+        }
+
+        // Add consignee
+        if (item.consigneeId && item.consigneeName) {
+          consigneesMap[item.consigneeId] = {
+            value: item.consigneeId,
+            label: item.consigneeName,
+          }
+        }
+      })
+
+      setConsignorOptions(Object.values(consignorsMap))
+      setConsigneeOptions(Object.values(consigneesMap))
+    }
+  }, [getGodownTP])
 
   // Worker options based on selected supervisor
   const workerOptions = selectedName?.value
@@ -205,6 +254,18 @@ const GodownLr = () => {
     setCurrentPage(1)
   }
 
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedConsignor(null)
+    setSelectedConsignee(null)
+    setSelectedName(null)
+    setSelectedWorker(null)
+    setDateRange({ startDate: null, endDate: null })
+    setSearchQuery('')
+    setCurrentPage(1)
+    toast.info('All filters cleared')
+  }
+
   // Update filtered data when API data changes
   useEffect(() => {
     if (getGodownTP?.receipts) {
@@ -242,9 +303,31 @@ const GodownLr = () => {
         })
       }
 
+      // Filter by consignor
+      if (selectedConsignor?.value) {
+        filtered = filtered.filter((receipt) => {
+          return receipt.consignorId === selectedConsignor.value
+        })
+      }
+
+      // Filter by consignee
+      if (selectedConsignee?.value) {
+        filtered = filtered.filter((receipt) => {
+          return receipt.consigneeId === selectedConsignee.value
+        })
+      }
+
       setFilteredData(filtered)
     }
-  }, [getGodownTP, dateRange, selectedName, selectedWorker, userRole])
+  }, [
+    getGodownTP,
+    dateRange,
+    selectedName,
+    selectedWorker,
+    selectedConsignor,
+    selectedConsignee,
+    userRole,
+  ])
 
   // Compute total pages
   const totalPages = getGodownTP ? Math.ceil(getGodownTP.total / getGodownTP.limit) : 1
@@ -487,6 +570,8 @@ const GodownLr = () => {
                 dateRange.startDate && dateRange.endDate
                   ? `${dateRange.startDate} to ${dateRange.endDate}`
                   : 'All Dates',
+              'Consignor Filter': selectedConsignor?.label || 'All',
+              'Consignee Filter': selectedConsignee?.label || 'All',
             },
             includeProducts: true,
             productsLabel: 'Products Details',
@@ -509,7 +594,7 @@ const GodownLr = () => {
         onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
-    [filteredData, exportToExcel, dateRange],
+    [filteredData, exportToExcel, dateRange, selectedConsignor, selectedConsignee],
   )
 
   // Handle Add button click - show type selection
@@ -689,6 +774,18 @@ const GodownLr = () => {
     }
   }
 
+  // Check if any filter is active
+  const isAnyFilterActive = () => {
+    return (
+      selectedConsignor ||
+      selectedConsignee ||
+      selectedName ||
+      selectedWorker ||
+      dateRange.startDate ||
+      searchQuery
+    )
+  }
+
   return (
     <>
       <ToastContainer />
@@ -696,9 +793,32 @@ const GodownLr = () => {
         <div className="d-flex align-items-center gap-2">
           <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
 
+          {/* Consignor and Consignee Dropdowns */}
+          <div>
+            <SingleSelectDropdown
+              options={consignorOptions}
+              value={selectedConsignor}
+              onChange={setSelectedConsignor}
+              isClearable
+              placeholder="Consignor..."
+              width="100px" // Custom width
+            />
+          </div>
+
+          <div>
+            <SingleSelectDropdown
+              options={consigneeOptions}
+              value={selectedConsignee}
+              onChange={setSelectedConsignee}
+              isClearable
+              placeholder="Consignee..."
+              width="100px" // Custom width
+            />
+          </div>
+
           {userRole === 'superadmin' ? (
             <div className="d-flex align-items-center gap-2">
-              <div style={{ minWidth: '140px' }}>
+              <div>
                 <SingleSelectDropdown
                   options={supervisorOptions}
                   value={selectedName}
@@ -708,17 +828,19 @@ const GodownLr = () => {
                   }}
                   isClearable
                   placeholder="Supervisor..."
+                  width="100px" // Custom width
                 />
               </div>
 
               {selectedName && (
-                <div style={{ minWidth: '140px' }}>
+                <div>
                   <SingleSelectDropdown
                     options={workerOptions}
                     value={selectedWorker}
                     onChange={setSelectedWorker}
                     isClearable
                     placeholder="Worker..."
+                    width="100px" // Custom width
                   />
                 </div>
               )}
@@ -733,6 +855,18 @@ const GodownLr = () => {
                 placeholder="Worker..."
               />
             </div>
+          )}
+
+          {/* Clear Filters Button - Only show when filters are active */}
+          {isAnyFilterActive() && (
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={clearAllFilters}
+              className="d-flex align-items-center gap-1"
+            >
+              Clear Filters
+            </Button>
           )}
         </div>
 

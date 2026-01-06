@@ -361,18 +361,30 @@ export const deleteInventoryProductListApi = async (id) => {
 // Godown LR tp pass
 
 export const getGodownTPApi = async ({ queryKey }) => {
-    const [_key, { search, page, limit }] = queryKey;
+    const [_key, { search, page, limit, consignorId, consigneeId }] = queryKey;
 
     if (!TOKEN) throw new Error('Authentication token not found');
+
+    const params = {
+        search: search || "",
+        page,
+        limit,
+    };
+
+    // Add consignorId filter if provided
+    if (consignorId) {
+        params.consignorId = consignorId;
+    }
+
+    // Add consigneeId filter if provided
+    if (consigneeId) {
+        params.consigneeId = consigneeId;
+    }
 
     const { data } = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/get`,
         {
-            params: {
-                search: search || "",
-                page,
-                limit,
-            },
+            params,
             headers: { Authorization: `Bearer ${TOKEN}` },
         }
     );
@@ -401,9 +413,6 @@ export const getGodownTPApi = async ({ queryKey }) => {
             companyofficeNumber: item.companyId?.officeNumber,
             companygstNumber: item.companyId?.companyName,
             digitalSignatureId: item.companyId?.digitalSignatureId,
-
-
-
 
             consignorId: item.consignorId,
             consignorName: item.consignorName,
