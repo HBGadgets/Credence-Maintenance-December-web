@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Card, Button, Form, Row, Col, Alert, Modal } from 'react-bootstrap'
 import { FaInfoCircle, FaSave, FaPlus, FaTimes } from 'react-icons/fa'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -13,8 +13,8 @@ import {
 const defaultProduct = {
   productId: '',
   productName: '',
-  quantityKg: '', // Changed from quantityKg to quantityMt (Metric Tons)
-  bagSize: '', // Bag weight in kg
+  quantityKg: '',
+  bagSize: '',
   totalBags: '',
 }
 
@@ -25,7 +25,6 @@ const defaultFormData = {
   products: [{ ...defaultProduct }],
 }
 
-// New product fields configuration
 const productFields = [
   {
     name: 'name',
@@ -50,31 +49,32 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
     category: '',
   })
   const [newProductErrors, setNewProductErrors] = useState({})
+  const selectRefs = useRef([])
 
   const queryClient = useQueryClient()
 
-  // Function to handle wheel event and prevent scrolling from changing number values
+  // Initialize refs array
+  useEffect(() => {
+    selectRefs.current = selectRefs.current.slice(0, formData.products.length)
+  }, [formData.products.length])
+
   const handleWheel = (e) => {
     e.target.blur()
   }
 
-  // Fetch Product list - with proper pagination
   const { data: inventoryResponse = {}, isFetching: inventoryLoading } = useQuery({
     queryKey: ['inventoryList', { page: 1, limit: 100 }],
     queryFn: ({ queryKey }) => getInventoryApi({ queryKey }),
     staleTime: 1000 * 60 * 30,
   })
 
-  // Extract inventory list from response
   const inventoryList = inventoryResponse?.data || []
 
-  // Mutation for submitting GR By Rail form
   const { mutate: postGrByRail, isLoading: isSubmitting } = useMutation({
     mutationFn: postGodownTPApi,
     onSuccess: () => {
       toast.success('GR By Rail added successfully!')
       queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
-      // Reset form and close if needed
       setFormData(defaultFormData)
       if (setShowForm) setShowForm(false)
       if (setSelectedFormType) setSelectedFormType(null)
@@ -84,19 +84,15 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
     },
   })
 
-  // Mutation for adding new product
   const { mutate: postInvenotry, isLoading: isAddingProduct } = useMutation({
     mutationFn: postInvenotryApi,
     onSuccess: (response) => {
       toast.success('Product added successfully!')
-      // Invalidate and refetch inventory list
       queryClient.invalidateQueries({ queryKey: ['inventoryList'], exact: false })
-      // Close modal and reset new product form
       setShowNewProductModal(false)
       setNewProductData({ name: '', category: '' })
       setNewProductErrors({})
 
-      // Auto-select the newly created product in the first product slot
       if (response.data?._id) {
         const updatedProducts = [...formData.products]
         if (updatedProducts[0]) {
@@ -134,9 +130,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
     const updatedProducts = [...formData.products]
 
     if (field === 'productId') {
-      // Find the selected product from inventory list
       const selectedProduct = inventoryList.find((item) => item._id === value)
-
       updatedProducts[index] = {
         ...updatedProducts[index],
         productId: value,
@@ -148,23 +142,19 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         [field]: value,
       }
 
-      // Get current values as numbers
       const bagSizeNum = parseFloat(updatedProducts[index].bagSize) || 0
       const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
       const quantityMtNum = parseFloat(updatedProducts[index].quantityKg) || 0
 
-      // Calculate based on the formula: Quantity in MT = (Bag Size × Total Bags) ÷ 1000
       if (field === 'bagSize' || field === 'totalBags') {
         if (bagSizeNum > 0 && totalBagsNum > 0) {
           const calculatedQuantityMt = (bagSizeNum * totalBagsNum) / 1000
           updatedProducts[index] = {
             ...updatedProducts[index],
-            quantityKg: calculatedQuantityMt.toFixed(3), // Keep 3 decimal places
+            quantityKg: calculatedQuantityMt.toFixed(3),
           }
         }
-      }
-      // If user manually enters quantityMt, calculate total bags
-      else if (field === 'quantityKg') {
+      } else if (field === 'quantityKg') {
         if (bagSizeNum > 0 && quantityMtNum > 0) {
           const calculatedTotalBags = Math.round((quantityMtNum * 1000) / bagSizeNum)
           updatedProducts[index] = {
@@ -195,39 +185,28 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
   const validateNewProduct = () => {
     const errors = {}
-
-    if (!newProductData.name.trim()) {
-      errors.name = 'Product name is required'
-    }
-    if (!newProductData.category.trim()) {
-      errors.category = 'Category is required'
-    }
-
+    if (!newProductData.name.trim()) errors.name = 'Product name is required'
+    if (!newProductData.category.trim()) errors.category = 'Category is required'
     return errors
   }
 
   const handleAddNewProduct = (e) => {
     e.preventDefault()
-
     const errors = validateNewProduct()
     if (Object.keys(errors).length > 0) {
       setNewProductErrors(errors)
       return
     }
 
-    // Prepare payload for API
     const payload = {
       name: newProductData.name.trim(),
       category: newProductData.category.trim(),
     }
-
     postInvenotry(payload)
   }
 
   const validateForm = () => {
     const errors = {}
-
-    // Validate each product
     formData.products.forEach((product, index) => {
       if (!product.productId) {
         errors[`productId_${index}`] = `Product selection for product ${index + 1} is required`
@@ -242,13 +221,11 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         errors[`quantityKg_${index}`] = `Valid quantity for product ${index + 1} is required`
       }
     })
-
     return errors
   }
 
   const onSubmit = (e) => {
     e.preventDefault()
-
     const errors = validateForm()
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -256,41 +233,32 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
       return
     }
 
-    // Get current date in YYYY-MM-DD format
     const currentDate = new Date().toISOString().split('T')[0]
-
-    // Prepare payload for API with current date
-    // Convert quantityKg to quantityKg for API (multiply by 1000)
     const payload = {
       tpPassType: formData.tpPassType,
       issuedBy: formData.issuedBy,
       receivedBy: formData.receivedBy,
-      date: currentDate, // Add current date
+      date: currentDate,
       products: formData.products.map((product) => ({
         productId: product.productId,
         productName: product.productName || '',
-        quantityKg: parseFloat(product.quantityKg) * 1000, // Convert MT to Kg
+        quantityKg: parseFloat(product.quantityKg) * 1000,
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseInt(product.totalBags) || 0,
       })),
     }
 
-    // Debug: log the final payload
     console.log('Final API payload:', payload)
-
-    // Call mutation
     postGrByRail(payload)
   }
 
-  // Prepare product options for React Select
   const getProductOptions = () => {
     const productOptions = inventoryList.map((item) => ({
       value: item._id,
       label: `${item.productName}${item.category ? ` (${item.category})` : ''}`,
-      productName: item.productName, // Add productName to the option object
+      productName: item.productName,
     }))
 
-    // Add "Create New Product" option at the beginning
     return [
       {
         value: 'new-product',
@@ -303,8 +271,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
   const getProductValue = (productId) => {
     if (!productId) return null
-
-    // First check inventory list
     const selectedProduct = inventoryList.find((item) => item._id === productId)
     if (selectedProduct) {
       return {
@@ -313,13 +279,10 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         productName: selectedProduct.productName,
       }
     }
-
     return null
   }
 
-  // Handle product selection with clearing
   const handleProductSelect = (selected, index) => {
-    // If user clicks the clear (X) button, selected will be null
     if (selected === null) {
       const updatedProducts = [...formData.products]
       updatedProducts[index] = {
@@ -328,24 +291,18 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         productName: '',
       }
       setFormData((prev) => ({ ...prev, products: updatedProducts }))
-
-      // Clear product error if exists
       if (formErrors[`productId_${index}`]) {
         setFormErrors((prev) => ({ ...prev, [`productId_${index}`]: '' }))
       }
       return
     }
 
-    // Handle "Create New Product" option
     if (selected?.value === 'new-product') {
-      // Open new product modal
       setShowNewProductModal(true)
       return
     }
 
-    // Handle regular product selection
     const selectedProduct = inventoryList.find((item) => item._id === selected?.value)
-
     if (selectedProduct) {
       const updatedProducts = [...formData.products]
       updatedProducts[index] = {
@@ -353,29 +310,23 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         productId: selectedProduct._id,
         productName: selectedProduct.productName || '',
       }
-
       setFormData((prev) => ({ ...prev, products: updatedProducts }))
-
-      // Clear product error if exists
       if (formErrors[`productId_${index}`]) {
         setFormErrors((prev) => ({ ...prev, [`productId_${index}`]: '' }))
       }
     }
   }
 
-  // Reset form
   const handleReset = () => {
     setFormData(defaultFormData)
     setFormErrors({})
   }
 
-  // Function to calculate quantity in MT based on bags and bag size
   const calculateQuantity = (totalBags, bagSizeKg) => {
     if (!totalBags || !bagSizeKg || bagSizeKg <= 0) return 0
     return (parseInt(totalBags) * parseFloat(bagSizeKg)) / 1000
   }
 
-  // Function to calculate bags based on quantity and bag size
   const calculateBags = (quantityKg, bagSizeKg) => {
     if (!quantityKg || !bagSizeKg || bagSizeKg <= 0) return 0
     return Math.round((parseFloat(quantityKg) * 1000) / parseFloat(bagSizeKg))
@@ -409,7 +360,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
         <Card.Body>
           <Form onSubmit={onSubmit}>
-            {/* Date Section Only */}
             <Row className="g-3 mb-4">
               <Col md={3}>
                 <Form.Group className="d-flex align-items-center gap-2">
@@ -425,7 +375,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
               </Col>
             </Row>
 
-            {/* Product Details */}
             <Card className="mb-4">
               <Card.Header className="bg-light">
                 <div className="d-flex justify-content-between align-items-center">
@@ -456,6 +405,120 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                   </Alert>
                 ) : (
                   formData.products.map((product, index) => {
+                    // Create custom styles function for each product to access index
+                    const createCustomStyles = (productIndex) => ({
+                      control: (base, state) => ({
+                        ...base,
+                        minHeight: '38px',
+                        borderColor: formErrors[`productId_${productIndex}`]
+                          ? '#dc3545'
+                          : '#dee2e6',
+                        '&:hover': {
+                          borderColor: formErrors[`productId_${productIndex}`]
+                            ? '#dc3545'
+                            : '#dee2e6',
+                        },
+                        boxShadow: state.isFocused
+                          ? '0 0 0 0.2rem rgba(13, 110, 253, 0.25)'
+                          : 'none',
+                        width: '100%',
+                      }),
+                      container: (base) => ({
+                        ...base,
+                        width: '100%',
+                        position: 'relative',
+                      }),
+                      menu: (base, state) => {
+                        // Get the select container position
+                        const selectElement = selectRefs.current[productIndex]
+                        let left = 0
+                        let top = 0
+                        let width = 'auto'
+
+                        if (selectElement) {
+                          const rect = selectElement.getBoundingClientRect()
+                          left = rect.left
+                          top = rect.bottom
+                          width = rect.width
+                        }
+
+                        return {
+                          ...base,
+                          position: 'fixed',
+                          zIndex: 99999,
+                          left: `${left}px !important`,
+                          top: `${top}px !important`,
+                          width: `${width}px !important`,
+                          maxHeight: '250px',
+                          overflowY: 'auto',
+                          minWidth: '300px',
+                          maxWidth: 'calc(100vw - 20px)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '4px',
+                          backgroundColor: 'white',
+                        }
+                      },
+                      menuList: (base) => ({
+                        ...base,
+                        maxHeight: '200px',
+                        padding: '4px 0',
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? '#0d6efd'
+                          : state.isFocused
+                            ? '#f8f9fa'
+                            : 'white',
+                        color: state.isSelected ? 'white' : '#212529',
+                        padding: '8px 12px',
+                        fontSize: '14px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        cursor: 'pointer',
+                        '&:active': {
+                          backgroundColor: state.isSelected ? '#0d6efd' : '#e9ecef',
+                        },
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        padding: '2px 8px',
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#212529',
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#6c757d',
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#212529',
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        padding: '0 8px',
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: '4px',
+                        cursor: 'pointer',
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: '4px',
+                        cursor: 'pointer',
+                      }),
+                    })
+
+                    const customStyles = createCustomStyles(index)
+
                     return (
                       <Card key={index} className="mb-3 border">
                         <Card.Header className="bg-light py-2">
@@ -475,73 +538,48 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                         </Card.Header>
                         <Card.Body>
                           <Row className="g-3">
-                            {/* Product Selection Dropdown with React Select */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Select Product <span className="text-danger">*</span>
                                 </Form.Label>
-                                <Select
-                                  value={getProductValue(product.productId)}
-                                  onChange={(selected) => handleProductSelect(selected, index)}
-                                  options={getProductOptions()}
-                                  placeholder="Search and select product"
-                                  isClearable
-                                  isSearchable
-                                  isLoading={inventoryLoading}
-                                  isDisabled={isSubmitting || isAddingProduct}
-                                  filterOption={(option, inputValue) => {
-                                    // Always show "Create New Product" option
-                                    if (option.value === 'new-product') return true
-                                    if (!inputValue) return true
-                                    return option.label
-                                      .toLowerCase()
-                                      .includes(inputValue.toLowerCase())
+                                <div
+                                  ref={(el) => {
+                                    if (el) {
+                                      selectRefs.current[index] = el
+                                    }
                                   }}
-                                  noOptionsMessage={({ inputValue }) =>
-                                    inputValue
-                                      ? `No products found for "${inputValue}"`
-                                      : 'No products available'
-                                  }
-                                  styles={{
-                                    control: (base, state) => ({
-                                      ...base,
-                                      borderColor: formErrors[`productId_${index}`]
-                                        ? '#dc3545'
-                                        : base.borderColor,
-                                      '&:hover': {
-                                        borderColor: formErrors[`productId_${index}`]
-                                          ? '#dc3545'
-                                          : base.borderColor,
-                                      },
-                                    }),
-                                    menu: (base) => ({
-                                      ...base,
-                                      zIndex: 9999,
-                                      maxHeight: '250px',
-                                      overflowY: 'auto',
-                                    }),
-                                    option: (base, state) => ({
-                                      ...base,
-                                      backgroundColor: state.isSelected
-                                        ? '#0d6efd'
-                                        : state.isFocused
-                                          ? '#f8f9fa'
-                                          : base.backgroundColor,
-                                      color: state.isSelected ? 'white' : base.color,
-                                      fontWeight:
-                                        state.data?.value === 'new-product'
-                                          ? 'bold'
-                                          : base.fontWeight,
-                                      color:
-                                        state.data?.value === 'new-product'
-                                          ? '#0d6efd'
-                                          : base.color,
-                                    }),
-                                  }}
-                                  className="react-select-container"
-                                  classNamePrefix="react-select"
-                                />
+                                >
+                                  <Select
+                                    instanceId={`product-select-${index}`}
+                                    value={getProductValue(product.productId)}
+                                    onChange={(selected) => handleProductSelect(selected, index)}
+                                    options={getProductOptions()}
+                                    placeholder="Search and select product"
+                                    isClearable
+                                    isSearchable
+                                    isLoading={inventoryLoading}
+                                    isDisabled={isSubmitting || isAddingProduct}
+                                    styles={customStyles}
+                                    menuPosition="fixed"
+                                    menuPlacement="auto"
+                                    menuShouldScrollIntoView={false}
+                                    menuShouldBlockScroll={true}
+                                    filterOption={(option, inputValue) => {
+                                      if (option.value === 'new-product') return true
+                                      if (!inputValue) return true
+                                      return option.label
+                                        .toLowerCase()
+                                        .includes(inputValue.toLowerCase())
+                                    }}
+                                    noOptionsMessage={({ inputValue }) =>
+                                      inputValue
+                                        ? `No products found for "${inputValue}"`
+                                        : 'No products available'
+                                    }
+                                    classNamePrefix="select"
+                                  />
+                                </div>
                                 {formErrors[`productId_${index}`] && (
                                   <div className="text-danger small mt-1">
                                     {formErrors[`productId_${index}`]}
@@ -555,8 +593,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                               </Form.Group>
                             </Col>
 
-                            {/* Bag Size (Kg per bag) */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Bag Size (kg) <span className="text-danger">*</span>
@@ -567,7 +604,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'bagSize', e.target.value)
                                   }
-                                  onWheel={handleWheel} // Added to disable scroll wheel
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 50"
                                   min="0.01"
@@ -585,8 +622,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                               </Form.Group>
                             </Col>
 
-                            {/* Total Bags */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Total Bags <span className="text-danger">*</span>
@@ -597,7 +633,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'totalBags', e.target.value)
                                   }
-                                  onWheel={handleWheel} // Added to disable scroll wheel
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 100"
                                   min="1"
@@ -620,8 +656,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                               </Form.Group>
                             </Col>
 
-                            {/* Quantity (Metric Tons) - Read Only */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Quantity (MT) <span className="text-danger">*</span>
@@ -632,7 +667,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   onChange={(e) =>
                                     handleProductChange(index, 'quantityKg', e.target.value)
                                   }
-                                  onWheel={handleWheel} // Added to disable scroll wheel
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 5"
                                   min="0.001"
@@ -669,7 +704,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                 )}
               </Card.Body>
             </Card>
-            {/* Action Buttons */}
+
             <div className="d-flex justify-content-between mt-4">
               <Button
                 variant="outline-secondary"
@@ -711,7 +746,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
         </Card.Body>
       </Card>
 
-      {/* New Product Modal */}
       <Modal
         show={showNewProductModal}
         onHide={() => !isAddingProduct && setShowNewProductModal(false)}

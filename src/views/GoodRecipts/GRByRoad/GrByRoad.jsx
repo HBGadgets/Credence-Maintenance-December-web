@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Card, Button, Form, Row, Col, Alert, Modal } from 'react-bootstrap'
 import { FaInfoCircle, FaSave, FaPlus, FaTimes } from 'react-icons/fa'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -53,8 +53,15 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
     category: '',
   })
   const [newProductErrors, setNewProductErrors] = useState({})
+  const warehouseSelectRef = useRef(null)
+  const productSelectRefs = useRef([])
 
   const queryClient = useQueryClient()
+
+  // Initialize refs array
+  useEffect(() => {
+    productSelectRefs.current = productSelectRefs.current.slice(0, formData.products.length)
+  }, [formData.products.length])
 
   // Fetch warehouse list
   const { data: warehouseResponse = {}, isFetching: warehouseLoading } = useQuery({
@@ -180,6 +187,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
 
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
   }
+
   const addProduct = () => {
     setFormData((prev) => ({
       ...prev,
@@ -418,6 +426,106 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
     return (parseInt(totalBags) * parseFloat(bagSizeKg)) / 1000
   }
 
+  // Warehouse dropdown styles
+  const warehouseStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: '38px',
+      borderColor: formErrors.warehouseId ? '#dc3545' : '#dee2e6',
+      '&:hover': {
+        borderColor: formErrors.warehouseId ? '#dc3545' : '#dee2e6',
+      },
+      boxShadow: state.isFocused ? '0 0 0 0.2rem rgba(13, 110, 253, 0.25)' : 'none',
+      width: '100%',
+    }),
+    container: (base) => ({
+      ...base,
+      width: '100%',
+      position: 'relative',
+    }),
+    menu: (base, state) => {
+      let left = 0
+      let top = 0
+      let width = 'auto'
+
+      if (warehouseSelectRef.current) {
+        const rect = warehouseSelectRef.current.getBoundingClientRect()
+        left = rect.left
+        top = rect.bottom
+        width = rect.width
+      }
+
+      return {
+        ...base,
+        position: 'fixed',
+        zIndex: 99999,
+        left: `${left}px !important`,
+        top: `${top}px !important`,
+        width: `${width}px !important`,
+        maxHeight: '250px',
+        overflowY: 'auto',
+        minWidth: '300px',
+        maxWidth: 'calc(100vw - 20px)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        border: '1px solid #dee2e6',
+        borderRadius: '4px',
+        backgroundColor: 'white',
+      }
+    },
+    menuList: (base) => ({
+      ...base,
+      maxHeight: '200px',
+      padding: '4px 0',
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? '#0d6efd' : state.isFocused ? '#f8f9fa' : 'white',
+      color: state.isSelected ? 'white' : '#212529',
+      padding: '8px 12px',
+      fontSize: '14px',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: state.isSelected ? '#0d6efd' : '#e9ecef',
+      },
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '2px 8px',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontSize: '14px',
+      color: '#212529',
+    }),
+    placeholder: (base) => ({
+      ...base,
+      fontSize: '14px',
+      color: '#6c757d',
+    }),
+    input: (base) => ({
+      ...base,
+      fontSize: '14px',
+      color: '#212529',
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      padding: '0 8px',
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      padding: '4px',
+      cursor: 'pointer',
+    }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      padding: '4px',
+      cursor: 'pointer',
+    }),
+  }
+
   return (
     <>
       <ToastContainer />
@@ -469,36 +577,27 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                       <Form.Label>
                         Select Warehouse <span className="text-danger">*</span>
                       </Form.Label>
-                      <Select
-                        value={getWarehouseValue()}
-                        onChange={handleWarehouseSelect}
-                        onInputChange={handleWarehouseSearch}
-                        options={warehouseOptions}
-                        placeholder="Search and select warehouse"
-                        isClearable
-                        isLoading={warehouseLoading}
-                        isInvalid={!!formErrors.warehouseId}
-                        filterOption={null}
-                        noOptionsMessage={() => 'No warehouses found'}
-                        isDisabled={isSubmitting || isAddingProduct}
-                        styles={{
-                          control: (base, state) => ({
-                            ...base,
-                            borderColor: formErrors.warehouseId ? '#dc3545' : base.borderColor,
-                            '&:hover': {
-                              borderColor: formErrors.warehouseId ? '#dc3545' : base.borderColor,
-                            },
-                          }),
-                          menu: (base) => ({
-                            ...base,
-                            zIndex: 9999,
-                            maxHeight: '250px',
-                            overflowY: 'auto',
-                          }),
-                        }}
-                        className="react-select-container"
-                        classNamePrefix="react-select"
-                      />
+                      <div ref={warehouseSelectRef}>
+                        <Select
+                          value={getWarehouseValue()}
+                          onChange={handleWarehouseSelect}
+                          onInputChange={handleWarehouseSearch}
+                          options={warehouseOptions}
+                          placeholder="Search and select warehouse"
+                          isClearable
+                          isLoading={warehouseLoading}
+                          isInvalid={!!formErrors.warehouseId}
+                          filterOption={null}
+                          noOptionsMessage={() => 'No warehouses found'}
+                          isDisabled={isSubmitting || isAddingProduct}
+                          styles={warehouseStyles}
+                          menuPosition="fixed"
+                          menuPlacement="auto"
+                          menuShouldScrollIntoView={false}
+                          menuShouldBlockScroll={true}
+                          classNamePrefix="select"
+                        />
+                      </div>
                       {formErrors.warehouseId && (
                         <div className="text-danger small mt-1">{formErrors.warehouseId}</div>
                       )}
@@ -539,6 +638,121 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                   </Alert>
                 ) : (
                   formData.products.map((product, index) => {
+                    // Create custom styles function for each product
+                    const createProductStyles = (productIndex) => ({
+                      control: (base, state) => ({
+                        ...base,
+                        minHeight: '38px',
+                        borderColor: formErrors[`productId_${productIndex}`]
+                          ? '#dc3545'
+                          : '#dee2e6',
+                        '&:hover': {
+                          borderColor: formErrors[`productId_${productIndex}`]
+                            ? '#dc3545'
+                            : '#dee2e6',
+                        },
+                        boxShadow: state.isFocused
+                          ? '0 0 0 0.2rem rgba(13, 110, 253, 0.25)'
+                          : 'none',
+                        width: '100%',
+                      }),
+                      container: (base) => ({
+                        ...base,
+                        width: '100%',
+                        position: 'relative',
+                      }),
+                      menu: (base, state) => {
+                        const selectElement = productSelectRefs.current[productIndex]
+                        let left = 0
+                        let top = 0
+                        let width = 'auto'
+
+                        if (selectElement) {
+                          const rect = selectElement.getBoundingClientRect()
+                          left = rect.left
+                          top = rect.bottom
+                          width = rect.width
+                        }
+
+                        return {
+                          ...base,
+                          position: 'fixed',
+                          zIndex: 99999,
+                          left: `${left}px !important`,
+                          top: `${top}px !important`,
+                          width: `${width}px !important`,
+                          maxHeight: '250px',
+                          overflowY: 'auto',
+                          minWidth: '300px',
+                          maxWidth: 'calc(100vw - 20px)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          border: '1px solid #dee2e6',
+                          borderRadius: '4px',
+                          backgroundColor: 'white',
+                        }
+                      },
+                      menuList: (base) => ({
+                        ...base,
+                        maxHeight: '200px',
+                        padding: '4px 0',
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? '#0d6efd'
+                          : state.isFocused
+                            ? '#f8f9fa'
+                            : 'white',
+                        color: state.isSelected ? 'white' : '#212529',
+                        padding: '8px 12px',
+                        fontSize: '14px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        cursor: 'pointer',
+                        '&:active': {
+                          backgroundColor: state.isSelected ? '#0d6efd' : '#e9ecef',
+                        },
+                        fontWeight: state.data?.value === 'new-product' ? 'bold' : 'normal',
+                        color: state.data?.value === 'new-product' ? '#0d6efd' : base.color,
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        padding: '2px 8px',
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#212529',
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#6c757d',
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        fontSize: '14px',
+                        color: '#212529',
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        padding: '0 8px',
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: '4px',
+                        cursor: 'pointer',
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: '4px',
+                        cursor: 'pointer',
+                      }),
+                    })
+
+                    const productStyles = createProductStyles(index)
+
                     return (
                       <Card key={index} className="mb-3 border">
                         <Card.Header className="bg-light py-2">
@@ -559,72 +773,49 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                         <Card.Body>
                           <Row className="g-3">
                             {/* Product Selection Dropdown with React Select */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Select Product <span className="text-danger">*</span>
                                 </Form.Label>
-                                <Select
-                                  value={getProductValue(product.productId)}
-                                  onChange={(selected) => handleProductSelect(selected, index)}
-                                  options={getProductOptions()}
-                                  placeholder="Search product"
-                                  isClearable
-                                  isSearchable
-                                  isLoading={inventoryLoading}
-                                  isDisabled={isSubmitting || isAddingProduct}
-                                  filterOption={(option, inputValue) => {
-                                    // Always show "Create New Product" option
-                                    if (option.value === 'new-product') return true
-                                    if (!inputValue) return true
-                                    return option.label
-                                      .toLowerCase()
-                                      .includes(inputValue.toLowerCase())
+                                <div
+                                  ref={(el) => {
+                                    if (el) {
+                                      productSelectRefs.current[index] = el
+                                    }
                                   }}
-                                  noOptionsMessage={({ inputValue }) =>
-                                    inputValue
-                                      ? `No products found for "${inputValue}"`
-                                      : 'No products available'
-                                  }
-                                  styles={{
-                                    control: (base, state) => ({
-                                      ...base,
-                                      borderColor: formErrors[`productId_${index}`]
-                                        ? '#dc3545'
-                                        : base.borderColor,
-                                      '&:hover': {
-                                        borderColor: formErrors[`productId_${index}`]
-                                          ? '#dc3545'
-                                          : base.borderColor,
-                                      },
-                                    }),
-                                    menu: (base) => ({
-                                      ...base,
-                                      zIndex: 9999,
-                                      maxHeight: '250px',
-                                      overflowY: 'auto',
-                                    }),
-                                    option: (base, state) => ({
-                                      ...base,
-                                      backgroundColor: state.isSelected
-                                        ? '#0d6efd'
-                                        : state.isFocused
-                                          ? '#f8f9fa'
-                                          : base.backgroundColor,
-                                      color: state.isSelected ? 'white' : base.color,
-                                      fontWeight:
-                                        state.data?.value === 'new-product'
-                                          ? 'bold'
-                                          : base.fontWeight,
-                                      color:
-                                        state.data?.value === 'new-product'
-                                          ? '#0d6efd'
-                                          : base.color,
-                                    }),
-                                  }}
-                                  className="react-select-container"
-                                  classNamePrefix="react-select"
-                                />
+                                >
+                                  <Select
+                                    instanceId={`product-select-${index}`}
+                                    value={getProductValue(product.productId)}
+                                    onChange={(selected) => handleProductSelect(selected, index)}
+                                    options={getProductOptions()}
+                                    placeholder="Search product"
+                                    isClearable
+                                    isSearchable
+                                    isLoading={inventoryLoading}
+                                    isDisabled={isSubmitting || isAddingProduct}
+                                    styles={productStyles}
+                                    menuPosition="fixed"
+                                    menuPlacement="auto"
+                                    menuShouldScrollIntoView={false}
+                                    menuShouldBlockScroll={true}
+                                    filterOption={(option, inputValue) => {
+                                      // Always show "Create New Product" option
+                                      if (option.value === 'new-product') return true
+                                      if (!inputValue) return true
+                                      return option.label
+                                        .toLowerCase()
+                                        .includes(inputValue.toLowerCase())
+                                    }}
+                                    noOptionsMessage={({ inputValue }) =>
+                                      inputValue
+                                        ? `No products found for "${inputValue}"`
+                                        : 'No products available'
+                                    }
+                                    classNamePrefix="select"
+                                  />
+                                </div>
                                 {formErrors[`productId_${index}`] && (
                                   <div className="text-danger small mt-1">
                                     {formErrors[`productId_${index}`]}
@@ -634,7 +825,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                             </Col>
 
                             {/* Bag Size (Kg per bag) */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Bag Size (kg) <span className="text-danger">*</span>
@@ -661,7 +852,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                             </Col>
 
                             {/* Total Bags */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Total Bags <span className="text-danger">*</span>
@@ -688,7 +879,7 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                             </Col>
 
                             {/* Quantity (Metric Tons) - Read Only */}
-                            <Col md={3}>
+                            <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
                                   Quantity (MT) <span className="text-danger">*</span>
