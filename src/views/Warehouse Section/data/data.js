@@ -395,6 +395,15 @@ export const getGodownTPApi = async ({ queryKey }) => {
 
             companyId: item.companyId?._id,
             companyName: item.companyId?.companyName,
+            companyEmail: item.companyId?.email,
+            companyAddress: item.companyId?.address,
+            companymobileNumber: item.companyId?.mobileNumber,
+            companyofficeNumber: item.companyId?.officeNumber,
+            companygstNumber: item.companyId?.companyName,
+            digitalSignatureId: item.companyId?.digitalSignatureId,
+
+
+
 
             consignorId: item.consignorId,
             consignorName: item.consignorName,

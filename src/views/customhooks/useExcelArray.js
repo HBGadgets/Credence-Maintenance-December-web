@@ -1,4 +1,3 @@
-// useExcelArray.js - Updated version without username
 import { useCallback } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -13,7 +12,7 @@ const useExcelArray = () => {
             metaData = {},
             fileName,
             config = {},
-            includeProducts = true, // Changed to true by default for TableArray
+            includeProducts = true,
             productsLabel = 'Products',
         }) => {
             try {
@@ -40,9 +39,9 @@ const useExcelArray = () => {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet(title || 'Sheet 1');
 
-                // Get visible columns only (excluding hidden ones like the ones in TableArray)
-                const visibleColumns = columns.filter((col) => !col.hidden);
-                const columnCount = visibleColumns.length + 1; // +1 for SN column
+                // Get ALL columns for export (don't filter hidden ones)
+                const exportColumns = columns;
+                const columnCount = exportColumns.length + 1; // +1 for SN column
                 const lastColumnLetter = String.fromCharCode(64 + Math.min(columnCount, 26));
 
                 // --- COMPANY NAME ---
@@ -72,7 +71,7 @@ const useExcelArray = () => {
                 worksheet.addRow([]);
 
                 // --- HEADER ROW ---
-                const tableColumns = ['SN', ...visibleColumns.map((col) => col.label)];
+                const tableColumns = ['SN', ...exportColumns.map((col) => col.label)];
                 const headerRow = worksheet.addRow(tableColumns);
                 headerRow.eachCell((cell) => {
                     cell.font = { bold: true, size: 12, color: { argb: CONFIG.colors.text } };
@@ -92,7 +91,7 @@ const useExcelArray = () => {
 
                 // Set column widths
                 worksheet.getColumn(1).width = 8; // SN column
-                visibleColumns.forEach((col, index) => {
+                exportColumns.forEach((col, index) => {
                     const column = worksheet.getColumn(index + 2);
                     if (col.minWidth) {
                         column.width = Math.max(col.minWidth / 7, 15);
@@ -102,6 +101,10 @@ const useExcelArray = () => {
                         column.width = 40;
                     } else if (col.key === 'email') {
                         column.width = 30;
+                    } else if (col.key.includes('Address')) {
+                        column.width = 35;
+                    } else if (col.key.includes('Rate') || col.key.includes('Amount') || col.key.includes('Freight')) {
+                        column.width = 20;
                     } else {
                         column.width = 18;
                     }
@@ -111,7 +114,7 @@ const useExcelArray = () => {
                 const cleanedData = data.map((item, index) => {
                     const cleanedItem = { SN: index + 1 };
 
-                    visibleColumns.forEach((col) => {
+                    exportColumns.forEach((col) => {
                         let value = item[col.key];
 
                         // Handle custom render functions
@@ -119,26 +122,25 @@ const useExcelArray = () => {
                             try {
                                 // Extract text from React elements if needed
                                 const renderedValue = col.render(item);
-                                if (React.isValidElement(renderedValue)) {
+                                if (typeof renderedValue === 'string') {
+                                    value = renderedValue;
+                                } else if (renderedValue && renderedValue.props) {
                                     // For React elements, try to get text content
-                                    if (renderedValue.props && renderedValue.props.children) {
+                                    if (renderedValue.props.children) {
                                         if (typeof renderedValue.props.children === 'string') {
                                             value = renderedValue.props.children;
-                                        } else if (React.isValidElement(renderedValue.props.children)) {
-                                            // Try to get text from nested elements
-                                            value = renderedValue.props.children.props?.children || 'N/A';
                                         } else if (Array.isArray(renderedValue.props.children)) {
                                             // Join array of children
                                             value = renderedValue.props.children
-                                                .map(child =>
-                                                    typeof child === 'string' ? child :
-                                                        React.isValidElement(child) ? (child.props?.children || '') :
-                                                            String(child)
-                                                )
+                                                .map(child => typeof child === 'string' ? child : String(child))
                                                 .join('');
+                                        } else {
+                                            value = String(renderedValue.props.children);
                                         }
+                                    } else if (renderedValue.props.title) {
+                                        value = renderedValue.props.title;
                                     } else {
-                                        value = renderedValue.props?.title || 'N/A';
+                                        value = 'N/A';
                                     }
                                 } else {
                                     value = renderedValue || 'N/A';
@@ -169,6 +171,22 @@ const useExcelArray = () => {
                 // Add main data rows
                 cleanedData.forEach((item, rowIndex) => {
                     const row = worksheet.addRow(Object.values(item));
+
+                    // Format numeric columns
+                    row.eachCell((cell, colNumber) => {
+                        const columnLabel = exportColumns[colNumber - 2]?.label;
+                        if (columnLabel && (
+                            columnLabel.includes('Rate') ||
+                            columnLabel.includes('Amount') ||
+                            columnLabel.includes('Freight')
+                        )) {
+                            const numValue = parseFloat(cell.value?.replace(/[^0-9.-]+/g, ''));
+                            if (!isNaN(numValue)) {
+                                cell.value = numValue;
+                                cell.numFmt = '#,##0.00';
+                            }
+                        }
+                    });
 
                     // Add borders
                     row.eachCell((cell) => {
@@ -225,15 +243,13 @@ const useExcelArray = () => {
                             };
                             worksheet.mergeCells(`A${recordHeader.number}:G${recordHeader.number}`);
 
-                            // Products table header (matching your TableArray structure)
+                            // Products table header
                             const productHeaders = [
                                 'Product Name',
                                 'Warehouse',
                                 'Quantity (Kg)',
                                 'Bag Size',
                                 'Total Bags',
-                                'Item Weight',
-                                'Item Cost'
                             ];
 
                             const productHeaderRow = worksheet.addRow(productHeaders);
@@ -267,8 +283,6 @@ const useExcelArray = () => {
                                     product.quantityKg || '0',
                                     product.bagSize || '0',
                                     product.totalBags || '0',
-                                    product.itemWeight || '0',
-                                    product.itemCost || '0',
                                 ]);
 
                                 // Alternate row colors
@@ -316,12 +330,6 @@ const useExcelArray = () => {
                             const totalBags = record.products.reduce((sum, product) =>
                                 sum + (parseFloat(product.totalBags) || 0), 0
                             );
-                            const totalWeight = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.itemWeight) || 0), 0
-                            );
-                            const totalCost = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.itemCost) || 0), 0
-                            );
 
                             const totalRow = worksheet.addRow([
                                 'TOTAL',
@@ -329,8 +337,6 @@ const useExcelArray = () => {
                                 totalQuantity.toFixed(2),
                                 '',
                                 totalBags.toFixed(0),
-                                totalWeight.toFixed(2),
-                                totalCost.toFixed(2),
                             ]);
 
                             totalRow.font = { bold: true };
@@ -372,9 +378,6 @@ const useExcelArray = () => {
                         const overallTotalBags = allProducts.reduce((sum, product) =>
                             sum + (parseFloat(product.totalBags) || 0), 0
                         );
-                        const overallTotalCost = allProducts.reduce((sum, product) =>
-                            sum + (parseFloat(product.itemCost) || 0), 0
-                        );
 
                         const summaryRow = worksheet.addRow([
                             'OVERALL SUMMARY',
@@ -383,7 +386,6 @@ const useExcelArray = () => {
                             '',
                             `Total Bags: ${overallTotalBags.toFixed(0)}`,
                             '',
-                            `Total Cost: ${overallTotalCost.toFixed(2)}`,
                         ]);
 
                         summaryRow.font = { bold: true, size: 12, color: { argb: CONFIG.colors.primary } };

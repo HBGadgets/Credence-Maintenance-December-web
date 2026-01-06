@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext, useMemo } from 'react'
 import {
   deleteGodownTPApi,
   getGodownTPApi,
-  // patchGodownTPApi,
   postGodownTPApi,
   patchGodownTPStatusApi,
   patchAcknowledgementsApi,
@@ -19,7 +18,7 @@ import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
-import { getWorkerApi } from '../../TransportPass/data/data'
+import { getDigitalSignatureApi, getWorkerApi } from '../../TransportPass/data/data'
 import { FaArrowUp, FaExchangeAlt, FaEye, FaPrint } from 'react-icons/fa'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
@@ -27,13 +26,14 @@ import IconDropdown from '../../Supervisor/IconDropdown'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelArray from '../../customhooks/useExcelArray'
 
-// Import the form components (only 2 now since RailheadForm is removed)
+// Import the form components
 import WarehouseForm from './component/WarehouseForm'
 import WarehouseToPartyForm from './component/WarehouseToPartyForm'
 import { Button, Card, Col, Modal, Row } from 'react-bootstrap'
 import { FaWarehouse } from 'react-icons/fa6'
 import StatusUpdateModal from './component/StatusUpdateModal'
 import AcknowledgementImage from './component/AcknowledgementImage'
+import TpInvoiceBill from './component/TpInvoiceBill'
 
 const GodownLr = () => {
   const { exportToPDF } = usePdfExporter()
@@ -73,6 +73,10 @@ const GodownLr = () => {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedStatusRecord, setSelectedStatusRecord] = useState(null)
   const [statusModalLoading, setStatusModalLoading] = useState(false)
+
+  // Add these state variables near other state variables
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [selectedInvoiceData, setSelectedInvoiceData] = useState(null)
 
   // Helper function to detect form type from record
   const detectFormType = (record) => {
@@ -378,78 +382,85 @@ const GodownLr = () => {
     )
   }
 
-  // table columns
-  const columns = [
+  // Frontend table columns (hidden columns excluded)
+  const frontendColumns = [
     {
       label: 'Date',
       key: 'date',
       sortable: true,
     },
     { label: 'Recipt No', key: 'receiptNo', sortable: true },
-    { label: 'Issued By', key: 'issuedBy', sortable: true },
-    { label: 'Received By', key: 'receivedBy', sortable: true },
     { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Consignor Name', key: 'consignorName', sortable: true },
-    { label: 'Consignor Address', key: 'consignorAddress' },
     { label: 'Consignee Name', key: 'consigneeName', sortable: true },
-    { label: 'Consignee Address', key: 'consigneeAddress' },
     { label: 'Customer Name', key: 'customerName', sortable: true },
-    { label: 'Customer Address', key: 'customerAddress' },
-    { label: 'Start Location', key: 'startLocation', sortable: true },
-    { label: 'End Location', key: 'endLocation', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
-    {
-      label: 'Customer Rate',
-      key: 'customerRate',
-      sortable: true,
-      render: (item) => `₹${item.customerRate}`,
-    },
-    {
-      label: 'Transporter Rate',
-      key: 'transporterRate',
-      sortable: true,
-      render: (item) => `₹${item.transporterRate}`,
-    },
-    {
-      label: 'Customer Freight',
-      key: 'customerFreight',
-      sortable: true,
-      render: (item) => `₹${item.customerFreight}`,
-    },
-    {
-      label: 'Transporter Freight',
-      key: 'transporterFreight',
-      sortable: true,
-      render: (item) => `₹${item.transporterFreight}`,
-    },
-    {
-      label: 'Total Amount',
-      key: 'totalAmount',
-      sortable: true,
-      render: (item) => `₹${item.totalAmount}`,
-    },
-    {
-      label: 'Total Transporter Amount',
-      key: 'totalTransporterAmount',
-      sortable: true,
-      render: (item) => `₹${item.totalTransporterAmount}`,
-    },
-    { label: 'Customer Rate On', key: 'customerRateOn' },
-    { label: 'Transporter Rate On', key: 'transporterRateOn' },
-    {
-      label: 'Products',
-      key: 'products',
-      render: (item) => {
-        if (!item.products || item.products.length === 0) return 'No products'
-        return `${item.products.length} product(s)`
-      },
-    },
     {
       label: 'Acknowledgement',
       key: 'acknowledgementImage',
       render: renderImagePreview,
     },
+    {
+      label: 'Status',
+      key: 'status',
+      render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
+    },
+  ]
+
+  // All columns for Excel export (including hidden ones)
+  const allColumns = [
+    {
+      label: 'Date',
+      key: 'date',
+    },
+    { label: 'Receipt No', key: 'receiptNo' },
+    { label: 'Issued By', key: 'issuedBy' },
+    { label: 'Received By', key: 'receivedBy' },
+    { label: 'Company Name', key: 'companyName' },
+    { label: 'Consignor Name', key: 'consignorName' },
+    { label: 'Consignor Address', key: 'consignorAddress' },
+    { label: 'Consignee Name', key: 'consigneeName' },
+    { label: 'Consignee Address', key: 'consigneeAddress' },
+    { label: 'Customer Name', key: 'customerName' },
+    { label: 'Customer Address', key: 'customerAddress' },
+    { label: 'Start Location', key: 'startLocation' },
+    { label: 'End Location', key: 'endLocation' },
+    { label: 'Vehicle Name', key: 'vehicleName' },
+    { label: 'Driver Name', key: 'driverName' },
+    {
+      label: 'Customer Rate',
+      key: 'customerRate',
+      render: (item) => `₹${item.customerRate}`,
+    },
+    {
+      label: 'Transporter Rate',
+      key: 'transporterRate',
+      render: (item) => `₹${item.transporterRate}`,
+    },
+    {
+      label: 'Customer Freight',
+      key: 'customerFreight',
+      render: (item) => `₹${item.customerFreight}`,
+    },
+    {
+      label: 'Transporter Freight',
+      key: 'transporterFreight',
+      render: (item) => `₹${item.transporterFreight}`,
+    },
+    {
+      label: 'Total Amount',
+      key: 'totalAmount',
+      render: (item) => `₹${item.totalAmount}`,
+    },
+    {
+      label: 'Total Transporter Amount',
+      key: 'totalTransporterAmount',
+      render: (item) => `₹${item.totalTransporterAmount}`,
+    },
+    { label: 'Customer Rate On', key: 'customerRateOn' },
+    { label: 'Transporter Rate On', key: 'transporterRateOn' },
+
     {
       label: 'Status',
       key: 'status',
@@ -465,10 +476,10 @@ const GodownLr = () => {
         label: 'Download Excel',
         onClick: () => {
           exportToExcel({
-            title: 'All Godown Transport Pass Report',
-            columns: columns.filter((col) => !col.hidden),
+            title: 'Transport Pass Report',
+            columns: allColumns,
             data: filteredData,
-            fileName: 'Godown_Transport_Pass_Report',
+            fileName: 'Transport_Pass_Report',
             metaData: {
               'Export Date': new Date().toLocaleDateString(),
               'Total Records': filteredData.length,
@@ -498,7 +509,7 @@ const GodownLr = () => {
         onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
-    [filteredData, columns, exportToExcel, dateRange],
+    [filteredData, exportToExcel, dateRange],
   )
 
   // Handle Add button click - show type selection
@@ -553,6 +564,128 @@ const GodownLr = () => {
           )
         }
         return null
+    }
+  }
+
+  // Update handleViewButton function
+  const handleViewButton = async (id) => {
+    const selectedRow = filteredData.find((item) => item.id === id)
+
+    if (!selectedRow) {
+      return toast.error('Data not found for this ID')
+    }
+
+    // Check for digitalSignatureId before calling the API
+    if (!selectedRow.digitalSignatureId || selectedRow.digitalSignatureId === 'Unknown') {
+      console.log('No digitalSignatureId found for this entry:', selectedRow)
+
+      // Still show invoice but without signature
+      const invoiceData = mapToInvoiceData(selectedRow)
+      setSelectedInvoiceData(invoiceData)
+      setShowInvoiceModal(true)
+      return
+    }
+
+    try {
+      console.log('Fetching Digital Signature for ID:', selectedRow.digitalSignatureId)
+      const response = await getDigitalSignatureApi(selectedRow.digitalSignatureId)
+
+      // Assuming the API returns { signatureImage: "base64..." }
+      const base64Image = response?.signatureImage
+      const invoiceData = mapToInvoiceData(selectedRow)
+
+      if (base64Image) {
+        invoiceData.digitalSignature = `data:image/jpeg;base64,${base64Image}`
+      }
+
+      setSelectedInvoiceData(invoiceData)
+      setShowInvoiceModal(true)
+    } catch (error) {
+      console.error('Error fetching digital signature:', error)
+
+      // Still show invoice but without signature
+      const invoiceData = mapToInvoiceData(selectedRow)
+      setSelectedInvoiceData(invoiceData)
+      setShowInvoiceModal(true)
+      toast.warn('Showing invoice without digital signature')
+    }
+  }
+
+  // Helper function to map API data to invoice format
+  const mapToInvoiceData = (apiData) => {
+    // Use the first product for item details (or aggregate if needed)
+    const firstProduct = apiData.products?.[0] || {}
+
+    // Calculate total bags and quantity from all products
+    const totalBags =
+      apiData.products?.reduce((sum, product) => sum + (product.totalBags || 0), 0) || 0
+    const totalQuantityKg =
+      apiData.products?.reduce((sum, product) => sum + (product.quantityKg || 0), 0) || 0
+
+    return {
+      // Company Details
+      companyName: apiData.companyName,
+      companyAddress: apiData.companyAddress,
+      companyEmail: apiData.companyEmail,
+      gstIn: apiData.companygstNumber,
+      companyOfficeNumber: apiData.companyofficeNumber,
+      companyMobileNumber: apiData.companymobileNumber,
+
+      // Basic Details
+      date: apiData.date,
+      receiptNo: apiData.receiptNo,
+
+      // Vehicle Details
+      vehicleName: apiData.vehicleName,
+      ownerName: apiData.companyName, // Assuming company is owner
+
+      // Location Details
+      startLocation: apiData.startLocation,
+      endLocation: apiData.endLocation,
+      containerNumber: 'N/A', // Not in API
+      sealNumber: 'N/A', // Not in API
+
+      // Parties Details
+      consignorName: apiData.consignorName,
+      consignorAddress: apiData.consignorAddress,
+      consigneeName: apiData.consigneeName,
+      consigneeAddress: apiData.consigneeAddress,
+
+      // Customer Details
+      customerName: apiData.customerName,
+      customerAddress: apiData.customerAddress,
+
+      // Product/Item Details
+      itemName:
+        firstProduct.productName || apiData.products?.map((p) => p.productName).join(', ') || 'N/A',
+      itemQuantity: totalBags,
+      itemUnit: 'Bags',
+      itemWeight: totalQuantityKg,
+      itemcost: apiData.totalAmount,
+
+      // Rate Details
+      customerRate: apiData.customerRate,
+      customerRateOn: apiData.customerRateOn,
+      customerFreight: apiData.customerFreight,
+      totalAmount: apiData.totalAmount,
+
+      transporterRate: apiData.transporterRate,
+      transporterRateOn: apiData.transporterRateOn,
+      transporterFreight: apiData.transporterFreight,
+      totalTransporterAmount: apiData.totalTransporterAmount,
+
+      // Driver Details
+      driverName: apiData.driverName,
+      driverContact: 'N/A', // Not in API
+      driverId: apiData.driverId,
+
+      // Status
+      status: apiData.status,
+
+      // Other
+      issuedBy: apiData.issuedBy,
+      receivedBy: apiData.receivedBy,
+      products: apiData.products || [],
     }
   }
 
@@ -616,7 +749,7 @@ const GodownLr = () => {
       {getFormComponent()}
       <TableArray
         title="TP Pass Receipts"
-        columns={columns}
+        columns={frontendColumns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
         currentPage={currentPage}
@@ -625,9 +758,12 @@ const GodownLr = () => {
         editButton={true}
         deleteButton={true}
         statusButton={true}
+        viewButton={true}
+        viewButtonLabel="Invoice"
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
-        handleStatusButton={handleStatusButtonClick}
+        handleStatusButtonClick={handleStatusButtonClick}
+        handleViewButton={handleViewButton}
       />
 
       <SmartPagination
@@ -665,6 +801,29 @@ const GodownLr = () => {
         imageUrl={selectedImageUrl}
       />
 
+      {/* Invoice Bill Modal */}
+      <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)} size="xl" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Transport Pass Invoice - {selectedInvoiceData?.receiptNo || 'N/A'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+          {selectedInvoiceData ? (
+            <TpInvoiceBill invoiceData={selectedInvoiceData} />
+          ) : (
+            <div className="text-center p-4">
+              <p>No invoice data available.</p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowInvoiceModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
       </div>
@@ -692,8 +851,6 @@ const FormTypeSelection = ({ show, handleClose, onSelectType }) => {
         <div className="text-center py-3">
           <h5 className="mb-4">Choose the type of TP Pass you want to create</h5>
           <Row className="justify-content-center g-4">
-            {/* Removed the Railhead card */}
-
             <Col md={6} lg={6}>
               <Card
                 className="h-100 cursor-pointer border-success"
