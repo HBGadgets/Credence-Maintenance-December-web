@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
@@ -6,8 +6,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRailHeadApi, patchRailHeadApi } from '../data/data'
 import { toast, ToastContainer } from 'react-toastify'
 import ReusableModal from '../../components/ReusableModal'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import { HiOutlineLogout } from 'react-icons/hi'
+import IconDropdown from '../../Supervisor/IconDropdown'
 
 const RailHead = () => {
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -126,6 +134,51 @@ const RailHead = () => {
     }
   }
 
+  // Memoized dropdown items for export
+  const dropdownItems = useMemo(
+    () => [
+      {
+        icon: FaRegFilePdf,
+        label: 'Download PDF',
+        onClick: () =>
+          exportToPDF({
+            title: 'All Railhead Inventory Report',
+            columns,
+            data: filteredData,
+            fileName: 'Railhead_Inventory_Report',
+          }),
+      },
+      {
+        icon: PiMicrosoftExcelLogo,
+        label: 'Download Excel',
+        onClick: () => {
+          exportToExcel({
+            title: 'All Railhead Inventory Report',
+            columns,
+            data: filteredData,
+            fileName: 'Railhead_Inventory_Report',
+          })
+        },
+      },
+      {
+        icon: FaPrint,
+        label: 'Print Page',
+        onClick: () => window.print(),
+      },
+      {
+        icon: HiOutlineLogout,
+        label: 'Logout',
+        onClick: () => handleLogout(),
+      },
+      {
+        icon: FaArrowUp,
+        label: 'Scroll To Top',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      },
+    ],
+    [filteredData, columns, exportToPDF, exportToExcel],
+  )
+
   return (
     <div>
       <ToastContainer />
@@ -174,6 +227,10 @@ const RailHead = () => {
           setCurrentPage(1)
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </div>
   )
 }
