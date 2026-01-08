@@ -896,7 +896,7 @@ const GodownLr = () => {
         viewButtonLabel="Invoice"
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
-        handleStatusButtonClick={handleStatusButtonClick}
+        handleStatusButton={handleStatusButtonClick}
         handleViewButton={handleViewButton}
       />
 
