@@ -58,6 +58,9 @@ const GodownLr = () => {
   // for consignee select
   const [selectedConsignee, setSelectedConsignee] = useState(null)
 
+  // Add status filter state
+  const [selectedStatus, setSelectedStatus] = useState('All')
+
   // superadmin role
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
@@ -87,6 +90,15 @@ const GodownLr = () => {
   // Add these state variables near other state variables
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [selectedInvoiceData, setSelectedInvoiceData] = useState(null)
+
+  // Define status options
+  const statusOptions = [
+    { value: 'All', label: 'All' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'Cancelled', label: 'Cancelled' },
+    { value: 'Partially Correction', label: 'Partially Correction' },
+  ]
 
   // Helper function to detect form type from record
   const detectFormType = (record) => {
@@ -125,6 +137,7 @@ const GodownLr = () => {
         limit: itemsPerPage,
         consignorId: selectedConsignor?.value || null,
         consigneeId: selectedConsignee?.value || null,
+        status: selectedStatus !== 'All' ? selectedStatus : null, // Add status to query params
       },
     ],
     queryFn: getGodownTPApi,
@@ -261,10 +274,17 @@ const GodownLr = () => {
     setSelectedConsignee(null)
     setSelectedName(null)
     setSelectedWorker(null)
+    setSelectedStatus('All')
     setDateRange({ startDate: null, endDate: null })
     setSearchQuery('')
     setCurrentPage(1)
     toast.info('All filters cleared')
+  }
+
+  // Handle status button click
+  const handleStatusFilterClick = (status) => {
+    setSelectedStatus(status)
+    setCurrentPage(1)
   }
 
   // Update filtered data when API data changes
@@ -318,6 +338,13 @@ const GodownLr = () => {
         })
       }
 
+      // Filter by status (client-side fallback if API doesn't support it)
+      if (selectedStatus !== 'All') {
+        filtered = filtered.filter((receipt) => {
+          return receipt.status === selectedStatus
+        })
+      }
+
       setFilteredData(filtered)
     }
   }, [
@@ -327,6 +354,7 @@ const GodownLr = () => {
     selectedWorker,
     selectedConsignor,
     selectedConsignee,
+    selectedStatus,
     userRole,
   ])
 
@@ -445,6 +473,67 @@ const GodownLr = () => {
                 ? '#007bff' // blue color for partially correction
                 : '#6c757d',
       color: 'white',
+    }
+  }
+
+  // Status button style
+  const getStatusButtonStyle = (status) => {
+    const isActive = selectedStatus === status
+
+    const baseStyle = {
+      padding: '4px 12px',
+      borderRadius: '20px',
+      border: '1px solid #dee2e6',
+      fontSize: '14px',
+      fontWeight: '400',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      whiteSpace: 'nowrap',
+    }
+
+    if (isActive) {
+      return {
+        ...baseStyle,
+        backgroundColor:
+          status === 'All'
+            ? '#6c757d'
+            : status === 'Pending'
+              ? '#f5a623'
+              : status === 'Completed'
+                ? '#28a745'
+                : status === 'Cancelled'
+                  ? '#dc3545'
+                  : '#007bff',
+        color: 'white',
+        borderColor:
+          status === 'All'
+            ? '#6c757d'
+            : status === 'Pending'
+              ? '#f5a623'
+              : status === 'Completed'
+                ? '#28a745'
+                : status === 'Cancelled'
+                  ? '#dc3545'
+                  : '#007bff',
+      }
+    }
+
+    return {
+      ...baseStyle,
+      backgroundColor: 'white',
+      color:
+        status === 'All'
+          ? '#6c757d'
+          : status === 'Pending'
+            ? '#f5a623'
+            : status === 'Completed'
+              ? '#28a745'
+              : status === 'Cancelled'
+                ? '#dc3545'
+                : '#007bff',
+      ':hover': {
+        backgroundColor: '#f8f9fa',
+      },
     }
   }
 
@@ -599,6 +688,7 @@ const GodownLr = () => {
                   : 'All Dates',
               'Consignor Filter': selectedConsignor?.label || 'All',
               'Consignee Filter': selectedConsignee?.label || 'All',
+              'Status Filter': selectedStatus !== 'All' ? selectedStatus : 'All',
             },
             includeProducts: true,
             productsLabel: 'Products Details',
@@ -621,7 +711,7 @@ const GodownLr = () => {
         onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
       },
     ],
-    [filteredData, exportToExcel, dateRange, selectedConsignor, selectedConsignee],
+    [filteredData, exportToExcel, dateRange, selectedConsignor, selectedConsignee, selectedStatus],
   )
 
   // Handle Add button click - show type selection
@@ -808,6 +898,7 @@ const GodownLr = () => {
       selectedConsignee ||
       selectedName ||
       selectedWorker ||
+      selectedStatus !== 'All' ||
       dateRange.startDate ||
       searchQuery
     )
@@ -904,6 +995,24 @@ const GodownLr = () => {
             placeholder="Search by vehicle, driver, consignor..."
           />
           <AddButton label="Add Lorry Receipt" onClick={handleAddButtonClick} />
+        </div>
+      </div>
+
+      {/* Status Filter Buttons */}
+      <div className="mb-3">
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <span className="text-muted fw-medium me-2">Status:</span>
+          {statusOptions.map((status) => (
+            <button
+              key={status.value}
+              type="button"
+              onClick={() => handleStatusFilterClick(status.value)}
+              style={getStatusButtonStyle(status.value)}
+              className="me-2"
+            >
+              {status.label}
+            </button>
+          ))}
         </div>
       </div>
 

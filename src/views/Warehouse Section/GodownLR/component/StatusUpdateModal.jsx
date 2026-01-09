@@ -350,6 +350,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     // Add products with updatedQuantityMT for Partially Correction status
     if (status === 'Partially Correction') {
       dataToSubmit.products = products.map((product) => ({
+        warehouseId: product.warehouseId,
         productId: product.productId,
         _id: product._id,
         updatedQuantityMT: parseFloat(quantitiesTaken[product._id] || 0),
@@ -503,15 +504,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                     })}
                   </tbody>
                 </Table>
-              </div>
-              <div className="alert alert-info mb-4">
-                <small>
-                  <strong>Note:</strong> For Partially Correction status, you must enter the
-                  quantity actually taken by the party. The quantity taken must be less than the
-                  ordered quantity for all products.
-                  <br />
-                  <strong>API expects:</strong> updatedQuantityMT field for each product
-                </small>
               </div>
             </div>
           )}
