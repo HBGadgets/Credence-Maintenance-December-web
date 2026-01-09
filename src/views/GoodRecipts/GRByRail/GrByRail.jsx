@@ -13,7 +13,7 @@ import {
 const defaultProduct = {
   productId: '',
   productName: '',
-  quantityKg: '',
+  quantityMT: '',
   bagSize: '',
   totalBags: '',
 }
@@ -128,43 +128,10 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...formData.products]
-
-    if (field === 'productId') {
-      const selectedProduct = inventoryList.find((item) => item._id === value)
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        productId: value,
-        productName: selectedProduct ? selectedProduct.productName : '',
-      }
-    } else {
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        [field]: value,
-      }
-
-      const bagSizeNum = parseFloat(updatedProducts[index].bagSize) || 0
-      const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
-      const quantityMtNum = parseFloat(updatedProducts[index].quantityKg) || 0
-
-      if (field === 'bagSize' || field === 'totalBags') {
-        if (bagSizeNum > 0 && totalBagsNum > 0) {
-          const calculatedQuantityMt = (bagSizeNum * totalBagsNum) / 1000
-          updatedProducts[index] = {
-            ...updatedProducts[index],
-            quantityKg: calculatedQuantityMt.toFixed(3),
-          }
-        }
-      } else if (field === 'quantityKg') {
-        if (bagSizeNum > 0 && quantityMtNum > 0) {
-          const calculatedTotalBags = Math.round((quantityMtNum * 1000) / bagSizeNum)
-          updatedProducts[index] = {
-            ...updatedProducts[index],
-            totalBags: calculatedTotalBags.toString(),
-          }
-        }
-      }
+    updatedProducts[index] = {
+      ...updatedProducts[index],
+      [field]: value,
     }
-
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
   }
 
@@ -211,13 +178,8 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
       if (!product.productId) {
         errors[`productId_${index}`] = `Product selection for product ${index + 1} is required`
       }
-      if (!product.bagSize || parseFloat(product.bagSize) <= 0) {
-        errors[`bagSize_${index}`] = `Valid bag size for product ${index + 1} is required`
-      }
-      if (!product.totalBags || parseInt(product.totalBags) <= 0) {
-        errors[`totalBags_${index}`] = `Valid total bags for product ${index + 1} is required`
-      }
-      if (!product.quantityKg || parseFloat(product.quantityKg) <= 0) {
+      // Quantity is required
+      if (!product.quantityMT || parseFloat(product.quantityMT) <= 0) {
         errors[`quantityKg_${index}`] = `Valid quantity for product ${index + 1} is required`
       }
     })
@@ -242,9 +204,9 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
       products: formData.products.map((product) => ({
         productId: product.productId,
         productName: product.productName || '',
-        quantityKg: parseFloat(product.quantityKg) * 1000,
-        bagSize: parseFloat(product.bagSize) || 0,
-        totalBags: parseInt(product.totalBags) || 0,
+        quantityMT: parseFloat(product.quantityMT),
+        bagSize: product.bagSize ? parseFloat(product.bagSize) : 0,
+        totalBags: product.totalBags ? parseInt(product.totalBags) : 0,
       })),
     }
 
@@ -320,16 +282,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
   const handleReset = () => {
     setFormData(defaultFormData)
     setFormErrors({})
-  }
-
-  const calculateQuantity = (totalBags, bagSizeKg) => {
-    if (!totalBags || !bagSizeKg || bagSizeKg <= 0) return 0
-    return (parseInt(totalBags) * parseFloat(bagSizeKg)) / 1000
-  }
-
-  const calculateBags = (quantityKg, bagSizeKg) => {
-    if (!quantityKg || !bagSizeKg || bagSizeKg <= 0) return 0
-    return Math.round((parseFloat(quantityKg) * 1000) / parseFloat(bagSizeKg))
   }
 
   return (
@@ -595,9 +547,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
 
                             <Col md={12} lg={3}>
                               <Form.Group>
-                                <Form.Label>
-                                  Bag Size (kg) <span className="text-danger">*</span>
-                                </Form.Label>
+                                <Form.Label>Bag Size (kg)</Form.Label>
                                 <Form.Control
                                   type="number"
                                   value={product.bagSize}
@@ -609,24 +559,16 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   placeholder="e.g., 50"
                                   min="0.01"
                                   step="0.01"
-                                  isInvalid={!!formErrors[`bagSize_${index}`]}
                                 />
-                                {formErrors[`bagSize_${index}`] && (
-                                  <div className="text-danger small mt-1">
-                                    {formErrors[`bagSize_${index}`]}
-                                  </div>
-                                )}
                                 <Form.Text className="text-muted">
-                                  Weight per bag in kilograms
+                                  Weight per bag in kilograms (optional)
                                 </Form.Text>
                               </Form.Group>
                             </Col>
 
                             <Col md={12} lg={3}>
                               <Form.Group>
-                                <Form.Label>
-                                  Total Bags <span className="text-danger">*</span>
-                                </Form.Label>
+                                <Form.Label>Total Bags</Form.Label>
                                 <Form.Control
                                   type="number"
                                   value={product.totalBags}
@@ -638,20 +580,9 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   placeholder="e.g., 100"
                                   min="1"
                                   step="1"
-                                  isInvalid={!!formErrors[`totalBags_${index}`]}
                                 />
-                                {formErrors[`totalBags_${index}`] && (
-                                  <div className="text-danger small mt-1">
-                                    {formErrors[`totalBags_${index}`]}
-                                  </div>
-                                )}
                                 <Form.Text className="text-muted">
-                                  {product.bagSize && product.quantityKg && (
-                                    <>
-                                      Formula: ({product.quantityKg} MT × 1000) ÷ {product.bagSize}{' '}
-                                      kg = {calculateBags(product.quantityKg, product.bagSize)} bags
-                                    </>
-                                  )}
+                                  Total number of bags (optional)
                                 </Form.Text>
                               </Form.Group>
                             </Col>
@@ -663,9 +594,9 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                 </Form.Label>
                                 <Form.Control
                                   type="number"
-                                  value={product.quantityKg}
+                                  value={product.quantityMT}
                                   onChange={(e) =>
-                                    handleProductChange(index, 'quantityKg', e.target.value)
+                                    handleProductChange(index, 'quantityMT', e.target.value)
                                   }
                                   onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
@@ -673,8 +604,6 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   min="0.001"
                                   step="0.001"
                                   isInvalid={!!formErrors[`quantityKg_${index}`]}
-                                  className="bg-light"
-                                  readOnly
                                 />
                                 {formErrors[`quantityKg_${index}`] && (
                                   <div className="text-danger small mt-1">
@@ -682,17 +611,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   </div>
                                 )}
                                 <Form.Text className="text-muted">
-                                  {product.totalBags && product.bagSize && (
-                                    <>
-                                      Formula: ({product.totalBags} bags × {product.bagSize} kg) ÷
-                                      1000 ={' '}
-                                      {calculateQuantity(
-                                        product.totalBags,
-                                        product.bagSize,
-                                      ).toFixed(3)}{' '}
-                                      MT
-                                    </>
-                                  )}
+                                  Quantity in metric tons (required)
                                 </Form.Text>
                               </Form.Group>
                             </Col>

@@ -230,6 +230,7 @@ const GodownLr = () => {
       queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
       setShowStatusModal(false)
       setSelectedStatusRecord(null)
+      setStatusModalLoading(false)
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update status')
@@ -375,7 +376,7 @@ const GodownLr = () => {
 
   // Function to check if status button should be disabled
   const shouldDisableStatusButton = (status) => {
-    return status === 'Cancelled' || status === 'Completed'
+    return status === 'Cancelled' || status === 'Completed' || status === 'Partially Correction'
   }
 
   // Handle checkbox status change
@@ -393,7 +394,7 @@ const GodownLr = () => {
     setShowStatusModal(true)
   }
 
-  // Update the handleStatusSubmit function:
+  // Updated handleStatusSubmit function with products support:
   const handleStatusSubmit = (statusData) => {
     if (!selectedStatusRecord) return
 
@@ -408,6 +409,12 @@ const GodownLr = () => {
     // Append image if it exists
     if (statusData.image) {
       formData.append('acknowledgementImage', statusData.image)
+    }
+
+    // Append products data for Partially Correction
+    if (statusData.status === 'Partially Correction' && statusData.products) {
+      // Method 1: Send as JSON string
+      formData.append('products', JSON.stringify(statusData.products))
     }
 
     // Use the correct mutation function that handles FormData
@@ -434,7 +441,9 @@ const GodownLr = () => {
             ? '#28a745'
             : status === 'Cancelled'
               ? '#dc3545'
-              : '#6c757d',
+              : status === 'Partially Correction'
+                ? '#007bff' // blue color for partially correction
+                : '#6c757d',
       color: 'white',
     }
   }
@@ -548,6 +557,24 @@ const GodownLr = () => {
       label: 'Status',
       key: 'status',
       render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
+    },
+    {
+      label: 'Products',
+      key: 'products',
+      render: (row) => {
+        if (!row.products || !Array.isArray(row.products)) return 'No products'
+
+        // Summarize product information
+        const summary = row.products.map((p) => {
+          const originalQty = parseFloat(p.quantityMT) || 0
+          const updatedQty = parseFloat(p.updatedQuantityMT) || 0
+          const balance = originalQty - updatedQty
+
+          return `${p.productName || 'N/A'}: ${originalQty.toFixed(2)} MT (Delivered: ${updatedQty.toFixed(2)} MT, Balance: ${balance.toFixed(2)} MT)`
+        })
+
+        return summary.join('; ')
+      },
     },
   ]
 
@@ -705,7 +732,7 @@ const GodownLr = () => {
     const totalBags =
       apiData.products?.reduce((sum, product) => sum + (product.totalBags || 0), 0) || 0
     const totalQuantityKg =
-      apiData.products?.reduce((sum, product) => sum + (product.quantityKg || 0), 0) || 0
+      apiData.products?.reduce((sum, product) => sum + (product.quantityMT || 0), 0) || 0
 
     return {
       // Company Details
@@ -920,7 +947,7 @@ const GodownLr = () => {
           setStatusModalLoading(false)
         }}
         onSubmit={handleStatusSubmit}
-        isLoading={isStatus}
+        isLoading={isStatus || statusModalLoading}
         currentStatus={selectedStatusRecord?.status || 'Pending'}
         recordData={selectedStatusRecord}
       />

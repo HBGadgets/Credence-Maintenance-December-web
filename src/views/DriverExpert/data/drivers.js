@@ -542,7 +542,6 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
     const data = response.data?.attendanceLocations;
     if (!Array.isArray(data)) throw new Error('Invalid API response: attendanceLocations must be an array');
 
-    const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // formated time for check out
     const formatDateTime = (timeString) => {
@@ -575,7 +574,7 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
       return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
     }
 
-    return sortedData.map((attendanceLoc) => ({
+    return data.map((attendanceLoc) => ({
       id: attendanceLoc._id,
       originalDate: attendanceLoc.createdAt,
       date: formatDateToDDMMYYYY(attendanceLoc.createdAt),

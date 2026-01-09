@@ -24,8 +24,8 @@ const InventoryList = () => {
     ],
     queryFn: getWarehouseProfileApi,
     enabled: !!id,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 1, // 1 minute (data is fresh for 1 min)
+    cacheTime: 1000 * 60 * 1, // 1 minute (kept in memory after unmount)
   })
 
   useEffect(() => {
@@ -44,9 +44,8 @@ const InventoryList = () => {
 
   const columns = [
     { label: 'Product Name', key: 'productName', sortable: true },
-    { label: 'Quantity', key: 'quantityKg', sortable: true },
-    { label: 'Bag Size (Kg)', key: 'bagSizeKg', sortable: true },
-    { label: 'Total Bags', key: 'totalBags', sortable: true },
+    { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
+    // { label: 'Product Total Count MT', key: 'productTotalCountMT', sortable: true },
   ]
 
   // Handle Edit

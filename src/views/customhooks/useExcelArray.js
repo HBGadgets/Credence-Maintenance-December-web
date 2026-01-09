@@ -247,9 +247,11 @@ const useExcelArray = () => {
                             const productHeaders = [
                                 'Product Name',
                                 'Warehouse',
-                                'Quantity (Kg)',
-                                'Bag Size',
+                                'Quantity (MT)',
+                                'Bag Size (KG)',
                                 'Total Bags',
+                                'Updated Quantity (MT)',
+                                'Total (MT)'
                             ];
 
                             const productHeaderRow = worksheet.addRow(productHeaders);
@@ -270,19 +272,33 @@ const useExcelArray = () => {
                             });
 
                             // Set column widths for products
+                            const productColumnWidths = [25, 20, 15, 15, 12, 18, 15];
                             ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach((col, idx) => {
-                                const widths = [25, 20, 15, 12, 12, 15, 15];
-                                worksheet.getColumn(col).width = widths[idx];
+                                worksheet.getColumn(col).width = productColumnWidths[idx];
                             });
 
                             // Add product rows
                             record.products.forEach((product, productIndex) => {
+                                // Parse quantities
+                                const originalQuantity = parseFloat(product.quantityMT) || 0;
+                                const updatedQuantity = parseFloat(product.updatedQuantityMT) || 0;
+                                const balanceQuantity = Math.max(0, originalQuantity - updatedQuantity);
+                                const bagSize = parseFloat(product.bagSize) || 0;
+
+                                // Calculate total bags
+                                let totalBags = 0;
+                                if (bagSize > 0) {
+                                    totalBags = Math.round(originalQuantity * 1000 / bagSize); // Convert MT to KG and divide by bag size
+                                }
+
                                 const productRow = worksheet.addRow([
                                     product.productName || '-',
                                     product.warehouseName || '-',
-                                    product.quantityKg || '0',
-                                    product.bagSize || '0',
-                                    product.totalBags || '0',
+                                    originalQuantity,
+                                    bagSize,
+                                    totalBags,
+                                    updatedQuantity,
+                                    balanceQuantity
                                 ]);
 
                                 // Alternate row colors
@@ -317,26 +333,46 @@ const useExcelArray = () => {
                                         const numValue = parseFloat(cell.value);
                                         if (!isNaN(numValue)) {
                                             cell.value = numValue;
-                                            cell.numFmt = colNumber === 6 || colNumber === 7 ? '#,##0.00' : '#,##0';
+                                            // Use decimal format for quantity columns
+                                            if (colNumber === 3 || colNumber === 6 || colNumber === 7) { // Quantity columns
+                                                cell.numFmt = '#,##0.00';
+                                            } else if (colNumber === 4) { // Bag Size
+                                                cell.numFmt = '#,##0';
+                                            } else if (colNumber === 5) { // Total Bags
+                                                cell.numFmt = '#,##0';
+                                            }
                                         }
                                     }
                                 });
                             });
 
                             // Add totals row for this record
-                            const totalQuantity = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.quantityKg) || 0), 0
+                            const totalOriginalQuantity = record.products.reduce((sum, product) =>
+                                sum + (parseFloat(product.quantityMT) || 0), 0
                             );
-                            const totalBags = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.totalBags) || 0), 0
+                            const totalUpdatedQuantity = record.products.reduce((sum, product) =>
+                                sum + (parseFloat(product.updatedQuantityMT) || 0), 0
                             );
+                            const totalBalance = totalOriginalQuantity - totalUpdatedQuantity;
+
+                            // Calculate total bags for this record
+                            let totalBags = 0;
+                            record.products.forEach(product => {
+                                const bagSize = parseFloat(product.bagSize) || 0;
+                                const quantityMT = parseFloat(product.quantityMT) || 0;
+                                if (bagSize > 0) {
+                                    totalBags += Math.round(quantityMT * 1000 / bagSize);
+                                }
+                            });
 
                             const totalRow = worksheet.addRow([
                                 'TOTAL',
                                 '',
-                                totalQuantity.toFixed(2),
+                                totalOriginalQuantity.toFixed(2),
                                 '',
-                                totalBags.toFixed(0),
+                                totalBags,
+                                totalUpdatedQuantity.toFixed(2),
+                                totalBalance.toFixed(2)
                             ]);
 
                             totalRow.font = { bold: true };
@@ -362,7 +398,11 @@ const useExcelArray = () => {
                                     const numValue = parseFloat(cell.value);
                                     if (!isNaN(numValue)) {
                                         cell.value = numValue;
-                                        cell.numFmt = colNumber === 6 || colNumber === 7 ? '#,##0.00' : '#,##0';
+                                        if (colNumber === 3 || colNumber === 6 || colNumber === 7) {
+                                            cell.numFmt = '#,##0.00';
+                                        } else if (colNumber === 5) {
+                                            cell.numFmt = '#,##0';
+                                        }
                                     }
                                 }
                             });
@@ -372,20 +412,38 @@ const useExcelArray = () => {
 
                         // Add overall summary
                         const allProducts = recordsWithProducts.flatMap(record => record.products);
-                        const overallTotalQuantity = allProducts.reduce((sum, product) =>
-                            sum + (parseFloat(product.quantityKg) || 0), 0
+                        const overallOriginalQuantity = allProducts.reduce((sum, product) =>
+                            sum + (parseFloat(product.quantityMT) || 0), 0
                         );
-                        const overallTotalBags = allProducts.reduce((sum, product) =>
-                            sum + (parseFloat(product.totalBags) || 0), 0
+                        const overallUpdatedQuantity = allProducts.reduce((sum, product) =>
+                            sum + (parseFloat(product.updatedQuantityMT) || 0), 0
                         );
+                        const overallBalance = overallOriginalQuantity - overallUpdatedQuantity;
+
+                        // Calculate overall total bags
+                        let overallTotalBags = 0;
+                        allProducts.forEach(product => {
+                            const bagSize = parseFloat(product.bagSize) || 0;
+                            const quantityMT = parseFloat(product.quantityMT) || 0;
+                            if (bagSize > 0) {
+                                overallTotalBags += Math.round(quantityMT * 1000 / bagSize);
+                            }
+                        });
+
+                        // Calculate delivery percentage
+                        const deliveryPercentage = overallOriginalQuantity > 0
+                            ? (overallUpdatedQuantity / overallOriginalQuantity) * 100
+                            : 0;
 
                         const summaryRow = worksheet.addRow([
-                            'OVERALL SUMMARY',
+                            'OVERALL PRODUCTS SUMMARY',
                             '',
-                            `Total Quantity: ${overallTotalQuantity.toFixed(2)} kg`,
+                            `Total Original Quantity: ${overallOriginalQuantity.toFixed(2)} MT`,
                             '',
-                            `Total Bags: ${overallTotalBags.toFixed(0)}`,
-                            '',
+                            `Total Bags: ${overallTotalBags}`,
+                            `Total Delivered: ${overallUpdatedQuantity.toFixed(2)} MT`,
+                            `Total: ${overallBalance.toFixed(2)} MT`,
+                            `Delivery: ${deliveryPercentage.toFixed(1)}%`
                         ]);
 
                         summaryRow.font = { bold: true, size: 12, color: { argb: CONFIG.colors.primary } };
@@ -394,7 +452,7 @@ const useExcelArray = () => {
                             pattern: 'solid',
                             fgColor: { argb: 'FFD4EDDA' },
                         };
-                        worksheet.mergeCells(`A${summaryRow.number}:G${summaryRow.number}`);
+                        worksheet.mergeCells(`A${summaryRow.number}:H${summaryRow.number}`);
                     }
                 }
 

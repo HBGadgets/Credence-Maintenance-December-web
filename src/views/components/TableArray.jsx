@@ -217,7 +217,8 @@ const skeletonStyles = `
   .quantity-col,
   .bags-col,
   .weight-col,
-  .cost-col {
+  .cost-col,
+  .updatedQuantity-col{
     min-width: 100px;
   }
 
@@ -286,6 +287,8 @@ function TableArray({
       return <Check color="#28a745" size={18} />
     } else if (status === 'cancelled') {
       return <X color="#dc3545" size={18} />
+    } else if (status === 'partially correction') {
+      return <Check color="#28a745" size={18} />
     } else {
       // Pending or any other status
       return <Square color="#6c757d" size={18} />
@@ -336,9 +339,12 @@ function TableArray({
               <CTableRow>
                 <CTableHeaderCell className="product-name-col">Product Name</CTableHeaderCell>
                 <CTableHeaderCell className="warehouse-col">Warehouse</CTableHeaderCell>
-                <CTableHeaderCell className="quantity-col">Quantity (Kg)</CTableHeaderCell>
+                <CTableHeaderCell className="quantity-col">Quantity (MT)</CTableHeaderCell>
                 <CTableHeaderCell className="bagSize-col">Bag Size</CTableHeaderCell>
                 <CTableHeaderCell className="totalBags-col">Total Bags</CTableHeaderCell>
+                <CTableHeaderCell className="updatedQuantityMT">
+                  Quantity Taken By Party(MT)
+                </CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
@@ -351,11 +357,14 @@ function TableArray({
                     {product.warehouseName || '-'}
                   </CTableDataCell>
                   <CTableDataCell className="quantity-col">
-                    {product.quantityKg || '0'}
+                    {product.quantityMT || '0'}
                   </CTableDataCell>
                   <CTableDataCell className="bagSize-col">{product.bagSize || '0'}</CTableDataCell>
                   <CTableDataCell className="totalBags-col">
                     {product.totalBags || '0'}
+                  </CTableDataCell>
+                  <CTableDataCell className="updatedQuantity-col">
+                    {product.updatedQuantityMT || '0'}
                   </CTableDataCell>
                 </CTableRow>
               ))}
@@ -484,7 +493,10 @@ function TableArray({
                     const hasProducts = row.products && row.products.length > 0
                     const statusIcon = getStatusIcon(row)
                     const status = row?.status?.toLowerCase()
-                    const isCompletedOrCancelled = status === 'completed' || status === 'cancelled'
+                    const isCompletedOrCancelled =
+                      status === 'completed' ||
+                      status === 'cancelled' ||
+                      status === 'partially correction'
 
                     return (
                       <React.Fragment key={rowIndex}>
@@ -575,7 +587,7 @@ function TableArray({
                                     disabled={isCompletedOrCancelled}
                                     title={
                                       isCompletedOrCancelled
-                                        ? 'Cannot edit completed/cancelled records'
+                                        ? 'Cannot edit completed/cancelled/Partially Correction records'
                                         : 'Edit'
                                     }
                                   >
@@ -593,7 +605,7 @@ function TableArray({
                                     disabled={isCompletedOrCancelled}
                                     title={
                                       isCompletedOrCancelled
-                                        ? 'Cannot delete completed/cancelled records'
+                                        ? 'Cannot delete completed/cancelled/Partially Correction records'
                                         : 'Delete'
                                     }
                                   >

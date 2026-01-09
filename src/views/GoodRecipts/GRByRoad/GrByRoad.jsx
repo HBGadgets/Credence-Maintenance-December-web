@@ -15,7 +15,7 @@ const defaultProduct = {
   warehouseId: '',
   productId: '',
   productName: '',
-  quantityKg: '', // Changed from quantityKg to quantityMt (Metric Tons)
+  quantityMT: '',
   bagSize: '',
   totalBags: '',
 }
@@ -157,32 +157,6 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
         ...updatedProducts[index],
         [field]: value,
       }
-
-      // Get current values as numbers
-      const bagSizeNum = parseFloat(updatedProducts[index].bagSize) || 0
-      const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
-      const quantityMtNum = parseFloat(updatedProducts[index].quantityKg) || 0
-
-      // Calculate based on the formula: Quantity in MT = (Bag Size × Total Bags) ÷ 1000
-      if (field === 'bagSize' || field === 'totalBags') {
-        if (bagSizeNum > 0 && totalBagsNum > 0) {
-          const calculatedQuantityMt = (bagSizeNum * totalBagsNum) / 1000
-          updatedProducts[index] = {
-            ...updatedProducts[index],
-            quantityKg: calculatedQuantityMt.toFixed(3), // Keep 3 decimal places
-          }
-        }
-      }
-      // If user manually enters quantityMt, calculate total bags
-      else if (field === 'quantityKg') {
-        if (bagSizeNum > 0 && quantityMtNum > 0) {
-          const calculatedTotalBags = Math.round((quantityMtNum * 1000) / bagSizeNum)
-          updatedProducts[index] = {
-            ...updatedProducts[index],
-            totalBags: calculatedTotalBags.toString(),
-          }
-        }
-      }
     }
 
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
@@ -247,13 +221,8 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
       if (!product.productId) {
         errors[`productId_${index}`] = `Product selection for product ${index + 1} is required`
       }
-      if (!product.bagSize || parseFloat(product.bagSize) <= 0) {
-        errors[`bagSize_${index}`] = `Valid bag size for product ${index + 1} is required`
-      }
-      if (!product.totalBags || parseInt(product.totalBags) <= 0) {
-        errors[`totalBags_${index}`] = `Valid total bags for product ${index + 1} is required`
-      }
-      if (!product.quantityKg || parseFloat(product.quantityKg) <= 0) {
+      // Quantity is required
+      if (!product.quantityMT || parseFloat(product.quantityMT) <= 0) {
         errors[`quantityKg_${index}`] = `Valid quantity for product ${index + 1} is required`
       }
     })
@@ -275,7 +244,6 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
     const currentDate = new Date().toISOString().split('T')[0]
 
     // Prepare payload for API with current date
-    // Convert quantityKg to quantityKg for API (multiply by 1000)
     const payload = {
       tpPassType: formData.tpPassType,
       issuedBy: formData.issuedBy, // Auto-filled as "Road"
@@ -286,9 +254,9 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
         warehouseId: formData.warehouseId,
         productId: product.productId,
         productName: product.productName || '',
-        quantityKg: parseFloat(product.quantityKg) * 1000, // Convert MT to Kg
-        bagSize: parseFloat(product.bagSize) || 0,
-        totalBags: parseInt(product.totalBags) || 0,
+        quantityMT: parseFloat(product.quantityMT),
+        bagSize: product.bagSize ? parseFloat(product.bagSize) : 0,
+        totalBags: product.totalBags ? parseInt(product.totalBags) : 0,
       })),
     }
 
@@ -412,18 +380,6 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
   const handleReset = () => {
     setFormData(defaultFormData)
     setFormErrors({})
-  }
-
-  // Function to calculate bags based on quantity and bag size
-  const calculateBags = (quantityKg, bagSizeKg) => {
-    if (!quantityKg || !bagSizeKg || bagSizeKg <= 0) return 0
-    return Math.round((parseFloat(quantityKg) * 1000) / parseFloat(bagSizeKg))
-  }
-
-  // Function to calculate quantity based on bags and bag size
-  const calculateQuantity = (totalBags, bagSizeKg) => {
-    if (!totalBags || !bagSizeKg || bagSizeKg <= 0) return 0
-    return (parseInt(totalBags) * parseFloat(bagSizeKg)) / 1000
   }
 
   // Warehouse dropdown styles
@@ -827,58 +783,48 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                             {/* Bag Size (Kg per bag) */}
                             <Col md={12} lg={3}>
                               <Form.Group>
-                                <Form.Label>
-                                  Bag Size (kg) <span className="text-danger">*</span>
-                                </Form.Label>
+                                <Form.Label>Bag Size (kg)</Form.Label>
                                 <Form.Control
                                   type="number"
                                   value={product.bagSize}
                                   onChange={(e) =>
                                     handleProductChange(index, 'bagSize', e.target.value)
                                   }
-                                  onWheel={handleWheel} // Added to disable scroll wheel
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 50"
                                   min="0.01"
                                   step="0.01"
-                                  isInvalid={!!formErrors[`bagSize_${index}`]}
                                 />
-                                {formErrors[`bagSize_${index}`] && (
-                                  <div className="text-danger small mt-1">
-                                    {formErrors[`bagSize_${index}`]}
-                                  </div>
-                                )}
+                                <Form.Text className="text-muted">
+                                  Weight per bag in kilograms (optional)
+                                </Form.Text>
                               </Form.Group>
                             </Col>
 
                             {/* Total Bags */}
                             <Col md={12} lg={3}>
                               <Form.Group>
-                                <Form.Label>
-                                  Total Bags <span className="text-danger">*</span>
-                                </Form.Label>
+                                <Form.Label>Total Bags</Form.Label>
                                 <Form.Control
                                   type="number"
                                   value={product.totalBags}
                                   onChange={(e) =>
                                     handleProductChange(index, 'totalBags', e.target.value)
                                   }
-                                  onWheel={handleWheel} // Added to disable scroll wheel
+                                  onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 100"
                                   min="1"
                                   step="1"
-                                  isInvalid={!!formErrors[`totalBags_${index}`]}
                                 />
-                                {formErrors[`totalBags_${index}`] && (
-                                  <div className="text-danger small mt-1">
-                                    {formErrors[`totalBags_${index}`]}
-                                  </div>
-                                )}
+                                <Form.Text className="text-muted">
+                                  Total number of bags (optional)
+                                </Form.Text>
                               </Form.Group>
                             </Col>
 
-                            {/* Quantity (Metric Tons) - Read Only */}
+                            {/* Quantity (Metric Tons) */}
                             <Col md={12} lg={3}>
                               <Form.Group>
                                 <Form.Label>
@@ -886,22 +832,25 @@ const GrByRoad = ({ setShowForm, setSelectedFormType }) => {
                                 </Form.Label>
                                 <Form.Control
                                   type="number"
-                                  value={product.quantityKg}
+                                  value={product.quantityMT}
                                   onChange={(e) =>
-                                    handleProductChange(index, 'quantityKg', e.target.value)
+                                    handleProductChange(index, 'quantityMT', e.target.value)
                                   }
                                   onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
                                   placeholder="e.g., 5"
+                                  min="0.001"
+                                  step="0.001"
                                   isInvalid={!!formErrors[`quantityKg_${index}`]}
-                                  className="bg-light"
-                                  readOnly
                                 />
                                 {formErrors[`quantityKg_${index}`] && (
                                   <div className="text-danger small mt-1">
                                     {formErrors[`quantityKg_${index}`]}
                                   </div>
                                 )}
+                                <Form.Text className="text-muted">
+                                  Quantity in metric tons (required)
+                                </Form.Text>
                               </Form.Group>
                             </Col>
                           </Row>

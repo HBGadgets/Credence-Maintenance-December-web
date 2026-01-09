@@ -32,6 +32,7 @@ const TpInvoiceBill = ({ invoiceData }) => {
     itemUnit,
     itemWeight,
     itemcost,
+    updatedQuantityMT,
     customerRate,
     totalAmount,
     transporterRate,
@@ -227,9 +228,10 @@ const TpInvoiceBill = ({ invoiceData }) => {
               <tr>
                 <th>Product Name</th>
                 <th>Warehouse</th>
-                <th>Quantity (kg)</th>
+                <th>Quantity (MT)</th>
                 <th>Bag Size</th>
                 <th>Total Bags</th>
+                <th>Updated Quantity(MT)</th>
               </tr>
             </thead>
             <tbody>
@@ -238,9 +240,10 @@ const TpInvoiceBill = ({ invoiceData }) => {
                   <tr key={index}>
                     <td>{product.productName || 'N/A'}</td>
                     <td>{product.warehouseName || 'N/A'}</td>
-                    <td>{product.quantityKg || 0}</td>
-                    <td>{product.bagSize || 'N/A'}</td>
+                    <td>{product.quantityMT || 0}</td>
+                    <td>{product.bagSize || 0}</td>
                     <td>{product.totalBags || 0}</td>
+                    <td>{product.updatedQuantityMT || 0}</td>
                   </tr>
                 ))
               ) : (
@@ -256,7 +259,7 @@ const TpInvoiceBill = ({ invoiceData }) => {
                     <strong>Total</strong>
                   </td>
                   <td>
-                    <strong>{products.reduce((sum, p) => sum + (p.quantityKg || 0), 0)}</strong>
+                    <strong>{products.reduce((sum, p) => sum + (p.quantityMT || 0), 0)}</strong>
                   </td>
                   <td></td>
                   <td>

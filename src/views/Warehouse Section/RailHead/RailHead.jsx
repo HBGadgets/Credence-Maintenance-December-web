@@ -32,8 +32,8 @@ const RailHead = () => {
     queryKey: ['RailHead', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
     queryFn: getRailHeadApi,
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 30,
-    cacheTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 1, // 1 minute (data is fresh for 1 min)
+    cacheTime: 1000 * 60 * 1, // 1 minute (kept in memory after unmount)
   })
 
   // ========== PATCH MUTATION ==========
@@ -60,9 +60,7 @@ const RailHead = () => {
   const columns = [
     { label: 'Date', key: 'createdAt', sortable: true },
     { label: 'Product Name', key: 'productName', sortable: true },
-    { label: 'Quantity', key: 'quantityKg', sortable: true },
-    { label: 'Bag Size (Kg)', key: 'bagSize', sortable: true },
-    { label: 'Total Bags', key: 'totalBags', sortable: true },
+    { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
   ]
 
   // Modal form fields - Fixed field names
@@ -74,20 +72,8 @@ const RailHead = () => {
       required: true,
     },
     {
-      name: 'quantityKg',
-      label: 'Quantity',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'bagSize',
-      label: 'Bag Size (Kg)',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'totalBags',
-      label: 'Total Bags',
+      name: 'quantityMT',
+      label: 'Quantity(MT)',
       type: 'text',
       required: true,
     },

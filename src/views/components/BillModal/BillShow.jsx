@@ -152,7 +152,7 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Download Bill
+            Download
           </a>
         )}
 

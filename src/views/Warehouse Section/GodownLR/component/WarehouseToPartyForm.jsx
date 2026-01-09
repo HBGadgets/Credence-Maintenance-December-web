@@ -25,7 +25,7 @@ const defaultProduct = {
   warehouseName: '',
   productId: '',
   productName: '',
-  quantityKg: '',
+  quantityMT: '',
   bagSizeKg: '',
   totalBags: '',
 }
@@ -133,6 +133,11 @@ const useDebounce = (value, delay) => {
   }, [value, delay])
 
   return debouncedValue
+}
+
+// Prevent wheel event on number inputs
+const handleNumberInputWheel = (e) => {
+  e.target.blur()
 }
 
 const WarehouseToPartyForm = ({
@@ -316,7 +321,7 @@ const WarehouseToPartyForm = ({
     return warehouseProductsResponse.data || []
   }, [warehouseProductsResponse])
 
-  // Create product options - FILTER OUT PRODUCTS WITH totalBags = 0
+  // Create product options - Show ALL products regardless of totalBags value
   const productOptions = useMemo(() => {
     if (!inventoryList || inventoryList.length === 0) {
       return []
@@ -328,14 +333,12 @@ const WarehouseToPartyForm = ({
     inventoryList.forEach((product) => {
       const productId = product.productId
       const productName = product.productName || 'Unknown Product'
-      const bagSizeKg = product.bagSizeKg
-      const quantityKg = product.quantityKg || 0
+      const bagSizeKg = product.bagSizeKg || 0
+      const quantityMT = product.quantityMT || 0
       const totalBags = product.totalBags || 0
 
-      // Skip if:
-      // 1. No productId or bagSizeKg
-      // 2. totalBags = 0
-      if (!productId || bagSizeKg === undefined || totalBags === 0) {
+      // Skip if no productId
+      if (!productId) {
         return
       }
 
@@ -344,7 +347,7 @@ const WarehouseToPartyForm = ({
       if (!seenCombinations.has(uniqueKey)) {
         seenCombinations.add(uniqueKey)
 
-        const label = `${productName} (Bag Size: ${bagSizeKg} kg, Available: ${quantityKg} kg, Total Bags: ${totalBags})`
+        const label = `${productName} (Bag Size: ${bagSizeKg || '0'} kg, Available: ${quantityMT} kg, Total Bags: ${totalBags})`
 
         options.push({
           value: uniqueKey,
@@ -352,19 +355,14 @@ const WarehouseToPartyForm = ({
           productId: productId,
           productName: productName,
           bagSizeKg: bagSizeKg,
-          quantityKg: quantityKg,
+          quantityMT: quantityMT,
           totalBags: totalBags,
           originalProductData: product,
         })
       }
     })
 
-    console.log(
-      'Filtered product options (excluding totalBags=0):',
-      options.length,
-      'of',
-      inventoryList.length,
-    )
+    console.log('Product options:', options.length, 'of', inventoryList.length)
     return options
   }, [inventoryList])
 
@@ -439,7 +437,7 @@ const WarehouseToPartyForm = ({
           const formProduct = {
             ...defaultProduct,
             ...product,
-            quantityKg: product.quantityKg?.toString() || '',
+            quantityMT: product.quantityMT?.toString() || '',
             bagSizeKg: product.bagSize?.toString() || product.bagSizeKg?.toString() || '',
             totalBags: product.totalBags?.toString() || '',
             warehouseId: product.warehouseId || '',
@@ -638,7 +636,7 @@ const WarehouseToPartyForm = ({
           ...updatedProducts[index],
           productId: selectedOption.productId,
           productName: selectedOption.productName || 'Unknown Product',
-          quantityKg: selectedOption.quantityKg?.toString() || '',
+          quantityMT: selectedOption.quantityMT?.toString() || '',
           bagSizeKg: selectedOption.bagSizeKg?.toString() || '',
           totalBags: selectedOption.totalBags?.toString() || '',
         }
@@ -647,18 +645,6 @@ const WarehouseToPartyForm = ({
       updatedProducts[index] = {
         ...updatedProducts[index],
         [field]: value,
-      }
-
-      if (field === 'bagSizeKg' || field === 'totalBags') {
-        const bagSizeNum = parseFloat(updatedProducts[index].bagSizeKg) || 0
-        const totalBagsNum = parseFloat(updatedProducts[index].totalBags) || 0
-        const calculatedQuantityKg = bagSizeNum * totalBagsNum
-
-        updatedProducts[index] = {
-          ...updatedProducts[index],
-          quantityKg: calculatedQuantityKg > 0 ? calculatedQuantityKg.toString() : '',
-          itemWeight: calculatedQuantityKg > 0 ? calculatedQuantityKg.toString() : '',
-        }
       }
     }
 
@@ -718,7 +704,7 @@ const WarehouseToPartyForm = ({
       products: formData.products.map((product) => {
         const transformedProduct = {
           ...product,
-          quantityKg: parseFloat(product.quantityKg) || 0,
+          quantityMT: parseFloat(product.quantityMT) || 0,
           bagSize: parseFloat(product.bagSizeKg) || 0,
           totalBags: parseFloat(product.totalBags) || 0,
         }
@@ -903,12 +889,12 @@ const WarehouseToPartyForm = ({
 
     if (product.productId && product.productName && product.bagSizeKg) {
       return {
-        value: `${product.productId}_${product.bagSizeKg}`,
-        label: `${product.productName} (Bag Size: ${product.bagSizeKg} kg)`,
+        value: `${product.productId}_${product.bagSizeKg || '0'}`,
+        label: `${product.productName} (Bag Size: ${product.bagSizeKg || '0'} kg)`,
         productId: product.productId,
         productName: product.productName,
-        bagSizeKg: product.bagSizeKg,
-        quantityKg: product.quantityKg || '',
+        bagSizeKg: product.bagSizeKg || '0',
+        quantityMT: product.quantityMT || '',
         totalBags: product.totalBags || '',
       }
     }
@@ -1381,10 +1367,6 @@ const WarehouseToPartyForm = ({
               </div>
 
               {formData.products.map((product, index) => {
-                const bagSize = parseFloat(product.bagSizeKg) || 0
-                const totalBags = parseFloat(product.totalBags) || 0
-                const calculatedQuantity = bagSize * totalBags
-
                 return (
                   <div key={index} className="border rounded p-3 mb-3">
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -1428,8 +1410,8 @@ const WarehouseToPartyForm = ({
                                 ...product,
                                 productId: selected.productId,
                                 productName: selected.productName || 'Unknown Product',
-                                quantityKg: selected.quantityKg?.toString() || '',
-                                bagSizeKg: selected.bagSizeKg?.toString() || '',
+                                quantityMT: selected.quantityMT?.toString() || '',
+                                bagSizeKg: selected.bagSizeKg?.toString() || '0',
                                 totalBags: selected.totalBags?.toString() || '',
                               }
 
@@ -1446,7 +1428,7 @@ const WarehouseToPartyForm = ({
                                 ...product,
                                 productId: '',
                                 productName: '',
-                                quantityKg: '',
+                                quantityMT: '',
                                 bagSizeKg: '',
                                 totalBags: '',
                               }
@@ -1480,17 +1462,6 @@ const WarehouseToPartyForm = ({
                           required
                         />
 
-                        {/* Add message when no products available (all have totalBags=0) */}
-                        {formData.issuedByWarehouseId &&
-                          productOptions.length === 0 &&
-                          !isLoadingWarehouseProducts &&
-                          inventoryList.length > 0 && (
-                            <Form.Text className="text-danger">
-                              No products available (all products have 0 total bags in this
-                              warehouse)
-                            </Form.Text>
-                          )}
-
                         {formData.issuedByWarehouseId &&
                           productOptions.length === 0 &&
                           !isLoadingWarehouseProducts &&
@@ -1516,47 +1487,55 @@ const WarehouseToPartyForm = ({
                       </div>
 
                       <div className="col-md-4">
-                        <Form.Label>
-                          Total Bags <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
+                        <Form.Label>Total Bags</Form.Label>
                         <Form.Control
                           type="number"
                           value={product.totalBags}
                           onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
                           disabled={isLoading}
-                          placeholder="Enter total bags"
-                          required
+                          placeholder="Enter total bags (optional)"
+                          min="0"
+                          onWheel={handleNumberInputWheel}
                         />
+                        <Form.Text className="text-muted">
+                          Total number of bags (optional)
+                        </Form.Text>
                       </div>
 
                       <div className="col-md-4">
-                        <Form.Label>
-                          Bag Size (Kg per bag) <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
+                        <Form.Label>Bag Size (Kg per bag)</Form.Label>
                         <Form.Control
                           type="number"
                           value={product.bagSizeKg}
-                          readOnly
-                          className="bg-light"
-                          required
+                          onChange={(e) => handleProductChange(index, 'bagSizeKg', e.target.value)}
+                          disabled={isLoading}
+                          placeholder="Enter bag size (optional)"
+                          min="0"
+                          step="0.01"
+                          onWheel={handleNumberInputWheel}
                         />
-                        <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
+                        <Form.Text className="text-muted">
+                          Weight per bag in kilograms (optional)
+                        </Form.Text>
                       </div>
 
                       <div className="col-md-4">
                         <Form.Label>
-                          Quantity (Kg) <span style={{ color: 'red' }}>*</span>
+                          Quantity (MT) <span style={{ color: 'red' }}>*</span>
                         </Form.Label>
                         <Form.Control
                           type="number"
-                          value={calculatedQuantity || product.quantityKg}
-                          onChange={(e) => handleProductChange(index, 'quantityKg', e.target.value)}
-                          placeholder="Auto-calculated"
-                          className="bg-light"
+                          value={product.quantityMT}
+                          onChange={(e) => handleProductChange(index, 'quantityMT', e.target.value)}
+                          disabled={isLoading}
+                          placeholder="Enter quantity in mt"
+                          min="0.001"
+                          step="0.001"
                           required
+                          onWheel={handleNumberInputWheel}
                         />
                         <Form.Text className="text-muted">
-                          Auto-calculated: Bag Size × Total Bags
+                          Quantity in mertic ton (required)
                         </Form.Text>
                       </div>
                     </div>
@@ -1585,6 +1564,7 @@ const WarehouseToPartyForm = ({
                   value={formData.customerRate}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1595,6 +1575,7 @@ const WarehouseToPartyForm = ({
                   value={formData.totalAmount}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1605,6 +1586,7 @@ const WarehouseToPartyForm = ({
                   value={formData.transporterRate}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1615,6 +1597,7 @@ const WarehouseToPartyForm = ({
                   value={formData.totalTransporterAmount}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1625,6 +1608,7 @@ const WarehouseToPartyForm = ({
                   value={formData.transporterRateOn}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1635,6 +1619,7 @@ const WarehouseToPartyForm = ({
                   value={formData.customerRateOn}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1645,6 +1630,7 @@ const WarehouseToPartyForm = ({
                   value={formData.customerFreight}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
               <div className="col-md-4">
@@ -1655,6 +1641,7 @@ const WarehouseToPartyForm = ({
                   value={formData.transporterFreight}
                   onChange={handleChange}
                   disabled={isLoading}
+                  onWheel={handleNumberInputWheel}
                 />
               </div>
             </div>

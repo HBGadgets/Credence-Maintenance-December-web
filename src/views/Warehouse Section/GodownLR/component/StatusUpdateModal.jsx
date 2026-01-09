@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Modal, Button, Form, Badge, ProgressBar } from 'react-bootstrap'
+import { Modal, Button, Form, Badge, ProgressBar, Table } from 'react-bootstrap'
 import Swal from 'sweetalert2'
 import { FaEye, FaFilePdf, FaSpinner, FaCompressAlt } from 'react-icons/fa'
 
@@ -12,11 +12,13 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   const [compressionProgress, setCompressionProgress] = useState(0)
   const [originalSize, setOriginalSize] = useState(0)
   const [compressedSize, setCompressedSize] = useState(0)
+  const [quantitiesTaken, setQuantitiesTaken] = useState({})
   const isSubmittingRef = useRef(false)
   const modalBodyRef = useRef(null)
 
   // Check if record already has an acknowledgement image
   const hasExistingImage = recordData?.acknowledgementImage
+  const products = recordData?.products || []
 
   useEffect(() => {
     if (show) {
@@ -28,14 +30,25 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       setCompressionProgress(0)
       setOriginalSize(0)
       setCompressedSize(0)
+      setQuantitiesTaken({})
       isSubmittingRef.current = false
+
+      // Initialize quantities taken for each product if they exist
+      if (products && products.length > 0) {
+        const initialQuantities = {}
+        products.forEach((product) => {
+          // Use updatedQuantityMT if it exists, otherwise use empty string
+          initialQuantities[product._id] = product.updatedQuantityMT || ''
+        })
+        setQuantitiesTaken(initialQuantities)
+      }
 
       // Scroll to top when modal opens
       if (modalBodyRef.current) {
         modalBodyRef.current.scrollTop = 0
       }
     }
-  }, [show, currentStatus])
+  }, [show, currentStatus, products])
 
   // Function to compress image
   const compressImage = async (file) => {
@@ -210,6 +223,48 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     }
   }
 
+  const handleQuantityChange = (productId, value) => {
+    const product = products.find((p) => p._id === productId)
+    if (!product) return
+
+    // Validate that value is a number and less than or equal to quantityMT
+    const numValue = parseFloat(value)
+    if (value === '' || (isNaN(numValue) && value !== '')) {
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: '' }))
+      return
+    }
+
+    // Ensure value is not less than 0
+    if (numValue < 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Quantity taken cannot be negative',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      })
+      return
+    }
+
+    // Check if value exceeds quantityMT
+    if (numValue > product.quantityMT) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Quantity Exceeds Limit',
+        text: `Quantity taken (${numValue}) cannot exceed ordered quantity (${product.quantityMT})`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      })
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: product.quantityMT.toString() }))
+    } else {
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: value }))
+    }
+  }
+
   const handleSubmit = async () => {
     // Prevent multiple submissions
     if (isSubmittingRef.current || isLoading || isCompressing) return
@@ -224,14 +279,62 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
-    // Validate required image for Cancelled status
-    if (status === 'Cancelled' && !image) {
+    // Validate required image for specific statuses
+    if (['Cancelled', 'Partially Correction'].includes(status) && !image) {
       Swal.fire({
         icon: 'error',
         title: 'Image Required',
-        text: 'Cancellation proof image is required for Cancelled status',
+        text: `Proof image is required for ${status} status`,
       })
       return
+    }
+
+    // Validate quantities for Partially Correction status
+    if (status === 'Partially Correction') {
+      // Check if all products have quantity taken entered
+      const missingQuantities = products.filter((product) => {
+        const updatedQuantityMT = quantitiesTaken[product._id]
+        return !updatedQuantityMT || updatedQuantityMT === ''
+      })
+
+      if (missingQuantities.length > 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Missing Quantities',
+          text: 'Please enter quantity taken for all products',
+        })
+        return
+      }
+
+      // Validate that quantity taken is less than quantityMT for each product
+      const invalidQuantities = products.filter((product) => {
+        const updatedQuantityMT = parseFloat(quantitiesTaken[product._id])
+        return updatedQuantityMT >= product.quantityMT
+      })
+
+      if (invalidQuantities.length > 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid Quantities',
+          text: 'Quantity taken must be less than the ordered quantity for all products',
+        })
+        return
+      }
+
+      // Check if at least one product has some quantity taken
+      const hasSomeQuantityTaken = products.some((product) => {
+        const updatedQuantityMT = parseFloat(quantitiesTaken[product._id])
+        return updatedQuantityMT > 0
+      })
+
+      if (!hasSomeQuantityTaken) {
+        Swal.fire({
+          icon: 'error',
+          title: 'No Quantity Taken',
+          text: 'At least one product must have some quantity taken',
+        })
+        return
+      }
     }
 
     // Set submitting state
@@ -244,12 +347,26 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       image: image, // This is the File object
     }
 
+    // Add products with updatedQuantityMT for Partially Correction status
+    if (status === 'Partially Correction') {
+      dataToSubmit.products = products.map((product) => ({
+        productId: product.productId,
+        _id: product._id,
+        updatedQuantityMT: parseFloat(quantitiesTaken[product._id] || 0),
+      }))
+    }
+
     try {
       await onSubmit(dataToSubmit)
+      // Reset state after successful submission
+      setIsSubmitting(false)
+      isSubmittingRef.current = false
     } catch (error) {
       // Reset submitting state on error
       setIsSubmitting(false)
       isSubmittingRef.current = false
+      // Re-throw the error so parent component can handle it
+      throw error
     }
   }
 
@@ -263,6 +380,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       setCompressionProgress(0)
       setOriginalSize(0)
       setCompressedSize(0)
+      setQuantitiesTaken({})
       onHide()
     }
   }
@@ -280,16 +398,18 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   }
 
   // Determine if image upload field should be shown
-  // Now shows for both Completed and Cancelled status
   const shouldShowImageUpload = () => {
-    return status === 'Completed' || status === 'Cancelled'
+    return ['Completed', 'Cancelled', 'Partially Correction'].includes(status)
   }
+
+  // Check if Partially Correction status is selected
+  const isPartiallyCorrection = status === 'Partially Correction'
 
   // Combined processing state
   const isProcessing = isLoading || isSubmitting || isCompressing
 
   return (
-    <Modal show={show} onHide={handleClose} centered size="lg">
+    <Modal show={show} onHide={handleClose} centered size="xl">
       <Modal.Header closeButton={!isProcessing} className="border-bottom-0 pb-0">
         <Modal.Title>Update Status</Modal.Title>
       </Modal.Header>
@@ -315,34 +435,103 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
               <option value="Pending">Pending</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
+              <option value="Partially Correction">Partially Correction</option>
             </Form.Select>
             <Form.Text className="text-muted mt-2 d-block">
               {status === 'Completed' ? (
                 <span className="text-info">* Image proof is optional for Completed status</span>
-              ) : status === 'Cancelled' ? (
-                <span className="text-info">* Image proof is required for Cancelled status</span>
+              ) : status === 'Cancelled' || status === 'Partially Correction' ? (
+                <span className="text-info">* Image proof is required for {status} status</span>
               ) : (
                 'No image required for Pending status'
               )}
             </Form.Text>
           </Form.Group>
 
-          {/* Show upload field for both Completed and Cancelled status */}
+          {/* Products section for Partially Correction */}
+          {isPartiallyCorrection && products && products.length > 0 && (
+            <div className="border-top pt-4">
+              <h6 className="fw-bold mb-3">Product Details</h6>
+              <div className="table-responsive">
+                <Table bordered className="mb-4">
+                  <thead>
+                    <tr className="table-light">
+                      <th>Product Name</th>
+                      <th>Ordered Quantity (MT)</th>
+                      <th>Quantity Taken by Party (MT)</th>
+                      <th>Remaining (MT)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => {
+                      const updatedQuantityMT = parseFloat(quantitiesTaken[product._id] || 0)
+                      const remaining = product.quantityMT - updatedQuantityMT
+                      return (
+                        <tr key={product._id}>
+                          <td className="fw-medium">{product.productName}</td>
+                          <td>{product.quantityMT}</td>
+                          <td>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              max={product.quantityMT - 0.01} // Allow values up to but not equal to quantityMT
+                              step="0.01"
+                              value={quantitiesTaken[product._id] || ''}
+                              onChange={(e) => handleQuantityChange(product._id, e.target.value)}
+                              disabled={isProcessing}
+                              className="py-1"
+                              placeholder="Enter quantity taken"
+                            />
+                            <Form.Text className="text-muted">
+                              Must be less than {product.quantityMT}
+                            </Form.Text>
+                          </td>
+                          <td
+                            className={
+                              remaining === 0 ? 'text-success' : remaining > 0 ? 'text-warning' : ''
+                            }
+                          >
+                            {remaining.toFixed(2)}
+                            {remaining < 0 && (
+                              <Badge bg="danger" className="ms-2">
+                                Invalid
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+              <div className="alert alert-info mb-4">
+                <small>
+                  <strong>Note:</strong> For Partially Correction status, you must enter the
+                  quantity actually taken by the party. The quantity taken must be less than the
+                  ordered quantity for all products.
+                  <br />
+                  <strong>API expects:</strong> updatedQuantityMT field for each product
+                </small>
+              </div>
+            </div>
+          )}
+
+          {/* Show upload field for specific statuses */}
           {shouldShowImageUpload() && (
             <div className="border-top pt-4">
               <Form.Group className="mb-4">
                 <Form.Label className="fw-bold">
                   {status === 'Completed'
                     ? 'Upload Completion Proof (Optional)'
-                    : 'Upload Cancellation Proof'}
-                  {status === 'Cancelled' && <span className="text-danger ms-1">*</span>}
+                    : `Upload ${status} Proof`}
+                  {status !== 'Completed' && <span className="text-danger ms-1">*</span>}
                   <small className="text-muted ms-2">(Max: 50KB)</small>
                 </Form.Label>
                 <Form.Control
                   type="file"
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={handleImageChange}
-                  required={status === 'Cancelled'} // Only required for Cancelled status
+                  required={status !== 'Completed'} // Required for all except Completed
                   disabled={isProcessing}
                   className="py-2"
                 />
@@ -469,7 +658,11 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         <Button
           variant="primary"
           onClick={handleSubmit}
-          disabled={isProcessing || (status === 'Cancelled' && !image)}
+          disabled={
+            isProcessing ||
+            (status === 'Cancelled' && !image) ||
+            (status === 'Partially Correction' && !image)
+          }
           className="px-4"
         >
           {isProcessing ? (

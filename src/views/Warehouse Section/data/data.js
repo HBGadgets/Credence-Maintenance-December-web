@@ -118,9 +118,8 @@ export const getWarehouseProfileApi = async ({ queryKey }) => {
 
             productId: product.productId?._id,
             productName: product.productId?.name || 'Unknown',
-            quantityKg: product.quantityKg,
-            bagSizeKg: product.bagSizeKg,
-            totalBags: product.totalBags,
+            quantityMT: product.quantityMT,
+            productTotalCountMT: product.productTotalCountMT,
         }))
     )
 
@@ -440,20 +439,21 @@ export const getGodownTPApi = async ({ queryKey }) => {
                 warehouseName: p.warehouseName,
                 productId: p.productId,
                 productName: p.productName,
-                quantityKg: p.quantityKg,
-                bagSize: p.bagSize,
-                totalBags: p.totalBags,
+                quantityMT: p.quantityMT || "0",
+                bagSize: p.bagSize || "0",
+                totalBags: p.totalBags || "0",
+                updatedQuantityMT: p.updatedQuantityMT || "0",
                 id: p._id,
             })) || [],
 
-            customerRate: item.customerRate,
-            totalAmount: item.totalAmount,
-            transporterRate: item.transporterRate,
-            totalTransporterAmount: item.totalTransporterAmount,
-            transporterRateOn: item.transporterRateOn,
-            customerRateOn: item.customerRateOn,
-            customerFreight: item.customerFreight,
-            transporterFreight: item.transporterFreight,
+            customerRate: item.customerRate || "0",
+            totalAmount: item.totalAmount || "0",
+            transporterRate: item.transporterRate || "0",
+            totalTransporterAmount: item.totalTransporterAmount || "0",
+            transporterRateOn: item.transporterRateOn || "0",
+            customerRateOn: item.customerRateOn || "0",
+            customerFreight: item.customerFreight || "0",
+            transporterFreight: item.transporterFreight || "0",
             status: item.status,
 
         })),
@@ -593,9 +593,8 @@ export const getRailHeadApi = async ({ queryKey }) => {
             createdAt: formatDateToDDMMYYYY(item.createdAt) || "--",
             productId: item.productId || "",
             productName: item.productName || 'Unknown',
-            quantityKg: item.quantityKg || 0,
-            bagSize: item.bagSize || 0,
-            totalBags: item.totalBags || 0,
+            quantityMT: item.quantityMT || 0,
+
         }))
         : []
 
