@@ -27,7 +27,7 @@ const ProductList = () => {
   const [filteredData, setFilteredData] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(20)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Modal states
   const [showModalFrom, setShowModalFrom] = useState(false)
