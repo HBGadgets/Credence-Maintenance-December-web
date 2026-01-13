@@ -137,6 +137,7 @@ const GodownLr = () => {
         limit: itemsPerPage,
         consignorId: selectedConsignor?.value || null,
         consigneeId: selectedConsignee?.value || null,
+        workerId: selectedWorker?.value || null,
         status: selectedStatus !== 'All' ? selectedStatus : null, // Add status to query params
       },
     ],
