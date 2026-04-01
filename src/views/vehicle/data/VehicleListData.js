@@ -909,7 +909,7 @@ export const fetchVehicleStatus = async () => {
             model: vehicleStatus.model,
             category: vehicleStatus.category ?? '',
             driverName: vehicleStatus.driverName ?? 'Not Assign',
-            supervisor: vehicleStatus.users?.[0]?.username || 'N/A',
+            supervisor: vehicleStatus.branchId?.branchName || 'N/A',
             status, // <-- add status label
         });
 
