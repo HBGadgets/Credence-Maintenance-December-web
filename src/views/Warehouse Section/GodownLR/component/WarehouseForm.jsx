@@ -32,6 +32,7 @@ import AddConsignorConsigneeModal from './AddConsignorConsigneeModal'
 // Clean default product object - removed temporary fields
 const defaultProduct = {
   productId: '',
+  inventoryId: '',
   productName: '',
   quantityMT: '',
   bagSize: '',
@@ -49,7 +50,7 @@ const getTodayDate = () => {
 // Clean default form data - removed extra fields
 const defaultFormData = {
   issuedBy: 'Railhead',
-  receivedBy: 'Warehouse/Party',
+  receivedBy: '',
   supervisorId: '',
   companyId: '',
   companyName: '',
@@ -491,6 +492,10 @@ const WarehouseForm = ({
       setReceivedByType('warehouse')
       setReceivedByWarehouseId('')
       setReceivedByWarehouseName('')
+      setFormData((prev) => ({
+        ...prev,
+        receivedBy: 'Warehouse', // Set default to Warehouse
+      }))
     }
   }, [initialData, mode, vehicles, drivers])
 
@@ -511,6 +516,8 @@ const WarehouseForm = ({
         ...prev,
         receivedBy: 'Party',
       }))
+      setReceivedByWarehouseId('')
+      setReceivedByWarehouseName('')
     }
   }
 
@@ -533,27 +540,36 @@ const WarehouseForm = ({
     const updatedProducts = [...formData.products]
 
     if (field === 'productId') {
-      const selectedProduct = inventoryList.find((p) => p._id === value || p.id === value)
+      // Find the selected product using the value (which is the inventory record ID)
+      const selectedProduct = inventoryList.find((p) => {
+        const inventoryId = p._id || p.id
+        return inventoryId === value
+      })
 
       if (selectedProduct) {
-        const productName = selectedProduct.productName || selectedProduct.name || 'Unknown Product'
+        // Get the actual product ID from the selected product
+        const actualProductId = selectedProduct.productId || selectedProduct._id
         const inventoryId = selectedProduct._id || selectedProduct.id
+        const productName = selectedProduct.productName || selectedProduct.name || 'Unknown Product'
         const bagSize = selectedProduct.bagSize || selectedProduct.bagWeight || 0
         const totalBags = selectedProduct.totalBags || 0
         const quantityMT = selectedProduct.quantityMT || selectedProduct.quantity || 0
 
         updatedProducts[index] = {
           ...updatedProducts[index],
-          productId: inventoryId,
+          productId: actualProductId, // Store the actual product ID for API
+          inventoryId: inventoryId, // Store inventory ID for reference
           productName: productName,
           quantityMT: quantityMT.toString(),
           bagSize: bagSize.toString(),
           totalBags: totalBags.toString(),
         }
       } else {
+        // If no product selected, clear the fields
         updatedProducts[index] = {
           ...updatedProducts[index],
-          productId: value,
+          productId: '',
+          inventoryId: '',
           productName: '',
           quantityMT: '',
           bagSize: '',
@@ -660,25 +676,33 @@ const WarehouseForm = ({
     }
 
     // Prepare products array - CLEAN VERSION
+    // In onSubmit function, update the product preparation:
     const preparedProducts = formData.products.map((product) => {
       // Find the actual product from inventory
-      const productFromInventory = inventoryList.find(
-        (p) => p._id === product.productId || p.id === product.productId,
-      )
+      const productFromInventory = inventoryList.find((p) => {
+        // Try to find by inventoryId first
+        if (product.inventoryId) {
+          return p._id === product.inventoryId || p.id === product.inventoryId
+        }
+        // Fall back to productId
+        return p.productId === product.productId || p._id === product.productId
+      })
 
       let productId = ''
       let productName = ''
 
       if (productFromInventory) {
-        productId = productFromInventory._id || productFromInventory.id
+        // Use the actual product ID from the inventory item
+        productId = productFromInventory.productId || productFromInventory._id
         productName =
           productFromInventory.productName || productFromInventory.name || product.productName
       } else {
+        // Fallback to what's in the form data
         productId = product.productId
         productName = product.productName
       }
 
-      // Create clean product object with ONLY required fields
+      // Create clean product object
       const cleanProduct = {
         productId: productId,
         productName: productName,
@@ -763,6 +787,7 @@ const WarehouseForm = ({
 
   const productOptions = inventoryList.map((p) => {
     const inventoryId = p._id || p.id
+    const actualProductId = p.productId
     const productName = p.productName || p.name || 'Unnamed Product'
     const quantityMT = p.quantityMT || p.quantity || 0
     const bagSize = p.bagSize || p.bagWeight || 0
@@ -771,7 +796,11 @@ const WarehouseForm = ({
     return {
       value: inventoryId,
       label: `${productName} (Available: ${quantityMT} MT, Bag Size: ${bagSize} kg, Total Bags: ${totalBags})`,
-      data: p,
+      data: {
+        ...p,
+        inventoryId: inventoryId,
+        actualProductId: actualProductId, // Store actual productId
+      },
     }
   })
 
@@ -835,8 +864,18 @@ const WarehouseForm = ({
   ]
 
   const getProductValue = (product) => {
-    if (product.productId) {
-      const found = productOptions.find((opt) => opt.value === product.productId)
+    if (product.inventoryId || product.productId) {
+      // Use inventoryId if available, otherwise find by productId
+      const searchId = product.inventoryId || product.productId
+
+      const found = productOptions.find((opt) => {
+        // Check if the option value matches either inventoryId or productId
+        return (
+          opt.value === searchId ||
+          (opt.data && (opt.data._id === searchId || opt.data.id === searchId))
+        )
+      })
+
       if (found) return found
     }
     return null
@@ -891,9 +930,21 @@ const WarehouseForm = ({
   }
 
   const getProductDetailForDisplay = (product) => {
-    const productFromList = inventoryList.find(
-      (p) => p._id === product.productId || p.id === product.productId,
-    )
+    // Try to find by inventoryId first, then by productId
+    let productFromList = null
+
+    if (product.inventoryId) {
+      productFromList = inventoryList.find(
+        (p) => p._id === product.inventoryId || p.id === product.inventoryId,
+      )
+    }
+
+    if (!productFromList && product.productId) {
+      productFromList = inventoryList.find(
+        (p) => p.productId === product.productId || p._id === product.productId,
+      )
+    }
+
     if (productFromList) {
       return {
         productId: productFromList.productId,
@@ -961,25 +1012,31 @@ const WarehouseForm = ({
             <div className="d-flex align-items-center">
               <FaWarehouse className="me-2" />
               <div>
-                <strong>TP Pass Type:</strong> Railhead to Warehouse/Party
+                <strong>TP Pass Type:</strong> Railhead to{' '}
+                {formData.receivedBy || (receivedByType === 'warehouse' ? 'Warehouse' : 'Party')}
                 <div className="small mt-1">
-                  <strong>Issued by:</strong> {formData.issuedBy} • <strong>Received by:</strong>{' '}
-                  {formData.receivedBy}
-                  {receivedByType && ` (${receivedByType})`}
-                  {receivedByType === 'warehouse' &&
-                    receivedByWarehouseName &&
-                    ` • ${receivedByWarehouseName}`}
+                  <strong>Issued by:</strong> Railhead • <strong>Received by:</strong>{' '}
+                  <span className="fw-semibold">
+                    {formData.receivedBy ||
+                      (receivedByType === 'warehouse' ? 'Warehouse' : 'Party')}
+                  </span>
+                  {receivedByType === 'warehouse' && receivedByWarehouseName && (
+                    <>
+                      {' '}
+                      • <span className="text-success">{receivedByWarehouseName}</span>
+                    </>
+                  )}
                 </div>
-                {warehouseDisplayMode === 'auto-filled' && (
+                {receivedByType === 'warehouse' && (
                   <div className="small text-success mt-1">
                     <FaWarehouse className="me-1" />
-                    Warehouse in products section will be auto-filled from selected warehouse above
+                    Warehouse will be included in the payload
                   </div>
                 )}
-                {warehouseDisplayMode === 'hidden' && (
+                {receivedByType === 'party' && (
                   <div className="small text-warning mt-1">
                     <FaUserFriends className="me-1" />
-                    Warehouse field is hidden in products section when received by party
+                    Party will be sent in receivedBy field
                   </div>
                 )}
               </div>

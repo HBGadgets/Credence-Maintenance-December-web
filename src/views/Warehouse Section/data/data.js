@@ -598,7 +598,8 @@ export const getRailHeadApi = async ({ queryKey }) => {
     // Transform the data items
     const transformedData = Array.isArray(apiData.data)
         ? apiData.data.map((item) => ({
-            id: item._id,
+            id: item._id,  // Keep this for internal selection
+            _id: item._id,  // Keep both for reference
             createdAt: formatDateToDDMMYYYY(item.createdAt) || "--",
             productId: item.productId || "",
             productName: item.productName || 'Unknown',

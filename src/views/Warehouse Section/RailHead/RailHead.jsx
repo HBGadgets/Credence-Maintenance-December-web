@@ -61,6 +61,7 @@ const RailHead = () => {
     { label: 'Date', key: 'createdAt', sortable: true },
     { label: 'Product Name', key: 'productName', sortable: true },
     { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
+    // { label: 'Product id', key: 'productId', sortable: true },
   ]
 
   // Modal form fields - Fixed field names
@@ -91,7 +92,7 @@ const RailHead = () => {
     // Map the record data to match the form field names
     const mappedRecord = {
       productName: record.productName,
-      quantityKg: record.quantityKg,
+      quantityMT: record.quantityMT,
       bagSize: record.bagSize,
       totalBags: record.totalBags,
       id: record._id || record.id, // Use _id if it exists, otherwise use id
@@ -108,7 +109,7 @@ const RailHead = () => {
       // Create proper form data object matching your API expectations
       const formData = {
         productName: formValues.productName,
-        quantityKg: Number(formValues.quantityKg),
+        quantityMT: Number(formValues.quantityMT),
         bagSize: Number(formValues.bagSize),
         totalBags: Number(formValues.totalBags),
       }
