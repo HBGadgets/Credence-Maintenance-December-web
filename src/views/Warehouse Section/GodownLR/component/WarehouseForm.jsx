@@ -27,11 +27,10 @@ import {
   postConsigneeApi,
 } from '../../../Consignee_Consignor/data/data'
 import { toast } from 'react-toastify'
-import AddConsignorConsigneeModal from './AddConsignorConsigneeModal' // Adjust the path as needed
+import AddConsignorConsigneeModal from './AddConsignorConsigneeModal'
 
+// Clean default product object - removed temporary fields
 const defaultProduct = {
-  warehouseId: '',
-  warehouseName: '',
   productId: '',
   productName: '',
   quantityMT: '',
@@ -47,21 +46,13 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`
 }
 
+// Clean default form data - removed extra fields
 const defaultFormData = {
-  tpPassType: 'warehouse',
   issuedBy: 'Railhead',
   receivedBy: 'Warehouse/Party',
-  receivedByType: '', // 'warehouse' or 'party'
-  receivedByWarehouseId: '',
-  receivedByWarehouseName: '',
   supervisorId: '',
   companyId: '',
   companyName: '',
-  companyEmail: '',
-  companyMobileNumber: '',
-  companyOfficeNumber: '',
-  companyAddress: '',
-  gstIn: '',
   date: getTodayDate(),
   vehicleId: '',
   vehicleName: '',
@@ -85,6 +76,7 @@ const defaultFormData = {
   customerRateOn: '',
   customerFreight: '',
   transporterFreight: '',
+  status: 'Pending',
   products: [{ ...defaultProduct }],
 }
 
@@ -118,6 +110,10 @@ const WarehouseForm = ({
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [productDetails, setProductDetails] = useState({})
+  const [receivedByType, setReceivedByType] = useState('warehouse')
+  const [receivedByWarehouseId, setReceivedByWarehouseId] = useState('')
+  const [receivedByWarehouseName, setReceivedByWarehouseName] = useState('')
+
   const [receivedByOptions] = useState([
     { value: 'warehouse', label: 'Warehouse', icon: <FaWarehouse className="me-2" /> },
     { value: 'party', label: 'Party', icon: <FaUserFriends className="me-2" /> },
@@ -153,7 +149,6 @@ const WarehouseForm = ({
       setIsCreatingConsignor(false)
       setShowConsignorModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignor'] })
-      // Set the newly created consignor in the form with the ID
       setFormData((prev) => ({
         ...prev,
         consignorId: response.data?.id || response.data?._id || '',
@@ -174,7 +169,6 @@ const WarehouseForm = ({
       setIsCreatingConsignee(false)
       setShowConsigneeModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignee'] })
-      // Set the newly created consignee in the form with the ID
       setFormData((prev) => ({
         ...prev,
         consigneeId: response.data?.id || response.data?._id || '',
@@ -189,13 +183,11 @@ const WarehouseForm = ({
     },
   })
 
-  // Handler for creating new consignor
   const handleCreateConsignor = (payload) => {
     setIsCreatingConsignor(true)
     postConsignor(payload)
   }
 
-  // Handler for creating new consignee
   const handleCreateConsignee = (payload) => {
     setIsCreatingConsignee(true)
     postConsignee(payload)
@@ -221,7 +213,6 @@ const WarehouseForm = ({
     queryFn: getRailHeadApi,
   })
 
-  // Fetch Consignor data with debounced search
   const { data: consignorData = { data: [], total: 0 }, isFetching: isFetchingConsignor } =
     useQuery({
       queryKey: [
@@ -237,7 +228,6 @@ const WarehouseForm = ({
       staleTime: 1000 * 60 * 5,
     })
 
-  // Fetch Consignee data with debounced search
   const { data: consigneeData = { data: [], total: 0 }, isFetching: isFetchingConsignee } =
     useQuery({
       queryKey: [
@@ -258,14 +248,12 @@ const WarehouseForm = ({
   const consignorList = consignorData?.data || []
   const consigneeList = consigneeData?.data || []
 
-  // Add this function to prevent scroll on number inputs
   const handleNumberInputScroll = (e) => {
     e.preventDefault()
     e.target.blur()
     return false
   }
 
-  // Vehicle and Driver handlers with CreatableSelect support
   const handleVehicleChange = (selected, action) => {
     if (selected) {
       if (action.action === 'create-option') {
@@ -310,12 +298,11 @@ const WarehouseForm = ({
     }
   }
 
-  // Handle Consignor selection - FIXED: Now sets consignorId too
   const handleConsignorChange = (selected) => {
     if (selected && selected.value !== 'create-new') {
       setFormData((prev) => ({
         ...prev,
-        consignorId: selected.value, // Set the ID
+        consignorId: selected.value,
         consignorName: selected.name,
         consignorAddress: selected.address,
       }))
@@ -329,12 +316,11 @@ const WarehouseForm = ({
     }
   }
 
-  // Handle Consignee selection - FIXED: Now sets consigneeId too
   const handleConsigneeChange = (selected) => {
     if (selected && selected.value !== 'create-new') {
       setFormData((prev) => ({
         ...prev,
-        consigneeId: selected.value, // Set the ID
+        consigneeId: selected.value,
         consigneeName: selected.name,
         consigneeAddress: selected.address,
       }))
@@ -348,19 +334,16 @@ const WarehouseForm = ({
     }
   }
 
-  // Handle consignor search input change with debouncing
   const handleConsignorInputChange = useCallback((value) => {
     setConsignorSearchInput(value)
-    setConsignorPage(1) // Reset to first page on new search
+    setConsignorPage(1)
   }, [])
 
-  // Handle consignee search input change with debouncing
   const handleConsigneeInputChange = useCallback((value) => {
     setConsigneeSearchInput(value)
-    setConsigneePage(1) // Reset to first page on new search
+    setConsigneePage(1)
   }, [])
 
-  // Handle infinite scroll for consignor
   const handleConsignorMenuScrollToBottom = useCallback(() => {
     const totalPages = Math.ceil(consignorData.total / itemsPerPage)
     if (consignorPage < totalPages) {
@@ -368,7 +351,6 @@ const WarehouseForm = ({
     }
   }, [consignorData.total, consignorPage])
 
-  // Handle infinite scroll for consignee
   const handleConsigneeMenuScrollToBottom = useCallback(() => {
     const totalPages = Math.ceil(consigneeData.total / itemsPerPage)
     if (consigneePage < totalPages) {
@@ -376,15 +358,11 @@ const WarehouseForm = ({
     }
   }, [consigneeData.total, consigneePage])
 
-  // Extract product details from rail head response
   useEffect(() => {
     if (inventoryList.length > 0) {
-      console.log('=== RAIL HEAD DATA ===', inventoryList)
-
       const details = {}
       inventoryList.forEach((item) => {
         const productId = item._id || item.id || item.productId
-
         if (productId) {
           details[productId] = {
             _id: item._id,
@@ -394,11 +372,9 @@ const WarehouseForm = ({
             quantityMT: item.quantityMT || item.quantity || item.totalQuantity || 0,
             bagSize: item.bagSize || item.bagWeight || 0,
             totalBags: item.totalBags || item.bags || item.totalBagsCount || 0,
-            __v: item.__v,
           }
         }
       })
-
       setProductDetails(details)
     }
   }, [inventoryList])
@@ -426,17 +402,11 @@ const WarehouseForm = ({
     loadVehicles()
   }, [])
 
-  // In the useEffect that sets initial data, update it:
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      console.log('WarehouseForm initialData:', initialData)
-
-      // Helper function to parse date from various formats
       const parseDate = (dateString) => {
         if (!dateString) return getTodayDate()
-
         try {
-          // Try to parse from DD/MM/YYYY format
           if (dateString.includes('/')) {
             const parts = dateString.split('/')
             if (parts.length === 3) {
@@ -446,8 +416,6 @@ const WarehouseForm = ({
               return `${year}-${month}-${day}`
             }
           }
-
-          // Try to parse from ISO string
           if (dateString.includes('T')) {
             const date = new Date(dateString)
             if (!isNaN(date.getTime())) {
@@ -457,30 +425,50 @@ const WarehouseForm = ({
               return `${year}-${month}-${day}`
             }
           }
-
-          // Return as-is if it already looks like YYYY-MM-DD
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
             return dateString
           }
         } catch (error) {
           console.error('Error parsing date:', error)
         }
-
         return getTodayDate()
       }
 
-      // Determine receivedByType from initialData
-      let receivedByType = 'warehouse' // default
+      // FIX: Determine receivedByType based on initialData
+      let receivedByTypeValue = 'warehouse'
       if (initialData.receivedBy === 'Party') {
-        receivedByType = 'party'
+        receivedByTypeValue = 'party'
       }
+
+      // FIX: Check if there's a warehouse ID in products or directly in initialData
+      let warehouseId = initialData.receivedByWarehouseId || ''
+      let warehouseName = initialData.receivedByWarehouseName || ''
+
+      // If not found in direct fields, try to extract from products
+      if (!warehouseId && initialData.products && initialData.products.length > 0) {
+        const productWithWarehouse = initialData.products.find((p) => p.warehouseId)
+        if (productWithWarehouse) {
+          warehouseId = productWithWarehouse.warehouseId
+          warehouseName = productWithWarehouse.warehouseName || ''
+        }
+      }
+
+      setReceivedByType(receivedByTypeValue)
+      setReceivedByWarehouseId(warehouseId)
+      setReceivedByWarehouseName(warehouseName)
 
       const editedFormData = {
         ...defaultFormData,
         ...initialData,
-        date: parseDate(initialData.date), // Use the parseDate function
-        vehicleName: vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name || '',
-        driverName: drivers.find((driver) => driver.id === initialData.driverId)?.name || '',
+        date: parseDate(initialData.date),
+        vehicleName:
+          vehicles.find((vehicle) => vehicle.id === initialData.vehicleId)?.name ||
+          initialData.vehicleName ||
+          '',
+        driverName:
+          drivers.find((driver) => driver.id === initialData.driverId)?.name ||
+          initialData.driverName ||
+          '',
         companyId: initialData.companyId || '',
         consignorId: initialData.consignorId || '',
         consignorName: initialData.consignorName || '',
@@ -488,75 +476,23 @@ const WarehouseForm = ({
         consigneeId: initialData.consigneeId || '',
         consigneeName: initialData.consigneeName || '',
         consigneeAddress: initialData.consigneeAddress || '',
-        receivedByType: receivedByType,
         products: initialData.products?.map((product) => ({
-          ...defaultProduct,
-          ...product,
+          productId: product.productId || '',
+          productName: product.productName || '',
           quantityMT: product.quantityMT?.toString() || '',
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
-          ...(initialData.receivedBy === 'Party'
-            ? {
-                warehouseId: '',
-                warehouseName: '',
-              }
-            : {}),
         })) || [{ ...defaultProduct }],
       }
 
-      console.log('WarehouseForm editedFormData - Date:', editedFormData.date)
-      console.log('WarehouseForm editedFormData:', editedFormData)
       setFormData(editedFormData)
     } else {
       setFormData(defaultFormData)
+      setReceivedByType('warehouse')
+      setReceivedByWarehouseId('')
+      setReceivedByWarehouseName('')
     }
   }, [initialData, mode, vehicles, drivers])
-
-  // Auto-fill warehouse in products when receivedByType is 'warehouse'
-  useEffect(() => {
-    if (
-      formData.receivedByType === 'warehouse' &&
-      formData.receivedByWarehouseId &&
-      formData.issuedBy === 'Railhead'
-    ) {
-      const updatedProducts = formData.products.map((product) => ({
-        ...product,
-        warehouseId: formData.receivedByWarehouseId,
-        warehouseName: formData.receivedByWarehouseName,
-      }))
-
-      if (JSON.stringify(updatedProducts) !== JSON.stringify(formData.products)) {
-        setFormData((prev) => ({
-          ...prev,
-          products: updatedProducts,
-        }))
-      }
-    }
-
-    // Clear warehouse in products when receivedByType is 'party'
-    if (formData.receivedByType === 'party' && formData.issuedBy === 'Railhead') {
-      const hasWarehouseInProducts = formData.products.some(
-        (product) => product.warehouseId || product.warehouseName,
-      )
-      if (hasWarehouseInProducts) {
-        const updatedProducts = formData.products.map((product) => ({
-          ...product,
-          warehouseId: '',
-          warehouseName: '',
-        }))
-
-        setFormData((prev) => ({
-          ...prev,
-          products: updatedProducts,
-        }))
-      }
-    }
-  }, [
-    formData.receivedByType,
-    formData.receivedByWarehouseId,
-    formData.receivedByWarehouseName,
-    formData.issuedBy,
-  ])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -564,31 +500,16 @@ const WarehouseForm = ({
   }
 
   const handleReceivedByTypeChange = (type) => {
+    setReceivedByType(type)
     if (type === 'warehouse') {
       setFormData((prev) => ({
         ...prev,
-        receivedByType: 'warehouse',
         receivedBy: 'Warehouse',
-        receivedByWarehouseId: '',
-        receivedByWarehouseName: '',
-        products: prev.products.map((product) => ({
-          ...product,
-          warehouseId: '',
-          warehouseName: '',
-        })),
       }))
     } else if (type === 'party') {
       setFormData((prev) => ({
         ...prev,
-        receivedByType: 'party',
         receivedBy: 'Party',
-        receivedByWarehouseId: '',
-        receivedByWarehouseName: '',
-        products: prev.products.map((product) => ({
-          ...product,
-          warehouseId: '',
-          warehouseName: '',
-        })),
       }))
     }
   }
@@ -598,56 +519,40 @@ const WarehouseForm = ({
       const selectedWarehouse = warehouseList.find(
         (w) => w.id === selected.value || w._id === selected.value,
       )
-      setFormData((prev) => ({
-        ...prev,
-        receivedByWarehouseId: selected.value,
-        receivedByWarehouseName:
-          selectedWarehouse?.wareHouseName || selectedWarehouse?.name || selected.label,
-      }))
+      setReceivedByWarehouseId(selected.value)
+      setReceivedByWarehouseName(
+        selectedWarehouse?.wareHouseName || selectedWarehouse?.name || selected.label,
+      )
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        receivedByWarehouseId: '',
-        receivedByWarehouseName: '',
-      }))
+      setReceivedByWarehouseId('')
+      setReceivedByWarehouseName('')
     }
   }
 
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...formData.products]
 
-    if (field === 'warehouseId') {
-      const selectedWarehouse = warehouseList.find((w) => w.id === value || w._id === value)
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        warehouseId: value,
-        warehouseName: selectedWarehouse?.wareHouseName || selectedWarehouse?.name || '',
-      }
-    } else if (field === 'productId') {
+    if (field === 'productId') {
       const selectedProduct = inventoryList.find((p) => p._id === value || p.id === value)
 
       if (selectedProduct) {
         const productName = selectedProduct.productName || selectedProduct.name || 'Unknown Product'
-        const productId = selectedProduct.productId
         const inventoryId = selectedProduct._id || selectedProduct.id
-
         const bagSize = selectedProduct.bagSize || selectedProduct.bagWeight || 0
-        const totalBags = selectedProduct.totalBags || selectedProduct.totalags || 0
+        const totalBags = selectedProduct.totalBags || 0
         const quantityMT = selectedProduct.quantityMT || selectedProduct.quantity || 0
 
         updatedProducts[index] = {
           ...updatedProducts[index],
-          inventoryId: inventoryId,
-          productId: productId,
+          productId: inventoryId,
           productName: productName,
-          quantityMT: quantityMT.toString(), // FIXED: Pre-fill with available quantity
+          quantityMT: quantityMT.toString(),
           bagSize: bagSize.toString(),
-          totalBags: totalBags.toString(), // FIXED: Pre-fill with total bags
+          totalBags: totalBags.toString(),
         }
       } else {
         updatedProducts[index] = {
           ...updatedProducts[index],
-          inventoryId: '',
           productId: value,
           productName: '',
           quantityMT: '',
@@ -662,36 +567,11 @@ const WarehouseForm = ({
       }
     }
 
-    if (
-      field !== 'warehouseId' &&
-      formData.receivedByType === 'warehouse' &&
-      formData.receivedByWarehouseId &&
-      formData.issuedBy === 'Railhead'
-    ) {
-      updatedProducts[index] = {
-        ...updatedProducts[index],
-        warehouseId: formData.receivedByWarehouseId,
-        warehouseName: formData.receivedByWarehouseName,
-      }
-    }
-
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
   }
 
   const addProduct = () => {
-    const newProduct = {
-      ...defaultProduct,
-    }
-
-    if (
-      formData.receivedByType === 'warehouse' &&
-      formData.receivedByWarehouseId &&
-      formData.issuedBy === 'Railhead'
-    ) {
-      newProduct.warehouseId = formData.receivedByWarehouseId
-      newProduct.warehouseName = formData.receivedByWarehouseName
-    }
-
+    const newProduct = { ...defaultProduct }
     setFormData((prev) => ({
       ...prev,
       products: [...prev.products, newProduct],
@@ -706,19 +586,9 @@ const WarehouseForm = ({
     }
   }
 
+  // FIXED: Clean onSubmit function
   const onSubmit = (e) => {
     e.preventDefault()
-
-    console.log('=== PRODUCTS BEFORE VALIDATION ===')
-    formData.products.forEach((product, index) => {
-      console.log(`Product ${index + 1}:`, {
-        productId: product.productId,
-        productName: product.productName,
-        quantityMT: product.quantityMT,
-        bagSize: product.bagSize,
-        totalBags: product.totalBags,
-      })
-    })
 
     // Basic validation
     if (!formData.companyId) {
@@ -731,6 +601,19 @@ const WarehouseForm = ({
       return
     }
 
+    // Validate consignor - REQUIRED
+    if (!formData.consignorId || !formData.consignorName) {
+      toast.error('Please select or create a consignor')
+      return
+    }
+
+    // Validate consignee - REQUIRED
+    if (!formData.consigneeId || !formData.consigneeName) {
+      toast.error('Please select or create a consignee')
+      return
+    }
+
+    // Validate products
     const invalidProducts = formData.products.reduce((acc, product, index) => {
       let isValid = true
       const errorMessages = []
@@ -746,27 +629,7 @@ const WarehouseForm = ({
         isValid = false
       }
 
-      // REMOVED: Bag size validation
-      // const bagSize = parseFloat(product.bagSize)
-      // if (isNaN(bagSize) || bagSize <= 0) {
-      //   errorMessages.push('Invalid bag size (must be greater than 0)')
-      //   isValid = false
-      // }
-
-      // REMOVED: Total bags validation
-      // const totalBags = parseFloat(product.totalBags)
-      // if (isNaN(totalBags) || totalBags <= 0) {
-      //   errorMessages.push('Invalid total bags (must be greater than 0)')
-      //   isValid = false
-      // }
-
-      if (warehouseDisplayMode !== 'hidden' && !product.warehouseId) {
-        errorMessages.push('Warehouse selection required')
-        isValid = false
-      }
-
       if (!isValid) {
-        console.log(`Product ${index + 1} validation failed:`, errorMessages)
         acc.push({ index, errors: errorMessages })
       }
 
@@ -777,18 +640,17 @@ const WarehouseForm = ({
       const firstError = invalidProducts[0]
       const productNumber = firstError.index + 1
       const errorDetails = firstError.errors.join(', ')
-
       alert(`Product ${productNumber} has validation errors: ${errorDetails}`)
       return
     }
 
-    // Check if vehicle exists in database (has a valid ID from vehicleOptions)
+    // Check if vehicle exists in database
     const vehicleExistsInDb = vehicleOptions.some((vehicle) => vehicle.value === formData.vehicleId)
 
-    // Check if driver exists in database (has a valid ID from driverOptions)
+    // Check if driver exists in database
     const driverExistsInDb = driverOptions.some((driver) => driver.value === formData.driverId)
 
-    // Process number fields - convert empty strings to 0
+    // Process number fields
     const processNumberField = (value) => {
       if (value === '' || value === null || value === undefined) {
         return 0
@@ -797,40 +659,62 @@ const WarehouseForm = ({
       return isNaN(num) ? 0 : num
     }
 
+    // Prepare products array - CLEAN VERSION
     const preparedProducts = formData.products.map((product) => {
+      // Find the actual product from inventory
       const productFromInventory = inventoryList.find(
         (p) => p._id === product.productId || p.id === product.productId,
       )
 
-      const actualProductId = productFromInventory?.productId || product.productId
-      const actualProductName =
-        productFromInventory?.productName || productFromInventory?.name || product.productName
+      let productId = ''
+      let productName = ''
 
-      const baseProduct = {
-        ...product,
-        productId: actualProductId,
-        productName: actualProductName,
+      if (productFromInventory) {
+        productId = productFromInventory._id || productFromInventory.id
+        productName =
+          productFromInventory.productName || productFromInventory.name || product.productName
+      } else {
+        productId = product.productId
+        productName = product.productName
+      }
+
+      // Create clean product object with ONLY required fields
+      const cleanProduct = {
+        productId: productId,
+        productName: productName,
         quantityMT: parseFloat(product.quantityMT) || 0,
         bagSize: parseFloat(product.bagSize) || 0,
         totalBags: parseFloat(product.totalBags) || 0,
       }
 
-      if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'party') {
-        const { warehouseId, warehouseName, ...rest } = baseProduct
-        return rest
+      // Add warehouseId for warehouse type
+      if (formData.issuedBy === 'Railhead' && receivedByType === 'warehouse') {
+        cleanProduct.warehouseId = receivedByWarehouseId
+        cleanProduct.warehouseName = receivedByWarehouseName
       }
 
-      return baseProduct
+      return cleanProduct
     })
 
-    // Build the payload
+    // Build the main payload
     const payload = {
-      ...formData,
-      tpPassType: 'warehouse',
-      companyId: formData.companyId || '',
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+      issuedBy: formData.issuedBy,
+      receivedBy: formData.receivedBy,
+      consignorName: formData.consignorName,
+      consignorAddress: formData.consignorAddress,
+      consigneeName: formData.consigneeName,
+      consigneeAddress: formData.consigneeAddress,
+      customerName: formData.customerName,
+      customerAddress: formData.customerAddress,
+      startLocation: formData.startLocation,
+      endLocation: formData.endLocation,
+      vehicleName: formData.vehicleName,
+      driverName: formData.driverName,
+      companyId: formData.companyId,
+      consignorId: formData.consignorId || '',
+      consigneeId: formData.consigneeId || '',
       products: preparedProducts,
-      // Process all number fields in the main form data
       customerRate: processNumberField(formData.customerRate),
       totalAmount: processNumberField(formData.totalAmount),
       transporterRate: processNumberField(formData.transporterRate),
@@ -839,55 +723,32 @@ const WarehouseForm = ({
       customerRateOn: processNumberField(formData.customerRateOn),
       customerFreight: processNumberField(formData.customerFreight),
       transporterFreight: processNumberField(formData.transporterFreight),
+      status: 'Pending',
     }
 
-    // Remove vehicleId if vehicle doesn't exist in database
-    if (!vehicleExistsInDb && payload.vehicleId) {
-      console.log('Vehicle not found in DB, removing vehicleId from payload')
-      payload.vehicleName = payload.vehicleId // Keep the name as what user entered
-      delete payload.vehicleId
+    // Add IDs if they exist in database
+    if (vehicleExistsInDb && formData.vehicleId) {
+      payload.vehicleId = formData.vehicleId
     }
 
-    // Remove driverId if driver doesn't exist in database
-    if (!driverExistsInDb && payload.driverId) {
-      console.log('Driver not found in DB, removing driverId from payload')
-      payload.driverName = payload.driverId // Keep the name as what user entered
-      delete payload.driverId
+    if (driverExistsInDb && formData.driverId) {
+      payload.driverId = formData.driverId
     }
 
-    if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'party') {
-      payload.products = payload.products.map((product) => {
-        const { warehouseId, warehouseName, ...rest } = product
-        return rest
-      })
+    // Add supervisorId for superadmin role
+    if (userRole === 'superadmin' && formData.supervisorId) {
+      payload.supervisorId = formData.supervisorId
     }
 
-    if (formData.issuedBy === 'Railhead' && formData.receivedByType === 'warehouse') {
-      payload.products = payload.products.map((product) => ({
-        ...product,
-        warehouseId: product.warehouseId || formData.receivedByWarehouseId,
-      }))
-    }
+    // Remove undefined values
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined || payload[key] === null) {
+        delete payload[key]
+      }
+    })
 
-    if (userRole !== 'superadmin') {
-      delete payload.supervisorId
-      delete payload.supervisorName
-    }
-
-    console.log('=== FINAL PAYLOAD ===', payload)
-    console.log('=== VEHICLE EXISTS IN DB? ===', vehicleExistsInDb)
-    console.log('=== DRIVER EXISTS IN DB? ===', driverExistsInDb)
-    console.log('=== PRODUCTS DETAIL ===', payload.products)
-
+    console.log('=== FINAL CLEANED PAYLOAD ===', JSON.stringify(payload, null, 2))
     handleSubmit(payload)
-  }
-
-  // Add this helper function near the top of your component
-  const formatNumberValue = (value) => {
-    if (value === '' || value === null || value === undefined) {
-      return ''
-    }
-    return value.toString()
   }
 
   const receivedByWarehouseOptions = warehouseList.map((w) => ({
@@ -900,10 +761,8 @@ const WarehouseForm = ({
     label: w.wareHouseName || w.name || 'Unnamed Warehouse',
   }))
 
-  // REMOVED: Filtering for bagSize > 0
   const productOptions = inventoryList.map((p) => {
     const inventoryId = p._id || p.id
-    const productId = p.productId || inventoryId
     const productName = p.productName || p.name || 'Unnamed Product'
     const quantityMT = p.quantityMT || p.quantity || 0
     const bagSize = p.bagSize || p.bagWeight || 0
@@ -911,7 +770,7 @@ const WarehouseForm = ({
 
     return {
       value: inventoryId,
-      label: `${productName} ( Available: ${quantityMT} MT, Bag Size: ${bagSize} kg, Total Bags: ${totalBags} )`, // CHANGED: kg to MT
+      label: `${productName} (Available: ${quantityMT} MT, Bag Size: ${bagSize} kg, Total Bags: ${totalBags})`,
       data: p,
     }
   })
@@ -935,10 +794,9 @@ const WarehouseForm = ({
       }))
     : []
 
-  // Consignor Options with create new option - FIXED: Include ID in the option
   const consignorOptions = [
     ...consignorList.map((consignor) => ({
-      value: consignor.id, // This is the ID
+      value: consignor.id,
       label: consignor.name,
       name: consignor.name,
       address: consignor.address,
@@ -956,10 +814,9 @@ const WarehouseForm = ({
     },
   ]
 
-  // Consignee Options with create new option - FIXED: Include ID in the option
   const consigneeOptions = [
     ...consigneeList.map((consignee) => ({
-      value: consignee.id, // This is the ID
+      value: consignee.id,
       label: consignee.name,
       name: consignee.name,
       address: consignee.address,
@@ -977,43 +834,11 @@ const WarehouseForm = ({
     },
   ]
 
-  const getWarehouseValue = (product) => {
-    if (!product.warehouseId) return null
-    return warehouseOptions.find((opt) => opt.value === product.warehouseId) || null
-  }
-
   const getProductValue = (product) => {
-    // Try to find by inventoryId first
-    if (product.inventoryId) {
-      const found = productOptions.find((opt) => opt.value === product.inventoryId)
-      if (found) return found
-    }
-
-    // Try to find by productId
     if (product.productId) {
-      const found = productOptions.find((opt) => {
-        const productData = opt.data || {}
-        return (
-          productData.productId === product.productId ||
-          productData.id === product.productId ||
-          productData._id === product.productId
-        )
-      })
+      const found = productOptions.find((opt) => opt.value === product.productId)
       if (found) return found
     }
-
-    // Try to find by productName
-    if (product.productName) {
-      const found = productOptions.find((opt) => {
-        const productData = opt.data || {}
-        return (
-          productData.productName === product.productName ||
-          productData.name === product.productName
-        )
-      })
-      if (found) return found
-    }
-
     return null
   }
 
@@ -1051,30 +876,42 @@ const WarehouseForm = ({
   }
 
   const getReceivedByWarehouseValue = () => {
-    if (!formData.receivedByWarehouseId) return null
-    return (
-      receivedByWarehouseOptions.find((opt) => opt.value === formData.receivedByWarehouseId) || null
-    )
+    if (!receivedByWarehouseId) return null
+    return receivedByWarehouseOptions.find((opt) => opt.value === receivedByWarehouseId) || null
   }
 
-  // Get consignor value for Select component - FIXED: Find by ID instead of name
   const getConsignorValue = () => {
     if (!formData.consignorId) return null
     return consignorOptions.find((opt) => opt.value === formData.consignorId) || null
   }
 
-  // Get consignee value for Select component - FIXED: Find by ID instead of name
   const getConsigneeValue = () => {
     if (!formData.consigneeId) return null
     return consigneeOptions.find((opt) => opt.value === formData.consigneeId) || null
   }
 
-  // In the product rendering section, update to handle party case:
+  const getProductDetailForDisplay = (product) => {
+    const productFromList = inventoryList.find(
+      (p) => p._id === product.productId || p.id === product.productId,
+    )
+    if (productFromList) {
+      return {
+        productId: productFromList.productId,
+        inventoryId: productFromList._id || productFromList.id,
+        productName: productFromList.productName || productFromList.name || 'Unknown Product',
+        quantityMT: productFromList.quantityMT || productFromList.quantity || 0,
+        bagSize: productFromList.bagSize || productFromList.bagWeight || 0,
+        totalBags: productFromList.totalBags || productFromList.bags || 0,
+      }
+    }
+    return null
+  }
+
   const shouldShowWarehouseInProducts = () => {
     if (formData.issuedBy === 'Railhead') {
-      if (formData.receivedByType === 'warehouse' || formData.receivedBy === 'Warehouse') {
+      if (receivedByType === 'warehouse') {
         return 'auto-filled'
-      } else if (formData.receivedByType === 'party' || formData.receivedBy === 'Party') {
+      } else if (receivedByType === 'party') {
         return 'hidden'
       }
     }
@@ -1082,55 +919,6 @@ const WarehouseForm = ({
   }
 
   const warehouseDisplayMode = shouldShowWarehouseInProducts()
-
-  // Get product details for display
-  const getProductDetailForDisplay = (product) => {
-    let productDetail
-    if (product.inventoryId) {
-      productDetail = productDetails[product.inventoryId]
-    }
-
-    if (!productDetail && (product.productId || product.inventoryId)) {
-      const productFromList = inventoryList.find(
-        (p) =>
-          p._id === product.inventoryId ||
-          p.id === product.inventoryId ||
-          p.productId === product.productId,
-      )
-      if (productFromList) {
-        productDetail = {
-          productId: productFromList.productId,
-          inventoryId: productFromList._id || productFromList.id,
-          productName: productFromList.productName || productFromList.name || 'Unknown Product',
-          quantityMT: productFromList.quantityMT || productFromList.quantity || 0,
-          bagSize: productFromList.bagSize || productFromList.bagWeight || 0,
-          totalBags: productFromList.totalBags || productFromList.bags || 0,
-          bags: productFromList.bags || 0,
-        }
-      }
-    }
-
-    return productDetail
-  }
-
-  // Calculate derived values for a product
-  const calculateProductDetails = (product, index) => {
-    const productDetail = getProductDetailForDisplay(product)
-    if (!productDetail) return null
-
-    const bags = parseFloat(product.bags) || 0
-    const bagSize = parseFloat(product.bagSize) || 0
-    const totalBags = parseFloat(product.totalBags) || 0
-    const quantityMT = parseFloat(product.quantityMT) || 0
-
-    return {
-      productDetail,
-      bags,
-      bagSize,
-      totalBags,
-      quantityMT,
-    }
-  }
 
   return (
     <>
@@ -1177,10 +965,10 @@ const WarehouseForm = ({
                 <div className="small mt-1">
                   <strong>Issued by:</strong> {formData.issuedBy} • <strong>Received by:</strong>{' '}
                   {formData.receivedBy}
-                  {formData.receivedByType && ` (${formData.receivedByType})`}
-                  {formData.receivedByType === 'warehouse' &&
-                    formData.receivedByWarehouseName &&
-                    ` • ${formData.receivedByWarehouseName}`}
+                  {receivedByType && ` (${receivedByType})`}
+                  {receivedByType === 'warehouse' &&
+                    receivedByWarehouseName &&
+                    ` • ${receivedByWarehouseName}`}
                 </div>
                 {warehouseDisplayMode === 'auto-filled' && (
                   <div className="small text-success mt-1">
@@ -1221,13 +1009,7 @@ const WarehouseForm = ({
                       {receivedByOptions.map((option) => (
                         <Button
                           key={option.value}
-                          variant={
-                            formData.receivedByType === option.value ||
-                            (option.value === 'party' && formData.receivedBy === 'Party') ||
-                            (option.value === 'warehouse' && formData.receivedBy === 'Warehouse')
-                              ? 'primary'
-                              : 'outline-primary'
-                          }
+                          variant={receivedByType === option.value ? 'primary' : 'outline-primary'}
                           onClick={() => handleReceivedByTypeChange(option.value)}
                           className="d-flex align-items-center"
                           disabled={isLoading}
@@ -1239,7 +1021,7 @@ const WarehouseForm = ({
                     </div>
                   </div>
 
-                  {formData.receivedByType === 'warehouse' && (
+                  {receivedByType === 'warehouse' && (
                     <div className="mt-3">
                       <Form.Label>Select Warehouse</Form.Label>
                       <Select
@@ -1250,26 +1032,22 @@ const WarehouseForm = ({
                         isClearable
                         isLoading={isLoading || isRailHeadFetching}
                       />
-                      {formData.receivedByWarehouseName && (
+                      {receivedByWarehouseName && (
                         <Form.Text className="text-success">
-                          Selected: {formData.receivedByWarehouseName}
+                          Selected: {receivedByWarehouseName}
                         </Form.Text>
                       )}
                     </div>
                   )}
 
-                  {formData.receivedByType === 'party' && (
+                  {receivedByType === 'party' && (
                     <div className="mt-3">
                       <Form.Label>Party</Form.Label>
                       <Form.Control
                         type="text"
                         value={formData.receivedBy}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, receivedBy: e.target.value }))
-                        }
-                        placeholder="Enter party name"
-                        disabled={isLoading}
                         readOnly
+                        disabled={isLoading}
                         className="bg-light"
                       />
                     </div>
@@ -1294,22 +1072,12 @@ const WarehouseForm = ({
                         ...prev,
                         companyId: selectedCompany?.id || '',
                         companyName: selectedCompany?.companyName || '',
-                        companyEmail: selectedCompany?.email || '',
-                        companyMobileNumber: selectedCompany?.mobileNumber || '',
-                        companyOfficeNumber: selectedCompany?.officeNumber || '',
-                        companyAddress: selectedCompany?.address || '',
-                        gstIn: selectedCompany?.gstNumber || '',
                       }))
                     } else {
                       setFormData((prev) => ({
                         ...prev,
                         companyId: '',
                         companyName: '',
-                        companyEmail: '',
-                        companyMobileNumber: '',
-                        companyOfficeNumber: '',
-                        companyAddress: '',
-                        gstIn: '',
                       }))
                     }
                   }}
@@ -1371,18 +1139,18 @@ const WarehouseForm = ({
               </div>
             </div>
 
-            {/* Consignor Details with Create New Option and Debouncing */}
+            {/* Consignor Details */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
-                <Form.Label>Consignor Name</Form.Label>
+                <Form.Label>
+                  Consignor Name <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
                 <Select
                   value={getConsignorValue()}
                   onChange={(selected) => {
                     if (selected && selected.value === 'create-new') {
-                      // Show the create consignor modal
                       setShowConsignorModal(true)
-                      // Clear the selection
                       handleConsignorChange(null)
                     } else {
                       handleConsignorChange(selected)
@@ -1400,16 +1168,7 @@ const WarehouseForm = ({
                       ? `No consignor found for "${inputValue}"`
                       : 'Type to search consignor'
                   }
-                  styles={{
-                    option: (provided, state) => ({
-                      ...provided,
-                      backgroundColor:
-                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
-                      '&:hover': {
-                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
-                      },
-                    }),
-                  }}
+                  required
                 />
                 {isFetchingConsignor && <Form.Text className="text-info">Searching...</Form.Text>}
               </div>
@@ -1421,18 +1180,18 @@ const WarehouseForm = ({
               )}
             </div>
 
-            {/* Consignee Details with Create New Option and Debouncing */}
+            {/* Consignee Details */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
-                <Form.Label>Consignee Name</Form.Label>
+                <Form.Label>
+                  Consignee Name <span style={{ color: 'red' }}>*</span>
+                </Form.Label>
                 <Select
                   value={getConsigneeValue()}
                   onChange={(selected) => {
                     if (selected && selected.value === 'create-new') {
-                      // Show the create consignee modal
                       setShowConsigneeModal(true)
-                      // Clear the selection
                       handleConsigneeChange(null)
                     } else {
                       handleConsigneeChange(selected)
@@ -1450,16 +1209,7 @@ const WarehouseForm = ({
                       ? `No consignee found for "${inputValue}"`
                       : 'Type to search consignee'
                   }
-                  styles={{
-                    option: (provided, state) => ({
-                      ...provided,
-                      backgroundColor:
-                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
-                      '&:hover': {
-                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
-                      },
-                    }),
-                  }}
+                  required
                 />
                 {isFetchingConsignee && <Form.Text className="text-info">Searching...</Form.Text>}
               </div>
@@ -1527,7 +1277,6 @@ const WarehouseForm = ({
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
             <div className="mb-4">
               {formData.products.map((product, index) => {
-                const calculations = calculateProductDetails(product, index)
                 const productDetail = getProductDetailForDisplay(product)
 
                 return (
@@ -1546,7 +1295,6 @@ const WarehouseForm = ({
                       )}
                     </div>
 
-                    {/* Product Details Display from API */}
                     {productDetail && (
                       <div className="alert alert-info mb-3 p-3">
                         <div className="d-flex align-items-center mb-2">
@@ -1593,7 +1341,6 @@ const WarehouseForm = ({
                     )}
 
                     <div className="row g-3">
-                      {/* Warehouse field - conditionally displayed */}
                       {warehouseDisplayMode === 'auto-filled' ? (
                         <div className="col-md-6">
                           <Form.Label>
@@ -1601,11 +1348,7 @@ const WarehouseForm = ({
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            value={
-                              product.warehouseName ||
-                              formData.receivedByWarehouseName ||
-                              'Select warehouse above'
-                            }
+                            value={receivedByWarehouseName || 'Select warehouse above'}
                             disabled
                             readOnly
                             required
@@ -1622,30 +1365,13 @@ const WarehouseForm = ({
                             <small>Warehouse not required when received by party</small>
                           </div>
                         </div>
-                      ) : (
-                        <div className="col-md-6">
-                          <Form.Label>
-                            Warehouse <span style={{ color: 'red' }}>*</span>
-                          </Form.Label>
-                          <Select
-                            value={getWarehouseValue(product)}
-                            onChange={(selected) =>
-                              handleProductChange(
-                                index,
-                                'warehouseId',
-                                selected ? selected.value : '',
-                              )
-                            }
-                            options={warehouseOptions}
-                            placeholder="Select Warehouse"
-                            isClearable
-                            isLoading={isLoading || isRailHeadFetching}
-                            required
-                          />
-                        </div>
-                      )}
+                      ) : null}
 
-                      <div className="col-md-6">
+                      <div
+                        className={
+                          warehouseDisplayMode === 'auto-filled' ? 'col-md-6' : 'col-md-12'
+                        }
+                      >
                         <Form.Label>
                           Product <span style={{ color: 'red' }}>*</span>
                         </Form.Label>
@@ -1660,17 +1386,8 @@ const WarehouseForm = ({
                           isLoading={isLoading || isRailHeadFetching}
                           required
                         />
-                        {productDetail && (
-                          <Form.Text className="text-info">
-                            <FaBox className="me-1" />
-                            {productDetail.productName} • Available: {productDetail.quantityMT} MT •
-                            Bag Size: {productDetail.bagSize} kg • Total Bags:{' '}
-                            {productDetail.totalBags}
-                          </Form.Text>
-                        )}
                       </div>
 
-                      {/* Total Bags */}
                       <div className="col-md-4">
                         <Form.Label>Total Bags</Form.Label>
                         <Form.Control
@@ -1683,7 +1400,6 @@ const WarehouseForm = ({
                         />
                       </div>
 
-                      {/* Bag Size */}
                       <div className="col-md-4">
                         <Form.Label>Bag Size (kg per bag)</Form.Label>
                         <Form.Control
@@ -1697,7 +1413,6 @@ const WarehouseForm = ({
                         <Form.Text className="text-muted">Weight per bag in kilograms</Form.Text>
                       </div>
 
-                      {/* Quantity (MT) - Editable field (removed auto-calculated logic) */}
                       <div className="col-md-4">
                         <Form.Label>
                           Quantity (MT) <span style={{ color: 'red' }}>*</span>
