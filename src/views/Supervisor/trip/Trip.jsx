@@ -1,3 +1,5 @@
+// Trip.jsx - Updated version
+
 import React, { useState, useEffect, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Table from '../../components/Table'
@@ -27,6 +29,7 @@ import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import DutySlip from './DutySlip'
+import Cookies from 'js-cookie' // Add this import
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -38,7 +41,7 @@ const Trip = () => {
   const [modalMode, setModalMode] = useState('add')
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
   const navigate = useNavigate()
 
   // Duty slip model
@@ -49,30 +52,55 @@ const Trip = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
+  // FIX: Get token from both Cookie and Context (prioritize Cookie as in Dashboard)
+  const contextToken = useContext(TokenContext)
+  const token = Cookies.get('crdnsMaintToken') || contextToken
+
   // superadmin role
-  const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
-  // Fetch Data
+  // Fetch Data - Add refetchInterval or staleTime to ensure data refresh
   const {
     data: TripsList = [],
     isFetching,
     refetch,
+    isLoading, // Add this to check loading state
+    error, // Add error handling
   } = useQuery({
-    queryKey: ['TripsList'],
+    queryKey: ['TripsList', token], // Add token to queryKey to refetch when token changes
     queryFn: () => getTripListApi(null, token),
-    staleTime: 1000 * 60 * 30,
-    enabled: !!token, //  only run if token is available
+    staleTime: 0, // Changed from 30 minutes to 0 to always consider data stale
+    cacheTime: 1000 * 60 * 5, // Keep cache for 5 minutes
+    enabled: !!token, // Only run if token is available
+    retry: 2, // Retry failed requests twice
+    retryDelay: 1000, // Wait 1 second between retries
   })
+
+  // Log for debugging
+  useEffect(() => {
+    console.log('Trip Component - Token available:', !!token)
+    console.log('Trip Component - TripsList:', TripsList?.length)
+    console.log('Trip Component - isFetching:', isFetching)
+    console.log('Trip Component - isLoading:', isLoading)
+    console.log('Trip Component - error:', error)
+  }, [token, TripsList, isFetching, isLoading, error])
 
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
-    queryKey: ['supervisors'],
+    queryKey: ['supervisors', token], // Add token to queryKey
     queryFn: fetchSupervisor,
     staleTime: 1000 * 60 * 10,
     enabled: !!token && !!decodedToken,
   })
+
+  // Force refetch when component mounts
+  useEffect(() => {
+    if (token) {
+      console.log('Token available, refetching trips...')
+      refetch()
+    }
+  }, [token, refetch]) // Refetch when token becomes available
 
   useEffect(() => {
     if (!TripsList || TripsList.length === 0) return
@@ -131,7 +159,6 @@ const Trip = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   const columns = [
-    // { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
     { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Transport Mode', key: 'transportMode', sortable: true },
     { label: 'Client Name', key: 'clientName', sortable: true },
@@ -168,7 +195,7 @@ const Trip = () => {
   // Handle Add Button Click
   const handleAdd = () => {
     setModalMode('add')
-    setSelectedTrip(null) // Clear any selected trip data
+    setSelectedTrip(null)
     setIsModalOpen(true)
   }
 
@@ -270,28 +297,47 @@ const Trip = () => {
     },
   ]
 
-  console.log('selectedName:', selectedName)
-  console.log('Comparing supervisor:', {
-    selectedValue: selectedName?.value,
-    selectedLabel: selectedName?.label,
-  })
-
-  console.log('Supervisors:', supervisorOptions)
-
   // Handle reports of duty slip
   const handleReportButton = async (id) => {
     try {
       setLoadingDutySlip(true)
-      const data = await getDutySlipApi(id)
+      const data = await getDutySlipApi(id, token) // Pass token here if needed
       setDutySlipData(data)
       setShowDutySlipModal(true)
-      toast.success('Duty slip loaded successfully!') // success toast
+      toast.success('Duty slip loaded successfully!')
     } catch (error) {
       console.error('Failed to fetch duty slip:', error)
-      toast.error('Trip in Progress!') // error toast
+      toast.error('Trip in Progress!')
     } finally {
       setLoadingDutySlip(false)
     }
+  }
+
+  // Show loading state while fetching
+  if (isLoading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: '400px' }}
+      >
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading trips...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="alert alert-danger m-3" role="alert">
+        <h5>Error loading trips</h5>
+        <p>{error.message}</p>
+        <button className="btn btn-primary" onClick={() => refetch()}>
+          Retry
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -316,20 +362,18 @@ const Trip = () => {
 
           <div className="d-flex justify-content-end align-items-center gap-2 w-75">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-            {/* Add Button */}
             <Button variant="primary" onClick={handleAdd}>
               Add Trip
             </Button>
           </div>
         </div>
 
-        {/* Trip Modal (for Add or Edit) */}
         {isModalOpen && (
           <ModalTrips
             mode={modalMode}
             selectedTrip={selectedTrip}
-            onClose={() => setIsModalOpen(false)} // Close modal
-            onSubmit={handleSubmit} // Submit handler
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleSubmit}
           />
         )}
 
@@ -363,7 +407,6 @@ const Trip = () => {
         />
       </div>
 
-      {/* DutySlip Modal */}
       <Modal show={showDutySlipModal} onHide={() => setShowDutySlipModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Duty Slip</Modal.Title>
