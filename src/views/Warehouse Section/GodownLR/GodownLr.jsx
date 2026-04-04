@@ -18,7 +18,11 @@ import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
-import { getDigitalSignatureApi, getWorkerApi } from '../../TransportPass/data/data'
+import {
+  getCompanyNameApi,
+  getDigitalSignatureApi,
+  getWorkerApi,
+} from '../../TransportPass/data/data'
 import { FaArrowUp, FaExchangeAlt, FaEye, FaPrint } from 'react-icons/fa'
 import { HiOutlineLogout } from 'react-icons/hi'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
@@ -58,6 +62,9 @@ const GodownLr = () => {
   // for consignee select
   const [selectedConsignee, setSelectedConsignee] = useState(null)
 
+  // for compant select
+  const [selectedCompany, setSelectedCompany] = useState(null)
+
   // Add status filter state
   const [selectedStatus, setSelectedStatus] = useState('All')
 
@@ -79,6 +86,9 @@ const GodownLr = () => {
   // Consignor and consignee options state
   const [consignorOptions, setConsignorOptions] = useState([])
   const [consigneeOptions, setConsigneeOptions] = useState([])
+
+  // company option useState
+  const [companyOptions, setCompanyOptions] = useState([])
 
   const queryClient = useQueryClient()
 
@@ -137,6 +147,7 @@ const GodownLr = () => {
         limit: itemsPerPage,
         consignorId: selectedConsignor?.value || null,
         consigneeId: selectedConsignee?.value || null,
+        companyId: selectedCompany?.value || null,
         workerId: selectedWorker?.value || null,
         status: selectedStatus !== 'All' ? selectedStatus : null, // Add status to query params
       },
@@ -161,12 +172,20 @@ const GodownLr = () => {
     staleTime: 1000 * 60 * 30,
   })
 
+  // Fetch company
+  const { data: companyList, isFetched } = useQuery({
+    queryKey: ['companyList'],
+    queryFn: getCompanyNameApi,
+    staleTime: 1000 * 60 * 30,
+  })
+
   // Extract consignor and consignee options from fetched data
   useEffect(() => {
     if (getGodownTP?.receipts) {
       // Extract unique consignors
       const consignorsMap = {}
       const consigneesMap = {}
+      const companiesMap = {}
 
       getGodownTP.receipts.forEach((item) => {
         // Add consignor
@@ -184,8 +203,16 @@ const GodownLr = () => {
             label: item.consigneeName,
           }
         }
+
+        if (item.companyId && item.companyName) {
+          companiesMap[item.companyId] = {
+            value: item.companyId,
+            label: item.companyName,
+          }
+        }
       })
 
+      setCompanyOptions(Object.values(companiesMap))
       setConsignorOptions(Object.values(consignorsMap))
       setConsigneeOptions(Object.values(consigneesMap))
     }
@@ -275,6 +302,7 @@ const GodownLr = () => {
     setSelectedConsignee(null)
     setSelectedName(null)
     setSelectedWorker(null)
+    setSelectedCompany(null)
     setSelectedStatus('All')
     setDateRange({ startDate: null, endDate: null })
     setSearchQuery('')
@@ -339,6 +367,13 @@ const GodownLr = () => {
         })
       }
 
+      // filter by company
+      if (selectedCompany?.value) {
+        filtered = filtered.filter((receipt) => {
+          return receipt.companyId === selectedCompany.value
+        })
+      }
+
       // Filter by status (client-side fallback if API doesn't support it)
       if (selectedStatus !== 'All') {
         filtered = filtered.filter((receipt) => {
@@ -355,6 +390,7 @@ const GodownLr = () => {
     selectedWorker,
     selectedConsignor,
     selectedConsignee,
+    selectedCompany,
     selectedStatus,
     userRole,
   ])
@@ -897,6 +933,7 @@ const GodownLr = () => {
     return (
       selectedConsignor ||
       selectedConsignee ||
+      selectedCompany ||
       selectedName ||
       selectedWorker ||
       selectedStatus !== 'All' ||
@@ -935,6 +972,17 @@ const GodownLr = () => {
             />
           </div>
 
+          <div>
+            <SingleSelectDropdown
+              options={companyOptions}
+              value={selectedCompany}
+              onChange={setSelectedCompany}
+              isClearable
+              placeholder="Company..."
+              width="100px" // Custom width
+            />
+          </div>
+
           {userRole === 'superadmin' ? (
             <div className="d-flex align-items-center gap-2">
               <div>
@@ -965,13 +1013,14 @@ const GodownLr = () => {
               )}
             </div>
           ) : (
-            <div style={{ minWidth: '140px' }}>
+            <div>
               <SingleSelectDropdown
                 options={workerOptions}
                 value={selectedWorker}
                 onChange={setSelectedWorker}
                 isClearable
                 placeholder="Worker..."
+                width="70px"
               />
             </div>
           )}
