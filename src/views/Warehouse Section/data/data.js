@@ -118,6 +118,8 @@ export const getWarehouseProfileApi = async ({ queryKey }) => {
 
             productId: product.productId?._id,
             productName: product.productId?.name || 'Unknown',
+            bagSize: product.bagSize || 0,
+            totalBags: product.totalBags || 0,
             quantityMT: product.quantityMT,
             productTotalCountMT: product.productTotalCountMT,
         }))
@@ -609,7 +611,8 @@ export const getRailHeadApi = async ({ queryKey }) => {
             productId: item.productId || "",
             productName: item.productName || 'Unknown',
             quantityMT: item.quantityMT || 0,
-
+            bagSize: item.bagSize || 0,
+            totalBags: item.totalBags || 0,
         }))
         : []
 

@@ -130,6 +130,8 @@ const GrByRoad = React.lazy(() => import('./views/GoodRecipts/GRByRoad/GrByRoad.
 const Consignor = React.lazy(() => import('./views/Consignee_Consignor/Consignor/Consignor'))
 const Consignee = React.lazy(() => import('./views/Consignee_Consignor/Consignee/Consignee'))
 
+// Material Owner
+const MaterialOwner = React.lazy(() => import('./views/Material_Owner/MaterialOwner.jsx'))
 
 // routes
 const routes = [
@@ -233,6 +235,9 @@ const routes = [
   // Consignee / Consignor
   { path: '/Consignor', name: 'Consignor', element: Consignor },
   { path: '/Consignee', name: 'Consignee', element: Consignee },
+
+  // Material Owner
+  { path: '/MaterialOwner', name: 'Material Owner', element: MaterialOwner },
 
 ]
 

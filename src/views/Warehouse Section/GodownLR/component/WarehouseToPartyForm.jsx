@@ -10,7 +10,14 @@ import Select from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
 import CreatableSelect from 'react-select/creatable'
 import { getWarehouseListApi, getWarehouseProfileApi } from '../../data/data'
-import { FaExchangeAlt, FaWarehouse, FaWeight, FaRupeeSign, FaUserPlus } from 'react-icons/fa'
+import {
+  FaExchangeAlt,
+  FaWarehouse,
+  FaWeight,
+  FaRupeeSign,
+  FaUserPlus,
+  FaInfoCircle,
+} from 'react-icons/fa'
 import {
   getConsigneeApi,
   getConsignorApi,
@@ -19,6 +26,7 @@ import {
 } from '../../../Consignee_Consignor/data/data'
 import { toast } from 'react-toastify'
 import AddConsignorConsigneeModal from './AddConsignorConsigneeModal'
+import { getMartialOwnerDropDownApi } from '../../../Material_Owner/data/data'
 
 const defaultProduct = {
   warehouseId: '',
@@ -26,7 +34,7 @@ const defaultProduct = {
   productId: '',
   productName: '',
   quantityMT: '',
-  bagSizeKg: '',
+  bagSize: '',
   totalBags: '',
 }
 
@@ -65,8 +73,9 @@ const defaultFormData = {
   consigneeId: '',
   consigneeName: '',
   consigneeAddress: '',
-  customerName: '',
-  customerAddress: '',
+  materialOwnerId: '',
+  martialOwnerName: '',
+  martialOwnerAddress: '',
   startLocation: '',
   endLocation: '',
   customerRate: '',
@@ -85,7 +94,6 @@ const parseDateForForm = (dateString) => {
   if (!dateString) return getTodayDate()
 
   try {
-    // Try to parse from DD/MM/YYYY format
     if (dateString.includes('/')) {
       const parts = dateString.split('/')
       if (parts.length === 3) {
@@ -96,7 +104,6 @@ const parseDateForForm = (dateString) => {
       }
     }
 
-    // Try to parse from ISO string
     if (dateString.includes('T')) {
       const date = new Date(dateString)
       if (!isNaN(date.getTime())) {
@@ -107,7 +114,6 @@ const parseDateForForm = (dateString) => {
       }
     }
 
-    // Return as-is if it already looks like YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       return dateString
     }
@@ -140,6 +146,27 @@ const handleNumberInputWheel = (e) => {
   e.target.blur()
 }
 
+// Calculate quantity in MT from bag size and total bags
+const calculateQuantityFromBags = (bagSize, totalBags) => {
+  if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
+  const quantityInMT = (bagSize * totalBags) / 1000
+  return quantityInMT.toFixed(3)
+}
+
+// Calculate total bags from bag size and quantity in MT
+const calculateBagsFromQuantity = (bagSize, quantityMT) => {
+  if (!bagSize || !quantityMT || bagSize <= 0 || quantityMT <= 0) return ''
+  const totalBags = (quantityMT * 1000) / bagSize
+  return Math.round(totalBags)
+}
+
+// Calculate bag size from total bags and quantity in MT
+const calculateBagSizeFromQuantityAndBags = (quantityMT, totalBags) => {
+  if (!quantityMT || !totalBags || quantityMT <= 0 || totalBags <= 0) return ''
+  const bagSize = (quantityMT * 1000) / totalBags
+  return bagSize.toFixed(2)
+}
+
 const WarehouseToPartyForm = ({
   show,
   handleClose,
@@ -155,17 +182,21 @@ const WarehouseToPartyForm = ({
   const [isCustomVehicle, setIsCustomVehicle] = useState(false)
   const [isCustomDriver, setIsCustomDriver] = useState(false)
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false)
+  const [calculationSource, setCalculationSource] = useState({})
 
   // Search states
   const [consignorSearchInput, setConsignorSearchInput] = useState('')
   const [consigneeSearchInput, setConsigneeSearchInput] = useState('')
+  const [martialOwnerSearchInput, setMartialOwnerSearchInput] = useState('')
 
   // Debounced search values
   const debouncedConsignorSearch = useDebounce(consignorSearchInput, 300)
   const debouncedConsigneeSearch = useDebounce(consigneeSearchInput, 300)
+  const debouncedMartialOwnerSearch = useDebounce(martialOwnerSearchInput, 300)
 
   const [consignorPage, setConsignorPage] = useState(1)
   const [consigneePage, setConsigneePage] = useState(1)
+  const [martialOwnerPage, setMartialOwnerPage] = useState(1)
   const itemsPerPage = 20
 
   // State for create new modals
@@ -220,13 +251,11 @@ const WarehouseToPartyForm = ({
     },
   })
 
-  // Handler for creating new consignor
   const handleCreateConsignor = (payload) => {
     setIsCreatingConsignor(true)
     postConsignor(payload)
   }
 
-  // Handler for creating new consignee
   const handleCreateConsignee = (payload) => {
     setIsCreatingConsignee(true)
     postConsignee(payload)
@@ -284,6 +313,22 @@ const WarehouseToPartyForm = ({
       enabled: true,
     })
 
+  // Fetch material owners dropdown
+  const { data: martialOwnerData = { data: [], total: 0 }, isFetching: isFetchingMartialOwner } =
+    useQuery({
+      queryKey: [
+        'MartialOwner',
+        {
+          search: debouncedMartialOwnerSearch,
+          page: martialOwnerPage,
+          limit: itemsPerPage,
+        },
+      ],
+      queryFn: getMartialOwnerDropDownApi,
+      keepPreviousData: true,
+      staleTime: 1000 * 60 * 5,
+    })
+
   // Fetch warehouse products when a warehouse is selected
   const {
     data: warehouseProductsResponse = {},
@@ -333,28 +378,27 @@ const WarehouseToPartyForm = ({
     inventoryList.forEach((product) => {
       const productId = product.productId
       const productName = product.productName || 'Unknown Product'
-      const bagSizeKg = product.bagSizeKg || 0
+      const bagSize = product.bagSize || 0
       const quantityMT = product.quantityMT || 0
       const totalBags = product.totalBags || 0
 
-      // Skip if no productId
       if (!productId) {
         return
       }
 
-      const uniqueKey = `${productId}_${bagSizeKg}`
+      const uniqueKey = `${productId}_${bagSize}`
 
       if (!seenCombinations.has(uniqueKey)) {
         seenCombinations.add(uniqueKey)
 
-        const label = `${productName} (Bag Size: ${bagSizeKg || '0'} kg, Available: ${quantityMT} kg, Total Bags: ${totalBags})`
+        const label = `${productName} (Bag Size: ${bagSize || '0'} kg, Available: ${quantityMT} kg, Total Bags: ${totalBags})`
 
         options.push({
           value: uniqueKey,
           label: label,
           productId: productId,
           productName: productName,
-          bagSizeKg: bagSizeKg,
+          bagSize: bagSize,
           quantityMT: quantityMT,
           totalBags: totalBags,
           originalProductData: product,
@@ -394,29 +438,22 @@ const WarehouseToPartyForm = ({
     if (mode === 'edit' && initialData && !isInitialDataLoaded) {
       console.log('Loading initial data for edit:', initialData)
 
-      // Get warehouse info from products
       const firstProduct = initialData.products?.[0]
       const warehouseId = firstProduct?.warehouseId || ''
       const warehouseName = firstProduct?.warehouseName || ''
 
-      // Get vehicle name - find in vehicles array OR use vehicleName from data
       let vehicleName = ''
       if (initialData.vehicleName) {
-        // If vehicleName is already in data, use it
         vehicleName = initialData.vehicleName
       } else if (initialData.vehicleId && vehicles.length > 0) {
-        // Otherwise try to find in vehicles array
         const vehicle = vehicles.find((v) => v.id === initialData.vehicleId)
         vehicleName = vehicle?.name || vehicle?.vehicleNumber || ''
       }
 
-      // Get driver name - find in drivers array OR use driverName from data
       let driverName = ''
       if (initialData.driverName) {
-        // If driverName is already in data, use it
         driverName = initialData.driverName
       } else if (initialData.driverId && drivers.length > 0) {
-        // Otherwise try to find in drivers array
         const driver = drivers.find((d) => d.id === initialData.driverId)
         driverName = driver?.name || ''
       }
@@ -430,7 +467,9 @@ const WarehouseToPartyForm = ({
         companyId: initialData.companyId || '',
         consignorId: initialData.consignorId || '',
         consigneeId: initialData.consigneeId || '',
-        // Set warehouse from product data
+        materialOwnerId: initialData.materialOwnerId || '',
+        martialOwnerName: initialData.martialOwnerName || '',
+        martialOwnerAddress: initialData.martialOwnerAddress || '',
         issuedByWarehouseId: warehouseId,
         issuedByWarehouseName: warehouseName,
         products: initialData.products?.map((product) => {
@@ -438,7 +477,7 @@ const WarehouseToPartyForm = ({
             ...defaultProduct,
             ...product,
             quantityMT: product.quantityMT?.toString() || '',
-            bagSizeKg: product.bagSize?.toString() || product.bagSizeKg?.toString() || '',
+            bagSize: product.bagSize?.toString() || '',
             totalBags: product.totalBags?.toString() || '',
             warehouseId: product.warehouseId || '',
             warehouseName: product.warehouseName || '',
@@ -618,6 +657,47 @@ const WarehouseToPartyForm = ({
     }
   }
 
+  // Handle material owner selection
+  const handleMartialOwnerChange = (selected) => {
+    if (selected) {
+      setFormData((prev) => ({
+        ...prev,
+        materialOwnerId: selected.value,
+        martialOwnerName: selected.name,
+        martialOwnerAddress: selected.address || '',
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        materialOwnerId: '',
+        martialOwnerName: '',
+        martialOwnerAddress: '',
+      }))
+    }
+  }
+
+  // Helper function to show calculation hint
+  const getCalculationHint = (index, field) => {
+    const source = calculationSource[index]
+    if (!source) return null
+
+    const product = formData.products[index]
+    const bagSize = parseFloat(product.bagSize)
+    const totalBags = parseInt(product.totalBags)
+    const quantityMT = parseFloat(product.quantityMT)
+
+    if (field === 'bagSize' && source !== 'bagSize' && bagSize > 0) {
+      return `Auto-calculated from ${quantityMT > 0 ? `${quantityMT} MT and ${totalBags} bags` : `${totalBags} bags and ${quantityMT} MT`}`
+    }
+    if (field === 'totalBags' && source !== 'totalBags' && totalBags > 0) {
+      return `Auto-calculated from ${bagSize > 0 ? `${bagSize} kg bags and ${quantityMT} MT` : `${bagSize} kg bags and ${quantityMT} MT`}`
+    }
+    if (field === 'quantityMT' && source !== 'quantityMT' && quantityMT > 0) {
+      return `Auto-calculated from ${bagSize > 0 ? `${bagSize} kg bags and ${totalBags} bags` : `${totalBags} bags and ${bagSize} kg bags`}`
+    }
+    return null
+  }
+
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...formData.products]
 
@@ -637,14 +717,66 @@ const WarehouseToPartyForm = ({
           productId: selectedOption.productId,
           productName: selectedOption.productName || 'Unknown Product',
           quantityMT: selectedOption.quantityMT?.toString() || '',
-          bagSizeKg: selectedOption.bagSizeKg?.toString() || '',
+          bagSize: selectedOption.bagSize?.toString() || '',
           totalBags: selectedOption.totalBags?.toString() || '',
+        }
+      } else {
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          [field]: value,
         }
       }
     } else {
       updatedProducts[index] = {
         ...updatedProducts[index],
         [field]: value,
+      }
+    }
+
+    const currentProduct = updatedProducts[index]
+    const bagSize = parseFloat(currentProduct.bagSize)
+    const totalBags = parseInt(currentProduct.totalBags)
+    const quantityMT = parseFloat(currentProduct.quantityMT)
+
+    if (field === 'bagSize' || field === 'totalBags' || field === 'quantityMT') {
+      setCalculationSource((prev) => ({ ...prev, [index]: field }))
+    }
+
+    if (field === 'bagSize' && value && !isNaN(bagSize) && bagSize > 0) {
+      if (totalBags && !isNaN(totalBags) && totalBags > 0) {
+        const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
+        if (calculatedQuantity) {
+          updatedProducts[index].quantityMT = calculatedQuantity
+        }
+      } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
+        const calculatedBags = calculateBagsFromQuantity(bagSize, quantityMT)
+        if (calculatedBags) {
+          updatedProducts[index].totalBags = calculatedBags
+        }
+      }
+    } else if (field === 'totalBags' && value && !isNaN(totalBags) && totalBags > 0) {
+      if (bagSize && !isNaN(bagSize) && bagSize > 0) {
+        const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
+        if (calculatedQuantity) {
+          updatedProducts[index].quantityMT = calculatedQuantity
+        }
+      } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
+        const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
+        if (calculatedBagSize) {
+          updatedProducts[index].bagSize = calculatedBagSize
+        }
+      }
+    } else if (field === 'quantityMT' && value && !isNaN(quantityMT) && quantityMT > 0) {
+      if (bagSize && !isNaN(bagSize) && bagSize > 0) {
+        const calculatedBags = calculateBagsFromQuantity(bagSize, quantityMT)
+        if (calculatedBags) {
+          updatedProducts[index].totalBags = calculatedBags
+        }
+      } else if (totalBags && !isNaN(totalBags) && totalBags > 0) {
+        const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
+        if (calculatedBagSize) {
+          updatedProducts[index].bagSize = calculatedBagSize
+        }
       }
     }
 
@@ -692,6 +824,9 @@ const WarehouseToPartyForm = ({
       warehouseId: formData.issuedByWarehouseId || '',
       consignorId: formData.consignorId || '',
       consigneeId: formData.consigneeId || '',
+      materialOwnerId: formData.materialOwnerId || '',
+      martialOwnerName: formData.martialOwnerName || '',
+      martialOwnerAddress: formData.martialOwnerAddress || '',
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
       customerRate: parseFloat(formData.customerRate) || 0,
       totalAmount: parseFloat(formData.totalAmount) || 0,
@@ -703,26 +838,26 @@ const WarehouseToPartyForm = ({
       transporterFreight: parseFloat(formData.transporterFreight) || 0,
       products: formData.products.map((product) => {
         const transformedProduct = {
-          ...product,
+          productId: product.productId,
+          productName: product.productName,
+          warehouseId: product.warehouseId || formData.issuedByWarehouseId,
+          warehouseName: product.warehouseName || formData.issuedByWarehouseName,
           quantityMT: parseFloat(product.quantityMT) || 0,
-          bagSize: parseFloat(product.bagSizeKg) || 0,
+          bagSize: parseFloat(product.bagSize) || 0,
           totalBags: parseFloat(product.totalBags) || 0,
         }
-
-        delete transformedProduct.bagSizeKg
-        delete transformedProduct.costPerBag
-        delete transformedProduct.itemCost
-
         return transformedProduct
       }),
     }
 
-    delete payload.bagSizeKg
+    // Remove unnecessary fields from the main payload
+    delete payload.bagSize
     delete payload.workerId
     delete payload.workerName
     delete payload.costPerBag
     delete payload.itemCost
 
+    // Handle vehicle
     if (isCustomVehicle) {
       delete payload.vehicleId
       payload.vehicleName = formData.vehicleName
@@ -734,6 +869,7 @@ const WarehouseToPartyForm = ({
       delete payload.vehicleName
     }
 
+    // Handle driver
     if (isCustomDriver) {
       delete payload.driverId
       payload.driverName = formData.driverName
@@ -745,6 +881,7 @@ const WarehouseToPartyForm = ({
       delete payload.driverName
     }
 
+    // Remove supervisor for non-superadmin
     if (userRole !== 'superadmin') {
       delete payload.supervisorId
       delete payload.supervisorName
@@ -804,6 +941,14 @@ const WarehouseToPartyForm = ({
     },
   ]
 
+  const martialOwnerOptions =
+    martialOwnerData?.data?.map((owner) => ({
+      value: owner.id,
+      label: owner.name,
+      name: owner.name,
+      address: owner.address || '',
+    })) || []
+
   const vehicleOptions = Array.isArray(vehicles)
     ? vehicles.map((v) => ({
         value: v.id || v._id,
@@ -819,22 +964,18 @@ const WarehouseToPartyForm = ({
     : []
 
   const getVehicleValue = () => {
-    // First check if we have a vehicleName set
     if (formData.vehicleName) {
-      // If we have a vehicleId, try to find it in the options
       if (formData.vehicleId && !isCustomVehicle) {
         const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
         if (existingVehicle) {
           return existingVehicle
         }
       }
-      // Otherwise, return a custom option with the vehicleName
       return {
         value: formData.vehicleName,
         label: formData.vehicleName,
       }
     }
-    // If vehicleId exists but no name, try to find it
     if (formData.vehicleId && vehicleOptions.length > 0) {
       const existingVehicle = vehicleOptions.find((opt) => opt.value === formData.vehicleId)
       if (existingVehicle) {
@@ -845,22 +986,18 @@ const WarehouseToPartyForm = ({
   }
 
   const getDriverValue = () => {
-    // First check if we have a driverName set
     if (formData.driverName) {
-      // If we have a driverId, try to find it in the options
       if (formData.driverId && !isCustomDriver) {
         const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
         if (existingDriver) {
           return existingDriver
         }
       }
-      // Otherwise, return a custom option with the driverName
       return {
         value: formData.driverName,
         label: formData.driverName,
       }
     }
-    // If driverId exists but no name, try to find it
     if (formData.driverId && driverOptions.length > 0) {
       const existingDriver = driverOptions.find((opt) => opt.value === formData.driverId)
       if (existingDriver) {
@@ -870,16 +1007,11 @@ const WarehouseToPartyForm = ({
     return null
   }
 
-  const getWarehouseValue = (product) => {
-    if (!product.warehouseId) return null
-    return warehouseOptions.find((opt) => opt.value === product.warehouseId) || null
-  }
-
   const getProductValue = (product) => {
     if (!product.productId) return null
 
-    if (product.bagSizeKg) {
-      const uniqueKey = `${product.productId}_${product.bagSizeKg}`
+    if (product.bagSize) {
+      const uniqueKey = `${product.productId}_${product.bagSize}`
       const foundOption = productOptions.find((opt) => opt.value === uniqueKey)
       if (foundOption) return foundOption
     }
@@ -887,13 +1019,13 @@ const WarehouseToPartyForm = ({
     const foundOption = productOptions.find((opt) => opt.productId === product.productId)
     if (foundOption) return foundOption
 
-    if (product.productId && product.productName && product.bagSizeKg) {
+    if (product.productId && product.productName && product.bagSize) {
       return {
-        value: `${product.productId}_${product.bagSizeKg || '0'}`,
-        label: `${product.productName} (Bag Size: ${product.bagSizeKg || '0'} kg)`,
+        value: `${product.productId}_${product.bagSize || '0'}`,
+        label: `${product.productName} (Bag Size: ${product.bagSize || '0'} kg)`,
         productId: product.productId,
         productName: product.productName,
-        bagSizeKg: product.bagSizeKg || '0',
+        bagSize: product.bagSize || '0',
         quantityMT: product.quantityMT || '',
         totalBags: product.totalBags || '',
       }
@@ -922,6 +1054,11 @@ const WarehouseToPartyForm = ({
     return consigneeOptions.find((opt) => opt.name === formData.consigneeName) || null
   }
 
+  const getMartialOwnerValue = () => {
+    if (!formData.materialOwnerId) return null
+    return martialOwnerOptions.find((opt) => opt.value === formData.materialOwnerId) || null
+  }
+
   const handleConsignorInputChange = useCallback((value) => {
     setConsignorSearchInput(value)
     setConsignorPage(1)
@@ -930,6 +1067,11 @@ const WarehouseToPartyForm = ({
   const handleConsigneeInputChange = useCallback((value) => {
     setConsigneeSearchInput(value)
     setConsigneePage(1)
+  }, [])
+
+  const handleMartialOwnerInputChange = useCallback((value) => {
+    setMartialOwnerSearchInput(value)
+    setMartialOwnerPage(1)
   }, [])
 
   const handleConsignorMenuScrollToBottom = useCallback(() => {
@@ -945,6 +1087,13 @@ const WarehouseToPartyForm = ({
       setConsigneePage((prev) => prev + 1)
     }
   }, [consigneeData.total, consigneePage])
+
+  const handleMartialOwnerMenuScrollToBottom = useCallback(() => {
+    const totalPages = Math.ceil((martialOwnerData?.total || 0) / itemsPerPage)
+    if (martialOwnerPage < totalPages) {
+      setMartialOwnerPage((prev) => prev + 1)
+    }
+  }, [martialOwnerData?.total, martialOwnerPage])
 
   return (
     <>
@@ -1288,27 +1437,41 @@ const WarehouseToPartyForm = ({
               )}
             </div>
 
-            {/* Customer Details */}
-            <h5 className="fw-semibold border-bottom pb-2 mb-3">Customer Details</h5>
+            {/* Material Owner Details */}
+            <h5 className="fw-semibold border-bottom pb-2 mb-3">Material Owner Details</h5>
             <div className="row g-3 mb-4">
-              <div className="col-md-6">
-                <Form.Label>Customer Name</Form.Label>
-                <Form.Control
-                  name="customerName"
-                  value={formData.customerName}
-                  onChange={handleChange}
-                  disabled={isLoading}
+              <div className="col-md-12">
+                <Form.Label>Material Owner Name</Form.Label>
+                <Select
+                  value={getMartialOwnerValue()}
+                  onChange={handleMartialOwnerChange}
+                  options={martialOwnerOptions}
+                  placeholder="Select Material Owner"
+                  isClearable
+                  isLoading={isFetchingMartialOwner}
+                  onInputChange={handleMartialOwnerInputChange}
+                  onMenuScrollToBottom={handleMartialOwnerMenuScrollToBottom}
+                  filterOption={null}
+                  noOptionsMessage={({ inputValue }) =>
+                    inputValue
+                      ? `No material owner found for "${inputValue}"`
+                      : 'Type to search material owner'
+                  }
                 />
+                {isFetchingMartialOwner && (
+                  <Form.Text className="text-info">Searching...</Form.Text>
+                )}
               </div>
-              <div className="col-md-6">
-                <Form.Label>Customer Address</Form.Label>
-                <Form.Control
-                  name="customerAddress"
-                  value={formData.customerAddress}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                />
-              </div>
+              {formData.martialOwnerAddress && (
+                <div className="col-md-12">
+                  <Form.Label>Material Owner Address</Form.Label>
+                  <Form.Control
+                    value={formData.martialOwnerAddress}
+                    readOnly
+                    className="bg-light"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Route Details */}
@@ -1367,6 +1530,10 @@ const WarehouseToPartyForm = ({
               </div>
 
               {formData.products.map((product, index) => {
+                const quantityHint = getCalculationHint(index, 'quantityMT')
+                const bagSizeHint = getCalculationHint(index, 'bagSize')
+                const totalBagsHint = getCalculationHint(index, 'totalBags')
+
                 return (
                   <div key={index} className="border rounded p-3 mb-3">
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -1411,7 +1578,7 @@ const WarehouseToPartyForm = ({
                                 productId: selected.productId,
                                 productName: selected.productName || 'Unknown Product',
                                 quantityMT: selected.quantityMT?.toString() || '',
-                                bagSizeKg: selected.bagSizeKg?.toString() || '0',
+                                bagSize: selected.bagSize?.toString() || '0',
                                 totalBags: selected.totalBags?.toString() || '',
                               }
 
@@ -1429,7 +1596,7 @@ const WarehouseToPartyForm = ({
                                 productId: '',
                                 productName: '',
                                 quantityMT: '',
-                                bagSizeKg: '',
+                                bagSize: '',
                                 totalBags: '',
                               }
 
@@ -1493,29 +1660,41 @@ const WarehouseToPartyForm = ({
                           value={product.totalBags}
                           onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
                           disabled={isLoading}
-                          placeholder="Enter total bags (optional)"
+                          placeholder="Enter total bags"
                           min="0"
                           onWheel={handleNumberInputWheel}
                         />
-                        <Form.Text className="text-muted">
-                          Total number of bags (optional)
-                        </Form.Text>
+                        {totalBagsHint && (
+                          <Form.Text className="text-info d-block">
+                            <FaInfoCircle className="me-1" size={12} />
+                            {totalBagsHint}
+                          </Form.Text>
+                        )}
+                        <Form.Text className="text-muted d-block">Total number of bags</Form.Text>
                       </div>
 
                       <div className="col-md-4">
                         <Form.Label>Bag Size (Kg per bag)</Form.Label>
                         <Form.Control
                           type="number"
-                          value={product.bagSizeKg}
-                          onChange={(e) => handleProductChange(index, 'bagSizeKg', e.target.value)}
+                          value={product.bagSize}
+                          onChange={(e) => handleProductChange(index, 'bagSize', e.target.value)}
                           disabled={isLoading}
-                          placeholder="Enter bag size (optional)"
+                          placeholder="Enter bag size"
                           min="0"
                           step="0.01"
                           onWheel={handleNumberInputWheel}
+                          readOnly
+                          className="bg-light"
                         />
-                        <Form.Text className="text-muted">
-                          Weight per bag in kilograms (optional)
+                        {bagSizeHint && (
+                          <Form.Text className="text-info d-block">
+                            <FaInfoCircle className="me-1" size={12} />
+                            {bagSizeHint}
+                          </Form.Text>
+                        )}
+                        <Form.Text className="text-muted d-block">
+                          Weight per bag in kilograms
                         </Form.Text>
                       </div>
 
@@ -1528,17 +1707,57 @@ const WarehouseToPartyForm = ({
                           value={product.quantityMT}
                           onChange={(e) => handleProductChange(index, 'quantityMT', e.target.value)}
                           disabled={isLoading}
-                          placeholder="Enter quantity in mt"
+                          placeholder="Enter quantity in MT"
                           min="0.001"
                           step="0.001"
                           required
                           onWheel={handleNumberInputWheel}
                         />
-                        <Form.Text className="text-muted">
-                          Quantity in mertic ton (required)
+                        {quantityHint && (
+                          <Form.Text className="text-info d-block">
+                            <FaInfoCircle className="me-1" size={12} />
+                            {quantityHint}
+                          </Form.Text>
+                        )}
+                        <Form.Text className="text-muted d-block">
+                          Quantity in metric tons (1 MT = 1000 kg)
                         </Form.Text>
                       </div>
                     </div>
+
+                    {(product.bagSize || product.totalBags || product.quantityMT) && (
+                      <div className="mt-3 p-2 bg-light rounded small">
+                        <strong>Formula:</strong>
+                        {product.bagSize && product.totalBags && !product.quantityMT && (
+                          <span>
+                            {' '}
+                            {product.bagSize} kg × {product.totalBags} bags ={' '}
+                            {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                          </span>
+                        )}
+                        {product.bagSize && product.quantityMT && !product.totalBags && (
+                          <span>
+                            {' '}
+                            {product.quantityMT} MT × 1000 / {product.bagSize} kg ={' '}
+                            {Math.round((product.quantityMT * 1000) / product.bagSize)} bags
+                          </span>
+                        )}
+                        {product.totalBags && product.quantityMT && !product.bagSize && (
+                          <span>
+                            {' '}
+                            {product.quantityMT} MT × 1000 / {product.totalBags} bags ={' '}
+                            {((product.quantityMT * 1000) / product.totalBags).toFixed(2)} kg/bag
+                          </span>
+                        )}
+                        {product.bagSize && product.totalBags && product.quantityMT && (
+                          <span>
+                            {' '}
+                            {product.bagSize} kg × {product.totalBags} bags ={' '}
+                            {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )
               })}

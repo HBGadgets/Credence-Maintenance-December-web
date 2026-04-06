@@ -49,6 +49,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
     category: '',
   })
   const [newProductErrors, setNewProductErrors] = useState({})
+  const [calculationSource, setCalculationSource] = useState({}) // Track which field triggered calculation
   const selectRefs = useRef([])
 
   const queryClient = useQueryClient()
@@ -126,13 +127,100 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
     }
   }
 
+  // Calculate quantity in MT from bag size and total bags
+  const calculateQuantityFromBags = (bagSize, totalBags) => {
+    if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
+    // Convert kg to MT (1 MT = 1000 kg)
+    const quantityInMT = (bagSize * totalBags) / 1000
+    return quantityInMT.toFixed(3)
+  }
+
+  // Calculate total bags from bag size and quantity in MT
+  const calculateBagsFromQuantity = (bagSize, quantityMT) => {
+    if (!bagSize || !quantityMT || bagSize <= 0 || quantityMT <= 0) return ''
+    // Convert MT to kg, then divide by bag size
+    const totalBags = (quantityMT * 1000) / bagSize
+    return Math.round(totalBags) // Round to nearest whole bag
+  }
+
+  // Calculate bag size from total bags and quantity in MT
+  const calculateBagSizeFromQuantityAndBags = (quantityMT, totalBags) => {
+    if (!quantityMT || !totalBags || quantityMT <= 0 || totalBags <= 0) return ''
+    // Convert MT to kg, then divide by total bags
+    const bagSize = (quantityMT * 1000) / totalBags
+    return bagSize.toFixed(2)
+  }
+
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...formData.products]
+    const oldValue = updatedProducts[index][field]
     updatedProducts[index] = {
       ...updatedProducts[index],
       [field]: value,
     }
+
+    const currentProduct = updatedProducts[index]
+    const bagSize = parseFloat(currentProduct.bagSize)
+    const totalBags = parseInt(currentProduct.totalBags)
+    const quantityMT = parseFloat(currentProduct.quantityMT)
+
+    // Track which field triggered the calculation
+    setCalculationSource((prev) => ({ ...prev, [index]: field }))
+
+    // Perform calculations based on which field was changed
+    if (field === 'bagSize' && value && !isNaN(bagSize) && bagSize > 0) {
+      // Bag size changed
+      if (totalBags && !isNaN(totalBags) && totalBags > 0) {
+        // Calculate quantity from bag size and total bags
+        const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
+        if (calculatedQuantity) {
+          updatedProducts[index].quantityMT = calculatedQuantity
+        }
+      } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
+        // Calculate total bags from bag size and quantity
+        const calculatedBags = calculateBagsFromQuantity(bagSize, quantityMT)
+        if (calculatedBags) {
+          updatedProducts[index].totalBags = calculatedBags
+        }
+      }
+    } else if (field === 'totalBags' && value && !isNaN(totalBags) && totalBags > 0) {
+      // Total bags changed
+      if (bagSize && !isNaN(bagSize) && bagSize > 0) {
+        // Calculate quantity from bag size and total bags
+        const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
+        if (calculatedQuantity) {
+          updatedProducts[index].quantityMT = calculatedQuantity
+        }
+      } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
+        // Calculate bag size from quantity and total bags
+        const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
+        if (calculatedBagSize) {
+          updatedProducts[index].bagSize = calculatedBagSize
+        }
+      }
+    } else if (field === 'quantityMT' && value && !isNaN(quantityMT) && quantityMT > 0) {
+      // Quantity changed
+      if (bagSize && !isNaN(bagSize) && bagSize > 0) {
+        // Calculate total bags from bag size and quantity
+        const calculatedBags = calculateBagsFromQuantity(bagSize, quantityMT)
+        if (calculatedBags) {
+          updatedProducts[index].totalBags = calculatedBags
+        }
+      } else if (totalBags && !isNaN(totalBags) && totalBags > 0) {
+        // Calculate bag size from quantity and total bags
+        const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
+        if (calculatedBagSize) {
+          updatedProducts[index].bagSize = calculatedBagSize
+        }
+      }
+    }
+
     setFormData((prev) => ({ ...prev, products: updatedProducts }))
+
+    // Clear error for this product's quantity if it exists
+    if (formErrors[`quantityKg_${index}`]) {
+      setFormErrors((prev) => ({ ...prev, [`quantityKg_${index}`]: '' }))
+    }
   }
 
   const addProduct = () => {
@@ -282,6 +370,29 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
   const handleReset = () => {
     setFormData(defaultFormData)
     setFormErrors({})
+    setCalculationSource({})
+  }
+
+  // Helper function to show calculation hint
+  const getCalculationHint = (index, field) => {
+    const source = calculationSource[index]
+    if (!source) return null
+
+    const product = formData.products[index]
+    const bagSize = parseFloat(product.bagSize)
+    const totalBags = parseInt(product.totalBags)
+    const quantityMT = parseFloat(product.quantityMT)
+
+    if (field === 'bagSize' && source !== 'bagSize' && bagSize > 0) {
+      return `Auto-calculated from ${quantityMT > 0 ? `${quantityMT} MT and ${totalBags} bags` : `${totalBags} bags and ${quantityMT} MT`}`
+    }
+    if (field === 'totalBags' && source !== 'totalBags' && totalBags > 0) {
+      return `Auto-calculated from ${bagSize > 0 ? `${bagSize} kg bags and ${quantityMT} MT` : `${bagSize} kg bags and ${quantityMT} MT`}`
+    }
+    if (field === 'quantityMT' && source !== 'quantityMT' && quantityMT > 0) {
+      return `Auto-calculated from ${bagSize > 0 ? `${bagSize} kg bags and ${totalBags} bags` : `${totalBags} bags and ${bagSize} kg bags`}`
+    }
+    return null
   }
 
   return (
@@ -470,6 +581,9 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                     })
 
                     const customStyles = createCustomStyles(index)
+                    const quantityHint = getCalculationHint(index, 'quantityMT')
+                    const bagSizeHint = getCalculationHint(index, 'bagSize')
+                    const totalBagsHint = getCalculationHint(index, 'totalBags')
 
                     return (
                       <Card key={index} className="mb-3 border">
@@ -556,12 +670,18 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   }
                                   onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
-                                  placeholder="e.g., 50"
+                                  placeholder="e.g., 35"
                                   min="0.01"
                                   step="0.01"
                                 />
-                                <Form.Text className="text-muted">
-                                  Weight per bag in kilograms (optional)
+                                {bagSizeHint && (
+                                  <Form.Text className="text-info">
+                                    <FaInfoCircle className="me-1" size={12} />
+                                    {bagSizeHint}
+                                  </Form.Text>
+                                )}
+                                <Form.Text className="text-muted d-block">
+                                  Weight per bag in kilograms
                                 </Form.Text>
                               </Form.Group>
                             </Col>
@@ -581,8 +701,14 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   min="1"
                                   step="1"
                                 />
-                                <Form.Text className="text-muted">
-                                  Total number of bags (optional)
+                                {totalBagsHint && (
+                                  <Form.Text className="text-info">
+                                    <FaInfoCircle className="me-1" size={12} />
+                                    {totalBagsHint}
+                                  </Form.Text>
+                                )}
+                                <Form.Text className="text-muted d-block">
+                                  Total number of bags
                                 </Form.Text>
                               </Form.Group>
                             </Col>
@@ -600,7 +726,7 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                   }
                                   onWheel={handleWheel}
                                   disabled={isSubmitting || isAddingProduct}
-                                  placeholder="e.g., 5"
+                                  placeholder="e.g., 3.5"
                                   min="0.001"
                                   step="0.001"
                                   isInvalid={!!formErrors[`quantityKg_${index}`]}
@@ -610,8 +736,14 @@ const GrByRail = ({ setShowForm, setSelectedFormType }) => {
                                     {formErrors[`quantityKg_${index}`]}
                                   </div>
                                 )}
-                                <Form.Text className="text-muted">
-                                  Quantity in metric tons (required)
+                                {quantityHint && (
+                                  <Form.Text className="text-info">
+                                    <FaInfoCircle className="me-1" size={12} />
+                                    {quantityHint}
+                                  </Form.Text>
+                                )}
+                                <Form.Text className="text-muted d-block">
+                                  Quantity in metric tons (1 MT = 1000 kg)
                                 </Form.Text>
                               </Form.Group>
                             </Col>

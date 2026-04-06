@@ -60,8 +60,10 @@ const RailHead = () => {
   const columns = [
     { label: 'Date', key: 'createdAt', sortable: true },
     { label: 'Product Name', key: 'productName', sortable: true },
-    { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
     // { label: 'Product id', key: 'productId', sortable: true },
+    { label: 'Bag Size', key: 'bagSize', sortable: true },
+    { label: 'Total Bags', key: 'totalBags', sortable: true },
+    { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
   ]
 
   // Modal form fields - Fixed field names

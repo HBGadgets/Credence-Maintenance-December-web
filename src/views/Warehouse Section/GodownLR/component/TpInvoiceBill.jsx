@@ -342,17 +342,17 @@ const TpInvoiceBill = ({ invoiceData }) => {
             </div>
 
             <div className="signature-names">
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+              {/* <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
                 <strong style={{ fontSize: '11px', minWidth: '140px' }}>
                   Consignor Signature:
                 </strong>
                 <div style={{ flex: 1, borderBottom: '1px solid #000', marginLeft: '10px' }}></div>
-              </div>
+              </div> */}
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <strong style={{ fontSize: '11px', minWidth: '140px' }}>
                   Consignee Signature:
                 </strong>
-                <div style={{ flex: 1, borderBottom: '1px solid #000', marginLeft: '10px' }}></div>
+                {/* <div style={{ flex: 1, borderBottom: '1px solid #000', marginLeft: '10px' }}></div */}
               </div>
             </div>
           </div>
