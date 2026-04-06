@@ -210,6 +210,38 @@ const WarehouseToPartyForm = ({
   const userRole = decodedToken?.role
   const queryClient = useQueryClient()
 
+  // Calculate total quantity in MT across all products
+  const calculateTotalQuantityMT = useCallback(() => {
+    return formData.products.reduce((total, product) => {
+      const quantity = parseFloat(product.quantityMT) || 0
+      return total + quantity
+    }, 0)
+  }, [formData.products])
+
+  // Auto-calculate total amount when customer rate or total quantity changes
+  useEffect(() => {
+    const totalQuantity = calculateTotalQuantityMT()
+    const customerRate = parseFloat(formData.customerRate) || 0
+    const calculatedTotalAmount = totalQuantity * customerRate
+
+    setFormData((prev) => ({
+      ...prev,
+      totalAmount: calculatedTotalAmount.toFixed(2),
+    }))
+  }, [formData.customerRate, formData.products, calculateTotalQuantityMT])
+
+  // Auto-calculate total transporter amount when transporter rate or total quantity changes
+  useEffect(() => {
+    const totalQuantity = calculateTotalQuantityMT()
+    const transporterRate = parseFloat(formData.transporterRate) || 0
+    const calculatedTotalTransporterAmount = totalQuantity * transporterRate
+
+    setFormData((prev) => ({
+      ...prev,
+      totalTransporterAmount: calculatedTotalTransporterAmount.toFixed(2),
+    }))
+  }, [formData.transporterRate, formData.products, calculateTotalQuantityMT])
+
   // API Mutations for creating consignor/consignee
   const { mutate: postConsignor } = useMutation({
     mutationFn: postConsignorApi,
@@ -1095,6 +1127,8 @@ const WarehouseToPartyForm = ({
     }
   }, [martialOwnerData?.total, martialOwnerPage])
 
+  const totalQuantity = calculateTotalQuantityMT()
+
   return (
     <>
       <Modal
@@ -1776,7 +1810,7 @@ const WarehouseToPartyForm = ({
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-4">
-                <Form.Label>Customer Rate (₹)</Form.Label>
+                <Form.Label>Customer Rate (per MT) (₹)</Form.Label>
                 <Form.Control
                   type="number"
                   name="customerRate"
@@ -1784,7 +1818,11 @@ const WarehouseToPartyForm = ({
                   onChange={handleChange}
                   disabled={isLoading}
                   onWheel={handleNumberInputWheel}
+                  placeholder="Enter rate per MT"
+                  min="0"
+                  step="0.01"
                 />
+                <Form.Text className="text-muted">Rate per metric ton</Form.Text>
               </div>
               <div className="col-md-4">
                 <Form.Label>Total Amount (₹)</Form.Label>
@@ -1795,10 +1833,17 @@ const WarehouseToPartyForm = ({
                   onChange={handleChange}
                   disabled={isLoading}
                   onWheel={handleNumberInputWheel}
+                  readOnly
+                  className="bg-light"
                 />
+                {/* <Form.Text className="text-info">
+                  <FaInfoCircle className="me-1" size={12} />
+                  Auto-calculated: {totalQuantity.toFixed(3)} MT × {formData.customerRate || 0} ={' '}
+                  {formData.totalAmount || 0}
+                </Form.Text> */}
               </div>
               <div className="col-md-4">
-                <Form.Label>Transporter Rate (₹)</Form.Label>
+                <Form.Label>Transporter Rate (per MT) (₹)</Form.Label>
                 <Form.Control
                   type="number"
                   name="transporterRate"
@@ -1806,7 +1851,11 @@ const WarehouseToPartyForm = ({
                   onChange={handleChange}
                   disabled={isLoading}
                   onWheel={handleNumberInputWheel}
+                  placeholder="Enter rate per MT"
+                  min="0"
+                  step="0.01"
                 />
+                <Form.Text className="text-muted">Rate per metric ton</Form.Text>
               </div>
               <div className="col-md-4">
                 <Form.Label>Total Transporter Amount (₹)</Form.Label>
@@ -1817,7 +1866,14 @@ const WarehouseToPartyForm = ({
                   onChange={handleChange}
                   disabled={isLoading}
                   onWheel={handleNumberInputWheel}
+                  readOnly
+                  className="bg-light"
                 />
+                {/* <Form.Text className="text-info">
+                  <FaInfoCircle className="me-1" size={12} />
+                  Auto-calculated: {totalQuantity.toFixed(3)} MT × {formData.transporterRate || 0} ={' '}
+                  {formData.totalTransporterAmount || 0}
+                </Form.Text> */}
               </div>
               <div className="col-md-4">
                 <Form.Label>Transporter Rate On</Form.Label>

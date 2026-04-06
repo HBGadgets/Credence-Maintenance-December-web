@@ -436,8 +436,8 @@ export const getGodownTPApi = async ({ queryKey }) => {
             workerId: item.workerId?._id,
             workerName: item.workerId?.name,
 
-            customerName: item.customerName,
-            customerAddress: item.customerAddress,
+            materialOwner: item.materialOwnerId?.name,
+            materialAddress: item.materialOwnerId?.address,
             startLocation: item.startLocation,
             endLocation: item.endLocation,
 

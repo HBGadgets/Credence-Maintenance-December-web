@@ -21,8 +21,8 @@ const TpInvoiceBill = ({ invoiceData }) => {
     consignorAddress,
     consigneeName,
     consigneeAddress,
-    customerName,
-    customerAddress,
+    materialOwner,
+    materialAddress,
     startLocation,
     endLocation,
     containerNumber,
@@ -163,7 +163,7 @@ const TpInvoiceBill = ({ invoiceData }) => {
                 <strong>Vehicle:</strong> {vehicleName || 'N/A'}
               </p>
               <p>
-                <strong>Owner:</strong> {ownerName || companyName || 'N/A'}
+                <strong>Material Owner:</strong> {materialOwner || 'N/A'}
               </p>
             </div>
             <div className="details-row compact">
@@ -207,15 +207,15 @@ const TpInvoiceBill = ({ invoiceData }) => {
           </div>
         </div>
 
-        {/* Customer Details */}
+        {/* Material Owner Details */}
         <div className="section compact">
-          <h3>Customer Details</h3>
+          <h3>Material Owner Details</h3>
           <div className="details-row compact">
             <p>
-              <strong>Name:</strong> {customerName || 'N/A'}
+              <strong>Name:</strong> {materialOwner || 'N/A'}
             </p>
             <p>
-              <strong>Address:</strong> {customerAddress || 'N/A'}
+              <strong>Address:</strong> {materialAddress || 'N/A'}
             </p>
           </div>
         </div>

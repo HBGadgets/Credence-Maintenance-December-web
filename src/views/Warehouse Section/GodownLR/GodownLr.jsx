@@ -611,7 +611,7 @@ const GodownLr = () => {
     { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Consignor Name', key: 'consignorName', sortable: true },
     { label: 'Consignee Name', key: 'consigneeName', sortable: true },
-    { label: 'Customer Name', key: 'customerName', sortable: true },
+    { label: 'Material Owner', key: 'materialOwner', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     {
@@ -876,7 +876,7 @@ const GodownLr = () => {
 
       // Vehicle Details
       vehicleName: apiData.vehicleName,
-      ownerName: apiData.companyName, // Assuming company is owner
+      ownerName: apiData.materialOwner, // Assuming company is owner
 
       // Location Details
       startLocation: apiData.startLocation,
@@ -891,8 +891,8 @@ const GodownLr = () => {
       consigneeAddress: apiData.consigneeAddress,
 
       // Customer Details
-      customerName: apiData.customerName,
-      customerAddress: apiData.customerAddress,
+      materialOwner: apiData.materialOwner,
+      materialAddress: apiData.materialAddress,
 
       // Product/Item Details
       itemName:
