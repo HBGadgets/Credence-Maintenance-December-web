@@ -160,10 +160,15 @@ function DriversPage() {
     },
     {
       name: 'password',
-      label: 'Password',
+      label: 'Password (Keep 123456 if you want default password, or enter your own)',
       type: 'password',
       Placeholder: 'Enter Password',
       required: true,
+    },
+    {
+      name: 'licenseExpiryDate',
+      label: 'License Expiry Date',
+      type: 'date',
     },
 
     // not show in edit from
@@ -191,6 +196,8 @@ function DriversPage() {
     { label: 'Contact Number', key: 'contactNumber', sortable: true },
     { label: 'Email', key: 'email', sortable: true },
     { label: 'Password', key: 'password', sortable: false },
+    { label: 'License Number', key: 'licenseNumber', sortable: false },
+    { label: 'License Expiry', key: 'licenseExpiryDate', sortable: false },
   ]
 
   // Handle view button click
@@ -364,7 +371,12 @@ function DriversPage() {
               onClick={() => {
                 setEditMode(false)
                 setSubmitEdit(false)
-                setEditingUser(null)
+
+                // default values for add form
+                setEditingUser({
+                  password: '123456',
+                })
+
                 setShowModalFrom(true)
               }}
             />
@@ -374,7 +386,7 @@ function DriversPage() {
 
       <ReusableModal
         show={showModalFrom}
-        initialData={editMode ? editingUser : null}
+        initialData={editingUser}
         onClose={() => {
           setShowModalFrom(false)
           setEditMode(false)

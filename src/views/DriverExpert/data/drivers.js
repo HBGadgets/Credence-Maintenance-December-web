@@ -46,6 +46,8 @@ export const fetchDrivers = async () => {
       password: driver.password,
       id: driver._id,
       supervisor: driver.supervisor,
+      licenseNumber: driver.licenseNumber || "N/A",
+      licenseExpiryDate: formatDateToDDMMYYYY(driver.licenseExpiryDate) || "N/A",
     }))
   } catch (error) {
     alert(error.message)
