@@ -374,13 +374,6 @@ const GodownLr = () => {
         })
       }
 
-      // Filter by status (client-side fallback if API doesn't support it)
-      if (selectedStatus !== 'All') {
-        filtered = filtered.filter((receipt) => {
-          return receipt.status === selectedStatus
-        })
-      }
-
       setFilteredData(filtered)
     }
   }, [
@@ -391,7 +384,6 @@ const GodownLr = () => {
     selectedConsignor,
     selectedConsignee,
     selectedCompany,
-    selectedStatus,
     userRole,
   ])
 

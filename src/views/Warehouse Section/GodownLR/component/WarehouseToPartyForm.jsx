@@ -856,7 +856,9 @@ const WarehouseToPartyForm = ({
       warehouseId: formData.issuedByWarehouseId || '',
       consignorId: formData.consignorId || '',
       consigneeId: formData.consigneeId || '',
-      materialOwnerId: formData.materialOwnerId || '',
+      ...(formData.materialOwnerId && formData.materialOwnerId.trim() !== ''
+        ? { materialOwnerId: formData.materialOwnerId }
+        : {}),
       martialOwnerName: formData.martialOwnerName || '',
       martialOwnerAddress: formData.martialOwnerAddress || '',
       date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),

@@ -362,7 +362,7 @@ export const deleteInventoryProductListApi = async (id) => {
 // Godown LR tp pass
 
 export const getGodownTPApi = async ({ queryKey }) => {
-    const [_key, { search, page, limit, consignorId, consigneeId, companyId, workerId }] = queryKey;
+    const [_key, { search, page, limit, consignorId, consigneeId, companyId, workerId, status }] = queryKey;
 
     if (!TOKEN) throw new Error('Authentication token not found');
 
@@ -390,6 +390,11 @@ export const getGodownTPApi = async ({ queryKey }) => {
     // Company
     if (companyId) {
         params.companyId = companyId;
+    }
+
+    // Status 
+    if (status && status !== 'All') {
+        params.status = status;
     }
 
     const { data } = await axios.get(
