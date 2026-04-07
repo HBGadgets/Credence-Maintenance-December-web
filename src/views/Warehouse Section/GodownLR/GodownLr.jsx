@@ -890,7 +890,7 @@ const GodownLr = () => {
       consigneeName: apiData.consigneeName,
       consigneeAddress: apiData.consigneeAddress,
 
-      // Customer Details
+      // Material owner Details
       materialOwner: apiData.materialOwner,
       materialAddress: apiData.materialAddress,
 
