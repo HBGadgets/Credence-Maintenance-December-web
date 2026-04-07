@@ -47,8 +47,8 @@ export const getMartialOwnerDropDownApi = async ({ queryKey }) => {
         {
             params: {
                 search: search || '',
-                page,
-                limit
+                // page,
+                // limit
             },
             headers: { Authorization: `Bearer ${TOKEN}` }
         }

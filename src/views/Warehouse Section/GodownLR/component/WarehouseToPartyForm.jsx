@@ -352,8 +352,8 @@ const WarehouseToPartyForm = ({
         'MartialOwner',
         {
           search: debouncedMartialOwnerSearch,
-          page: martialOwnerPage,
-          limit: itemsPerPage,
+          // page: martialOwnerPage,
+          // limit: itemsPerPage,
         },
       ],
       queryFn: getMartialOwnerDropDownApi,

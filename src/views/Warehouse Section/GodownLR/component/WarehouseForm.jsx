@@ -294,8 +294,8 @@ const WarehouseForm = ({
         'Consignee',
         {
           search: debouncedConsigneeSearch,
-          page: consigneePage,
-          limit: itemsPerPage,
+          // page: consigneePage,
+          // limit: itemsPerPage,
         },
       ],
       queryFn: getConsigneeApi,
