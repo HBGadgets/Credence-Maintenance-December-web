@@ -1050,7 +1050,7 @@ const GodownLr = () => {
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
         editButton={true}
-        deleteButton={true}
+        deleteButton={false}
         statusButton={true}
         viewButton={true}
         viewButtonLabel="Invoice"
