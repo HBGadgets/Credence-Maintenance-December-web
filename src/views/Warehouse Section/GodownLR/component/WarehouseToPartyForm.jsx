@@ -319,7 +319,7 @@ const WarehouseToPartyForm = ({
         {
           search: debouncedConsignorSearch,
           page: consignorPage,
-          limit: itemsPerPage,
+          limit: 2000,
         },
       ],
       queryFn: getConsignorApi,
@@ -336,7 +336,7 @@ const WarehouseToPartyForm = ({
         {
           search: debouncedConsigneeSearch,
           page: consigneePage,
-          limit: itemsPerPage,
+          limit: 2000,
         },
       ],
       queryFn: getConsigneeApi,

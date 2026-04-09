@@ -280,7 +280,7 @@ const WarehouseForm = ({
         {
           search: debouncedConsignorSearch,
           page: consignorPage,
-          limit: itemsPerPage,
+          limit: 2000,
         },
       ],
       queryFn: getConsignorApi,
@@ -294,8 +294,8 @@ const WarehouseForm = ({
         'Consignee',
         {
           search: debouncedConsigneeSearch,
-          // page: consigneePage,
-          // limit: itemsPerPage,
+          page: consigneePage,
+          limit: 2000,
         },
       ],
       queryFn: getConsigneeApi,
