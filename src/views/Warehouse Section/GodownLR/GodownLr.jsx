@@ -632,8 +632,8 @@ const GodownLr = () => {
     { label: 'Consignor Address', key: 'consignorAddress' },
     { label: 'Consignee Name', key: 'consigneeName' },
     { label: 'Consignee Address', key: 'consigneeAddress' },
-    { label: 'Customer Name', key: 'customerName' },
-    { label: 'Customer Address', key: 'customerAddress' },
+    { label: 'Material Owner', key: 'materialOwner' },
+    { label: 'Material Address', key: 'materialAddress' },
     { label: 'Start Location', key: 'startLocation' },
     { label: 'End Location', key: 'endLocation' },
     { label: 'Vehicle Name', key: 'vehicleName' },
@@ -670,30 +670,12 @@ const GodownLr = () => {
     },
     { label: 'Customer Rate On', key: 'customerRateOn' },
     { label: 'Transporter Rate On', key: 'transporterRateOn' },
-
     {
       label: 'Status',
       key: 'status',
       render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
     },
-    {
-      label: 'Products',
-      key: 'products',
-      render: (row) => {
-        if (!row.products || !Array.isArray(row.products)) return 'No products'
-
-        // Summarize product information
-        const summary = row.products.map((p) => {
-          const originalQty = parseFloat(p.quantityMT) || 0
-          const updatedQty = parseFloat(p.updatedQuantityMT) || 0
-          const balance = originalQty - updatedQty
-
-          return `${p.productName || 'N/A'}: ${originalQty.toFixed(2)} MT (Delivered: ${updatedQty.toFixed(2)} MT, Balance: ${balance.toFixed(2)} MT)`
-        })
-
-        return summary.join('; ')
-      },
-    },
+    // REMOVED the Products column from here since we now expand products into separate rows
   ]
 
   // Memoized dropdown items for export

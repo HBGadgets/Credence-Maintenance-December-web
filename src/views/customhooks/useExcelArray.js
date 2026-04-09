@@ -39,8 +39,59 @@ const useExcelArray = () => {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet(title || 'Sheet 1');
 
-                // Get ALL columns for export (don't filter hidden ones)
-                const exportColumns = columns;
+                // Check if we need to expand products into separate rows
+                let exportData = [...data];
+                let hasProductsToExpand = false;
+
+                if (includeProducts) {
+                    // Expand data: create separate row for each product
+                    const expandedData = [];
+                    data.forEach((item) => {
+                        if (item.products && Array.isArray(item.products) && item.products.length > 0) {
+                            hasProductsToExpand = true;
+                            // Create a row for each product
+                            item.products.forEach((product) => {
+                                expandedData.push({
+                                    ...item,
+                                    _productData: product, // Store product data separately
+                                });
+                            });
+                        } else {
+                            // No products, keep as is
+                            expandedData.push({
+                                ...item,
+                                _productData: null,
+                            });
+                        }
+                    });
+                    exportData = expandedData;
+                }
+
+                // Add product-specific columns to the columns array
+                let exportColumns = [...columns];
+                if (includeProducts && hasProductsToExpand) {
+                    // Find the index of Products column or add at the end
+                    const productsIndex = exportColumns.findIndex(col => col.key === 'products');
+
+                    // Remove the original products column if it exists
+                    if (productsIndex !== -1) {
+                        exportColumns.splice(productsIndex, 1);
+                    }
+
+                    // Add product detail columns
+                    const productColumns = [
+                        { label: 'Product Name', key: 'productName' },
+                        { label: 'Warehouse', key: 'warehouseName' },
+                        { label: 'Quantity (MT)', key: 'quantityMT' },
+                        { label: 'Bag Size (KG)', key: 'bagSize' },
+                        { label: 'Total Bags', key: 'totalBags' },
+                        { label: 'Updated Quantity (MT)', key: 'updatedQuantityMT' },
+                    ];
+
+                    exportColumns.push(...productColumns);
+                }
+
+                // Get ALL columns for export
                 const columnCount = exportColumns.length + 1; // +1 for SN column
                 const lastColumnLetter = String.fromCharCode(64 + Math.min(columnCount, 26));
 
@@ -61,7 +112,7 @@ const useExcelArray = () => {
                 titleRow.alignment = { horizontal: 'center' };
                 worksheet.mergeCells(`A${titleRow.number}:${lastColumnLetter}${titleRow.number}`);
 
-                // Add export date row instead of username
+                // Add export date row
                 const exportDateRow = worksheet.addRow([`Exported on: ${new Date().toLocaleDateString()}`]);
                 exportDateRow.font = { italic: true, size: 12, color: { argb: 'FF555555' } };
                 exportDateRow.alignment = { horizontal: 'center' };
@@ -105,32 +156,67 @@ const useExcelArray = () => {
                         column.width = 35;
                     } else if (col.key.includes('Rate') || col.key.includes('Amount') || col.key.includes('Freight')) {
                         column.width = 20;
+                    } else if (col.key === 'warehouseName') {
+                        column.width = 20;
+                    } else if (col.key === 'quantityMT' || col.key === 'updatedQuantityMT' || col.key === 'balanceMT') {
+                        column.width = 18;
+                    } else if (col.key === 'bagSize') {
+                        column.width = 15;
+                    } else if (col.key === 'totalBags') {
+                        column.width = 12;
                     } else {
                         column.width = 18;
                     }
                 });
 
-                // --- CLEAN AND ADD DATA ROWS ---
-                const cleanedData = data.map((item, index) => {
+                // --- CLEAN AND ADD DATA ROWS (with product expansion) ---
+                const cleanedData = exportData.map((item, index) => {
                     const cleanedItem = { SN: index + 1 };
 
                     exportColumns.forEach((col) => {
-                        let value = item[col.key];
+                        let value;
+
+                        // Check if this is a product-related column
+                        if (includeProducts && hasProductsToExpand && item._productData) {
+                            // Get value from product data for product columns
+                            if (col.key === 'productName') {
+                                value = item._productData.productName || '-';
+                            } else if (col.key === 'warehouseName') {
+                                value = item._productData.warehouseName || '-';
+                            } else if (col.key === 'quantityMT') {
+                                value = parseFloat(item._productData.quantityMT) || 0;
+                            } else if (col.key === 'bagSize') {
+                                value = parseFloat(item._productData.bagSize) || 0;
+                            } else if (col.key === 'totalBags') {
+                                const bagSize = parseFloat(item._productData.bagSize) || 0;
+                                const quantityMT = parseFloat(item._productData.quantityMT) || 0;
+                                value = bagSize > 0 ? Math.round(quantityMT * 1000 / bagSize) : 0;
+                            } else if (col.key === 'updatedQuantityMT') {
+                                value = parseFloat(item._productData.updatedQuantityMT) || 0;
+                            } else if (col.key === 'balanceMT') {
+                                const originalQty = parseFloat(item._productData.quantityMT) || 0;
+                                const updatedQty = parseFloat(item._productData.updatedQuantityMT) || 0;
+                                value = Math.max(0, originalQty - updatedQty);
+                            } else {
+                                // Get from main item
+                                value = item[col.key];
+                            }
+                        } else {
+                            // Get from main item
+                            value = item[col.key];
+                        }
 
                         // Handle custom render functions
-                        if (col.render) {
+                        if (col.render && !col.key.startsWith('_')) {
                             try {
-                                // Extract text from React elements if needed
                                 const renderedValue = col.render(item);
                                 if (typeof renderedValue === 'string') {
                                     value = renderedValue;
                                 } else if (renderedValue && renderedValue.props) {
-                                    // For React elements, try to get text content
                                     if (renderedValue.props.children) {
                                         if (typeof renderedValue.props.children === 'string') {
                                             value = renderedValue.props.children;
                                         } else if (Array.isArray(renderedValue.props.children)) {
-                                            // Join array of children
                                             value = renderedValue.props.children
                                                 .map(child => typeof child === 'string' ? child : String(child))
                                                 .join('');
@@ -178,12 +264,20 @@ const useExcelArray = () => {
                         if (columnLabel && (
                             columnLabel.includes('Rate') ||
                             columnLabel.includes('Amount') ||
-                            columnLabel.includes('Freight')
+                            columnLabel.includes('Freight') ||
+                            columnLabel.includes('Quantity') ||
+                            columnLabel.includes('Bag Size') ||
+                            columnLabel.includes('Total Bags') ||
+                            columnLabel.includes('Balance')
                         )) {
-                            const numValue = parseFloat(cell.value?.replace(/[^0-9.-]+/g, ''));
+                            const numValue = parseFloat(cell.value?.toString().replace(/[^0-9.-]+/g, ''));
                             if (!isNaN(numValue)) {
                                 cell.value = numValue;
-                                cell.numFmt = '#,##0.00';
+                                if (columnLabel.includes('Bag Size') || columnLabel.includes('Total Bags')) {
+                                    cell.numFmt = '#,##0';
+                                } else {
+                                    cell.numFmt = '#,##0.00';
+                                }
                             }
                         }
                     });
@@ -199,262 +293,8 @@ const useExcelArray = () => {
                     });
                 });
 
-                // --- PRODUCTS SECTION ---
-                if (includeProducts) {
-                    // Get all records with products
-                    const recordsWithProducts = data.filter(item =>
-                        item.products &&
-                        Array.isArray(item.products) &&
-                        item.products.length > 0
-                    );
-
-                    if (recordsWithProducts.length > 0) {
-                        // Add spacer
-                        worksheet.addRow([]);
-                        worksheet.addRow([]);
-
-                        // Products Section Title
-                        const productsTitleRow = worksheet.addRow([`${productsLabel} Details`]);
-                        productsTitleRow.font = {
-                            bold: true,
-                            size: 14,
-                            color: { argb: CONFIG.colors.primary }
-                        };
-                        productsTitleRow.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FFF8F9FA' },
-                        };
-                        productsTitleRow.alignment = { horizontal: 'center' };
-                        worksheet.mergeCells(`A${productsTitleRow.number}:G${productsTitleRow.number}`);
-
-                        // Process each record's products
-                        recordsWithProducts.forEach((record, recordIndex) => {
-                            // Add record header
-                            worksheet.addRow([]);
-                            const recordHeader = worksheet.addRow([
-                                `Record ${recordIndex + 1}: ${record.receiptNo || record.id || record._id || `Record #${recordIndex + 1}`}`
-                            ]);
-                            recordHeader.font = { bold: true, italic: true, size: 12 };
-                            recordHeader.fill = {
-                                type: 'pattern',
-                                pattern: 'solid',
-                                fgColor: { argb: 'FFE9ECEF' },
-                            };
-                            worksheet.mergeCells(`A${recordHeader.number}:G${recordHeader.number}`);
-
-                            // Products table header
-                            const productHeaders = [
-                                'Product Name',
-                                'Warehouse',
-                                'Quantity (MT)',
-                                'Bag Size (KG)',
-                                'Total Bags',
-                                'Updated Quantity (MT)',
-                                'Total (MT)'
-                            ];
-
-                            const productHeaderRow = worksheet.addRow(productHeaders);
-                            productHeaderRow.eachCell((cell) => {
-                                cell.font = { bold: true, size: 11, color: { argb: CONFIG.colors.text } };
-                                cell.fill = {
-                                    type: 'pattern',
-                                    pattern: 'solid',
-                                    fgColor: { argb: CONFIG.colors.secondary },
-                                };
-                                cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                                cell.border = {
-                                    top: { style: CONFIG.borderStyle },
-                                    left: { style: CONFIG.borderStyle },
-                                    bottom: { style: CONFIG.borderStyle },
-                                    right: { style: CONFIG.borderStyle },
-                                };
-                            });
-
-                            // Set column widths for products
-                            const productColumnWidths = [25, 20, 15, 15, 12, 18, 15];
-                            ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach((col, idx) => {
-                                worksheet.getColumn(col).width = productColumnWidths[idx];
-                            });
-
-                            // Add product rows
-                            record.products.forEach((product, productIndex) => {
-                                // Parse quantities
-                                const originalQuantity = parseFloat(product.quantityMT) || 0;
-                                const updatedQuantity = parseFloat(product.updatedQuantityMT) || 0;
-                                const balanceQuantity = Math.max(0, originalQuantity - updatedQuantity);
-                                const bagSize = parseFloat(product.bagSize) || 0;
-
-                                // Calculate total bags
-                                let totalBags = 0;
-                                if (bagSize > 0) {
-                                    totalBags = Math.round(originalQuantity * 1000 / bagSize); // Convert MT to KG and divide by bag size
-                                }
-
-                                const productRow = worksheet.addRow([
-                                    product.productName || '-',
-                                    product.warehouseName || '-',
-                                    originalQuantity,
-                                    bagSize,
-                                    totalBags,
-                                    updatedQuantity,
-                                    balanceQuantity
-                                ]);
-
-                                // Alternate row colors
-                                if (productIndex % 2 === 0) {
-                                    productRow.fill = {
-                                        type: 'pattern',
-                                        pattern: 'solid',
-                                        fgColor: { argb: 'FFFFFFFF' },
-                                    };
-                                } else {
-                                    productRow.fill = {
-                                        type: 'pattern',
-                                        pattern: 'solid',
-                                        fgColor: { argb: 'FFF8F9FA' },
-                                    };
-                                }
-
-                                // Format cells
-                                productRow.eachCell((cell, colNumber) => {
-                                    cell.alignment = {
-                                        horizontal: colNumber <= 2 ? 'left' : 'center',
-                                        vertical: 'middle'
-                                    };
-                                    cell.border = {
-                                        left: { style: CONFIG.borderStyle },
-                                        right: { style: CONFIG.borderStyle },
-                                        bottom: { style: CONFIG.borderStyle },
-                                    };
-
-                                    // Format numeric cells (columns C, D, E, F, G)
-                                    if (colNumber >= 3 && colNumber <= 7) {
-                                        const numValue = parseFloat(cell.value);
-                                        if (!isNaN(numValue)) {
-                                            cell.value = numValue;
-                                            // Use decimal format for quantity columns
-                                            if (colNumber === 3 || colNumber === 6 || colNumber === 7) { // Quantity columns
-                                                cell.numFmt = '#,##0.00';
-                                            } else if (colNumber === 4) { // Bag Size
-                                                cell.numFmt = '#,##0';
-                                            } else if (colNumber === 5) { // Total Bags
-                                                cell.numFmt = '#,##0';
-                                            }
-                                        }
-                                    }
-                                });
-                            });
-
-                            // Add totals row for this record
-                            const totalOriginalQuantity = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.quantityMT) || 0), 0
-                            );
-                            const totalUpdatedQuantity = record.products.reduce((sum, product) =>
-                                sum + (parseFloat(product.updatedQuantityMT) || 0), 0
-                            );
-                            const totalBalance = totalOriginalQuantity - totalUpdatedQuantity;
-
-                            // Calculate total bags for this record
-                            let totalBags = 0;
-                            record.products.forEach(product => {
-                                const bagSize = parseFloat(product.bagSize) || 0;
-                                const quantityMT = parseFloat(product.quantityMT) || 0;
-                                if (bagSize > 0) {
-                                    totalBags += Math.round(quantityMT * 1000 / bagSize);
-                                }
-                            });
-
-                            const totalRow = worksheet.addRow([
-                                'TOTAL',
-                                '',
-                                totalOriginalQuantity.toFixed(2),
-                                '',
-                                totalBags,
-                                totalUpdatedQuantity.toFixed(2),
-                                totalBalance.toFixed(2)
-                            ]);
-
-                            totalRow.font = { bold: true };
-                            totalRow.fill = {
-                                type: 'pattern',
-                                pattern: 'solid',
-                                fgColor: { argb: 'FFE9ECEF' },
-                            };
-                            totalRow.eachCell((cell, colNumber) => {
-                                cell.alignment = {
-                                    horizontal: colNumber <= 2 ? 'left' : 'center',
-                                    vertical: 'middle'
-                                };
-                                cell.border = {
-                                    top: { style: 'medium' },
-                                    bottom: { style: CONFIG.borderStyle },
-                                    left: { style: CONFIG.borderStyle },
-                                    right: { style: CONFIG.borderStyle },
-                                };
-
-                                // Format numeric totals
-                                if (colNumber >= 3 && colNumber <= 7) {
-                                    const numValue = parseFloat(cell.value);
-                                    if (!isNaN(numValue)) {
-                                        cell.value = numValue;
-                                        if (colNumber === 3 || colNumber === 6 || colNumber === 7) {
-                                            cell.numFmt = '#,##0.00';
-                                        } else if (colNumber === 5) {
-                                            cell.numFmt = '#,##0';
-                                        }
-                                    }
-                                }
-                            });
-
-                            worksheet.addRow([]);
-                        });
-
-                        // Add overall summary
-                        const allProducts = recordsWithProducts.flatMap(record => record.products);
-                        const overallOriginalQuantity = allProducts.reduce((sum, product) =>
-                            sum + (parseFloat(product.quantityMT) || 0), 0
-                        );
-                        const overallUpdatedQuantity = allProducts.reduce((sum, product) =>
-                            sum + (parseFloat(product.updatedQuantityMT) || 0), 0
-                        );
-                        const overallBalance = overallOriginalQuantity - overallUpdatedQuantity;
-
-                        // Calculate overall total bags
-                        let overallTotalBags = 0;
-                        allProducts.forEach(product => {
-                            const bagSize = parseFloat(product.bagSize) || 0;
-                            const quantityMT = parseFloat(product.quantityMT) || 0;
-                            if (bagSize > 0) {
-                                overallTotalBags += Math.round(quantityMT * 1000 / bagSize);
-                            }
-                        });
-
-                        // Calculate delivery percentage
-                        const deliveryPercentage = overallOriginalQuantity > 0
-                            ? (overallUpdatedQuantity / overallOriginalQuantity) * 100
-                            : 0;
-
-                        const summaryRow = worksheet.addRow([
-                            'OVERALL PRODUCTS SUMMARY',
-                            '',
-                            `Total Original Quantity: ${overallOriginalQuantity.toFixed(2)} MT`,
-                            '',
-                            `Total Bags: ${overallTotalBags}`,
-                            `Total Delivered: ${overallUpdatedQuantity.toFixed(2)} MT`,
-                            `Total: ${overallBalance.toFixed(2)} MT`,
-                            `Delivery: ${deliveryPercentage.toFixed(1)}%`
-                        ]);
-
-                        summaryRow.font = { bold: true, size: 12, color: { argb: CONFIG.colors.primary } };
-                        summaryRow.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FFD4EDDA' },
-                        };
-                        worksheet.mergeCells(`A${summaryRow.number}:H${summaryRow.number}`);
-                    }
-                }
+                // Remove the old PRODUCTS SECTION since we're now showing products in main rows
+                // The includeProducts parameter now only controls whether to expand products into separate rows
 
                 // --- METADATA ---
                 if (Object.keys(metaData).length > 0) {
@@ -469,7 +309,7 @@ const useExcelArray = () => {
 
                 // --- FOOTER ---
                 worksheet.addRow([]);
-                const totalRecordsRow = worksheet.addRow([`Total Records: ${data.length}`]);
+                const totalRecordsRow = worksheet.addRow([`Total Records: ${exportData.length}`]);
                 totalRecordsRow.font = { bold: true, size: 11 };
                 totalRecordsRow.alignment = { horizontal: 'left' };
                 worksheet.mergeCells(`A${totalRecordsRow.number}:${lastColumnLetter}${totalRecordsRow.number}`);
