@@ -9,57 +9,52 @@ import {
   FaFilePdf,
   FaCompressAlt,
   FaExpandAlt,
-  FaEye,
+  FaRegFileAlt,
 } from 'react-icons/fa'
-import { Document, Page, pdfjs } from 'react-pdf'
-
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [fileError, setFileError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [fileInfo, setFileInfo] = useState(null)
   const [fileType, setFileType] = useState(null)
-  const [pdfNumPages, setPdfNumPages] = useState(null)
-  const [pdfPageNumber, setPdfPageNumber] = useState(1)
-  const [pdfScale, setPdfScale] = useState(1.0)
-  const [pdfLoading, setPdfLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('preview')
   const [isZoomed, setIsZoomed] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [fileSize, setFileSize] = useState(null)
+  const [useIframe, setUseIframe] = useState(false)
 
   const imageRef = useRef(null)
   const modalBodyRef = useRef(null)
+  const iframeRef = useRef(null)
 
-  // Detect file type and load file
   useEffect(() => {
     if (imageUrl && show) {
       loadFileInfo()
     }
   }, [imageUrl, show])
 
-  // Reset states when modal closes
   useEffect(() => {
     if (!show) {
-      setIsLoading(true)
-      setFileError(false)
-      setFileInfo(null)
-      setFileType(null)
-      setPdfNumPages(null)
-      setPdfPageNumber(1)
-      setPdfScale(1.0)
-      setActiveTab('preview')
-      setIsZoomed(false)
-      setDownloadProgress(0)
+      resetStates()
     }
   }, [show])
+
+  const resetStates = () => {
+    setIsLoading(true)
+    setFileError(false)
+    setErrorMessage('')
+    setFileInfo(null)
+    setFileType(null)
+    setActiveTab('preview')
+    setIsZoomed(false)
+    setDownloadProgress(0)
+    setUseIframe(false)
+  }
 
   const getFullFileUrl = () => {
     if (!imageUrl) return ''
 
-    // If it's already a full URL, return it
     if (
       imageUrl.startsWith('http://') ||
       imageUrl.startsWith('https://') ||
@@ -68,34 +63,36 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
       return imageUrl
     }
 
-    // If it starts with /uploads, prepend API URL
     if (imageUrl.startsWith('/uploads')) {
       return `${import.meta.env.VITE_API_URL || ''}${imageUrl}`
     }
 
-    // Otherwise, assume it's a relative path from the API
     return `${import.meta.env.VITE_API_URL || ''}/uploads/${imageUrl}`
   }
 
   const loadFileInfo = async () => {
     setIsLoading(true)
     setFileError(false)
+    setErrorMessage('')
     const fullUrl = getFullFileUrl()
 
     try {
-      // First, detect file type from URL
       const fileName = getFileName()
       const extension = fileName.split('.').pop().toLowerCase()
 
       if (['pdf'].includes(extension)) {
         setFileType('pdf')
+        // Just set loading to false, don't try to load PDF.js
+        setIsLoading(false)
       } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(extension)) {
         setFileType('image')
+        setIsLoading(false)
       } else {
         setFileType('unknown')
+        setIsLoading(false)
       }
 
-      // Try to get file size via HEAD request
+      // Get file size
       try {
         const response = await fetch(fullUrl, { method: 'HEAD' })
         if (response.headers.get('content-length')) {
@@ -106,22 +103,15 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
         console.log('Could not fetch file size:', error)
       }
 
-      // Check if file exists
-      const testResponse = await fetch(fullUrl, { method: 'HEAD' })
-      if (!testResponse.ok) {
-        throw new Error(`File not found (${testResponse.status})`)
-      }
-
       setFileInfo({
         url: fullUrl,
         name: fileName,
         extension: extension,
       })
-
-      setIsLoading(false)
     } catch (error) {
       console.error('Error loading file info:', error)
       setFileError(true)
+      setErrorMessage(error.message || 'Failed to load file')
       setIsLoading(false)
     }
   }
@@ -129,15 +119,23 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
   const getFileName = () => {
     if (!imageUrl) return 'acknowledgement-file'
 
+    let cleanUrl = imageUrl
+    if (cleanUrl.includes('chrome-extension://')) {
+      const match = cleanUrl.match(/chrome-extension:\/\/[^/]+\/(.+)/)
+      if (match && match[1]) {
+        cleanUrl = match[1]
+      }
+    }
+
     try {
-      const url = new URL(getFullFileUrl())
+      const url = new URL(cleanUrl)
       const pathParts = url.pathname.split('/')
       const fileName = pathParts[pathParts.length - 1]
-      return fileName || `acknowledgement.${fileType || 'jpg'}`
+      return decodeURIComponent(fileName) || `acknowledgement.${fileType || 'jpg'}`
     } catch (error) {
-      const parts = imageUrl.split('/')
+      const parts = cleanUrl.split('/')
       const fileName = parts[parts.length - 1]
-      return fileName || `acknowledgement.${fileType || 'jpg'}`
+      return decodeURIComponent(fileName) || `acknowledgement.${fileType || 'jpg'}`
     }
   }
 
@@ -157,82 +155,22 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
       const response = await fetch(fullUrl)
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`)
+        throw new Error(`Failed to fetch file: ${response.status}`)
       }
 
-      const contentLength = response.headers.get('content-length')
-      const total = contentLength ? parseInt(contentLength, 10) : 0
-      let loaded = 0
-
-      const reader = response.body.getReader()
-      const chunks = []
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        chunks.push(value)
-        loaded += value.length
-
-        if (total > 0) {
-          const progress = Math.round((loaded / total) * 100)
-          setDownloadProgress(progress)
-        }
-      }
-
-      const blob = new Blob(chunks)
+      const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = fileName
-      link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-        setDownloadProgress(0)
-      }, 100)
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download failed:', error)
-      // Fallback to opening in new tab
       window.open(fullUrl, '_blank')
     }
-  }
-
-  const onPdfLoadSuccess = ({ numPages }) => {
-    setPdfNumPages(numPages)
-    setPdfLoading(false)
-  }
-
-  const onPdfLoadError = (error) => {
-    console.error('PDF load error:', error)
-    setFileError(true)
-    setPdfLoading(false)
-  }
-
-  const changePdfPage = (offset) => {
-    setPdfPageNumber((prevPageNumber) => {
-      const newPageNumber = prevPageNumber + offset
-      if (newPageNumber >= 1 && newPageNumber <= pdfNumPages) {
-        return newPageNumber
-      }
-      return prevPageNumber
-    })
-  }
-
-  const zoomIn = () => {
-    setPdfScale((prev) => Math.min(prev + 0.25, 3.0))
-  }
-
-  const zoomOut = () => {
-    setPdfScale((prev) => Math.max(prev - 0.25, 0.5))
-  }
-
-  const resetZoom = () => {
-    setPdfScale(1.0)
   }
 
   const toggleZoom = () => {
@@ -251,6 +189,11 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
     }
   }
 
+  const openInBrowser = () => {
+    const fullUrl = getFullFileUrl()
+    window.open(fullUrl, '_blank', 'noopener,noreferrer')
+  }
+
   const renderImage = () => (
     <div className="image-container" style={{ textAlign: 'center' }}>
       <img
@@ -261,6 +204,7 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setFileError(true)
+          setErrorMessage('Failed to load image')
           setIsLoading(false)
         }}
         style={{
@@ -277,53 +221,24 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
     </div>
   )
 
-  const renderPDF = () => (
+  const renderPDFWithIframe = () => (
     <div className="pdf-container" style={{ textAlign: 'center' }}>
-      {pdfLoading && (
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ minHeight: '400px' }}
-        >
-          <Spinner animation="border" variant="primary" />
-        </div>
-      )}
+      <div className="alert alert-info mb-3">
+        <FaRegFileAlt className="me-2" />
+        <strong>PDF Viewer:</strong> Use the controls below to navigate or open in a new tab for
+        better viewing.
+      </div>
 
       <div className="pdf-controls mb-3">
-        <div className="d-flex justify-content-center align-items-center gap-2">
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={() => changePdfPage(-1)}
-            disabled={pdfPageNumber <= 1 || pdfLoading}
-          >
-            Previous
+        <div className="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+          <Button variant="outline-primary" size="sm" onClick={openInBrowser}>
+            <FaExternalLinkAlt className="me-2" />
+            Open in New Tab
           </Button>
 
-          <span className="mx-2">
-            Page {pdfPageNumber} of {pdfNumPages || '--'}
-          </span>
-
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={() => changePdfPage(1)}
-            disabled={pdfPageNumber >= pdfNumPages || pdfLoading}
-          >
-            Next
-          </Button>
-        </div>
-
-        <div className="d-flex justify-content-center align-items-center gap-2 mt-2">
-          <Button variant="outline-secondary" size="sm" onClick={zoomOut} disabled={pdfLoading}>
-            <FaCompressAlt /> Zoom Out
-          </Button>
-
-          <Button variant="outline-secondary" size="sm" onClick={resetZoom} disabled={pdfLoading}>
-            Reset Zoom
-          </Button>
-
-          <Button variant="outline-secondary" size="sm" onClick={zoomIn} disabled={pdfLoading}>
-            <FaExpandAlt /> Zoom In
+          <Button variant="outline-success" size="sm" onClick={handleDownload}>
+            <FaDownload className="me-2" />
+            Download PDF
           </Button>
         </div>
       </div>
@@ -331,44 +246,95 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
       <div
         className="pdf-viewer"
         style={{
-          overflow: 'auto',
-          maxHeight: '60vh',
+          position: 'relative',
+          paddingBottom: '75%',
+          height: 0,
+          overflow: 'hidden',
           border: '1px solid #dee2e6',
           borderRadius: '8px',
-          padding: '10px',
           backgroundColor: '#f8f9fa',
         }}
       >
-        <Document
-          file={getFullFileUrl()}
-          onLoadSuccess={onPdfLoadSuccess}
-          onLoadError={onPdfLoadError}
-          loading={
-            <div
-              className="d-flex justify-content-center align-items-center"
-              style={{ minHeight: '300px' }}
-            >
-              <Spinner animation="border" variant="primary" />
-              <span className="ms-2">Loading PDF...</span>
-            </div>
-          }
-          onLoadProgress={({ loaded, total }) => {
-            if (total > 0) {
-              const progress = Math.round((loaded / total) * 100)
-              setDownloadProgress(progress)
+        <iframe
+          ref={iframeRef}
+          src={`https://docs.google.com/viewer?url=${encodeURIComponent(getFullFileUrl())}&embedded=true`}
+          title="PDF Viewer"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          onError={() => {
+            console.log('Google Docs viewer failed, falling back to direct link')
+            if (iframeRef.current) {
+              iframeRef.current.src = getFullFileUrl()
             }
           }}
-        >
-          <Page
-            pageNumber={pdfPageNumber}
-            scale={pdfScale}
-            renderAnnotationLayer={false}
-            renderTextLayer={true}
-          />
-        </Document>
+        />
+      </div>
+
+      <div className="mt-3 text-muted small">
+        <Alert variant="secondary" className="mb-0">
+          <small>
+            <strong>Note:</strong> If the PDF doesn't display above, click "Open in New Tab" to view
+            directly in your browser.
+          </small>
+        </Alert>
       </div>
     </div>
   )
+
+  const renderPDFDirect = () => (
+    <div className="pdf-container" style={{ textAlign: 'center' }}>
+      <div className="pdf-controls mb-3">
+        <div className="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+          <Button variant="primary" onClick={openInBrowser}>
+            <FaExternalLinkAlt className="me-2" />
+            Open PDF in Browser
+          </Button>
+
+          <Button variant="outline-success" onClick={handleDownload}>
+            <FaDownload className="me-2" />
+            Download PDF
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className="pdf-preview-placeholder"
+        style={{
+          minHeight: '400px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '2px dashed #dee2e6',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa',
+          padding: '40px',
+        }}
+      >
+        <div className="text-center">
+          <FaFilePdf size={80} className="text-danger mb-3" />
+          <h5>PDF Document Ready</h5>
+          <p className="text-muted">
+            Click the button above to view the PDF in your browser's native PDF viewer.
+          </p>
+          <Button variant="danger" onClick={openInBrowser}>
+            <FaExternalLinkAlt className="me-2" />
+            View PDF Document
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderPDF = () => {
+    // Use iframe with Google Docs viewer as fallback
+    return renderPDFWithIframe()
+  }
 
   const renderFileInfo = () => {
     const fileName = getFileName()
@@ -404,6 +370,16 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
             <small className="text-muted text-break">{fileInfo.url}</small>
           </div>
         )}
+        <div className="mt-3">
+          <Button variant="primary" onClick={openInBrowser} className="me-2">
+            <FaExternalLinkAlt className="me-1" />
+            Open in Browser
+          </Button>
+          <Button variant="outline-primary" onClick={handleDownload}>
+            <FaDownload className="me-1" />
+            Download
+          </Button>
+        </div>
       </div>
     )
   }
@@ -418,11 +394,6 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
           <div className="text-center">
             <Spinner animation="border" role="status" variant="primary" size="lg" />
             <p className="mt-3">Loading file...</p>
-            {downloadProgress > 0 && (
-              <div className="mt-3" style={{ width: '200px' }}>
-                <ProgressBar now={downloadProgress} label={`${downloadProgress}%`} />
-              </div>
-            )}
           </div>
         </div>
       )
@@ -433,15 +404,13 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
         <div className="text-center py-5">
           <FaExclamationTriangle size={64} className="text-warning mb-3" />
           <h5>File Not Available</h5>
-          <p className="text-muted">The acknowledgement file could not be loaded.</p>
+          <p className="text-muted">
+            {errorMessage || 'The acknowledgement file could not be loaded.'}
+          </p>
           <div className="mt-4">
-            <Button
-              variant="outline-primary"
-              onClick={() => window.open(getFullFileUrl(), '_blank')}
-              className="me-2"
-            >
+            <Button variant="primary" onClick={openInBrowser} className="me-2">
               <FaExternalLinkAlt className="me-2" />
-              Open in New Tab
+              Open in Browser
             </Button>
             <Button variant="outline-secondary" onClick={loadFileInfo}>
               Retry
@@ -525,13 +494,9 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
               </Button>
             )}
 
-            <Button
-              variant="outline-primary"
-              onClick={() => window.open(getFullFileUrl(), '_blank')}
-              disabled={isLoading || fileError}
-            >
+            <Button variant="primary" onClick={openInBrowser} disabled={isLoading}>
               <FaExternalLinkAlt className="me-2" />
-              Open
+              Open in Browser
             </Button>
 
             <Button variant="primary" onClick={handleDownload} disabled={isLoading || fileError}>

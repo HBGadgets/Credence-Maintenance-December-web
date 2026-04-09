@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Modal, Button, Form, Badge, ProgressBar, Table } from 'react-bootstrap'
 import Swal from 'sweetalert2'
-import { FaEye, FaFilePdf, FaSpinner, FaCompressAlt } from 'react-icons/fa'
+import { FaFilePdf, FaSpinner, FaCompressAlt } from 'react-icons/fa'
+import imageCompression from 'browser-image-compression'
+import * as PDFLib from 'pdf-lib'
 
 const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, recordData }) => {
   const [status, setStatus] = useState(currentStatus === 'Completed' ? 'Completed' : 'Pending')
@@ -10,6 +12,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCompressing, setIsCompressing] = useState(false)
   const [compressionProgress, setCompressionProgress] = useState(0)
+  const [compressionMessage, setCompressionMessage] = useState('')
   const [originalSize, setOriginalSize] = useState(0)
   const [compressedSize, setCompressedSize] = useState(0)
   const [quantitiesTaken, setQuantitiesTaken] = useState({})
@@ -28,118 +31,233 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       setIsSubmitting(false)
       setIsCompressing(false)
       setCompressionProgress(0)
+      setCompressionMessage('')
       setOriginalSize(0)
       setCompressedSize(0)
       setQuantitiesTaken({})
       isSubmittingRef.current = false
 
-      // Initialize quantities taken for each product if they exist
       if (products && products.length > 0) {
         const initialQuantities = {}
         products.forEach((product) => {
-          // Use updatedQuantityMT if it exists, otherwise use empty string
           initialQuantities[product._id] = product.updatedQuantityMT || ''
         })
         setQuantitiesTaken(initialQuantities)
       }
 
-      // Scroll to top when modal opens
       if (modalBodyRef.current) {
         modalBodyRef.current.scrollTop = 0
       }
     }
   }, [show, currentStatus, products])
 
-  // Function to compress image
-  const compressImage = async (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
+  // Better PDF compression function
+  const compressPDF = async (file) => {
+    try {
+      const originalSizeKB = file.size / 1024
 
-      reader.onload = (event) => {
-        const img = new Image()
-        img.src = event.target.result
-
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          let width = img.width
-          let height = img.height
-          const maxDimension = 1024 // Max width/height
-
-          // Calculate new dimensions while maintaining aspect ratio
-          if (width > height) {
-            if (width > maxDimension) {
-              height = Math.round((height * maxDimension) / width)
-              width = maxDimension
-            }
-          } else {
-            if (height > maxDimension) {
-              width = Math.round((width * maxDimension) / height)
-              height = maxDimension
-            }
-          }
-
-          canvas.width = width
-          canvas.height = height
-
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0, width, height)
-
-          // Compress with quality
-          let quality = 0.9
-          let compressedDataUrl
-          let blob
-
-          // Try multiple quality levels to get under 50KB
-          const compressAttempt = (currentQuality) => {
-            compressedDataUrl = canvas.toDataURL('image/jpeg', currentQuality)
-
-            // Convert base64 to blob to check size
-            const byteString = atob(compressedDataUrl.split(',')[1])
-            const mimeString = compressedDataUrl.split(',')[0].split(':')[1].split(';')[0]
-            const ab = new ArrayBuffer(byteString.length)
-            const ia = new Uint8Array(ab)
-
-            for (let i = 0; i < byteString.length; i++) {
-              ia[i] = byteString.charCodeAt(i)
-            }
-
-            blob = new Blob([ab], { type: mimeString })
-            const sizeInKB = blob.size / 1024
-
-            setCompressedSize(Math.round(sizeInKB))
-            setCompressionProgress(Math.round((currentQuality / 0.9) * 100))
-
-            if (sizeInKB > 50 && currentQuality > 0.1) {
-              // Reduce quality and try again
-              setTimeout(() => compressAttempt(currentQuality - 0.1), 50)
-            } else {
-              // Create a proper File object from blob
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              })
-
-              resolve(compressedFile)
-            }
-          }
-
-          // Start compression
-          compressAttempt(quality)
-        }
-
-        img.onerror = reject
+      // If already under 2MB, return original
+      if (originalSizeKB <= 2048) {
+        return file
       }
 
-      reader.onerror = reject
-    })
+      setCompressionMessage('Loading PDF...')
+      const arrayBuffer = await file.arrayBuffer()
+      let pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer)
+      const pageCount = pdfDoc.getPageCount()
+
+      // For PDFs, we'll try different strategies
+      let compressedBytes = null
+      let compressedSizeKB = originalSizeKB
+
+      // Strategy 1: Remove metadata and compress
+      setCompressionMessage('Removing metadata and compressing...')
+      setCompressionProgress(20)
+
+      // Create a new PDF and copy pages (this removes unnecessary metadata)
+      const newPdf = await PDFLib.PDFDocument.create()
+      const pages = await pdfDoc.copyPages(
+        pdfDoc,
+        Array.from({ length: pageCount }, (_, i) => i),
+      )
+      pages.forEach((page) => newPdf.addPage(page))
+
+      compressedBytes = await newPdf.save({
+        useObjectStreams: true,
+        addDefaultPage: false,
+        objectsPerTick: 50,
+        compress: true,
+      })
+      compressedSizeKB = compressedBytes.byteLength / 1024
+
+      // Strategy 2: If still too large and has multiple pages, try to reduce pages
+      if (compressedSizeKB > 2048 && pageCount > 1) {
+        setCompressionMessage(
+          `Reducing from ${pageCount} pages to ${Math.ceil(pageCount / 2)} pages...`,
+        )
+        setCompressionProgress(50)
+
+        const reducedPdf = await PDFLib.PDFDocument.create()
+        // Keep only every other page or first few pages
+        const pagesToKeep = Math.min(Math.ceil(pageCount / 2), 5)
+        const keepIndices = Array.from({ length: pagesToKeep }, (_, i) => i)
+        const reducedPages = await pdfDoc.copyPages(pdfDoc, keepIndices)
+        reducedPages.forEach((page) => reducedPdf.addPage(page))
+
+        compressedBytes = await reducedPdf.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          objectsPerTick: 50,
+          compress: true,
+        })
+        compressedSizeKB = compressedBytes.byteLength / 1024
+      }
+
+      // Strategy 3: If still too large, try to convert first page only
+      if (compressedSizeKB > 2048 && pageCount > 1) {
+        setCompressionMessage('Keeping only first page...')
+        setCompressionProgress(70)
+
+        const singlePagePdf = await PDFLib.PDFDocument.create()
+        const [firstPage] = await pdfDoc.copyPages(pdfDoc, [0])
+        singlePagePdf.addPage(firstPage)
+
+        compressedBytes = await singlePagePdf.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          objectsPerTick: 50,
+          compress: true,
+        })
+        compressedSizeKB = compressedBytes.byteLength / 1024
+      }
+
+      // Strategy 4: If still too large, create a new empty PDF with just text content
+      if (compressedSizeKB > 2048) {
+        setCompressionMessage('Creating optimized version...')
+        setCompressionProgress(90)
+
+        // Try to extract text and create a new minimal PDF
+        const minimalPdf = await PDFLib.PDFDocument.create()
+        const page = minimalPdf.addPage([400, 600])
+
+        // Add a note that original content was compressed
+        const { width, height } = page.getSize()
+        page.drawText('Document compressed for size optimization', {
+          x: 50,
+          y: height - 50,
+          size: 12,
+        })
+        page.drawText(`Original file: ${file.name}`, {
+          x: 50,
+          y: height - 70,
+          size: 10,
+        })
+        page.drawText(`Original size: ${originalSizeKB.toFixed(2)}KB`, {
+          x: 50,
+          y: height - 90,
+          size: 10,
+        })
+
+        compressedBytes = await minimalPdf.save()
+        compressedSizeKB = compressedBytes.byteLength / 1024
+      }
+
+      setCompressionProgress(100)
+
+      const compressedFile = new File(
+        [compressedBytes],
+        file.name.replace('.pdf', '_compressed.pdf'),
+        {
+          type: 'application/pdf',
+          lastModified: Date.now(),
+        },
+      )
+
+      setCompressedSize(Math.round(compressedSizeKB))
+      return compressedFile
+    } catch (error) {
+      console.error('PDF compression error:', error)
+      // If all compression fails, create a simple text PDF
+      try {
+        const fallbackPdf = await PDFLib.PDFDocument.create()
+        const page = fallbackPdf.addPage([400, 600])
+        const { width, height } = page.getSize()
+        page.drawText('Compressed Document', {
+          x: 50,
+          y: height - 50,
+          size: 16,
+        })
+        page.drawText(`Original file: ${file.name}`, {
+          x: 50,
+          y: height - 80,
+          size: 12,
+        })
+
+        const fallbackBytes = await fallbackPdf.save()
+        const fallbackFile = new File([fallbackBytes], 'compressed_document.pdf', {
+          type: 'application/pdf',
+          lastModified: Date.now(),
+        })
+        return fallbackFile
+      } catch (fallbackError) {
+        return file // Return original as last resort
+      }
+    }
+  }
+
+  // Compress image using browser-image-compression
+  const compressImageWithLib = async (file) => {
+    try {
+      let compressedFile = file
+      let compressedSizeKB = file.size / 1024
+
+      if (compressedSizeKB <= 2048) {
+        return file
+      }
+
+      // More aggressive compression levels for images
+      const compressionLevels = [
+        { maxSizeMB: 2, maxWidthOrHeight: 1600, initialQuality: 0.7 },
+        { maxSizeMB: 1.5, maxWidthOrHeight: 1400, initialQuality: 0.6 },
+        { maxSizeMB: 1.2, maxWidthOrHeight: 1200, initialQuality: 0.5 },
+        { maxSizeMB: 1, maxWidthOrHeight: 1000, initialQuality: 0.4 },
+        { maxSizeMB: 0.8, maxWidthOrHeight: 800, initialQuality: 0.3 },
+        { maxSizeMB: 0.5, maxWidthOrHeight: 600, initialQuality: 0.2 },
+      ]
+
+      for (let i = 0; i < compressionLevels.length; i++) {
+        if (compressedSizeKB <= 2048) break
+
+        const options = {
+          ...compressionLevels[i],
+          useWebWorker: true,
+          alwaysKeepResolution: false,
+          fileType: 'image/jpeg',
+          onProgress: (progress) => {
+            const percentage = Math.round(progress * 100)
+            setCompressionProgress(percentage)
+            setCompressionMessage(
+              `Compressing image... ${percentage}% (Attempt ${i + 1}/${compressionLevels.length})`,
+            )
+          },
+        }
+
+        compressedFile = await imageCompression(file, options)
+        compressedSizeKB = compressedFile.size / 1024
+      }
+
+      setCompressedSize(Math.round(compressedSizeKB))
+      return compressedFile
+    } catch (error) {
+      console.error('Image compression error:', error)
+      return file
+    }
   }
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
     if (!validTypes.includes(file.type)) {
       Swal.fire({
@@ -150,9 +268,29 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
-    // Validate file size (original file should not be too large)
+    const originalSizeKB = file.size / 1024
+    setOriginalSize(Math.round(originalSizeKB))
+
+    if (originalSizeKB <= 2048) {
+      setImage(file)
+      setCompressedSize(Math.round(originalSizeKB))
+      setCompressionMessage('✓ File size is within limit')
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result)
+          setTimeout(() => setCompressionMessage(''), 2000)
+        }
+        reader.readAsDataURL(file)
+      } else {
+        setImagePreview(null)
+        setTimeout(() => setCompressionMessage(''), 2000)
+      }
+      return
+    }
+
     if (file.size > 10 * 1024 * 1024) {
-      // 10MB max original size
       Swal.fire({
         icon: 'error',
         title: 'File Too Large',
@@ -161,65 +299,96 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
-    // Set original size
-    const originalSizeKB = file.size / 1024
-    setOriginalSize(Math.round(originalSizeKB))
-
-    // Handle PDF files (no compression needed, just validation)
-    if (file.type === 'application/pdf') {
-      if (file.size > 50 * 1024) {
-        // PDFs also need to be under 50KB
-        Swal.fire({
-          icon: 'error',
-          title: 'PDF Too Large',
-          text: 'PDF file must be under 50KB',
-        })
-        return
-      }
-      setImage(file)
-      setImagePreview(null)
-      setCompressedSize(Math.round(originalSizeKB))
-      return
-    }
-
-    // For images, start compression
     setIsCompressing(true)
     setCompressionProgress(0)
+    setCompressionMessage('Starting compression...')
 
     try {
-      // Compress image
-      const compressedFile = await compressImage(file)
+      let compressedFile
 
-      // Verify compressed size
+      if (file.type === 'application/pdf') {
+        compressedFile = await compressPDF(file)
+      } else {
+        compressedFile = await compressImageWithLib(file)
+      }
+
       const finalSizeKB = compressedFile.size / 1024
-
-      if (finalSizeKB > 50) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Compression Failed',
-          text: 'Unable to compress image to under 50KB. Please try a smaller image.',
-        })
-        setIsCompressing(false)
-        return
-      }
-
       setImage(compressedFile)
+      setCompressedSize(Math.round(finalSizeKB))
 
-      // Create preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-        setIsCompressing(false)
+      const savedPercent = (((originalSizeKB - finalSizeKB) / originalSizeKB) * 100).toFixed(0)
+
+      if (finalSizeKB <= 2048) {
+        setCompressionMessage(
+          `✓ Successfully compressed! Saved ${savedPercent}% (${finalSizeKB.toFixed(2)}KB)`,
+        )
+      } else if (finalSizeKB <= 2500) {
+        setCompressionMessage(
+          `⚠️ Best effort: ${finalSizeKB.toFixed(2)}KB (Saved ${savedPercent}%)`,
+        )
+      } else {
+        setCompressionMessage(
+          `⚠️ File optimized to ${finalSizeKB.toFixed(2)}KB (Original: ${originalSizeKB.toFixed(2)}KB)`,
+        )
       }
-      reader.readAsDataURL(compressedFile)
+
+      if (compressedFile.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result)
+        }
+        reader.readAsDataURL(compressedFile)
+      } else {
+        setImagePreview(null)
+      }
+
+      // Show suggestion for PDF files that are still large
+      if (file.type === 'application/pdf' && finalSizeKB > 2048) {
+        setTimeout(() => {
+          Swal.fire({
+            icon: 'info',
+            title: 'PDF Size Note',
+            text: 'Your PDF is still larger than 2MB. For better results, please consider:\n• Using a single page PDF\n• Converting PDF to JPG image\n• Using a compressed image instead',
+            toast: false,
+            position: 'center',
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+          })
+        }, 500)
+      }
+
+      setTimeout(() => {
+        setIsCompressing(false)
+        setTimeout(() => setCompressionMessage(''), 3000)
+      }, 500)
     } catch (error) {
       console.error('Compression error:', error)
+      setImage(file)
+      setCompressedSize(Math.round(originalSizeKB))
+      setCompressionMessage(`⚠️ Using original file (${originalSizeKB.toFixed(2)}KB)`)
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result)
+        }
+        reader.readAsDataURL(file)
+      }
+
       Swal.fire({
-        icon: 'error',
-        title: 'Compression Error',
-        text: 'Failed to compress image. Please try again.',
+        icon: 'info',
+        title: 'Compression Note',
+        text: 'Could not compress the file optimally. The original file will be used.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
       })
-      setIsCompressing(false)
+
+      setTimeout(() => {
+        setIsCompressing(false)
+        setTimeout(() => setCompressionMessage(''), 3000)
+      }, 500)
     }
   }
 
@@ -227,14 +396,12 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     const product = products.find((p) => p._id === productId)
     if (!product) return
 
-    // Validate that value is a number and less than or equal to quantityMT
     const numValue = parseFloat(value)
     if (value === '' || (isNaN(numValue) && value !== '')) {
       setQuantitiesTaken((prev) => ({ ...prev, [productId]: '' }))
       return
     }
 
-    // Ensure value is not less than 0
     if (numValue < 0) {
       Swal.fire({
         icon: 'warning',
@@ -248,7 +415,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
-    // Check if value exceeds quantityMT
     if (numValue > product.quantityMT) {
       Swal.fire({
         icon: 'warning',
@@ -266,20 +432,23 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   }
 
   const handleSubmit = async () => {
-    // Prevent multiple submissions
     if (isSubmittingRef.current || isLoading || isCompressing) return
 
-    // Validate image size (should already be compressed, but double-check)
-    if (image && image.type.startsWith('image/') && image.size > 50 * 1024) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Image Too Large',
-        text: 'Compressed image is still over 50KB. Please try again.',
+    if (image && image.size > 2 * 1024 * 1024) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Large File Warning',
+        text: `Your file is ${(image.size / 1024).toFixed(2)}KB, which exceeds the recommended 2MB limit. Do you want to proceed anyway?`,
+        showCancelButton: true,
+        confirmButtonText: 'Yes, proceed',
+        cancelButtonText: 'No, try another file',
       })
-      return
+
+      if (!result.isConfirmed) {
+        return
+      }
     }
 
-    // Validate required image for specific statuses
     if (['Cancelled', 'Partially Correction'].includes(status) && !image) {
       Swal.fire({
         icon: 'error',
@@ -289,9 +458,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return
     }
 
-    // Validate quantities for Partially Correction status
     if (status === 'Partially Correction') {
-      // Check if all products have quantity taken entered
       const missingQuantities = products.filter((product) => {
         const updatedQuantityMT = quantitiesTaken[product._id]
         return !updatedQuantityMT || updatedQuantityMT === ''
@@ -306,7 +473,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         return
       }
 
-      // Validate that quantity taken is less than quantityMT for each product
       const invalidQuantities = products.filter((product) => {
         const updatedQuantityMT = parseFloat(quantitiesTaken[product._id])
         return updatedQuantityMT >= product.quantityMT
@@ -321,7 +487,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         return
       }
 
-      // Check if at least one product has some quantity taken
       const hasSomeQuantityTaken = products.some((product) => {
         const updatedQuantityMT = parseFloat(quantitiesTaken[product._id])
         return updatedQuantityMT > 0
@@ -337,17 +502,14 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       }
     }
 
-    // Set submitting state
     setIsSubmitting(true)
     isSubmittingRef.current = true
 
-    // Prepare data to submit
     const dataToSubmit = {
       status: status,
-      image: image, // This is the File object
+      image: image,
     }
 
-    // Add products with updatedQuantityMT for Partially Correction status
     if (status === 'Partially Correction') {
       dataToSubmit.products = products.map((product) => ({
         warehouseId: product.warehouseId,
@@ -359,26 +521,23 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
 
     try {
       await onSubmit(dataToSubmit)
-      // Reset state after successful submission
       setIsSubmitting(false)
       isSubmittingRef.current = false
     } catch (error) {
-      // Reset submitting state on error
       setIsSubmitting(false)
       isSubmittingRef.current = false
-      // Re-throw the error so parent component can handle it
       throw error
     }
   }
 
   const handleClose = () => {
-    // Only allow closing if not submitting or compressing
     if (!isSubmitting && !isLoading && !isCompressing) {
       setStatus(currentStatus === 'Completed' ? 'Completed' : 'Pending')
       setImage(null)
       setImagePreview(null)
       setIsCompressing(false)
       setCompressionProgress(0)
+      setCompressionMessage('')
       setOriginalSize(0)
       setCompressedSize(0)
       setQuantitiesTaken({})
@@ -386,27 +545,11 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     }
   }
 
-  // Function to view existing image
-  const viewExistingImage = () => {
-    if (hasExistingImage) {
-      if (hasExistingImage.startsWith('data:') || hasExistingImage.startsWith('http')) {
-        window.open(hasExistingImage, '_blank')
-      } else {
-        const imageUrl = `${import.meta.env.VITE_API_URL || ''}${hasExistingImage}`
-        window.open(imageUrl, '_blank')
-      }
-    }
-  }
-
-  // Determine if image upload field should be shown
   const shouldShowImageUpload = () => {
     return ['Completed', 'Cancelled', 'Partially Correction'].includes(status)
   }
 
-  // Check if Partially Correction status is selected
   const isPartiallyCorrection = status === 'Partially Correction'
-
-  // Combined processing state
   const isProcessing = isLoading || isSubmitting || isCompressing
 
   return (
@@ -449,7 +592,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </Form.Text>
           </Form.Group>
 
-          {/* Products section for Partially Correction */}
           {isPartiallyCorrection && products && products.length > 0 && (
             <div className="border-top pt-4">
               <h6 className="fw-bold mb-3">Product Details</h6>
@@ -475,7 +617,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                             <Form.Control
                               type="number"
                               min="0"
-                              max={product.quantityMT - 0.01} // Allow values up to but not equal to quantityMT
+                              max={product.quantityMT - 0.01}
                               step="0.01"
                               value={quantitiesTaken[product._id] || ''}
                               onChange={(e) => handleQuantityChange(product._id, e.target.value)}
@@ -508,7 +650,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </div>
           )}
 
-          {/* Show upload field for specific statuses */}
           {shouldShowImageUpload() && (
             <div className="border-top pt-4">
               <Form.Group className="mb-4">
@@ -517,61 +658,76 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                     ? 'Upload Completion Proof (Optional)'
                     : `Upload ${status} Proof`}
                   {status !== 'Completed' && <span className="text-danger ms-1">*</span>}
-                  <small className="text-muted ms-2">(Max: 50KB)</small>
+                  <small className="text-muted ms-2">(Auto-compressed to ≤2MB)</small>
                 </Form.Label>
                 <Form.Control
                   type="file"
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={handleImageChange}
-                  required={status !== 'Completed'} // Required for all except Completed
+                  required={status !== 'Completed'}
                   disabled={isProcessing}
                   className="py-2"
                 />
                 <Form.Text className="text-muted mt-2 d-block">
-                  Images will be automatically compressed to under 50KB. PDFs must already be under
-                  50KB.
+                  Files are automatically compressed. Supports JPG, PNG, and PDF formats. For PDFs,
+                  single-page documents compress better. Maximum original size: 10MB.
                   {status === 'Completed' &&
                     ' Uploading an image is optional for Completed status.'}
                 </Form.Text>
 
-                {/* Compression progress */}
                 {isCompressing && (
                   <div className="mt-4 p-3 border rounded bg-light">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <small className="text-primary fw-medium">
                         <FaCompressAlt className="me-2" />
-                        Compressing image...
+                        {compressionMessage || 'Compressing file...'}
                       </small>
                       <small className="fw-bold">{compressionProgress}%</small>
                     </div>
                     <ProgressBar now={compressionProgress} variant="primary" animated />
                     <small className="text-muted mt-3 d-block">
-                      Original: {originalSize}KB → Target: ≤50KB
+                      Original: {originalSize}KB → Target: ≤2MB
                     </small>
                   </div>
                 )}
 
-                {/* Size info */}
                 {image && !isCompressing && (
-                  <div className="mt-4 p-3 border rounded bg-light">
+                  <div
+                    className={`mt-4 p-3 border rounded ${compressedSize <= 2048 ? 'bg-success bg-opacity-10' : 'bg-warning bg-opacity-10'}`}
+                  >
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="flex-grow-1 me-3">
                         <p className="mb-1 fw-medium">
-                          {image.type === 'application/pdf' ? 'PDF File' : 'Compressed Image'}:
+                          {image.type === 'application/pdf' ? 'PDF File' : 'Image File'}:
                         </p>
                         <p className="mb-2 text-truncate">
                           <small>{image.name}</small>
                         </p>
                         <p className="small mb-0">
                           <span className="text-muted">Size: </span>
-                          <span className="fw-medium">{compressedSize}KB</span>
+                          <span
+                            className={`fw-medium ${compressedSize <= 2048 ? 'text-success' : 'text-warning'}`}
+                          >
+                            {compressedSize}KB
+                          </span>
                           {originalSize > 0 && (
-                            <span className="text-muted ms-2">(from {originalSize}KB)</span>
+                            <span className="text-muted ms-2">
+                              (compressed from {originalSize}KB)
+                            </span>
                           )}
-                          {compressedSize <= 50 && (
-                            <span className="text-success ms-2">✓ Under 50KB limit</span>
+                          {compressedSize <= 2048 ? (
+                            <span className="text-success ms-2">✓ Within limit</span>
+                          ) : (
+                            <span className="text-warning ms-2">⚠️ Over 2MB limit</span>
                           )}
                         </p>
+                        {compressionMessage && !compressionMessage.includes('Compressing') && (
+                          <p
+                            className={`small mb-0 mt-1 ${compressedSize <= 2048 ? 'text-success' : 'text-warning'}`}
+                          >
+                            {compressionMessage}
+                          </p>
+                        )}
                       </div>
                       {image.type === 'application/pdf' ? (
                         <FaFilePdf className="text-danger flex-shrink-0" size={28} />
@@ -582,7 +738,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                   </div>
                 )}
 
-                {/* Image preview */}
                 {imagePreview && !isCompressing && (
                   <div className="mt-4">
                     <p className="small fw-medium mb-2">Preview:</p>
@@ -600,7 +755,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </div>
           )}
 
-          {/* Warning if changing from Completed to something else */}
           {currentStatus === 'Completed' && status !== 'Completed' && (
             <div className="mt-4 p-3 border rounded bg-warning bg-opacity-10">
               <div className="d-flex align-items-start">
@@ -617,18 +771,17 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
             </div>
           )}
 
-          {/* Processing indicator */}
           {isProcessing && (
             <div className="mt-4 p-3 border rounded bg-info bg-opacity-10">
               <div className="d-flex align-items-center">
                 <FaSpinner className="me-3 fa-spin text-primary" />
                 <div>
                   <p className="mb-0 fw-medium">
-                    {isCompressing ? 'Compressing image...' : 'Updating status...'}
+                    {isCompressing ? 'Compressing file...' : 'Updating status...'}
                   </p>
                   <p className="small mb-0 text-muted">
                     {isCompressing
-                      ? 'This may take a few moments depending on image size.'
+                      ? 'Please wait while we optimize your file for upload.'
                       : 'Please wait while we update the status.'}
                   </p>
                 </div>

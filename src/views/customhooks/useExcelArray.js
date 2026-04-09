@@ -4,6 +4,60 @@ import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
 
 const useExcelArray = () => {
+    // Helper function to get status color
+    const getStatusColor = (status) => {
+        const statusColors = {
+            'Pending': 'FFFFC107',     // Yellow
+            'Partial': 'FF007BFF',     // Blue
+            'Completed': 'FF28A745',   // Green
+            'Cancelled': 'FFDC3545',   // Red
+            'Approved': 'FF28A745',    // Green
+            'Rejected': 'FFDC3545',    // Red
+            'In Progress': 'FF17A2B8', // Teal
+            'Delivered': 'FF28A745',   // Green
+            'Shipped': 'FF17A2B8',     // Teal
+        };
+
+        return statusColors[status] || null;
+    };
+
+    // Helper function to apply status styling to a cell
+    const applyStatusStyle = (cell, status) => {
+        const colorArgb = getStatusColor(status);
+
+        if (colorArgb) {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: colorArgb }
+            };
+            cell.font = {
+                color: { argb: 'FFFFFFFF' }, // White text for colored backgrounds
+                bold: true,
+                size: 11
+            };
+        } else {
+            // Default style for unknown status
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFF8F9FA' } // Light gray background
+            };
+            cell.font = {
+                color: { argb: 'FF495057' }, // Dark gray text
+                size: 11
+            };
+        }
+
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+    };
+
     const exportToExcel = useCallback(
         async ({
             title,
@@ -164,6 +218,8 @@ const useExcelArray = () => {
                         column.width = 15;
                     } else if (col.key === 'totalBags') {
                         column.width = 12;
+                    } else if (col.key.toLowerCase().includes('status')) {
+                        column.width = 15;
                     } else {
                         column.width = 18;
                     }
@@ -249,6 +305,11 @@ const useExcelArray = () => {
                         }
 
                         cleanedItem[col.label] = String(value);
+
+                        // Store original status value for styling (if this is a status column)
+                        if (col.key.toLowerCase().includes('status')) {
+                            cleanedItem[`_${col.key}_original`] = value;
+                        }
                     });
 
                     return cleanedItem;
@@ -256,12 +317,28 @@ const useExcelArray = () => {
 
                 // Add main data rows
                 cleanedData.forEach((item, rowIndex) => {
-                    const row = worksheet.addRow(Object.values(item));
+                    const rowValues = Object.values(item).filter((_, idx) => {
+                        // Filter out internal _original fields from display
+                        const key = Object.keys(item)[idx];
+                        return !key.startsWith('_');
+                    });
 
-                    // Format numeric columns
+                    const row = worksheet.addRow(rowValues);
+
+                    // Format numeric columns and apply status styling
                     row.eachCell((cell, colNumber) => {
                         const columnLabel = exportColumns[colNumber - 2]?.label;
-                        if (columnLabel && (
+
+                        // Check if this is a status column
+                        const isStatusColumn = columnLabel &&
+                            (columnLabel.toLowerCase().includes('status') ||
+                                exportColumns[colNumber - 2]?.key?.toLowerCase().includes('status'));
+
+                        if (isStatusColumn) {
+                            // Apply status styling
+                            const statusValue = cell.value?.toString() || '';
+                            applyStatusStyle(cell, statusValue);
+                        } else if (columnLabel && (
                             columnLabel.includes('Rate') ||
                             columnLabel.includes('Amount') ||
                             columnLabel.includes('Freight') ||
@@ -279,22 +356,24 @@ const useExcelArray = () => {
                                     cell.numFmt = '#,##0.00';
                                 }
                             }
+                            // Add borders and alignment for numeric cells
+                            cell.border = {
+                                left: { style: CONFIG.borderStyle },
+                                right: { style: CONFIG.borderStyle },
+                                bottom: { style: CONFIG.borderStyle },
+                            };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        } else {
+                            // Add borders for non-numeric cells
+                            cell.border = {
+                                left: { style: CONFIG.borderStyle },
+                                right: { style: CONFIG.borderStyle },
+                                bottom: { style: CONFIG.borderStyle },
+                            };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         }
                     });
-
-                    // Add borders
-                    row.eachCell((cell) => {
-                        cell.border = {
-                            left: { style: CONFIG.borderStyle },
-                            right: { style: CONFIG.borderStyle },
-                            bottom: { style: CONFIG.borderStyle },
-                        };
-                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                    });
                 });
-
-                // Remove the old PRODUCTS SECTION since we're now showing products in main rows
-                // The includeProducts parameter now only controls whether to expand products into separate rows
 
                 // --- METADATA ---
                 if (Object.keys(metaData).length > 0) {
