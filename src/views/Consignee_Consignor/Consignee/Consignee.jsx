@@ -74,6 +74,8 @@ const Consignee = () => {
     }
   }, [data])
 
+  const totalPages = data?.totalPages || 1
+
   const columns = [
     { label: 'Consignee Name', key: 'name', sortable: true },
     { label: 'Address', key: 'address', sortable: true },
@@ -178,7 +180,7 @@ const Consignee = () => {
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
-        currentPage={currentPage}
+        currentPage={1}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
         editButton={true}
@@ -188,7 +190,7 @@ const Consignee = () => {
       />
 
       <SmartPagination
-        totalPages={data?.totalPages || 1}
+        totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         onItemsPerPageChange={(value) => {

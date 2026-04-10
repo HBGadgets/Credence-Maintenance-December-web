@@ -117,42 +117,42 @@ const ReusableModal = ({
                 {field.required && <span style={{ color: 'red' }}> *</span>}
               </Form.Label>
 
+              {/* MULTI SELECT */}
               {field.type === 'multiselect' ? (
-                <>
-                  <Select
-                    isMulti
-                    options={field.options || []}
-                    value={formData[field.name]}
-                    onChange={(selected) => handleSelectChange(selected, field.name)}
-                    menuPortalTarget={document.body}
-                    isDisabled={field.disabled || false}
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      menu: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                  />
-                </>
+                <Select
+                  isMulti
+                  options={field.options || []}
+                  value={formData[field.name]}
+                  onChange={(selected) => handleSelectChange(selected, field.name)}
+                  menuPortalTarget={document.body}
+                  isDisabled={field.disabled || field.readOnly}
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
               ) : field.type === 'select' ? (
-                <>
-                  <Select
-                    options={field.options || []}
-                    value={formData[field.name]}
-                    onChange={(selected) => handleSelectChange(selected, field.name)}
-                    menuPortalTarget={document.body}
-                    isDisabled={field.disabled || false}
-                    styles={{
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      menu: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
-                  />
-                </>
+                /* SELECT */
+                <Select
+                  options={field.options || []}
+                  value={formData[field.name]}
+                  onChange={(selected) => handleSelectChange(selected, field.name)}
+                  menuPortalTarget={document.body}
+                  isDisabled={field.disabled || field.readOnly}
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
               ) : field.type === 'file' ? (
+                /* FILE INPUT */
                 <>
                   <Form.Control
                     type="file"
                     name={field.name}
                     onChange={handleChange}
                     accept={field.accept || 'image/*'}
+                    disabled={field.readOnly}
                   />
                   {formData[field.name] && typeof formData[field.name] === 'object' && (
                     <div className="mt-2">
@@ -161,16 +161,18 @@ const ReusableModal = ({
                   )}
                 </>
               ) : (
-                <>
-                  <Form.Control
-                    type={field.type}
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    value={formData[field.name]}
-                    onChange={handleChange}
-                  />
-                </>
+                /* NORMAL INPUT */
+                <Form.Control
+                  type={field.type}
+                  name={field.name}
+                  placeholder={field.placeholder}
+                  value={formData[field.name]}
+                  onChange={handleChange}
+                  readOnly={field.readOnly}
+                  disabled={field.disabled}
+                />
               )}
+
               {errors[field.name] && <div className="text-danger">{errors[field.name]}</div>}
             </Form.Group>
           ))}

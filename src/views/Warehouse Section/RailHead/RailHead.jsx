@@ -75,6 +75,19 @@ const RailHead = () => {
       required: true,
     },
     {
+      name: 'bagSize',
+      label: 'Bag Size',
+      type: 'text',
+      required: true,
+      readOnly: true,
+    },
+    {
+      name: 'totalBags',
+      label: 'Total Bags',
+      type: 'text',
+      required: true,
+    },
+    {
       name: 'quantityMT',
       label: 'Quantity(MT)',
       type: 'text',

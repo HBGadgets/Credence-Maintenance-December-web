@@ -6,7 +6,7 @@ import { TokenContext } from '../../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getWorkerApi } from '../../../TransportPass/data/data'
-import Select from 'react-select'
+import Select, { components } from 'react-select'
 import { getCompanyNameApi } from '../../../TransportPass/data/data'
 import CreatableSelect from 'react-select/creatable'
 import { getWarehouseListApi, getWarehouseProfileApi } from '../../data/data'
@@ -17,6 +17,7 @@ import {
   FaRupeeSign,
   FaUserPlus,
   FaInfoCircle,
+  FaCheck,
 } from 'react-icons/fa'
 import {
   getConsigneeApi,
@@ -167,6 +168,231 @@ const calculateBagSizeFromQuantityAndBags = (quantityMT, totalBags) => {
   return bagSize.toFixed(2)
 }
 
+// Skeleton Option Component for loading state
+const SkeletonOption = () => (
+  <div className="px-3 py-2">
+    <div className="placeholder-glow d-flex align-items-center">
+      <span
+        className="placeholder col-1 me-2"
+        style={{ height: '20px', borderRadius: '4px' }}
+      ></span>
+      <span className="placeholder col-8" style={{ height: '20px', borderRadius: '4px' }}></span>
+    </div>
+  </div>
+)
+
+// Scroll Loader Component with skeleton items
+const ScrollLoader = ({ count = 3, currentCount, totalCount, direction = 'down' }) => (
+  <div className="border-top pt-2">
+    {[...Array(count)].map((_, i) => (
+      <SkeletonOption key={i} />
+    ))}
+    <div className="text-center py-2 small text-muted">
+      <div
+        className="spinner-border spinner-border-sm me-2"
+        role="status"
+        style={{ width: '1rem', height: '1rem' }}
+      >
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      Loading {direction === 'up' ? 'previous' : 'more'} items... ({currentCount} of{' '}
+      {totalCount || '?'} loaded)
+    </div>
+  </div>
+)
+
+// Custom Loading Message Component for initial load
+const LoadingMessage = ({ children }) => (
+  <div className="d-flex align-items-center justify-content-center py-3">
+    <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+      <span className="visually-hidden">Loading...</span>
+    </div>
+    <span className="text-muted">{children}</span>
+  </div>
+)
+
+// Add New Option styled component
+const AddNewOption = ({ label, icon: Icon }) => (
+  <div
+    className="d-flex align-items-center py-2 px-1 rounded"
+    style={{
+      backgroundColor: '#f0f7ff',
+      border: '1px dashed #0d6efd',
+      cursor: 'pointer',
+    }}
+  >
+    <div
+      className="d-flex align-items-center justify-content-center me-2"
+      style={{
+        width: '24px',
+        height: '24px',
+        backgroundColor: '#0d6efd',
+        borderRadius: '50%',
+      }}
+    >
+      <Icon className="text-white" size={12} />
+    </div>
+    <span className="text-primary fw-semibold">{label}</span>
+    <span className="ms-auto text-primary">
+      <FaUserPlus size={12} />
+    </span>
+  </div>
+)
+
+// Custom MenuList with bidirectional scroll pagination
+const CustomMenuList = ({
+  children,
+  isLoading,
+  hasMore,
+  hasPrevious,
+  onLoadPrevious,
+  onLoadMore,
+  selectProps,
+  ...props
+}) => {
+  const scrollRef = React.useRef(null)
+  const [isLoadingPrevious, setIsLoadingPrevious] = React.useState(false)
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false)
+  const previousScrollHeight = React.useRef(0)
+  const isLoadingRef = React.useRef(false)
+  const scrollTimeoutRef = React.useRef(null)
+
+  const handleScroll = (event) => {
+    const target = event.target
+    const scrollTop = target.scrollTop
+    const scrollHeight = target.scrollHeight
+    const clientHeight = target.clientHeight
+
+    // Debounce scroll events to prevent multiple triggers
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      // Check if we're at the bottom (load more)
+      const atBottom = scrollHeight - scrollTop <= clientHeight + 50
+      // Check if we're at the top (load previous)
+      const atTop = scrollTop <= 50
+
+      // Load more when scrolling to bottom (only if not already loading)
+      if (atBottom && !isLoadingRef.current && hasMore && onLoadMore && !isLoadingPrevious) {
+        isLoadingRef.current = true
+        setIsLoadingMore(true)
+        onLoadMore()
+      }
+
+      // Load previous when scrolling to top (only if not already loading)
+      if (
+        atTop &&
+        !isLoadingRef.current &&
+        hasPrevious &&
+        onLoadPrevious &&
+        scrollTop > 0 &&
+        !isLoadingMore
+      ) {
+        previousScrollHeight.current = scrollHeight
+        isLoadingRef.current = true
+        setIsLoadingPrevious(true)
+        onLoadPrevious()
+      }
+    }, 100)
+  }
+
+  // Reset loading states and restore scroll position after loading
+  React.useEffect(() => {
+    if (!isLoading && !isLoadingMore && !isLoadingPrevious && isLoadingRef.current) {
+      isLoadingRef.current = false
+    }
+  }, [isLoading, isLoadingMore, isLoadingPrevious])
+
+  // Restore scroll position after loading previous items
+  React.useEffect(() => {
+    if (!isLoadingPrevious && previousScrollHeight.current > 0 && scrollRef.current) {
+      const newScrollHeight = scrollRef.current.scrollHeight
+      const scrollDiff = newScrollHeight - previousScrollHeight.current
+      if (scrollDiff > 0) {
+        scrollRef.current.scrollTop = scrollDiff
+      }
+      previousScrollHeight.current = 0
+      setTimeout(() => {
+        setIsLoadingPrevious(false)
+      }, 100)
+    }
+  }, [isLoadingPrevious])
+
+  // Reset loading more state
+  React.useEffect(() => {
+    if (!isLoading && isLoadingMore) {
+      setTimeout(() => {
+        setIsLoadingMore(false)
+      }, 100)
+    }
+  }, [isLoading, isLoadingMore])
+
+  const selectedValue = selectProps.value?.value
+  const hasSelectedItemNotInList =
+    selectedValue &&
+    !selectProps.options?.some(
+      (opt) =>
+        opt.value === selectedValue &&
+        opt.value !== 'create-new' &&
+        opt.value !== 'separator' &&
+        opt.value !== 'header',
+    )
+  const currentCount =
+    selectProps.options?.filter(
+      (opt) => opt.value !== 'create-new' && opt.value !== 'separator' && opt.value !== 'header',
+    ).length || 0
+  const totalCount = selectProps.totalCount || 0
+
+  React.useEffect(() => {
+    const scrollElement = scrollRef.current
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll)
+      return () => {
+        scrollElement.removeEventListener('scroll', handleScroll)
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current)
+        }
+      }
+    }
+  }, [hasMore, hasPrevious])
+
+  return (
+    <div ref={scrollRef} style={{ maxHeight: '300px', overflowY: 'auto' }}>
+      {isLoadingPrevious && (
+        <ScrollLoader
+          count={2}
+          currentCount={currentCount}
+          totalCount={totalCount}
+          direction="up"
+        />
+      )}
+      {hasSelectedItemNotInList && (
+        <div className="px-3 py-2 small bg-light border-bottom">
+          <FaCheck className="me-1 text-success" size={10} />
+          <span className="text-muted">Currently selected item shown in list</span>
+        </div>
+      )}
+      {children}
+      {isLoadingMore && (
+        <ScrollLoader
+          count={3}
+          currentCount={currentCount}
+          totalCount={totalCount}
+          direction="down"
+        />
+      )}
+      {!isLoading && !hasMore && currentCount > 0 && !isLoadingPrevious && !isLoadingMore && (
+        <div className="text-center py-2 text-muted small border-top">
+          <FaCheck className="me-1 text-success" size={10} />
+          <span>All {currentCount} items loaded</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const WarehouseToPartyForm = ({
   show,
   handleClose,
@@ -197,7 +423,24 @@ const WarehouseToPartyForm = ({
   const [consignorPage, setConsignorPage] = useState(1)
   const [consigneePage, setConsigneePage] = useState(1)
   const [martialOwnerPage, setMartialOwnerPage] = useState(1)
-  const itemsPerPage = 20
+
+  const [hasMoreConsignor, setHasMoreConsignor] = useState(true)
+  const [hasMoreConsignee, setHasMoreConsignee] = useState(true)
+  const [hasMoreMartialOwner, setHasMoreMartialOwner] = useState(true)
+
+  const [hasPreviousConsignor, setHasPreviousConsignor] = useState(false)
+  const [hasPreviousConsignee, setHasPreviousConsignee] = useState(false)
+  const [hasPreviousMartialOwner, setHasPreviousMartialOwner] = useState(false)
+
+  // State for cumulative data storage (for infinite scroll)
+  const [allConsignors, setAllConsignors] = useState([])
+  const [allConsignees, setAllConsignees] = useState([])
+  const [allMartialOwners, setAllMartialOwners] = useState([])
+
+  // Track which pages have been loaded
+  const [loadedConsignorPages, setLoadedConsignorPages] = useState(new Set())
+  const [loadedConsigneePages, setLoadedConsigneePages] = useState(new Set())
+  const [loadedMartialOwnerPages, setLoadedMartialOwnerPages] = useState(new Set())
 
   // State for create new modals
   const [showConsignorModal, setShowConsignorModal] = useState(false)
@@ -209,6 +452,8 @@ const WarehouseToPartyForm = ({
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
   const queryClient = useQueryClient()
+
+  const itemsPerPage = 20
 
   // Calculate total quantity in MT across all products
   const calculateTotalQuantityMT = useCallback(() => {
@@ -249,6 +494,10 @@ const WarehouseToPartyForm = ({
       setIsCreatingConsignor(false)
       setShowConsignorModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignor'] })
+      // Reset accumulated data
+      setAllConsignors([])
+      setLoadedConsignorPages(new Set())
+      setConsignorPage(1)
       setFormData((prev) => ({
         ...prev,
         consignorId: response.data?.id || '',
@@ -269,6 +518,10 @@ const WarehouseToPartyForm = ({
       setIsCreatingConsignee(false)
       setShowConsigneeModal(false)
       queryClient.invalidateQueries({ queryKey: ['Consignee'] })
+      // Reset accumulated data
+      setAllConsignees([])
+      setLoadedConsigneePages(new Set())
+      setConsigneePage(1)
       setFormData((prev) => ({
         ...prev,
         consigneeId: response.data?.id || '',
@@ -311,55 +564,77 @@ const WarehouseToPartyForm = ({
     staleTime: 1000 * 60 * 30,
   })
 
-  // Fetch consignor data with debounced search
-  const { data: consignorData = { data: [], total: 0 }, isFetching: isFetchingConsignor } =
-    useQuery({
-      queryKey: [
-        'Consignor',
-        {
-          search: debouncedConsignorSearch,
-          page: consignorPage,
-          limit: 2000,
-        },
-      ],
-      queryFn: getConsignorApi,
-      keepPreviousData: true,
-      staleTime: 1000 * 60 * 5,
-      enabled: true,
-    })
+  // Fetch consignor data with debounced search and pagination
+  const {
+    data: consignorData = { data: [], total: 0 },
+    isFetching: isFetchingConsignor,
+    isPreviousData: isPreviousConsignorData,
+  } = useQuery({
+    queryKey: [
+      'Consignor',
+      {
+        search: debouncedConsignorSearch,
+        page: consignorPage,
+        limit: itemsPerPage,
+      },
+    ],
+    queryFn: getConsignorApi,
+    keepPreviousData: true,
+    staleTime: 1000 * 60 * 5,
+    onSuccess: (data) => {
+      const totalPages = Math.ceil((data?.total || 0) / itemsPerPage)
+      setHasMoreConsignor(consignorPage < totalPages)
+      setHasPreviousConsignor(consignorPage > 1)
+    },
+  })
 
-  // Fetch consignee data with debounced search
-  const { data: consigneeData = { data: [], total: 0 }, isFetching: isFetchingConsignee } =
-    useQuery({
-      queryKey: [
-        'Consignee',
-        {
-          search: debouncedConsigneeSearch,
-          page: consigneePage,
-          limit: 2000,
-        },
-      ],
-      queryFn: getConsigneeApi,
-      keepPreviousData: true,
-      staleTime: 1000 * 60 * 5,
-      enabled: true,
-    })
+  // Fetch consignee data with debounced search and pagination
+  const {
+    data: consigneeData = { data: [], total: 0 },
+    isFetching: isFetchingConsignee,
+    isPreviousData: isPreviousConsigneeData,
+  } = useQuery({
+    queryKey: [
+      'Consignee',
+      {
+        search: debouncedConsigneeSearch,
+        page: consigneePage,
+        limit: itemsPerPage,
+      },
+    ],
+    queryFn: getConsigneeApi,
+    keepPreviousData: true,
+    staleTime: 1000 * 60 * 5,
+    onSuccess: (data) => {
+      const totalPages = Math.ceil((data?.total || 0) / itemsPerPage)
+      setHasMoreConsignee(consigneePage < totalPages)
+      setHasPreviousConsignee(consigneePage > 1)
+    },
+  })
 
-  // Fetch material owners dropdown
-  const { data: martialOwnerData = { data: [], total: 0 }, isFetching: isFetchingMartialOwner } =
-    useQuery({
-      queryKey: [
-        'MartialOwner',
-        {
-          search: debouncedMartialOwnerSearch,
-          // page: martialOwnerPage,
-          // limit: itemsPerPage,
-        },
-      ],
-      queryFn: getMartialOwnerDropDownApi,
-      keepPreviousData: true,
-      staleTime: 1000 * 60 * 5,
-    })
+  // Fetch material owners dropdown with pagination
+  const {
+    data: martialOwnerData = { data: [], total: 0 },
+    isFetching: isFetchingMartialOwner,
+    isPreviousData: isPreviousMartialOwnerData,
+  } = useQuery({
+    queryKey: [
+      'MartialOwner',
+      {
+        search: debouncedMartialOwnerSearch,
+        page: martialOwnerPage,
+        limit: itemsPerPage,
+      },
+    ],
+    queryFn: getMartialOwnerDropDownApi,
+    keepPreviousData: true,
+    staleTime: 1000 * 60 * 5,
+    onSuccess: (data) => {
+      const totalPages = Math.ceil((data?.total || 0) / itemsPerPage)
+      setHasMoreMartialOwner(martialOwnerPage < totalPages)
+      setHasPreviousMartialOwner(martialOwnerPage > 1)
+    },
+  })
 
   // Fetch warehouse products when a warehouse is selected
   const {
@@ -383,6 +658,108 @@ const WarehouseToPartyForm = ({
     staleTime: 1000 * 60 * 5,
     retry: 2,
   })
+
+  // ACCUMULATION EFFECTS - Must come AFTER the queries
+  // Effect to accumulate consignor data when new data arrives
+  useEffect(() => {
+    if (consignorData?.data && consignorData.data.length > 0) {
+      const newItems = consignorData.data.filter(
+        (item) => !allConsignors.some((existing) => existing.id === item.id),
+      )
+
+      if (newItems.length > 0) {
+        if (consignorPage === 1) {
+          setAllConsignors(consignorData.data)
+        } else if (consignorPage < Math.min(...Array.from(loadedConsignorPages))) {
+          setAllConsignors((prev) => [...newItems, ...prev])
+        } else {
+          setAllConsignors((prev) => [...prev, ...newItems])
+        }
+      }
+
+      setLoadedConsignorPages((prev) => new Set([...prev, consignorPage]))
+    }
+  }, [consignorData?.data, consignorPage])
+
+  // Effect to accumulate consignee data when new data arrives
+  useEffect(() => {
+    if (consigneeData?.data && consigneeData.data.length > 0) {
+      const newItems = consigneeData.data.filter(
+        (item) => !allConsignees.some((existing) => existing.id === item.id),
+      )
+
+      if (newItems.length > 0) {
+        if (consigneePage === 1) {
+          setAllConsignees(consigneeData.data)
+        } else if (consigneePage < Math.min(...Array.from(loadedConsigneePages))) {
+          setAllConsignees((prev) => [...newItems, ...prev])
+        } else {
+          setAllConsignees((prev) => [...prev, ...newItems])
+        }
+      }
+
+      setLoadedConsigneePages((prev) => new Set([...prev, consigneePage]))
+    }
+  }, [consigneeData?.data, consigneePage])
+
+  // Effect to accumulate martial owner data when new data arrives
+  useEffect(() => {
+    if (martialOwnerData?.data && martialOwnerData.data.length > 0) {
+      const newItems = martialOwnerData.data.filter(
+        (item) => !allMartialOwners.some((existing) => existing.id === item.id),
+      )
+
+      if (newItems.length > 0) {
+        if (martialOwnerPage === 1) {
+          setAllMartialOwners(martialOwnerData.data)
+        } else if (martialOwnerPage < Math.min(...Array.from(loadedMartialOwnerPages))) {
+          setAllMartialOwners((prev) => [...newItems, ...prev])
+        } else {
+          setAllMartialOwners((prev) => [...prev, ...newItems])
+        }
+      }
+
+      setLoadedMartialOwnerPages((prev) => new Set([...prev, martialOwnerPage]))
+    }
+  }, [martialOwnerData?.data, martialOwnerPage])
+
+  // Load more handlers (scroll down)
+  const loadMoreConsignors = useCallback(() => {
+    if (!isFetchingConsignor && hasMoreConsignor && !isPreviousConsignorData) {
+      setConsignorPage((prev) => prev + 1)
+    }
+  }, [isFetchingConsignor, hasMoreConsignor, isPreviousConsignorData])
+
+  const loadMoreConsignees = useCallback(() => {
+    if (!isFetchingConsignee && hasMoreConsignee && !isPreviousConsigneeData) {
+      setConsigneePage((prev) => prev + 1)
+    }
+  }, [isFetchingConsignee, hasMoreConsignee, isPreviousConsigneeData])
+
+  const loadMoreMartialOwners = useCallback(() => {
+    if (!isFetchingMartialOwner && hasMoreMartialOwner && !isPreviousMartialOwnerData) {
+      setMartialOwnerPage((prev) => prev + 1)
+    }
+  }, [isFetchingMartialOwner, hasMoreMartialOwner, isPreviousMartialOwnerData])
+
+  // Load previous handlers (scroll up)
+  const loadPreviousConsignors = useCallback(() => {
+    if (!isFetchingConsignor && consignorPage > 1 && !isPreviousConsignorData) {
+      setConsignorPage((prev) => prev - 1)
+    }
+  }, [isFetchingConsignor, consignorPage, isPreviousConsignorData])
+
+  const loadPreviousConsignees = useCallback(() => {
+    if (!isFetchingConsignee && consigneePage > 1 && !isPreviousConsigneeData) {
+      setConsigneePage((prev) => prev - 1)
+    }
+  }, [isFetchingConsignee, consigneePage, isPreviousConsigneeData])
+
+  const loadPreviousMartialOwners = useCallback(() => {
+    if (!isFetchingMartialOwner && martialOwnerPage > 1 && !isPreviousMartialOwnerData) {
+      setMartialOwnerPage((prev) => prev - 1)
+    }
+  }, [isFetchingMartialOwner, martialOwnerPage, isPreviousMartialOwnerData])
 
   const warehouseList = warehouseResponse?.data || []
 
@@ -438,7 +815,6 @@ const WarehouseToPartyForm = ({
       }
     })
 
-    console.log('Product options:', options.length, 'of', inventoryList.length)
     return options
   }, [inventoryList])
 
@@ -523,7 +899,6 @@ const WarehouseToPartyForm = ({
         }) || [{ ...defaultProduct }],
       }
 
-      console.log('Updated form data:', updatedFormData)
       setFormData(updatedFormData)
       setIsInitialDataLoaded(true)
     } else if (mode === 'add') {
@@ -535,7 +910,6 @@ const WarehouseToPartyForm = ({
   // Refetch warehouse products when warehouse ID changes in edit mode
   useEffect(() => {
     if (mode === 'edit' && formData.issuedByWarehouseId && isInitialDataLoaded) {
-      console.log('Refetching warehouse products for ID:', formData.issuedByWarehouseId)
       refetchWarehouseProducts()
     }
   }, [formData.issuedByWarehouseId, mode, isInitialDataLoaded, refetchWarehouseProducts])
@@ -653,12 +1027,25 @@ const WarehouseToPartyForm = ({
 
   // Handle consignor selection
   const handleConsignorChange = (selected) => {
-    if (selected && selected.value !== 'create-new') {
+    if (
+      selected &&
+      selected.value !== 'create-new' &&
+      selected.value !== 'separator' &&
+      selected.value !== 'header'
+    ) {
       setFormData((prev) => ({
         ...prev,
         consignorId: selected.value,
         consignorName: selected.name,
         consignorAddress: selected.address,
+      }))
+    } else if (selected && selected.value === 'create-new') {
+      setShowConsignorModal(true)
+      setFormData((prev) => ({
+        ...prev,
+        consignorId: '',
+        consignorName: '',
+        consignorAddress: '',
       }))
     } else {
       setFormData((prev) => ({
@@ -672,12 +1059,25 @@ const WarehouseToPartyForm = ({
 
   // Handle consignee selection
   const handleConsigneeChange = (selected) => {
-    if (selected && selected.value !== 'create-new') {
+    if (
+      selected &&
+      selected.value !== 'create-new' &&
+      selected.value !== 'separator' &&
+      selected.value !== 'header'
+    ) {
       setFormData((prev) => ({
         ...prev,
         consigneeId: selected.value,
         consigneeName: selected.name,
         consigneeAddress: selected.address,
+      }))
+    } else if (selected && selected.value === 'create-new') {
+      setShowConsigneeModal(true)
+      setFormData((prev) => ({
+        ...prev,
+        consigneeId: '',
+        consigneeName: '',
+        consigneeAddress: '',
       }))
     } else {
       setFormData((prev) => ({
@@ -935,53 +1335,186 @@ const WarehouseToPartyForm = ({
     label: c.companyName || c.name || 'Unnamed Company',
   }))
 
-  const consignorOptions = [
-    ...consignorData.data.map((consignor) => ({
-      value: consignor.id,
-      label: consignor.name,
-      name: consignor.name,
-      address: consignor.address,
-    })),
-    {
+  // Options with selected item persistence for Consignor (using accumulated data)
+  const consignorOptions = useMemo(() => {
+    const options = []
+
+    options.push({
       value: 'create-new',
-      label: (
-        <div className="text-primary d-flex align-items-center">
-          <FaUserPlus className="me-2" />
-          Create New Consignor
-        </div>
-      ),
+      label: <AddNewOption label="Add New Consignor" icon={FaUserPlus} />,
       name: '',
       address: '',
-    },
-  ]
+    })
 
-  const consigneeOptions = [
-    ...consigneeData.data.map((consignee) => ({
-      value: consignee.id,
-      label: consignee.name,
-      name: consignee.name,
-      address: consignee.address,
-    })),
-    {
+    if (allConsignors.length > 0) {
+      options.push({
+        value: 'header',
+        label: (
+          <div className="text-muted small fw-semibold py-1 px-2 bg-light">Existing Consignors</div>
+        ),
+        isDisabled: true,
+        name: '',
+        address: '',
+      })
+    }
+
+    if (formData.consignorId && formData.consignorName) {
+      const isSelectedInList = allConsignors.some((c) => c.id === formData.consignorId)
+      if (!isSelectedInList) {
+        options.push({
+          value: formData.consignorId,
+          label: (
+            <div className="d-flex align-items-center">
+              <FaCheck className="text-success me-2" size={12} />
+              <span>{formData.consignorName}</span>
+              <span className="badge bg-success ms-2" style={{ fontSize: '10px' }}>
+                Selected
+              </span>
+            </div>
+          ),
+          name: formData.consignorName,
+          address: formData.consignorAddress || '',
+        })
+      }
+    }
+
+    allConsignors.forEach((consignor) => {
+      if (consignor.id === formData.consignorId) {
+        options.push({
+          value: consignor.id,
+          label: (
+            <div className="d-flex align-items-center">
+              <FaCheck className="text-success me-2" size={12} />
+              <span>{consignor.name}</span>
+              <span className="badge bg-success ms-2" style={{ fontSize: '10px' }}>
+                Selected
+              </span>
+            </div>
+          ),
+          name: consignor.name,
+          address: consignor.address,
+        })
+      } else {
+        options.push({
+          value: consignor.id,
+          label: consignor.name,
+          name: consignor.name,
+          address: consignor.address,
+        })
+      }
+    })
+
+    return options
+  }, [allConsignors, formData.consignorId, formData.consignorName, formData.consignorAddress])
+
+  // Options with selected item persistence for Consignee (using accumulated data)
+  const consigneeOptions = useMemo(() => {
+    const options = []
+
+    options.push({
       value: 'create-new',
-      label: (
-        <div className="text-primary d-flex align-items-center">
-          <FaUserPlus className="me-2" />
-          Create New Consignee
-        </div>
-      ),
+      label: <AddNewOption label="Add New Consignee" icon={FaUserPlus} />,
       name: '',
       address: '',
-    },
-  ]
+    })
 
-  const martialOwnerOptions =
-    martialOwnerData?.data?.map((owner) => ({
+    if (allConsignees.length > 0) {
+      options.push({
+        value: 'header',
+        label: (
+          <div className="text-muted small fw-semibold py-1 px-2 bg-light">Existing Consignees</div>
+        ),
+        isDisabled: true,
+        name: '',
+        address: '',
+      })
+    }
+
+    if (formData.consigneeId && formData.consigneeName) {
+      const isSelectedInList = allConsignees.some((c) => c.id === formData.consigneeId)
+      if (!isSelectedInList) {
+        options.push({
+          value: formData.consigneeId,
+          label: (
+            <div className="d-flex align-items-center">
+              <FaCheck className="text-success me-2" size={12} />
+              <span>{formData.consigneeName}</span>
+              <span className="badge bg-success ms-2" style={{ fontSize: '10px' }}>
+                Selected
+              </span>
+            </div>
+          ),
+          name: formData.consigneeName,
+          address: formData.consigneeAddress || '',
+        })
+      }
+    }
+
+    allConsignees.forEach((consignee) => {
+      if (consignee.id === formData.consigneeId) {
+        options.push({
+          value: consignee.id,
+          label: (
+            <div className="d-flex align-items-center">
+              <FaCheck className="text-success me-2" size={12} />
+              <span>{consignee.name}</span>
+              <span className="badge bg-success ms-2" style={{ fontSize: '10px' }}>
+                Selected
+              </span>
+            </div>
+          ),
+          name: consignee.name,
+          address: consignee.address,
+        })
+      } else {
+        options.push({
+          value: consignee.id,
+          label: consignee.name,
+          name: consignee.name,
+          address: consignee.address,
+        })
+      }
+    })
+
+    return options
+  }, [allConsignees, formData.consigneeId, formData.consigneeName, formData.consigneeAddress])
+
+  // Options with selected item persistence for Material Owner (using accumulated data)
+  const martialOwnerOptions = useMemo(() => {
+    const options = allMartialOwners.map((owner) => ({
       value: owner.id,
       label: owner.name,
       name: owner.name,
       address: owner.address || '',
-    })) || []
+    }))
+
+    if (formData.materialOwnerId && formData.martialOwnerName) {
+      const isSelectedInList = options.some((opt) => opt.value === formData.materialOwnerId)
+      if (!isSelectedInList) {
+        options.unshift({
+          value: formData.materialOwnerId,
+          label: (
+            <div className="d-flex align-items-center">
+              <FaCheck className="text-success me-2" size={12} />
+              <span>{formData.martialOwnerName}</span>
+              <span className="badge bg-success ms-2" style={{ fontSize: '10px' }}>
+                Selected
+              </span>
+            </div>
+          ),
+          name: formData.martialOwnerName,
+          address: formData.martialOwnerAddress || '',
+        })
+      }
+    }
+
+    return options
+  }, [
+    allMartialOwners,
+    formData.materialOwnerId,
+    formData.martialOwnerName,
+    formData.martialOwnerAddress,
+  ])
 
   const vehicleOptions = Array.isArray(vehicles)
     ? vehicles.map((v) => ({
@@ -1079,13 +1612,21 @@ const WarehouseToPartyForm = ({
   }
 
   const getConsignorValue = () => {
-    if (!formData.consignorName) return null
-    return consignorOptions.find((opt) => opt.name === formData.consignorName) || null
+    if (!formData.consignorId && !formData.consignorName) return null
+    return (
+      consignorOptions.find(
+        (opt) => opt.value === formData.consignorId || opt.name === formData.consignorName,
+      ) || null
+    )
   }
 
   const getConsigneeValue = () => {
-    if (!formData.consigneeName) return null
-    return consigneeOptions.find((opt) => opt.name === formData.consigneeName) || null
+    if (!formData.consigneeId && !formData.consigneeName) return null
+    return (
+      consigneeOptions.find(
+        (opt) => opt.value === formData.consigneeId || opt.name === formData.consigneeName,
+      ) || null
+    )
   }
 
   const getMartialOwnerValue = () => {
@@ -1096,38 +1637,32 @@ const WarehouseToPartyForm = ({
   const handleConsignorInputChange = useCallback((value) => {
     setConsignorSearchInput(value)
     setConsignorPage(1)
+    setHasMoreConsignor(true)
+    setHasPreviousConsignor(false)
+    // Reset accumulated data when searching
+    setAllConsignors([])
+    setLoadedConsignorPages(new Set())
   }, [])
 
   const handleConsigneeInputChange = useCallback((value) => {
     setConsigneeSearchInput(value)
     setConsigneePage(1)
+    setHasMoreConsignee(true)
+    setHasPreviousConsignee(false)
+    // Reset accumulated data when searching
+    setAllConsignees([])
+    setLoadedConsigneePages(new Set())
   }, [])
 
   const handleMartialOwnerInputChange = useCallback((value) => {
     setMartialOwnerSearchInput(value)
     setMartialOwnerPage(1)
+    setHasMoreMartialOwner(true)
+    setHasPreviousMartialOwner(false)
+    // Reset accumulated data when searching
+    setAllMartialOwners([])
+    setLoadedMartialOwnerPages(new Set())
   }, [])
-
-  const handleConsignorMenuScrollToBottom = useCallback(() => {
-    const totalPages = Math.ceil(consignorData.total / itemsPerPage)
-    if (consignorPage < totalPages) {
-      setConsignorPage((prev) => prev + 1)
-    }
-  }, [consignorData.total, consignorPage])
-
-  const handleConsigneeMenuScrollToBottom = useCallback(() => {
-    const totalPages = Math.ceil(consigneeData.total / itemsPerPage)
-    if (consigneePage < totalPages) {
-      setConsigneePage((prev) => prev + 1)
-    }
-  }, [consigneeData.total, consigneePage])
-
-  const handleMartialOwnerMenuScrollToBottom = useCallback(() => {
-    const totalPages = Math.ceil((martialOwnerData?.total || 0) / itemsPerPage)
-    if (martialOwnerPage < totalPages) {
-      setMartialOwnerPage((prev) => prev + 1)
-    }
-  }, [martialOwnerData?.total, martialOwnerPage])
 
   const totalQuantity = calculateTotalQuantityMT()
 
@@ -1371,7 +1906,7 @@ const WarehouseToPartyForm = ({
               </div>
             </div>
 
-            {/* Consignor Details */}
+            {/* Consignor Details with Bidirectional Infinite Scroll */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignor Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
@@ -1380,39 +1915,46 @@ const WarehouseToPartyForm = ({
                 </Form.Label>
                 <Select
                   value={getConsignorValue()}
-                  onChange={(selected) => {
-                    if (selected && selected.value === 'create-new') {
-                      setShowConsignorModal(true)
-                      handleConsignorChange(null)
-                    } else {
-                      handleConsignorChange(selected)
-                    }
-                  }}
+                  onChange={handleConsignorChange}
                   options={consignorOptions}
-                  placeholder="Select Consignor or Create New"
+                  placeholder="Select Consignor or Add New"
                   isClearable
-                  isLoading={isFetchingConsignor}
+                  isLoading={isFetchingConsignor && consignorPage === 1}
                   onInputChange={handleConsignorInputChange}
-                  onMenuScrollToBottom={handleConsignorMenuScrollToBottom}
                   filterOption={null}
                   noOptionsMessage={({ inputValue }) =>
                     inputValue
                       ? `No consignor found for "${inputValue}"`
                       : 'Type to search consignor'
                   }
-                  required
-                  styles={{
-                    option: (provided, state) => ({
-                      ...provided,
-                      backgroundColor:
-                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
-                      '&:hover': {
-                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
-                      },
-                    }),
+                  loadingMessage={() => <LoadingMessage>Loading consignors...</LoadingMessage>}
+                  components={{
+                    MenuList: (props) => (
+                      <CustomMenuList
+                        {...props}
+                        isLoading={isFetchingConsignor}
+                        hasMore={hasMoreConsignor}
+                        hasPrevious={hasPreviousConsignor}
+                        onLoadPrevious={loadPreviousConsignors}
+                        onLoadMore={loadMoreConsignors}
+                        totalCount={consignorData?.total || 0}
+                      />
+                    ),
+                    Option: (props) => {
+                      if (props.data.value === 'create-new') {
+                        return (
+                          <components.Option {...props}>
+                            <div style={{ margin: '-8px -12px', padding: '8px 12px' }}>
+                              {props.children}
+                            </div>
+                          </components.Option>
+                        )
+                      }
+                      return <components.Option {...props} />
+                    },
                   }}
+                  required
                 />
-                {isFetchingConsignor && <Form.Text className="text-info">Searching...</Form.Text>}
               </div>
               {formData.consignorAddress && (
                 <div className="col-md-12">
@@ -1422,7 +1964,7 @@ const WarehouseToPartyForm = ({
               )}
             </div>
 
-            {/* Consignee Details */}
+            {/* Consignee Details with Bidirectional Infinite Scroll */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Consignee Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
@@ -1431,39 +1973,46 @@ const WarehouseToPartyForm = ({
                 </Form.Label>
                 <Select
                   value={getConsigneeValue()}
-                  onChange={(selected) => {
-                    if (selected && selected.value === 'create-new') {
-                      setShowConsigneeModal(true)
-                      handleConsigneeChange(null)
-                    } else {
-                      handleConsigneeChange(selected)
-                    }
-                  }}
+                  onChange={handleConsigneeChange}
                   options={consigneeOptions}
-                  placeholder="Select Consignee or Create New"
+                  placeholder="Select Consignee or Add New"
                   isClearable
-                  isLoading={isFetchingConsignee}
+                  isLoading={isFetchingConsignee && consigneePage === 1}
                   onInputChange={handleConsigneeInputChange}
-                  onMenuScrollToBottom={handleConsigneeMenuScrollToBottom}
                   filterOption={null}
                   noOptionsMessage={({ inputValue }) =>
                     inputValue
                       ? `No consignee found for "${inputValue}"`
                       : 'Type to search consignee'
                   }
-                  required
-                  styles={{
-                    option: (provided, state) => ({
-                      ...provided,
-                      backgroundColor:
-                        state.data.value === 'create-new' ? '#f8f9fa' : provided.backgroundColor,
-                      '&:hover': {
-                        backgroundColor: state.data.value === 'create-new' ? '#e9ecef' : '#f8f9fa',
-                      },
-                    }),
+                  loadingMessage={() => <LoadingMessage>Loading consignees...</LoadingMessage>}
+                  components={{
+                    MenuList: (props) => (
+                      <CustomMenuList
+                        {...props}
+                        isLoading={isFetchingConsignee}
+                        hasMore={hasMoreConsignee}
+                        hasPrevious={hasPreviousConsignee}
+                        onLoadPrevious={loadPreviousConsignees}
+                        onLoadMore={loadMoreConsignees}
+                        totalCount={consigneeData?.total || 0}
+                      />
+                    ),
+                    Option: (props) => {
+                      if (props.data.value === 'create-new') {
+                        return (
+                          <components.Option {...props}>
+                            <div style={{ margin: '-8px -12px', padding: '8px 12px' }}>
+                              {props.children}
+                            </div>
+                          </components.Option>
+                        )
+                      }
+                      return <components.Option {...props} />
+                    },
                   }}
+                  required
                 />
-                {isFetchingConsignee && <Form.Text className="text-info">Searching...</Form.Text>}
               </div>
               {formData.consigneeAddress && (
                 <div className="col-md-12">
@@ -1473,7 +2022,7 @@ const WarehouseToPartyForm = ({
               )}
             </div>
 
-            {/* Material Owner Details */}
+            {/* Material Owner Details with Bidirectional Infinite Scroll */}
             <h5 className="fw-semibold border-bottom pb-2 mb-3">Material Owner Details</h5>
             <div className="row g-3 mb-4">
               <div className="col-md-12">
@@ -1484,19 +2033,29 @@ const WarehouseToPartyForm = ({
                   options={martialOwnerOptions}
                   placeholder="Select Material Owner"
                   isClearable
-                  isLoading={isFetchingMartialOwner}
+                  isLoading={isFetchingMartialOwner && martialOwnerPage === 1}
                   onInputChange={handleMartialOwnerInputChange}
-                  onMenuScrollToBottom={handleMartialOwnerMenuScrollToBottom}
                   filterOption={null}
                   noOptionsMessage={({ inputValue }) =>
                     inputValue
                       ? `No material owner found for "${inputValue}"`
                       : 'Type to search material owner'
                   }
+                  loadingMessage={() => <LoadingMessage>Loading material owners...</LoadingMessage>}
+                  components={{
+                    MenuList: (props) => (
+                      <CustomMenuList
+                        {...props}
+                        isLoading={isFetchingMartialOwner}
+                        hasMore={hasMoreMartialOwner}
+                        hasPrevious={hasPreviousMartialOwner}
+                        onLoadPrevious={loadPreviousMartialOwners}
+                        onLoadMore={loadMoreMartialOwners}
+                        totalCount={martialOwnerData?.total || 0}
+                      />
+                    ),
+                  }}
                 />
-                {isFetchingMartialOwner && (
-                  <Form.Text className="text-info">Searching...</Form.Text>
-                )}
               </div>
               {formData.martialOwnerAddress && (
                 <div className="col-md-12">
@@ -1838,11 +2397,6 @@ const WarehouseToPartyForm = ({
                   readOnly
                   className="bg-light"
                 />
-                {/* <Form.Text className="text-info">
-                  <FaInfoCircle className="me-1" size={12} />
-                  Auto-calculated: {totalQuantity.toFixed(3)} MT × {formData.customerRate || 0} ={' '}
-                  {formData.totalAmount || 0}
-                </Form.Text> */}
               </div>
               <div className="col-md-4">
                 <Form.Label>Transporter Rate (per MT) (₹)</Form.Label>
@@ -1871,11 +2425,6 @@ const WarehouseToPartyForm = ({
                   readOnly
                   className="bg-light"
                 />
-                {/* <Form.Text className="text-info">
-                  <FaInfoCircle className="me-1" size={12} />
-                  Auto-calculated: {totalQuantity.toFixed(3)} MT × {formData.transporterRate || 0} ={' '}
-                  {formData.totalTransporterAmount || 0}
-                </Form.Text> */}
               </div>
               <div className="col-md-4">
                 <Form.Label>Transporter Rate On</Form.Label>
