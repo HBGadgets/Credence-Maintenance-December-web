@@ -16,10 +16,10 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   const [originalSize, setOriginalSize] = useState(0)
   const [compressedSize, setCompressedSize] = useState(0)
   const [quantitiesTaken, setQuantitiesTaken] = useState({})
+  const [bagDetails, setBagDetails] = useState({})
   const isSubmittingRef = useRef(false)
   const modalBodyRef = useRef(null)
 
-  // Check if record already has an acknowledgement image
   const hasExistingImage = recordData?.acknowledgementImage
   const products = recordData?.products || []
 
@@ -35,14 +35,28 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       setOriginalSize(0)
       setCompressedSize(0)
       setQuantitiesTaken({})
+      setBagDetails({})
       isSubmittingRef.current = false
 
       if (products && products.length > 0) {
         const initialQuantities = {}
+        const initialBagDetails = {}
         products.forEach((product) => {
+          // Initialize quantity taken with any existing updatedQuantityMT
           initialQuantities[product._id] = product.updatedQuantityMT || ''
+
+          // Initialize bag details with data from the API response
+          initialBagDetails[product._id] = {
+            // Use bagSize from API if available, otherwise use product's bagSize
+            bagSize: product.bagSize || product.bagSize || null,
+            // Use totalBags from API if available, otherwise use product's totalBags
+            totalBags: product.totalBags || product.totalBags || null,
+            // Initialize takenBags from existing data if available
+            takenBags: product.takenBags || 0,
+          }
         })
         setQuantitiesTaken(initialQuantities)
+        setBagDetails(initialBagDetails)
       }
 
       if (modalBodyRef.current) {
@@ -51,12 +65,191 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
     }
   }, [show, currentStatus, products])
 
-  // Better PDF compression function
+  const calculateQuantityFromBags = (bagSize, takenBags) => {
+    if (!bagSize || !takenBags) return 0
+    const quantityMT = (bagSize * takenBags) / 1000
+    return parseFloat(quantityMT.toFixed(3))
+  }
+
+  const calculateBagsFromQuantity = (quantityMT, bagSize) => {
+    if (!quantityMT || !bagSize) return 0
+    const totalKG = quantityMT * 1000
+    const bags = totalKG / bagSize
+    return Math.floor(bags)
+  }
+
+  const handleBagChange = (productId, field, value) => {
+    const product = products.find((p) => p._id === productId)
+    if (!product) return
+
+    const numValue = value === '' ? 0 : parseInt(value)
+    if (isNaN(numValue)) return
+
+    const currentBagDetails = bagDetails[productId] || {
+      bagSize: null,
+      totalBags: null,
+      takenBags: 0,
+    }
+    const maxBags = currentBagDetails.totalBags
+
+    if (field === 'takenBags') {
+      if (numValue < 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Bags',
+          text: 'Number of bags cannot be negative',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+        })
+        return
+      }
+
+      if (maxBags !== null && numValue > maxBags) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Exceeds Total Bags',
+          text: `Cannot take more than ${maxBags} bags`,
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+        })
+        setBagDetails((prev) => ({
+          ...prev,
+          [productId]: { ...prev[productId], takenBags: maxBags },
+        }))
+
+        if (currentBagDetails.bagSize) {
+          const calculatedQuantity = calculateQuantityFromBags(currentBagDetails.bagSize, maxBags)
+          if (calculatedQuantity <= product.quantityMT) {
+            setQuantitiesTaken((prev) => ({ ...prev, [productId]: calculatedQuantity.toString() }))
+          }
+        }
+        return
+      }
+
+      setBagDetails((prev) => ({
+        ...prev,
+        [productId]: { ...prev[productId], takenBags: numValue },
+      }))
+
+      if (currentBagDetails.bagSize) {
+        const calculatedQuantity = calculateQuantityFromBags(currentBagDetails.bagSize, numValue)
+
+        if (calculatedQuantity > product.quantityMT) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Quantity Exceeds Limit',
+            text: `Calculated quantity (${calculatedQuantity} MT) exceeds ordered quantity (${product.quantityMT} MT)`,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+          })
+          const maxAllowedBags = calculateBagsFromQuantity(
+            product.quantityMT,
+            currentBagDetails.bagSize,
+          )
+          setBagDetails((prev) => ({
+            ...prev,
+            [productId]: { ...prev[productId], takenBags: maxAllowedBags },
+          }))
+          const maxQuantity = calculateQuantityFromBags(currentBagDetails.bagSize, maxAllowedBags)
+          setQuantitiesTaken((prev) => ({ ...prev, [productId]: maxQuantity.toString() }))
+        } else {
+          setQuantitiesTaken((prev) => ({ ...prev, [productId]: calculatedQuantity.toString() }))
+        }
+      }
+    } else if (field === 'bagSize') {
+      setBagDetails((prev) => ({
+        ...prev,
+        [productId]: { ...prev[productId], bagSize: numValue },
+      }))
+
+      const currentTakenBags = currentBagDetails.takenBags
+      if (currentTakenBags > 0 && numValue) {
+        const recalculatedQuantity = calculateQuantityFromBags(numValue, currentTakenBags)
+        if (recalculatedQuantity <= product.quantityMT) {
+          setQuantitiesTaken((prev) => ({ ...prev, [productId]: recalculatedQuantity.toString() }))
+        } else {
+          const maxAllowedBags = calculateBagsFromQuantity(product.quantityMT, numValue)
+          setBagDetails((prev) => ({
+            ...prev,
+            [productId]: { ...prev[productId], takenBags: maxAllowedBags, bagSize: numValue },
+          }))
+          const maxQuantity = calculateQuantityFromBags(numValue, maxAllowedBags)
+          setQuantitiesTaken((prev) => ({ ...prev, [productId]: maxQuantity.toString() }))
+        }
+      }
+    }
+  }
+
+  const handleQuantityChange = (productId, value) => {
+    const product = products.find((p) => p._id === productId)
+    if (!product) return
+
+    const numValue = parseFloat(value)
+    if (value === '' || (isNaN(numValue) && value !== '')) {
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: '' }))
+      return
+    }
+
+    if (numValue < 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Quantity taken cannot be negative',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      })
+      return
+    }
+
+    if (numValue > product.quantityMT) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Quantity Exceeds Limit',
+        text: `Quantity taken (${numValue}) cannot exceed ordered quantity (${product.quantityMT})`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      })
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: product.quantityMT.toString() }))
+
+      const currentBagDetails = bagDetails[productId]
+      if (currentBagDetails && currentBagDetails.bagSize) {
+        const calculatedBags = calculateBagsFromQuantity(
+          product.quantityMT,
+          currentBagDetails.bagSize,
+        )
+        setBagDetails((prev) => ({
+          ...prev,
+          [productId]: { ...prev[productId], takenBags: calculatedBags },
+        }))
+      }
+    } else {
+      setQuantitiesTaken((prev) => ({ ...prev, [productId]: value }))
+
+      const currentBagDetails = bagDetails[productId]
+      if (currentBagDetails && currentBagDetails.bagSize && numValue > 0) {
+        const calculatedBags = calculateBagsFromQuantity(numValue, currentBagDetails.bagSize)
+        setBagDetails((prev) => ({
+          ...prev,
+          [productId]: { ...prev[productId], takenBags: calculatedBags },
+        }))
+      }
+    }
+  }
+
   const compressPDF = async (file) => {
     try {
       const originalSizeKB = file.size / 1024
 
-      // If already under 2MB, return original
       if (originalSizeKB <= 2048) {
         return file
       }
@@ -66,15 +259,12 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       let pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer)
       const pageCount = pdfDoc.getPageCount()
 
-      // For PDFs, we'll try different strategies
       let compressedBytes = null
       let compressedSizeKB = originalSizeKB
 
-      // Strategy 1: Remove metadata and compress
       setCompressionMessage('Removing metadata and compressing...')
       setCompressionProgress(20)
 
-      // Create a new PDF and copy pages (this removes unnecessary metadata)
       const newPdf = await PDFLib.PDFDocument.create()
       const pages = await pdfDoc.copyPages(
         pdfDoc,
@@ -90,7 +280,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       })
       compressedSizeKB = compressedBytes.byteLength / 1024
 
-      // Strategy 2: If still too large and has multiple pages, try to reduce pages
       if (compressedSizeKB > 2048 && pageCount > 1) {
         setCompressionMessage(
           `Reducing from ${pageCount} pages to ${Math.ceil(pageCount / 2)} pages...`,
@@ -98,7 +287,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         setCompressionProgress(50)
 
         const reducedPdf = await PDFLib.PDFDocument.create()
-        // Keep only every other page or first few pages
         const pagesToKeep = Math.min(Math.ceil(pageCount / 2), 5)
         const keepIndices = Array.from({ length: pagesToKeep }, (_, i) => i)
         const reducedPages = await pdfDoc.copyPages(pdfDoc, keepIndices)
@@ -113,7 +301,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         compressedSizeKB = compressedBytes.byteLength / 1024
       }
 
-      // Strategy 3: If still too large, try to convert first page only
       if (compressedSizeKB > 2048 && pageCount > 1) {
         setCompressionMessage('Keeping only first page...')
         setCompressionProgress(70)
@@ -131,16 +318,13 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         compressedSizeKB = compressedBytes.byteLength / 1024
       }
 
-      // Strategy 4: If still too large, create a new empty PDF with just text content
       if (compressedSizeKB > 2048) {
         setCompressionMessage('Creating optimized version...')
         setCompressionProgress(90)
 
-        // Try to extract text and create a new minimal PDF
         const minimalPdf = await PDFLib.PDFDocument.create()
         const page = minimalPdf.addPage([400, 600])
 
-        // Add a note that original content was compressed
         const { width, height } = page.getSize()
         page.drawText('Document compressed for size optimization', {
           x: 50,
@@ -177,7 +361,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       return compressedFile
     } catch (error) {
       console.error('PDF compression error:', error)
-      // If all compression fails, create a simple text PDF
       try {
         const fallbackPdf = await PDFLib.PDFDocument.create()
         const page = fallbackPdf.addPage([400, 600])
@@ -200,12 +383,11 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         })
         return fallbackFile
       } catch (fallbackError) {
-        return file // Return original as last resort
+        return file
       }
     }
   }
 
-  // Compress image using browser-image-compression
   const compressImageWithLib = async (file) => {
     try {
       let compressedFile = file
@@ -215,7 +397,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         return file
       }
 
-      // More aggressive compression levels for images
       const compressionLevels = [
         { maxSizeMB: 2, maxWidthOrHeight: 1600, initialQuality: 0.7 },
         { maxSizeMB: 1.5, maxWidthOrHeight: 1400, initialQuality: 0.6 },
@@ -342,7 +523,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         setImagePreview(null)
       }
 
-      // Show suggestion for PDF files that are still large
       if (file.type === 'application/pdf' && finalSizeKB > 2048) {
         setTimeout(() => {
           Swal.fire({
@@ -389,45 +569,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         setIsCompressing(false)
         setTimeout(() => setCompressionMessage(''), 3000)
       }, 500)
-    }
-  }
-
-  const handleQuantityChange = (productId, value) => {
-    const product = products.find((p) => p._id === productId)
-    if (!product) return
-
-    const numValue = parseFloat(value)
-    if (value === '' || (isNaN(numValue) && value !== '')) {
-      setQuantitiesTaken((prev) => ({ ...prev, [productId]: '' }))
-      return
-    }
-
-    if (numValue < 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Invalid Quantity',
-        text: 'Quantity taken cannot be negative',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-      })
-      return
-    }
-
-    if (numValue > product.quantityMT) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Quantity Exceeds Limit',
-        text: `Quantity taken (${numValue}) cannot exceed ordered quantity (${product.quantityMT})`,
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-      })
-      setQuantitiesTaken((prev) => ({ ...prev, [productId]: product.quantityMT.toString() }))
-    } else {
-      setQuantitiesTaken((prev) => ({ ...prev, [productId]: value }))
     }
   }
 
@@ -516,6 +657,9 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         productId: product.productId,
         _id: product._id,
         updatedQuantityMT: parseFloat(quantitiesTaken[product._id] || 0),
+        bagSize: bagDetails[product._id]?.bagSize || product.bagSize || null,
+        // Send totalBags with the value of takenBags (not the original totalBags)
+        totalBags: bagDetails[product._id]?.takenBags || 0,
       }))
     }
 
@@ -541,6 +685,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
       setOriginalSize(0)
       setCompressedSize(0)
       setQuantitiesTaken({})
+      setBagDetails({})
       onHide()
     }
   }
@@ -601,7 +746,10 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                     <tr className="table-light">
                       <th>Product Name</th>
                       <th>Ordered Quantity (MT)</th>
-                      <th>Quantity Taken by Party (MT)</th>
+                      <th>Bag Size (kg)</th>
+                      <th>Total Bags</th>
+                      <th>Bags Taken</th>
+                      <th>Quantity Taken (MT)</th>
                       <th>Remaining (MT)</th>
                     </tr>
                   </thead>
@@ -609,6 +757,12 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                     {products.map((product) => {
                       const updatedQuantityMT = parseFloat(quantitiesTaken[product._id] || 0)
                       const remaining = product.quantityMT - updatedQuantityMT
+                      const productBagDetails = bagDetails[product._id] || {
+                        bagSize: product.bagSize || null,
+                        totalBags: product.totalBags || null,
+                        takenBags: 0,
+                      }
+
                       return (
                         <tr key={product._id}>
                           <td className="fw-medium">{product.productName}</td>
@@ -616,25 +770,93 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                           <td>
                             <Form.Control
                               type="number"
+                              min="1"
+                              step="1"
+                              value={productBagDetails.bagSize || ''}
+                              onChange={(e) =>
+                                handleBagChange(product._id, 'bagSize', e.target.value)
+                              }
+                              disabled={true}
+                              className="py-1"
+                              placeholder="Enter bag size"
+                            />
+                            {!productBagDetails.bagSize && (
+                              <Form.Text className="text-muted">Enter bag size in kg</Form.Text>
+                            )}
+                            {productBagDetails.bagSize && (
+                              <Form.Text className="text-muted">
+                                Current: {productBagDetails.bagSize} kg/bag
+                              </Form.Text>
+                            )}
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="number"
                               min="0"
-                              max={product.quantityMT - 0.01}
-                              step="0.01"
-                              value={quantitiesTaken[product._id] || ''}
-                              onChange={(e) => handleQuantityChange(product._id, e.target.value)}
+                              step="1"
+                              value={productBagDetails.totalBags || ''}
+                              disabled={true}
+                              className="py-1 bg-light"
+                              placeholder="Total bags"
+                            />
+                            {productBagDetails.totalBags ? (
+                              <Form.Text className="text-muted">
+                                Total: {productBagDetails.totalBags} bags
+                              </Form.Text>
+                            ) : (
+                              <Form.Text className="text-muted">Not specified</Form.Text>
+                            )}
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              max={productBagDetails.totalBags || undefined}
+                              step="1"
+                              value={productBagDetails.takenBags}
+                              onChange={(e) =>
+                                handleBagChange(product._id, 'takenBags', e.target.value)
+                              }
                               disabled={isProcessing}
                               className="py-1"
-                              placeholder="Enter quantity taken"
+                              placeholder="Bags taken"
                             />
-                            <Form.Text className="text-muted">
-                              Must be less than {product.quantityMT}
-                            </Form.Text>
+                            {productBagDetails.totalBags !== null && (
+                              <Form.Text className="text-muted">
+                                Max: {productBagDetails.totalBags} bags
+                              </Form.Text>
+                            )}
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              max={product.quantityMT - 0.01}
+                              step="0.001"
+                              value={quantitiesTaken[product._id] || ''}
+                              onChange={(e) => handleQuantityChange(product._id, e.target.value)}
+                              disabled={true}
+                              className="py-1"
+                              placeholder="Quantity in MT"
+                            />
+                            {productBagDetails.bagSize && productBagDetails.takenBags > 0 && (
+                              <Form.Text className="text-muted">
+                                Auto-calculated: {productBagDetails.takenBags} bags ×{' '}
+                                {productBagDetails.bagSize}kg ={' '}
+                                {(
+                                  (productBagDetails.bagSize * productBagDetails.takenBags) /
+                                  1000
+                                ).toFixed(3)}{' '}
+                                MT
+                              </Form.Text>
+                            )}
                           </td>
                           <td
                             className={
                               remaining === 0 ? 'text-success' : remaining > 0 ? 'text-warning' : ''
                             }
                           >
-                            {remaining.toFixed(2)}
+                            {remaining.toFixed(3)}
                             {remaining < 0 && (
                               <Badge bg="danger" className="ms-2">
                                 Invalid
