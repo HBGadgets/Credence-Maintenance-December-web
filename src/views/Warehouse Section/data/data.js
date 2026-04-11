@@ -648,3 +648,20 @@ export const patchRailHeadApi = async (id, data) => {
 
 // ------------------------------------------------------------------------------------------------------------- 
 
+// Tp pass Image Update button 
+
+export const patchUpdateAknowledgementApi = async (id, data) => {
+    try {
+        const response = await axios.patch(
+            `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/update-acknowledgement-image/${id}`,
+            data,
+            {
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Update failed');
+    }
+};

@@ -47,6 +47,9 @@ const GodownLr = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // aknowledgement selected Row id
+  const [selectedRecordId, setSelectedRecordId] = useState(null)
+
   // Date range state
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
 
@@ -582,6 +585,7 @@ const GodownLr = () => {
           onClick={(e) => {
             e.stopPropagation()
             setSelectedImageUrl(fullImageUrl)
+            setSelectedRecordId(item.id)
             setShowImageModal(true)
           }}
           className="d-flex align-items-center gap-2"
@@ -1091,8 +1095,15 @@ const GodownLr = () => {
         onHide={() => {
           setShowImageModal(false)
           setSelectedImageUrl(null)
+          setSelectedRecordId(null) // Clear the selected record ID
         }}
         imageUrl={selectedImageUrl}
+        recordId={selectedRecordId} // This will now have the correct _id
+        onUploadSuccess={() => {
+          // Refresh the data after successful upload
+          queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
+          toast.success('File updated successfully!')
+        }}
       />
 
       {/* Invoice Bill Modal */}

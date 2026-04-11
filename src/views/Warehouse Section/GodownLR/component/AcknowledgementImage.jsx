@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Modal, Button, Spinner, Alert, ProgressBar, Tabs, Tab } from 'react-bootstrap'
+import { Modal, Button, Spinner, Alert, ProgressBar, Tabs, Tab, Form } from 'react-bootstrap'
 import {
   FaDownload,
   FaExternalLinkAlt,
@@ -10,9 +10,14 @@ import {
   FaCompressAlt,
   FaExpandAlt,
   FaRegFileAlt,
+  FaUpload,
+  FaCheckCircle,
+  FaTimesCircle,
 } from 'react-icons/fa'
+import { patchUpdateAknowledgementApi } from '../../data/data'
 
-const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
+const AcknowledgementImage = ({ show, onHide, imageUrl, recordId }) => {
+  // Changed from 'id' to 'recordId'
   const [isLoading, setIsLoading] = useState(true)
   const [fileError, setFileError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -24,9 +29,18 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
   const [fileSize, setFileSize] = useState(null)
   const [useIframe, setUseIframe] = useState(false)
 
+  // Update image states
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [previewUrl, setPreviewUrl] = useState(null)
+
   const imageRef = useRef(null)
   const modalBodyRef = useRef(null)
   const iframeRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (imageUrl && show) {
@@ -50,6 +64,13 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
     setIsZoomed(false)
     setDownloadProgress(0)
     setUseIframe(false)
+    // Reset update image states
+    setSelectedFile(null)
+    setUploading(false)
+    setUploadProgress(0)
+    setUploadSuccess(false)
+    setUploadError('')
+    setPreviewUrl(null)
   }
 
   const getFullFileUrl = () => {
@@ -82,7 +103,6 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
 
       if (['pdf'].includes(extension)) {
         setFileType('pdf')
-        // Just set loading to false, don't try to load PDF.js
         setIsLoading(false)
       } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(extension)) {
         setFileType('image')
@@ -92,7 +112,6 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
         setIsLoading(false)
       }
 
-      // Get file size
       try {
         const response = await fetch(fullUrl, { method: 'HEAD' })
         if (response.headers.get('content-length')) {
@@ -192,6 +211,103 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
   const openInBrowser = () => {
     const fullUrl = getFullFileUrl()
     window.open(fullUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Validate file type (accept images and PDFs)
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Please select a valid image (JPEG, PNG, GIF, WEBP) or PDF file')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File size must be less than 10MB')
+      return
+    }
+
+    setUploadError('')
+    setSelectedFile(file)
+    setUploadSuccess(false)
+
+    // Create preview URL for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setPreviewUrl(null)
+    }
+  }
+
+  // Handle file upload
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setUploadError('Please select a file first')
+      return
+    }
+
+    if (!recordId) {
+      setUploadError('Record ID is missing')
+      console.error('No recordId provided to AcknowledgementImage component')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(0)
+    setUploadError('')
+
+    // Create form data
+    const formData = new FormData()
+    formData.append('acknowledgementImage', selectedFile)
+    formData.append('acknowledgementImage', selectedFile.name)
+
+    // Simulate progress (since axios doesn't have built-in progress for patch easily)
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + 10
+      })
+    }, 200)
+
+    try {
+      // Call the API with recordId
+      const response = await patchUpdateAknowledgementApi(recordId, formData)
+
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+      setUploadSuccess(true)
+
+      // Reset and close modal after success
+      setTimeout(() => {
+        setUploading(false)
+        setSelectedFile(null)
+        setPreviewUrl(null)
+        onHide() // Close modal
+        // You might want to trigger a refresh of the parent component here
+        if (typeof onUploadSuccess === 'function') {
+          onUploadSuccess() // Call callback if provided
+        } else {
+          window.location.reload() // Or call a callback prop to refresh data
+        }
+      }, 1500)
+    } catch (error) {
+      clearInterval(progressInterval)
+      setUploadError(error.message || 'Failed to upload file')
+      setUploading(false)
+      setUploadProgress(0)
+      console.error('Upload error:', error)
+    }
   }
 
   const renderImage = () => (
@@ -332,7 +448,6 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
   )
 
   const renderPDF = () => {
-    // Use iframe with Google Docs viewer as fallback
     return renderPDFWithIframe()
   }
 
@@ -383,6 +498,129 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
       </div>
     )
   }
+
+  // Render update image tab content
+  const renderUpdateImage = () => (
+    <div className="update-image-container p-3">
+      <Alert variant="info" className="mb-4">
+        <FaUpload className="me-2" />
+        Upload a new acknowledgement file (image or PDF). The existing file will be replaced.
+      </Alert>
+
+      {uploadSuccess ? (
+        <div className="text-center py-4">
+          <FaCheckCircle size={64} className="text-success mb-3" />
+          <h5>Upload Successful!</h5>
+          <p>The acknowledgement file has been updated successfully.</p>
+          <Spinner animation="border" variant="success" size="sm" />
+        </div>
+      ) : (
+        <>
+          <Form.Group className="mb-4">
+            <Form.Label className="fw-bold">Select New File</Form.Label>
+            <div className="file-upload-area">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                onChange={handleFileSelect}
+                className="form-control"
+                disabled={uploading}
+                style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}
+              />
+              <Form.Text className="text-muted">
+                Supported formats: JPEG, PNG, GIF, WEBP, PDF (Max size: 10MB)
+              </Form.Text>
+            </div>
+          </Form.Group>
+
+          {uploadError && (
+            <Alert variant="danger" className="mt-3">
+              <FaTimesCircle className="me-2" />
+              {uploadError}
+            </Alert>
+          )}
+
+          {selectedFile && !uploadSuccess && (
+            <div className="selected-file-info mt-3 p-3 border rounded">
+              <h6 className="mb-3">Selected File:</h6>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="mb-1">
+                    <strong>Name:</strong> {selectedFile.name}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Size:</strong> {formatFileSize(selectedFile.size)}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Type:</strong> {selectedFile.type}
+                  </p>
+                </div>
+                {previewUrl && (
+                  <div className="preview-thumbnail" style={{ maxWidth: '100px' }}>
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        borderRadius: '4px',
+                        border: '1px solid #dee2e6',
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {uploading && (
+                <div className="mt-3">
+                  <ProgressBar
+                    now={uploadProgress}
+                    label={`${uploadProgress}%`}
+                    animated
+                    striped
+                    variant="primary"
+                  />
+                  <p className="text-center text-muted mt-2">Uploading...</p>
+                </div>
+              )}
+
+              <div className="mt-3 d-flex gap-2">
+                <Button variant="primary" onClick={handleUpload} disabled={uploading}>
+                  {uploading ? (
+                    <>
+                      <Spinner as="span" animation="border" size="sm" className="me-2" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaUpload className="me-2" />
+                      Upload File
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => {
+                    setSelectedFile(null)
+                    setPreviewUrl(null)
+                    setUploadError('')
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ''
+                    }
+                  }}
+                  disabled={uploading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 
   const renderContent = () => {
     if (isLoading) {
@@ -473,6 +711,9 @@ const AcknowledgementImage = ({ show, onHide, imageUrl }) => {
           </Tab>
           <Tab eventKey="info" title="File Info">
             {renderFileInfo()}
+          </Tab>
+          <Tab eventKey="update" title="Update Image">
+            {renderUpdateImage()}
           </Tab>
         </Tabs>
       </Modal.Body>
