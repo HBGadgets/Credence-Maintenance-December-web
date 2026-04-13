@@ -448,6 +448,9 @@ const WarehouseToPartyForm = ({
   const [isCreatingConsignor, setIsCreatingConsignor] = useState(false)
   const [isCreatingConsignee, setIsCreatingConsignee] = useState(false)
 
+  const [originalData, setOriginalData] = useState({}) // Track original data for edit mode
+  const [changedFields, setChangedFields] = useState(new Set()) // Track which fields have been changed
+
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
@@ -900,12 +903,109 @@ const WarehouseToPartyForm = ({
       }
 
       setFormData(updatedFormData)
+      setOriginalData(JSON.parse(JSON.stringify(updatedFormData))) // Deep copy original data
       setIsInitialDataLoaded(true)
     } else if (mode === 'add') {
       setFormData(defaultFormData)
+      setOriginalData({})
+      setChangedFields(new Set())
       setIsInitialDataLoaded(false)
     }
   }, [initialData, mode, vehicles, drivers, isInitialDataLoaded])
+
+  // Track form data changes in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && originalData && Object.keys(originalData).length > 0) {
+      const changes = getChangedFields(originalData, formData)
+      setChangedFields(new Set(Object.keys(changes)))
+      console.log('Changed fields:', Object.keys(changes))
+    }
+  }, [formData, originalData, mode])
+
+  // Helper function to compare nested objects
+  const isEqual = (obj1, obj2) => {
+    if (obj1 === obj2) return true
+
+    if (obj1 instanceof Date && obj2 instanceof Date) {
+      return obj1.getTime() === obj2.getTime()
+    }
+
+    if (typeof obj1 === 'object' && obj1 !== null && typeof obj2 === 'object' && obj2 !== null) {
+      return JSON.stringify(obj1) === JSON.stringify(obj2)
+    }
+
+    return false
+  }
+
+  // Helper function to get changed fields recursively
+
+  const getChangedFields = (original, current, prefix = '') => {
+    const changes = {}
+
+    // Fields to exclude from edit payload (auto-calculated fields)
+    const excludedFields = ['totalAmount', 'totalTransporterAmount']
+
+    Object.keys(current).forEach((key) => {
+      // Skip excluded fields
+      if (excludedFields.includes(key)) {
+        return
+      }
+
+      const currentValue = current[key]
+      const originalValue = original[key]
+      const fieldPath = prefix ? `${prefix}.${key}` : key
+
+      // Skip if both values are empty/undefined/null
+      if (currentValue === originalValue) {
+        return
+      }
+
+      if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
+        // Handle arrays (like products)
+        if (!isEqual(currentValue, originalValue)) {
+          const arrayChanges = []
+          let hasChanges = false
+
+          for (let i = 0; i < Math.max(currentValue.length, originalValue.length); i++) {
+            if (i < currentValue.length && i < originalValue.length) {
+              if (!isEqual(currentValue[i], originalValue[i])) {
+                arrayChanges.push(currentValue[i])
+                hasChanges = true
+              } else {
+                arrayChanges.push(undefined)
+              }
+            } else if (i < currentValue.length) {
+              arrayChanges.push(currentValue[i])
+              hasChanges = true
+            }
+          }
+
+          if (hasChanges) {
+            const filteredChanges = arrayChanges.filter((item) => item !== undefined)
+            if (filteredChanges.length > 0) {
+              changes[fieldPath] = filteredChanges
+            }
+          }
+        }
+      } else if (
+        typeof currentValue === 'object' &&
+        currentValue !== null &&
+        typeof originalValue === 'object' &&
+        originalValue !== null
+      ) {
+        // Handle nested objects
+        const nestedChanges = getChangedFields(originalValue, currentValue, fieldPath)
+        if (Object.keys(nestedChanges).length > 0) {
+          Object.assign(changes, nestedChanges)
+        }
+      } else if (currentValue !== originalValue) {
+        // Handle primitive values
+        changes[fieldPath] = currentValue
+      }
+    })
+
+    return changes
+  }
 
   // Refetch warehouse products when warehouse ID changes in edit mode
   useEffect(() => {
@@ -1239,16 +1339,52 @@ const WarehouseToPartyForm = ({
   const onSubmit = (e) => {
     e.preventDefault()
 
-    if (!formData.companyId) {
-      alert('Please select a company')
-      return
-    }
+    if (mode === 'add') {
+      // For add mode, validate and send all data
+      if (!formData.companyId) {
+        alert('Please select a company')
+        return
+      }
 
-    if (!formData.startLocation || !formData.endLocation) {
-      alert('Please enter both start and end locations')
-      return
-    }
+      if (!formData.startLocation || !formData.endLocation) {
+        alert('Please enter both start and end locations')
+        return
+      }
 
+      const payload = createFullPayload(formData)
+      console.log('Submitting full payload:', payload)
+      handleSubmit(payload)
+    } else {
+      // For edit mode, only send changed fields
+      if (changedFields.size === 0) {
+        toast.info('No changes detected')
+        return
+      }
+
+      // Get only the changed fields
+      const changes = getChangedFields(originalData, formData)
+
+      // Add ID to identify which record to update
+      const payload = {
+        id: initialData.id || initialData._id, // Make sure to pass the ID from initialData
+        ...changes,
+      }
+
+      // Clean up the payload - remove any undefined or null values
+      Object.keys(payload).forEach((key) => {
+        if (payload[key] === undefined || payload[key] === null) {
+          delete payload[key]
+        }
+      })
+
+      console.log('Submitting only changed fields:', payload)
+      console.log('Changed fields:', Array.from(changedFields))
+      handleSubmit(payload)
+    }
+  }
+
+  // Helper function to create full payload (for add mode)
+  const createFullPayload = (formData) => {
     const payload = {
       ...formData,
       tpPassType: 'warehouseToParty',
@@ -1321,8 +1457,7 @@ const WarehouseToPartyForm = ({
       delete payload.supervisorName
     }
 
-    console.log('Submitting payload:', payload)
-    handleSubmit(payload)
+    return payload
   }
 
   const warehouseOptions = warehouseList.map((w) => ({
@@ -1820,40 +1955,40 @@ const WarehouseToPartyForm = ({
                 <Form.Label>
                   Company Name <span style={{ color: 'red' }}>*</span>
                 </Form.Label>
-                <Select
-                  value={getCompanyValue()}
-                  onChange={(selected) => {
-                    if (selected) {
-                      const selectedCompany = companyList.find((c) => c.id === selected.value)
-                      setFormData((prev) => ({
-                        ...prev,
-                        companyId: selectedCompany?.id || '',
-                        companyName: selectedCompany?.companyName || '',
-                        companyEmail: selectedCompany?.email || '',
-                        companyMobileNumber: selectedCompany?.mobileNumber || '',
-                        companyOfficeNumber: selectedCompany?.officeNumber || '',
-                        companyAddress: selectedCompany?.address || '',
-                        gstIn: selectedCompany?.gstNumber || '',
-                      }))
-                    } else {
-                      setFormData((prev) => ({
-                        ...prev,
-                        companyId: '',
-                        companyName: '',
-                        companyEmail: '',
-                        companyMobileNumber: '',
-                        companyOfficeNumber: '',
-                        companyAddress: '',
-                        gstIn: '',
-                      }))
-                    }
-                  }}
-                  options={companyOptions}
-                  placeholder="Select Company"
-                  isClearable
-                  isLoading={isLoading}
-                  required
-                />
+                {mode === 'edit' ? (
+                  <Form.Control
+                    type="text"
+                    value={formData.companyName || ''}
+                    readOnly
+                    disabled={isLoading}
+                    className="bg-light"
+                  />
+                ) : (
+                  <Select
+                    value={getCompanyValue()}
+                    onChange={(selected) => {
+                      if (selected) {
+                        const selectedCompany = companyList.find((c) => c.id === selected.value)
+                        setFormData((prev) => ({
+                          ...prev,
+                          companyId: selectedCompany?.id || '',
+                          companyName: selectedCompany?.companyName || '',
+                        }))
+                      } else {
+                        setFormData((prev) => ({
+                          ...prev,
+                          companyId: '',
+                          companyName: '',
+                        }))
+                      }
+                    }}
+                    options={companyOptions}
+                    placeholder="Select Company"
+                    isClearable
+                    isLoading={isLoading}
+                    required
+                  />
+                )}
               </div>
             </div>
 
@@ -2098,379 +2233,396 @@ const WarehouseToPartyForm = ({
               </div>
             </div>
 
-            {/* Product Details */}
-            <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
-            <div className="mb-4">
-              <div className="alert alert-warning mb-3">
-                <div className="d-flex align-items-center">
-                  <FaWarehouse className="me-2" />
-                  <div>
-                    <strong>Note:</strong> Products will be loaded from the selected warehouse in
-                    the "Issued By" section.
-                    {formData.issuedByWarehouseName && (
-                      <span className="ms-1">
-                        Current warehouse: <strong>{formData.issuedByWarehouseName}</strong>
-                      </span>
-                    )}
-                    {!formData.issuedByWarehouseId && (
-                      <span className="text-danger ms-1">Please select a warehouse first.</span>
-                    )}
-                    {isError && (
-                      <span className="text-danger ms-1">
-                        Error loading products. Please try again.
-                      </span>
-                    )}
+            {/* Product Details - Only show in add mode */}
+            {mode === 'add' && (
+              <>
+                <h5 className="fw-semibold border-bottom pb-2 mb-3">Product Details</h5>
+                <div className="mb-4">
+                  <div className="alert alert-warning mb-3">
+                    <div className="d-flex align-items-center">
+                      <FaWarehouse className="me-2" />
+                      <div>
+                        <strong>Note:</strong> Products will be loaded from the selected warehouse
+                        in the "Issued By" section.
+                        {formData.issuedByWarehouseName && (
+                          <span className="ms-1">
+                            Current warehouse: <strong>{formData.issuedByWarehouseName}</strong>
+                          </span>
+                        )}
+                        {!formData.issuedByWarehouseId && (
+                          <span className="text-danger ms-1">Please select a warehouse first.</span>
+                        )}
+                        {isError && (
+                          <span className="text-danger ms-1">
+                            Error loading products. Please try again.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {formData.products.map((product, index) => {
+                    const quantityHint = getCalculationHint(index, 'quantityMT')
+                    const bagSizeHint = getCalculationHint(index, 'bagSize')
+                    const totalBagsHint = getCalculationHint(index, 'totalBags')
+
+                    return (
+                      <div key={index} className="border rounded p-3 mb-3">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <h6 className="mb-0">Product {index + 1}</h6>
+                          {formData.products.length > 1 && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => removeProduct(index)}
+                              disabled={isLoading}
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <Form.Label>Warehouse</Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={product.warehouseName || formData.issuedByWarehouseName || ''}
+                              disabled
+                              readOnly
+                              className="bg-light"
+                            />
+                            <Form.Text className="text-muted">
+                              Auto-selected from "Issued By" warehouse
+                            </Form.Text>
+                          </div>
+
+                          <div className="col-md-6">
+                            <Form.Label>
+                              Product <span style={{ color: 'red' }}>*</span>
+                            </Form.Label>
+                            <Select
+                              key={`product-select-${index}-${product.productId || 'empty'}`}
+                              value={getProductValue(product)}
+                              onChange={(selected) => {
+                                if (selected) {
+                                  const updatedProduct = {
+                                    ...product,
+                                    productId: selected.productId,
+                                    productName: selected.productName || 'Unknown Product',
+                                    quantityMT: selected.quantityMT?.toString() || '',
+                                    bagSize: selected.bagSize?.toString() || '0',
+                                    totalBags: selected.totalBags?.toString() || '',
+                                  }
+
+                                  const updatedProducts = [...formData.products]
+                                  updatedProducts[index] = updatedProduct
+
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    products: updatedProducts,
+                                  }))
+                                } else {
+                                  const updatedProducts = [...formData.products]
+                                  updatedProducts[index] = {
+                                    ...product,
+                                    productId: '',
+                                    productName: '',
+                                    quantityMT: '',
+                                    bagSize: '',
+                                    totalBags: '',
+                                  }
+
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    products: updatedProducts,
+                                  }))
+                                }
+                              }}
+                              options={productOptions}
+                              placeholder={
+                                isLoadingWarehouseProducts
+                                  ? 'Loading products...'
+                                  : !formData.issuedByWarehouseId
+                                    ? 'Select a warehouse first'
+                                    : isError
+                                      ? 'Error loading products'
+                                      : productOptions.length === 0
+                                        ? 'No available products in this warehouse'
+                                        : `Select Product`
+                              }
+                              isClearable
+                              isLoading={isLoadingWarehouseProducts || isLoading}
+                              isDisabled={
+                                !formData.issuedByWarehouseId ||
+                                isLoadingWarehouseProducts ||
+                                isLoading ||
+                                isError
+                              }
+                              required
+                            />
+
+                            {formData.issuedByWarehouseId &&
+                              productOptions.length === 0 &&
+                              !isLoadingWarehouseProducts &&
+                              inventoryList.length === 0 && (
+                                <Form.Text className="text-danger">
+                                  No products found in this warehouse
+                                </Form.Text>
+                              )}
+
+                            {!formData.issuedByWarehouseId && (
+                              <Form.Text className="text-danger">
+                                Please select a warehouse in the "Issued By" section first
+                              </Form.Text>
+                            )}
+                            {mode === 'edit' &&
+                              product.productId &&
+                              product.productName &&
+                              !getProductValue(product) && (
+                                <Form.Text className="text-warning">
+                                  Product "{product.productName}" loaded from original data
+                                </Form.Text>
+                              )}
+                          </div>
+
+                          <div className="col-md-4">
+                            <Form.Label>Total Bags</Form.Label>
+                            <Form.Control
+                              type="number"
+                              value={product.totalBags}
+                              onChange={(e) =>
+                                handleProductChange(index, 'totalBags', e.target.value)
+                              }
+                              disabled={isLoading}
+                              placeholder="Enter total bags"
+                              min="0"
+                              onWheel={handleNumberInputWheel}
+                            />
+                            {totalBagsHint && (
+                              <Form.Text className="text-info d-block">
+                                <FaInfoCircle className="me-1" size={12} />
+                                {totalBagsHint}
+                              </Form.Text>
+                            )}
+                            <Form.Text className="text-muted d-block">
+                              Total number of bags
+                            </Form.Text>
+                          </div>
+
+                          <div className="col-md-4">
+                            <Form.Label>Bag Size (Kg per bag)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              value={product.bagSize}
+                              onChange={(e) =>
+                                handleProductChange(index, 'bagSize', e.target.value)
+                              }
+                              disabled={isLoading}
+                              placeholder="Enter bag size"
+                              min="0"
+                              step="0.01"
+                              onWheel={handleNumberInputWheel}
+                              readOnly
+                              className="bg-light"
+                            />
+                            {bagSizeHint && (
+                              <Form.Text className="text-info d-block">
+                                <FaInfoCircle className="me-1" size={12} />
+                                {bagSizeHint}
+                              </Form.Text>
+                            )}
+                            <Form.Text className="text-muted d-block">
+                              Weight per bag in kilograms
+                            </Form.Text>
+                          </div>
+
+                          <div className="col-md-4">
+                            <Form.Label>
+                              Quantity (MT) <span style={{ color: 'red' }}>*</span>
+                            </Form.Label>
+                            <Form.Control
+                              type="number"
+                              value={product.quantityMT}
+                              onChange={(e) =>
+                                handleProductChange(index, 'quantityMT', e.target.value)
+                              }
+                              disabled={isLoading}
+                              placeholder="Enter quantity in MT"
+                              min="0.001"
+                              step="0.001"
+                              required
+                              onWheel={handleNumberInputWheel}
+                            />
+                            {quantityHint && (
+                              <Form.Text className="text-info d-block">
+                                <FaInfoCircle className="me-1" size={12} />
+                                {quantityHint}
+                              </Form.Text>
+                            )}
+                            <Form.Text className="text-muted d-block">
+                              Quantity in metric tons (1 MT = 1000 kg)
+                            </Form.Text>
+                          </div>
+                        </div>
+
+                        {(product.bagSize || product.totalBags || product.quantityMT) && (
+                          <div className="mt-3 p-2 bg-light rounded small">
+                            <strong>Formula:</strong>
+                            {product.bagSize && product.totalBags && !product.quantityMT && (
+                              <span>
+                                {' '}
+                                {product.bagSize} kg × {product.totalBags} bags ={' '}
+                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                              </span>
+                            )}
+                            {product.bagSize && product.quantityMT && !product.totalBags && (
+                              <span>
+                                {' '}
+                                {product.quantityMT} MT × 1000 / {product.bagSize} kg ={' '}
+                                {Math.round((product.quantityMT * 1000) / product.bagSize)} bags
+                              </span>
+                            )}
+                            {product.totalBags && product.quantityMT && !product.bagSize && (
+                              <span>
+                                {' '}
+                                {product.quantityMT} MT × 1000 / {product.totalBags} bags ={' '}
+                                {((product.quantityMT * 1000) / product.totalBags).toFixed(2)}{' '}
+                                kg/bag
+                              </span>
+                            )}
+                            {product.bagSize && product.totalBags && product.quantityMT && (
+                              <span>
+                                {' '}
+                                {product.bagSize} kg × {product.totalBags} bags ={' '}
+                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  <Button
+                    variant="outline-primary"
+                    onClick={addProduct}
+                    className="mb-3"
+                    disabled={isLoading || !formData.issuedByWarehouseId}
+                  >
+                    Add Another Product
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Freight Details - Only show in add mode */}
+            {mode === 'add' && (
+              <>
+                <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
+                <div className="row g-3 mb-4">
+                  <div className="col-md-4">
+                    <Form.Label>Customer Rate (per MT) (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="customerRate"
+                      value={formData.customerRate}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                      placeholder="Enter rate per MT"
+                      min="0"
+                      step="0.01"
+                    />
+                    <Form.Text className="text-muted">Rate per metric ton</Form.Text>
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Total Amount (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="totalAmount"
+                      value={formData.totalAmount}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                      readOnly
+                      className="bg-light"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Transporter Rate (per MT) (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="transporterRate"
+                      value={formData.transporterRate}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                      placeholder="Enter rate per MT"
+                      min="0"
+                      step="0.01"
+                    />
+                    <Form.Text className="text-muted">Rate per metric ton</Form.Text>
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Total Transporter Amount (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="totalTransporterAmount"
+                      value={formData.totalTransporterAmount}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                      readOnly
+                      className="bg-light"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Transporter Rate On</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="transporterRateOn"
+                      value={formData.transporterRateOn}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Customer Rate On</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="customerRateOn"
+                      value={formData.customerRateOn}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Customer Freight (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="customerFreight"
+                      value={formData.customerFreight}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <Form.Label>Transporter Freight (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="transporterFreight"
+                      value={formData.transporterFreight}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      onWheel={handleNumberInputWheel}
+                    />
                   </div>
                 </div>
-              </div>
-
-              {formData.products.map((product, index) => {
-                const quantityHint = getCalculationHint(index, 'quantityMT')
-                const bagSizeHint = getCalculationHint(index, 'bagSize')
-                const totalBagsHint = getCalculationHint(index, 'totalBags')
-
-                return (
-                  <div key={index} className="border rounded p-3 mb-3">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h6 className="mb-0">Product {index + 1}</h6>
-                      {formData.products.length > 1 && (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => removeProduct(index)}
-                          disabled={isLoading}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <Form.Label>Warehouse</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={product.warehouseName || formData.issuedByWarehouseName || ''}
-                          disabled
-                          readOnly
-                          className="bg-light"
-                        />
-                        <Form.Text className="text-muted">
-                          Auto-selected from "Issued By" warehouse
-                        </Form.Text>
-                      </div>
-
-                      <div className="col-md-6">
-                        <Form.Label>
-                          Product <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
-                        <Select
-                          key={`product-select-${index}-${product.productId || 'empty'}`}
-                          value={getProductValue(product)}
-                          onChange={(selected) => {
-                            if (selected) {
-                              const updatedProduct = {
-                                ...product,
-                                productId: selected.productId,
-                                productName: selected.productName || 'Unknown Product',
-                                quantityMT: selected.quantityMT?.toString() || '',
-                                bagSize: selected.bagSize?.toString() || '0',
-                                totalBags: selected.totalBags?.toString() || '',
-                              }
-
-                              const updatedProducts = [...formData.products]
-                              updatedProducts[index] = updatedProduct
-
-                              setFormData((prev) => ({
-                                ...prev,
-                                products: updatedProducts,
-                              }))
-                            } else {
-                              const updatedProducts = [...formData.products]
-                              updatedProducts[index] = {
-                                ...product,
-                                productId: '',
-                                productName: '',
-                                quantityMT: '',
-                                bagSize: '',
-                                totalBags: '',
-                              }
-
-                              setFormData((prev) => ({
-                                ...prev,
-                                products: updatedProducts,
-                              }))
-                            }
-                          }}
-                          options={productOptions}
-                          placeholder={
-                            isLoadingWarehouseProducts
-                              ? 'Loading products...'
-                              : !formData.issuedByWarehouseId
-                                ? 'Select a warehouse first'
-                                : isError
-                                  ? 'Error loading products'
-                                  : productOptions.length === 0
-                                    ? 'No available products in this warehouse'
-                                    : `Select Product`
-                          }
-                          isClearable
-                          isLoading={isLoadingWarehouseProducts || isLoading}
-                          isDisabled={
-                            !formData.issuedByWarehouseId ||
-                            isLoadingWarehouseProducts ||
-                            isLoading ||
-                            isError
-                          }
-                          required
-                        />
-
-                        {formData.issuedByWarehouseId &&
-                          productOptions.length === 0 &&
-                          !isLoadingWarehouseProducts &&
-                          inventoryList.length === 0 && (
-                            <Form.Text className="text-danger">
-                              No products found in this warehouse
-                            </Form.Text>
-                          )}
-
-                        {!formData.issuedByWarehouseId && (
-                          <Form.Text className="text-danger">
-                            Please select a warehouse in the "Issued By" section first
-                          </Form.Text>
-                        )}
-                        {mode === 'edit' &&
-                          product.productId &&
-                          product.productName &&
-                          !getProductValue(product) && (
-                            <Form.Text className="text-warning">
-                              Product "{product.productName}" loaded from original data
-                            </Form.Text>
-                          )}
-                      </div>
-
-                      <div className="col-md-4">
-                        <Form.Label>Total Bags</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={product.totalBags}
-                          onChange={(e) => handleProductChange(index, 'totalBags', e.target.value)}
-                          disabled={isLoading}
-                          placeholder="Enter total bags"
-                          min="0"
-                          onWheel={handleNumberInputWheel}
-                        />
-                        {totalBagsHint && (
-                          <Form.Text className="text-info d-block">
-                            <FaInfoCircle className="me-1" size={12} />
-                            {totalBagsHint}
-                          </Form.Text>
-                        )}
-                        <Form.Text className="text-muted d-block">Total number of bags</Form.Text>
-                      </div>
-
-                      <div className="col-md-4">
-                        <Form.Label>Bag Size (Kg per bag)</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={product.bagSize}
-                          onChange={(e) => handleProductChange(index, 'bagSize', e.target.value)}
-                          disabled={isLoading}
-                          placeholder="Enter bag size"
-                          min="0"
-                          step="0.01"
-                          onWheel={handleNumberInputWheel}
-                          readOnly
-                          className="bg-light"
-                        />
-                        {bagSizeHint && (
-                          <Form.Text className="text-info d-block">
-                            <FaInfoCircle className="me-1" size={12} />
-                            {bagSizeHint}
-                          </Form.Text>
-                        )}
-                        <Form.Text className="text-muted d-block">
-                          Weight per bag in kilograms
-                        </Form.Text>
-                      </div>
-
-                      <div className="col-md-4">
-                        <Form.Label>
-                          Quantity (MT) <span style={{ color: 'red' }}>*</span>
-                        </Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={product.quantityMT}
-                          onChange={(e) => handleProductChange(index, 'quantityMT', e.target.value)}
-                          disabled={isLoading}
-                          placeholder="Enter quantity in MT"
-                          min="0.001"
-                          step="0.001"
-                          required
-                          onWheel={handleNumberInputWheel}
-                        />
-                        {quantityHint && (
-                          <Form.Text className="text-info d-block">
-                            <FaInfoCircle className="me-1" size={12} />
-                            {quantityHint}
-                          </Form.Text>
-                        )}
-                        <Form.Text className="text-muted d-block">
-                          Quantity in metric tons (1 MT = 1000 kg)
-                        </Form.Text>
-                      </div>
-                    </div>
-
-                    {(product.bagSize || product.totalBags || product.quantityMT) && (
-                      <div className="mt-3 p-2 bg-light rounded small">
-                        <strong>Formula:</strong>
-                        {product.bagSize && product.totalBags && !product.quantityMT && (
-                          <span>
-                            {' '}
-                            {product.bagSize} kg × {product.totalBags} bags ={' '}
-                            {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
-                          </span>
-                        )}
-                        {product.bagSize && product.quantityMT && !product.totalBags && (
-                          <span>
-                            {' '}
-                            {product.quantityMT} MT × 1000 / {product.bagSize} kg ={' '}
-                            {Math.round((product.quantityMT * 1000) / product.bagSize)} bags
-                          </span>
-                        )}
-                        {product.totalBags && product.quantityMT && !product.bagSize && (
-                          <span>
-                            {' '}
-                            {product.quantityMT} MT × 1000 / {product.totalBags} bags ={' '}
-                            {((product.quantityMT * 1000) / product.totalBags).toFixed(2)} kg/bag
-                          </span>
-                        )}
-                        {product.bagSize && product.totalBags && product.quantityMT && (
-                          <span>
-                            {' '}
-                            {product.bagSize} kg × {product.totalBags} bags ={' '}
-                            {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              <Button
-                variant="outline-primary"
-                onClick={addProduct}
-                className="mb-3"
-                disabled={isLoading || !formData.issuedByWarehouseId}
-              >
-                Add Another Product
-              </Button>
-            </div>
-
-            {/* Freight Details */}
-            <h5 className="fw-semibold border-bottom pb-2 mb-3">Freight Details</h5>
-            <div className="row g-3 mb-4">
-              <div className="col-md-4">
-                <Form.Label>Customer Rate (per MT) (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="customerRate"
-                  value={formData.customerRate}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                  placeholder="Enter rate per MT"
-                  min="0"
-                  step="0.01"
-                />
-                <Form.Text className="text-muted">Rate per metric ton</Form.Text>
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Total Amount (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="totalAmount"
-                  value={formData.totalAmount}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                  readOnly
-                  className="bg-light"
-                />
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Transporter Rate (per MT) (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="transporterRate"
-                  value={formData.transporterRate}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                  placeholder="Enter rate per MT"
-                  min="0"
-                  step="0.01"
-                />
-                <Form.Text className="text-muted">Rate per metric ton</Form.Text>
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Total Transporter Amount (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="totalTransporterAmount"
-                  value={formData.totalTransporterAmount}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                  readOnly
-                  className="bg-light"
-                />
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Transporter Rate On</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="transporterRateOn"
-                  value={formData.transporterRateOn}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                />
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Customer Rate On</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="customerRateOn"
-                  value={formData.customerRateOn}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                />
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Customer Freight (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="customerFreight"
-                  value={formData.customerFreight}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                />
-              </div>
-              <div className="col-md-4">
-                <Form.Label>Transporter Freight (₹)</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="transporterFreight"
-                  value={formData.transporterFreight}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  onWheel={handleNumberInputWheel}
-                />
-              </div>
-            </div>
+              </>
+            )}
 
             <div className="text-end mt-4">
               <Button

@@ -441,8 +441,10 @@ export const getGodownTPApi = async ({ queryKey }) => {
             workerId: item.workerId?._id,
             workerName: item.workerId?.name,
 
-            materialOwner: item.materialOwnerId?.name,
-            materialAddress: item.materialOwnerId?.address,
+            materialOwnerId: item.materialOwnerId?._id || item.materialId?._id,
+            martialOwnerName: item.materialOwnerId?.name || item.materialOwnerName,
+            martialOwnerAddress: item.materialOwnerId?.address || item.materialOwnerAddress,
+
             startLocation: item.startLocation,
             endLocation: item.endLocation,
 
