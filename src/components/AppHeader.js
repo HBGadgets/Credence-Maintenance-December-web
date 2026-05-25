@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useContext } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   CContainer,
@@ -35,10 +35,11 @@ import NotificationDropdown from '../views/components/NotificationDropdown';
 import { NotificationContext } from '../context/NotificationContext';
 import { socket } from '../views/customhooks/useSocket';
 import Cookies from 'js-cookie';
-
+import Swal from 'sweetalert2'; // Make sure to install sweetalert2 if not already
 
 const AppHeader = () => {
   const headerRef = useRef();
+  const navigate = useNavigate();
   const { colorMode, setColorMode } = useColorModes();
   const [view, setView] = useState(false);
   const { notifications, setNotifications, unreadCounts, setUnreadCounts } = useContext(NotificationContext);
@@ -105,38 +106,124 @@ const AppHeader = () => {
   const currentPathname = useLocation().pathname;
   const currentRouteName = getRouteName(currentPathname, routes);
 
-  const handleBackToCredence = () => {
-    // 1️⃣ Clear session and local storage
-    sessionStorage.clear()
-    localStorage.clear()
-
-    // 2️⃣ Remove all JS-accessible cookies
-    document.cookie.split(';').forEach((c) => {
-      const eqPos = c.indexOf('=')
-      const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim()
-
-      // Remove for current path
-      document.cookie = `${name}=; Max-Age=0; path=/`
-
-      // Remove for root domain
-      document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname}`
-
-      // Remove for wildcard subdomain (if hostname has subdomain)
-      const parts = window.location.hostname.split('.')
-      if (parts.length > 2) {
-        const rootDomain = parts.slice(-2).join('.')
-        document.cookie = `${name}=; Max-Age=0; path=/; domain=.${rootDomain}`
+  // Function to clear all storage
+  const clearAllStorage = () => {
+    // Clear session storage
+    sessionStorage.clear();
+    
+    // Clear local storage
+    localStorage.clear();
+    
+    // Clear all cookies
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+      const eqPos = cookie.indexOf('=');
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      
+      // Delete cookie for current path
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      
+      // Delete cookie for root domain
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+      
+      // Delete cookie for all subdomains
+      const domainParts = window.location.hostname.split('.');
+      if (domainParts.length >= 2) {
+        const baseDomain = domainParts.slice(-2).join('.');
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${baseDomain}`;
       }
-    })
+    }
+    
+    // Clear using js-cookie (if needed for specific cookies)
+    const allCookies = Cookies.get();
+    Object.keys(allCookies).forEach(cookieName => {
+      Cookies.remove(cookieName);
+      Cookies.remove(cookieName, { path: '/' });
+      Cookies.remove(cookieName, { path: '/', domain: window.location.hostname });
+    });
+  };
 
-    // 3️⃣ Disconnect socket if any
-    if (socket?.connected) socket.disconnect()
+  // Function to handle logout with confirmation
+  const handleLogout = async () => {
+    // Show confirmation dialog
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'You are about to logout. All unsaved data will be lost.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
 
-    // 4️⃣ Reload / redirect to login
-    window.location.replace('#/login')
-  }
+    if (result.isConfirmed) {
+      try {
+        // Show loading state
+        Swal.fire({
+          title: 'Logging out...',
+          text: 'Please wait while we log you out',
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
 
+        // Clear all storage
+        clearAllStorage();
 
+        // Disconnect socket if connected
+        if (socket && socket.connected) {
+          socket.disconnect();
+        }
+
+        // Dispatch logout action if you have Redux state for auth
+        // dispatch({ type: 'LOGOUT' });
+
+        // Small delay to ensure all storage is cleared
+        setTimeout(() => {
+          Swal.fire({
+            title: 'Logged Out!',
+            text: 'You have been successfully logged out.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            // Navigate to login page
+            navigate('/login', { replace: true });
+            // Force reload to reset all app state
+            window.location.reload();
+          });
+        }, 500);
+      } catch (error) {
+        console.error('Logout error:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'An error occurred during logout. Please try again.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+  };
+
+  // Alternative: Simple logout without Swal (if you don't want to add sweetalert2)
+  const handleSimpleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      clearAllStorage();
+      
+      if (socket && socket.connected) {
+        socket.disconnect();
+      }
+      
+      navigate('/login', { replace: true });
+      window.location.reload();
+    }
+  };
 
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
@@ -183,12 +270,10 @@ const AppHeader = () => {
               <CNavItem>
                 <CDropdownItem
                   className="d-flex align-items-center gap-4"
-                  // type="button"
-                  // to="/ProfileSection"
                   as={NavLink}
+                  to="/ProfileSection"
                 >
-                  {' '}
-                  <User />
+                  <User size={18} />
                   <span>{username}</span>
                 </CDropdownItem>
               </CNavItem>
@@ -196,10 +281,9 @@ const AppHeader = () => {
                 <CDropdownItem
                   className="d-flex align-items-center gap-4"
                   type="button"
-                  onClick={handleBackToCredence}
+                  onClick={handleLogout}
                 >
-                  {' '}
-                  <LogOut />
+                  <LogOut size={18} />
                   Logout
                 </CDropdownItem>
               </CNavItem>

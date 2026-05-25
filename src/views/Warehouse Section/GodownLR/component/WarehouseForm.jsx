@@ -105,7 +105,7 @@ const useDebounce = (value, delay) => {
 const calculateQuantityFromBags = (bagSize, totalBags) => {
   if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
   const quantityInMT = (bagSize * totalBags) / 1000
-  return quantityInMT.toFixed(3)
+  return quantityInMT.toFixed(2)
 }
 
 // Calculate total bags from bag size and quantity in MT
@@ -210,6 +210,19 @@ const CustomMenuList = ({
   const previousScrollHeight = React.useRef(0)
   const isLoadingRef = React.useRef(false)
   const scrollTimeoutRef = React.useRef(null)
+  const isSearchingRef = React.useRef(false)
+
+  // Track if we're in a search operation
+  React.useEffect(() => {
+    const searchValue = selectProps.inputValue
+    if (searchValue && searchValue.length > 0) {
+      isSearchingRef.current = true
+      // Reset scroll position flag when searching
+      previousScrollHeight.current = 0
+    } else {
+      isSearchingRef.current = false
+    }
+  }, [selectProps.inputValue])
 
   const handleScroll = (event) => {
     const target = event.target
@@ -223,6 +236,9 @@ const CustomMenuList = ({
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
+      // Don't trigger infinite scroll while searching
+      if (isSearchingRef.current) return
+
       // Check if we're at the bottom (load more)
       const atBottom = scrollHeight - scrollTop <= clientHeight + 50
       // Check if we're at the top (load previous)
@@ -313,6 +329,22 @@ const CustomMenuList = ({
       }
     }
   }, [hasMore, hasPrevious])
+
+  // Preserve scroll position when options change (e.g., during search)
+  React.useEffect(() => {
+    if (scrollRef.current && previousScrollHeight.current === 0) {
+      // When options change, try to maintain scroll position if possible
+      const currentScrollTop = scrollRef.current.scrollTop
+      if (currentScrollTop > 0) {
+        // Small delay to let DOM update
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = currentScrollTop
+          }
+        }, 50)
+      }
+    }
+  }, [children])
 
   return (
     <div ref={scrollRef} style={{ maxHeight: '300px', overflowY: 'auto' }}>
@@ -1034,34 +1066,61 @@ const WarehouseForm = ({
     }
   }
 
-  const handleConsignorInputChange = useCallback((value) => {
-    setConsignorSearchInput(value)
-    setConsignorPage(1)
-    setHasMoreConsignor(true)
-    setHasPreviousConsignor(false)
-    // Reset accumulated data when searching
-    setAllConsignors([])
-    setLoadedConsignorPages(new Set())
+  const handleConsignorInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value') {
+      return
+    }
+
+    setConsignorSearchInput(value || '')
+
+    // Only reset pagination when actually typing (not when clearing selection)
+    if (action?.action === 'input-change' || (value === '' && action?.action === 'input-change')) {
+      setConsignorPage(1)
+      setHasMoreConsignor(true)
+      setHasPreviousConsignor(false)
+      // Reset accumulated data when searching
+      setAllConsignors([])
+      setLoadedConsignorPages(new Set())
+    }
   }, [])
 
-  const handleConsigneeInputChange = useCallback((value) => {
-    setConsigneeSearchInput(value)
-    setConsigneePage(1)
-    setHasMoreConsignee(true)
-    setHasPreviousConsignee(false)
-    // Reset accumulated data when searching
-    setAllConsignees([])
-    setLoadedConsigneePages(new Set())
+  const handleConsigneeInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value') {
+      return
+    }
+
+    setConsigneeSearchInput(value || '')
+
+    // Only reset pagination when actually typing (not when clearing selection)
+    if (action?.action === 'input-change' || (value === '' && action?.action === 'input-change')) {
+      setConsigneePage(1)
+      setHasMoreConsignee(true)
+      setHasPreviousConsignee(false)
+      // Reset accumulated data when searching
+      setAllConsignees([])
+      setLoadedConsigneePages(new Set())
+    }
   }, [])
 
-  const handleMartialOwnerInputChange = useCallback((value) => {
-    setMartialOwnerSearchInput(value)
-    setMartialOwnerPage(1)
-    setHasMoreMartialOwner(true)
-    setHasPreviousMartialOwner(false)
-    // Reset accumulated data when searching
-    setAllMartialOwners([])
-    setLoadedMartialOwnerPages(new Set())
+  const handleMartialOwnerInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value') {
+      return
+    }
+
+    setMartialOwnerSearchInput(value || '')
+
+    // Only reset pagination when actually typing (not when clearing selection)
+    if (action?.action === 'input-change' || (value === '' && action?.action === 'input-change')) {
+      setMartialOwnerPage(1)
+      setHasMoreMartialOwner(true)
+      setHasPreviousMartialOwner(false)
+      // Reset accumulated data when searching
+      setAllMartialOwners([])
+      setLoadedMartialOwnerPages(new Set())
+    }
   }, [])
 
   const handleConsignorChange = (selected) => {
@@ -2160,7 +2219,27 @@ const WarehouseForm = ({
                   placeholder="Select Consignee or Add New"
                   isClearable
                   isLoading={isFetchingConsignee && consigneePage === 1}
-                  onInputChange={handleConsigneeInputChange}
+                  onInputChange={(value, action) => {
+                    // Don't reset search when selecting an option
+                    if (action?.action === 'set-value') {
+                      return
+                    }
+
+                    setConsigneeSearchInput(value || '')
+
+                    // Only reset pagination when actually typing (not when clearing selection)
+                    if (
+                      action?.action === 'input-change' ||
+                      (value === '' && action?.action === 'input-change')
+                    ) {
+                      setConsigneePage(1)
+                      setHasMoreConsignee(true)
+                      setHasPreviousConsignee(false)
+                      // Reset accumulated data when searching
+                      setAllConsignees([])
+                      setLoadedConsigneePages(new Set())
+                    }
+                  }}
                   filterOption={null}
                   noOptionsMessage={({ inputValue }) =>
                     inputValue
@@ -2211,12 +2290,33 @@ const WarehouseForm = ({
                 <Form.Label>Material Owner Name</Form.Label>
                 <Select
                   value={getMartialOwnerValue()}
-                  onChange={handleMartialOwnerChange}
+                  onChange={(selected, action) => {
+                    if (action?.action === 'select-option' || action?.action === 'clear') {
+                      handleMartialOwnerChange(selected)
+                    }
+                  }}
                   options={martialOwnerOptions}
                   placeholder="Select Material Owner"
                   isClearable
                   isLoading={isFetchingMartialOwner && martialOwnerPage === 1}
-                  onInputChange={handleMartialOwnerInputChange}
+                  onInputChange={(value, action) => {
+                    // Don't reset search when selecting an option
+                    if (action?.action === 'set-value' || action?.action === 'input-blur') {
+                      return
+                    }
+
+                    setMartialOwnerSearchInput(value || '')
+
+                    // Only reset pagination when actually typing
+                    if (action?.action === 'input-change') {
+                      setMartialOwnerPage(1)
+                      setHasMoreMartialOwner(true)
+                      setHasPreviousMartialOwner(false)
+                      // Reset accumulated data when searching
+                      setAllMartialOwners([])
+                      setLoadedMartialOwnerPages(new Set())
+                    }
+                  }}
                   filterOption={null}
                   noOptionsMessage={({ inputValue }) =>
                     inputValue
@@ -2237,6 +2337,8 @@ const WarehouseForm = ({
                       />
                     ),
                   }}
+                  menuShouldScrollIntoView={false}
+                  isSearchable={true}
                 />
               </div>
               {formData.martialOwnerAddress && (

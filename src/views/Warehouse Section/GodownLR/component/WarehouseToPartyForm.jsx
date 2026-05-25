@@ -74,7 +74,7 @@ const defaultFormData = {
   consigneeId: '',
   consigneeName: '',
   consigneeAddress: '',
-  materialOwnerId: '',
+  materialOwnerId: null, // Changed from '' to null
   martialOwnerName: '',
   martialOwnerAddress: '',
   startLocation: '',
@@ -256,6 +256,19 @@ const CustomMenuList = ({
   const previousScrollHeight = React.useRef(0)
   const isLoadingRef = React.useRef(false)
   const scrollTimeoutRef = React.useRef(null)
+  const isSearchingRef = React.useRef(false)
+  const lastScrollTopRef = React.useRef(0)
+  const isSelectionInProgressRef = React.useRef(false)
+
+  // Track if we're in a search operation
+  React.useEffect(() => {
+    const searchValue = selectProps.inputValue
+    if (searchValue && searchValue.length > 0) {
+      isSearchingRef.current = true
+    } else {
+      isSearchingRef.current = false
+    }
+  }, [selectProps.inputValue])
 
   const handleScroll = (event) => {
     const target = event.target
@@ -263,12 +276,18 @@ const CustomMenuList = ({
     const scrollHeight = target.scrollHeight
     const clientHeight = target.clientHeight
 
+    // Store last scroll position
+    lastScrollTopRef.current = scrollTop
+
     // Debounce scroll events to prevent multiple triggers
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
+      // Don't trigger infinite scroll while searching or selecting
+      if (isSearchingRef.current || isSelectionInProgressRef.current) return
+
       // Check if we're at the bottom (load more)
       const atBottom = scrollHeight - scrollTop <= clientHeight + 50
       // Check if we're at the top (load previous)
@@ -329,6 +348,20 @@ const CustomMenuList = ({
     }
   }, [isLoading, isLoadingMore])
 
+  // Preserve scroll position when options change (e.g., during search)
+  React.useEffect(() => {
+    if (scrollRef.current && !isLoading && !isLoadingMore && !isLoadingPrevious) {
+      const currentScrollTop = lastScrollTopRef.current
+      if (currentScrollTop > 0) {
+        requestAnimationFrame(() => {
+          if (scrollRef.current && scrollRef.current.scrollTop !== currentScrollTop) {
+            scrollRef.current.scrollTop = currentScrollTop
+          }
+        })
+      }
+    }
+  }, [children, isLoading, isLoadingMore, isLoadingPrevious])
+
   const selectedValue = selectProps.value?.value
   const hasSelectedItemNotInList =
     selectedValue &&
@@ -356,7 +389,7 @@ const CustomMenuList = ({
         }
       }
     }
-  }, [hasMore, hasPrevious])
+  }, [hasMore, hasPrevious, onLoadMore, onLoadPrevious])
 
   return (
     <div ref={scrollRef} style={{ maxHeight: '300px', overflowY: 'auto' }}>
@@ -878,7 +911,7 @@ const WarehouseToPartyForm = ({
         companyId: initialData.companyId || '',
         consignorId: initialData.consignorId || '',
         consigneeId: initialData.consigneeId || '',
-        materialOwnerId: initialData.materialOwnerId || '',
+        materialOwnerId: initialData.materialOwnerId || null, // Use null instead of empty string
         martialOwnerName: initialData.martialOwnerName || '',
         martialOwnerAddress: initialData.martialOwnerAddress || '',
         issuedByWarehouseId: warehouseId,
@@ -1191,7 +1224,7 @@ const WarehouseToPartyForm = ({
 
   // Handle material owner selection
   const handleMartialOwnerChange = (selected) => {
-    if (selected) {
+    if (selected && selected.value) {
       setFormData((prev) => ({
         ...prev,
         materialOwnerId: selected.value,
@@ -1199,9 +1232,10 @@ const WarehouseToPartyForm = ({
         martialOwnerAddress: selected.address || '',
       }))
     } else {
+      // When clearing, set to null or remove the field entirely
       setFormData((prev) => ({
         ...prev,
-        materialOwnerId: '',
+        materialOwnerId: null, // Use null instead of empty string
         martialOwnerName: '',
         martialOwnerAddress: '',
       }))
@@ -1392,7 +1426,11 @@ const WarehouseToPartyForm = ({
       warehouseId: formData.issuedByWarehouseId || '',
       consignorId: formData.consignorId || '',
       consigneeId: formData.consigneeId || '',
-      ...(formData.materialOwnerId && formData.materialOwnerId.trim() !== ''
+      // IMPORTANT FIX: Only include materialOwnerId if it has a valid value
+      ...(formData.materialOwnerId &&
+      formData.materialOwnerId.trim() !== '' &&
+      formData.materialOwnerId !== 'null' &&
+      formData.materialOwnerId !== 'undefined'
         ? { materialOwnerId: formData.materialOwnerId }
         : {}),
       martialOwnerName: formData.martialOwnerName || '',
@@ -1427,6 +1465,13 @@ const WarehouseToPartyForm = ({
     delete payload.costPerBag
     delete payload.itemCost
 
+    // Remove empty or invalid fields
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined || payload[key] === null || payload[key] === '') {
+        delete payload[key]
+      }
+    })
+
     // Handle vehicle
     if (isCustomVehicle) {
       delete payload.vehicleId
@@ -1457,7 +1502,36 @@ const WarehouseToPartyForm = ({
       delete payload.supervisorName
     }
 
-    return payload
+    // Clean up any remaining empty strings or invalid values
+    const cleanPayload = {}
+    Object.keys(payload).forEach((key) => {
+      const value = payload[key]
+      // Skip empty strings, null, undefined, and NaN
+      if (
+        value !== '' &&
+        value !== null &&
+        value !== undefined &&
+        !(typeof value === 'number' && isNaN(value))
+      ) {
+        // For arrays, ensure they're not empty
+        if (Array.isArray(value) && value.length === 0) {
+          return
+        }
+        // For objects, ensure they're not empty
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value) &&
+          Object.keys(value).length === 0
+        ) {
+          return
+        }
+        cleanPayload[key] = value
+      }
+    })
+
+    console.log('Cleaned payload:', cleanPayload)
+    return cleanPayload
   }
 
   const warehouseOptions = warehouseList.map((w) => ({
@@ -1769,34 +1843,61 @@ const WarehouseToPartyForm = ({
     return martialOwnerOptions.find((opt) => opt.value === formData.materialOwnerId) || null
   }
 
-  const handleConsignorInputChange = useCallback((value) => {
-    setConsignorSearchInput(value)
-    setConsignorPage(1)
-    setHasMoreConsignor(true)
-    setHasPreviousConsignor(false)
-    // Reset accumulated data when searching
-    setAllConsignors([])
-    setLoadedConsignorPages(new Set())
+  const handleConsignorInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value' || action?.action === 'input-blur') {
+      return
+    }
+
+    setConsignorSearchInput(value || '')
+
+    // Only reset pagination when actually typing
+    if (action?.action === 'input-change') {
+      setConsignorPage(1)
+      setHasMoreConsignor(true)
+      setHasPreviousConsignor(false)
+      // Reset accumulated data when searching
+      setAllConsignors([])
+      setLoadedConsignorPages(new Set())
+    }
   }, [])
 
-  const handleConsigneeInputChange = useCallback((value) => {
-    setConsigneeSearchInput(value)
-    setConsigneePage(1)
-    setHasMoreConsignee(true)
-    setHasPreviousConsignee(false)
-    // Reset accumulated data when searching
-    setAllConsignees([])
-    setLoadedConsigneePages(new Set())
+  const handleConsigneeInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value' || action?.action === 'input-blur') {
+      return
+    }
+
+    setConsigneeSearchInput(value || '')
+
+    // Only reset pagination when actually typing
+    if (action?.action === 'input-change') {
+      setConsigneePage(1)
+      setHasMoreConsignee(true)
+      setHasPreviousConsignee(false)
+      // Reset accumulated data when searching
+      setAllConsignees([])
+      setLoadedConsigneePages(new Set())
+    }
   }, [])
 
-  const handleMartialOwnerInputChange = useCallback((value) => {
-    setMartialOwnerSearchInput(value)
-    setMartialOwnerPage(1)
-    setHasMoreMartialOwner(true)
-    setHasPreviousMartialOwner(false)
-    // Reset accumulated data when searching
-    setAllMartialOwners([])
-    setLoadedMartialOwnerPages(new Set())
+  const handleMartialOwnerInputChange = useCallback((value, action) => {
+    // Don't reset search when selecting an option
+    if (action?.action === 'set-value' || action?.action === 'input-blur') {
+      return
+    }
+
+    setMartialOwnerSearchInput(value || '')
+
+    // Only reset pagination when actually typing
+    if (action?.action === 'input-change') {
+      setMartialOwnerPage(1)
+      setHasMoreMartialOwner(true)
+      setHasPreviousMartialOwner(false)
+      // Reset accumulated data when searching
+      setAllMartialOwners([])
+      setLoadedMartialOwnerPages(new Set())
+    }
   }, [])
 
   const totalQuantity = calculateTotalQuantityMT()
@@ -2089,6 +2190,8 @@ const WarehouseToPartyForm = ({
                     },
                   }}
                   required
+                  menuShouldScrollIntoView={false}
+                  isSearchable={true}
                 />
               </div>
               {formData.consignorAddress && (
@@ -2147,6 +2250,8 @@ const WarehouseToPartyForm = ({
                     },
                   }}
                   required
+                  menuShouldScrollIntoView={false}
+                  isSearchable={true}
                 />
               </div>
               {formData.consigneeAddress && (
@@ -2190,6 +2295,8 @@ const WarehouseToPartyForm = ({
                       />
                     ),
                   }}
+                  menuShouldScrollIntoView={false}
+                  isSearchable={true}
                 />
               </div>
               {formData.martialOwnerAddress && (
