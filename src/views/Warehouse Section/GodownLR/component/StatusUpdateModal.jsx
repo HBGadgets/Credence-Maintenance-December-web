@@ -47,10 +47,10 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
 
           // Initialize bag details with data from the API response
           initialBagDetails[product._id] = {
-            // Use bagSize from API if available, otherwise use product's bagSize
-            bagSize: product.bagSize || product.bagSize || null,
-            // Use totalBags from API if available, otherwise use product's totalBags
-            totalBags: product.totalBags || product.totalBags || null,
+            // Use bagSize from API if available
+            bagSize: product.bagSize || null,
+            // Use totalBags from API if available
+            totalBags: product.totalBags || null,
             // Initialize takenBags from existing data if available
             takenBags: product.takenBags || 0,
           }
@@ -160,27 +160,6 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
           setQuantitiesTaken((prev) => ({ ...prev, [productId]: maxQuantity.toString() }))
         } else {
           setQuantitiesTaken((prev) => ({ ...prev, [productId]: calculatedQuantity.toString() }))
-        }
-      }
-    } else if (field === 'bagSize') {
-      setBagDetails((prev) => ({
-        ...prev,
-        [productId]: { ...prev[productId], bagSize: numValue },
-      }))
-
-      const currentTakenBags = currentBagDetails.takenBags
-      if (currentTakenBags > 0 && numValue) {
-        const recalculatedQuantity = calculateQuantityFromBags(numValue, currentTakenBags)
-        if (recalculatedQuantity <= product.quantityMT) {
-          setQuantitiesTaken((prev) => ({ ...prev, [productId]: recalculatedQuantity.toString() }))
-        } else {
-          const maxAllowedBags = calculateBagsFromQuantity(product.quantityMT, numValue)
-          setBagDetails((prev) => ({
-            ...prev,
-            [productId]: { ...prev[productId], takenBags: maxAllowedBags, bagSize: numValue },
-          }))
-          const maxQuantity = calculateQuantityFromBags(numValue, maxAllowedBags)
-          setQuantitiesTaken((prev) => ({ ...prev, [productId]: maxQuantity.toString() }))
         }
       }
     }
@@ -658,7 +637,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
         _id: product._id,
         updatedQuantityMT: parseFloat(quantitiesTaken[product._id] || 0),
         bagSize: bagDetails[product._id]?.bagSize || product.bagSize || null,
-        // Send totalBags with the value of takenBags (not the original totalBags)
+        // Send totalBags with the value of takenBags
         totalBags: bagDetails[product._id]?.takenBags || 0,
       }))
     }
@@ -768,24 +747,17 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                           <td className="fw-medium">{product.productName}</td>
                           <td>{product.quantityMT}</td>
                           <td>
+                            {/* Bag Size - Read Only */}
                             <Form.Control
                               type="number"
-                              min="1"
-                              step="1"
                               value={productBagDetails.bagSize || ''}
-                              onChange={(e) =>
-                                handleBagChange(product._id, 'bagSize', e.target.value)
-                              }
                               disabled={true}
-                              className="py-1"
-                              placeholder="Enter bag size"
+                              className="py-1 bg-light"
+                              placeholder="Bag size"
                             />
-                            {!productBagDetails.bagSize && (
-                              <Form.Text className="text-muted">Enter bag size in kg</Form.Text>
-                            )}
                             {productBagDetails.bagSize && (
                               <Form.Text className="text-muted">
-                                Current: {productBagDetails.bagSize} kg/bag
+                                {productBagDetails.bagSize} kg/bag
                               </Form.Text>
                             )}
                           </td>
@@ -828,26 +800,19 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
                             )}
                           </td>
                           <td>
+                            {/* Quantity Taken - Read Only */}
                             <Form.Control
                               type="number"
-                              min="0"
-                              max={product.quantityMT - 0.01}
                               step="0.001"
-                              value={quantitiesTaken[product._id] || ''}
-                              onChange={(e) => handleQuantityChange(product._id, e.target.value)}
+                              value={updatedQuantityMT || ''}
                               disabled={true}
-                              className="py-1"
+                              className="py-1 bg-light"
                               placeholder="Quantity in MT"
                             />
                             {productBagDetails.bagSize && productBagDetails.takenBags > 0 && (
                               <Form.Text className="text-muted">
                                 Auto-calculated: {productBagDetails.takenBags} bags ×{' '}
-                                {productBagDetails.bagSize}kg ={' '}
-                                {(
-                                  (productBagDetails.bagSize * productBagDetails.takenBags) /
-                                  1000
-                                ).toFixed(3)}{' '}
-                                MT
+                                {productBagDetails.bagSize}kg = {updatedQuantityMT.toFixed(3)} MT
                               </Form.Text>
                             )}
                           </td>
