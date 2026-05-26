@@ -388,8 +388,8 @@ const Dashboard = () => {
     {
       label: 'Transport Recipt',
       icon: <BsPassFill className="dashboard-icon" />,
-      top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount}`,
-      bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount} `,
+      top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount || '0'}`,
+      bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount || '0'} `,
       color: 'text-primary',
       onClick: () => handleTP('Transport Recipt'),
     },
