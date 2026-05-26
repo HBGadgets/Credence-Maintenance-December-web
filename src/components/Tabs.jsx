@@ -5,13 +5,13 @@ import PropTypes from 'prop-types'
 
 function Tabs({ tabs }) {
   return (
-    <CTabs activeItemKey="1">
+    <CTabs activeItemKey={1}>
       <CTabList variant="underline-border" className="text-center">
         {tabs.map((tab, index) => (
           <CTab
             key={index}
             aria-controls={`${tab.label}-tab-pane`}
-            itemKey={(index + 1).toString()}
+            itemKey={index + 1}
             className="px-4"
           >
             {tab.label}
@@ -23,7 +23,7 @@ function Tabs({ tabs }) {
           <CTabPanel
             key={index}
             aria-labelledby={`${tab.label}-tab-pane`}
-            itemKey={(index + 1).toString()}
+            itemKey={index + 1}
             className="border mt-3 rounded"
             style={{ paddingTop: '15px', paddingBottom: '30px' }}
           >
