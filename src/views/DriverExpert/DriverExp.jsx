@@ -237,6 +237,11 @@ function DriversPage() {
 
   // handle submit
   const handleFormSubmit = (data) => {
+    // Fix invalid date
+    if (data.licenseExpiryDate === 'N/A' || data.licenseExpiryDate === '') {
+      data.licenseExpiryDate = null
+    }
+
     if (editMode && editingUser?.id) {
       Swal.fire({
         title: editMode ? 'Update Driver?' : 'Add New Driver?',
