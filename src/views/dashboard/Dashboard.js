@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react'
 import {
   CAvatar,
   CButton,
@@ -19,56 +19,47 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-} from '@coreui/react';
-import {
-  IoPersonSharp,
-  IoSettingsSharp,
-  IoAlertCircle,
-} from 'react-icons/io5';
-import { FaTruckMoving, FaMapLocationDot, FaHandshakeSimple } from 'react-icons/fa6';
-import { TbTruckDelivery } from 'react-icons/tb';
-import { RiMoneyRupeeCircleFill } from 'react-icons/ri';
-import { TokenContext } from '../../context/TokenContext';
-import { useQuery } from '@tanstack/react-query';
-import { fetchAllAdmin, fetchDashboardData, getAllTripListApi } from './data/data';
-import SingleSelectDropdown from '../components/SingleSelectDropdown';
-import { jwtDecode } from 'jwt-decode';
-import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers';
-import Table from '../components/Table';
-import SearchInput from '../components/SearchInput';
+} from '@coreui/react'
+import { IoPersonSharp, IoSettingsSharp, IoAlertCircle } from 'react-icons/io5'
+import { FaTruckMoving, FaMapLocationDot, FaHandshakeSimple, FaCar } from 'react-icons/fa6'
+import { TbTruckDelivery } from 'react-icons/tb'
+import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
+import { TokenContext } from '../../context/TokenContext'
+import { useQuery } from '@tanstack/react-query'
+import { fetchAllAdmin, fetchDashboardData, getAllTripListApi } from './data/data'
+import SingleSelectDropdown from '../components/SingleSelectDropdown'
+import { jwtDecode } from 'jwt-decode'
+import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers'
+import Table from '../components/Table'
+import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
 import logo from 'src/assets/brand/fmslogo.svg'
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { socket } from '../customhooks/useSocket';
-import { NotificationContext } from '../../context/NotificationContext';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
+import { socket } from '../customhooks/useSocket'
+import { NotificationContext } from '../../context/NotificationContext'
 import notificationSound from '../../../mario_up.mp3'
-import Cookies from 'js-cookie';
-
-
+import Cookies from 'js-cookie'
+import { BsPassFill } from 'react-icons/bs'
 
 const Dashboard = () => {
-  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext);
+  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
   // if (!socket.connected) socket.connect();
-  console.log('Socket connected:', socket.connected);
+  console.log('Socket connected:', socket.connected)
 
   const [messages, setMessages] = useState({})
-  const { notifications, addNotification, unreadCounts, setUnreadCounts } = useContext(NotificationContext)
+  const { notifications, addNotification, unreadCounts, setUnreadCounts } =
+    useContext(NotificationContext)
   const [selectedContact, setSelectedContact] = useState(null)
 
-  const [userInteracted, setUserInteracted] = useState(false);
-
+  const [userInteracted, setUserInteracted] = useState(false)
 
   console.log(unreadCounts, notifications)
-
-
 
   // Function to clear notifications
   const handleClearNotifications = () => {
     setNotifications([]) // Clears all notifications
   }
-
-
 
   const navigate = useNavigate()
   const [filteredData, setFilteredData] = useState([])
@@ -90,7 +81,7 @@ const Dashboard = () => {
     queryKey: ['dashboardData', token, selectedName?.value],
     queryFn: () => fetchDashboardData(selectedName?.value),
     enabled: !!token,
-  });
+  })
 
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({
@@ -100,126 +91,116 @@ const Dashboard = () => {
   })
 
   // Fetch Trip Data
-  const {
-    data: TripsList = [],
-    isFetching,
-  } = useQuery({
+  const { data: TripsList = [], isFetching } = useQuery({
     queryKey: ['TripsList', token],
     queryFn: getAllTripListApi,
     staleTime: 1000 * 60 * 30,
     enabled: !!token && !!decodedToken,
-  });
-
+  })
 
   // Use fetched data if available, otherwise fallback to static values
-  const dashboardData = data?.data || {};
+  const dashboardData = data?.data || {}
   const metadata = data?.metadata || {}
-
-
 
   useEffect(() => {
     if (token) {
-      console.log('token', token);
+      console.log('token', token)
     }
-  }, [token]);
+  }, [token])
 
   // Add this useEffect for initial interaction
   useEffect(() => {
     const handleFirstInteraction = () => {
-      setUserInteracted(true);
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('keydown', handleFirstInteraction);
-    };
+      setUserInteracted(true)
+      document.removeEventListener('click', handleFirstInteraction)
+      document.removeEventListener('keydown', handleFirstInteraction)
+    }
 
-    document.addEventListener('click', handleFirstInteraction);
-    document.addEventListener('keydown', handleFirstInteraction);
+    document.addEventListener('click', handleFirstInteraction)
+    document.addEventListener('keydown', handleFirstInteraction)
 
     return () => {
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('keydown', handleFirstInteraction);
-    };
-  }, []);
+      document.removeEventListener('click', handleFirstInteraction)
+      document.removeEventListener('keydown', handleFirstInteraction)
+    }
+  }, [])
 
   // notification alerts
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) return
 
     const handleReceiveMessage = (msg) => {
       // Add notification
-      addNotification(msg);
+      addNotification(msg)
 
       // Play sound only if user interacted
       if (userInteracted) {
-        const audio = new Audio(notificationSound);
-        audio.play().catch((e) =>
-          console.log("Audio play error:", e)
-        );
+        const audio = new Audio(notificationSound)
+        audio.play().catch((e) => console.log('Audio play error:', e))
       }
 
       // Update unread counts only if the message is from another contact
       setUnreadCounts((prev) => {
-        if (selectedContact?.id === msg.senderId) return prev;
+        if (selectedContact?.id === msg.senderId) return prev
         return {
           ...prev,
           [msg.senderId]: (prev[msg.senderId] || 0) + 1,
-        };
-      });
+        }
+      })
 
       // Append message
       setMessages((prev) => {
-        const prevMsgs = prev[msg.senderId] || [];
+        const prevMsgs = prev[msg.senderId] || []
         return {
           ...prev,
           [msg.senderId]: [...prevMsgs, msg],
-        };
-      });
-    };
+        }
+      })
+    }
 
-    socket.on("receiveMessage", handleReceiveMessage);
+    socket.on('receiveMessage', handleReceiveMessage)
 
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
-    };
+      socket.off('receiveMessage', handleReceiveMessage)
+    }
 
     //  Only depend on things that won't change on every render
-  }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts]);
-
-
+  }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts])
 
   useEffect(() => {
-    if (!TripsList || TripsList.length === 0) return;
+    if (!TripsList || TripsList.length === 0) return
 
-    let filtered = TripsList;
+    let filtered = TripsList
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
-      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value);
+      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
     }
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.orginalDate);
-        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate);
-      });
+        const itemDate = new Date(item.orginalDate)
+        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+      })
     }
 
     // Apply search query filter
     if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase();
+      const lowercasedQuery = searchQuery.toLowerCase()
       filtered = filtered.filter((item) =>
         Object.values(item).some(
-          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery)
-        )
-      );
+          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
+        ),
+      )
     }
 
     // Add calculated fields
     const styledData = filtered.map((data) => {
-      const budgetAllocated = Number(data.budgetAllocated) || 0;
-      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0;
-      const spentAmount = Number(data.spentAmount) || 0;
-      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount;
+      const budgetAllocated = Number(data.budgetAllocated) || 0
+      const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
+      const spentAmount = Number(data.spentAmount) || 0
+      const remaining = budgetAllocated + subTripBudgetAllocated - spentAmount
 
       return {
         ...data,
@@ -227,13 +208,11 @@ const Dashboard = () => {
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
         status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
-      };
-    });
+      }
+    })
 
-    setFilteredData(styledData);
-  }, [TripsList, selectedName, searchQuery, dateRange]);
-
-
+    setFilteredData(styledData)
+  }, [TripsList, selectedName, searchQuery, dateRange])
 
   // Table view
   const columns = [
@@ -250,7 +229,6 @@ const Dashboard = () => {
     { label: 'Material Type', key: 'materialType', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ]
-
 
   // Handle Search
   const handleSearch = (query) => {
@@ -303,26 +281,24 @@ const Dashboard = () => {
   }
 
   // handle navigate roadside assit
-  const handleRoadside = () => {
-    navigate('/ServiceCall')
+  const handleTP = () => {
+    navigate('/GodownLr')
   }
 
   // cards container
 
-  const [isStatic, setIsStatic] = useState(false);
-
+  const [isStatic, setIsStatic] = useState(false)
 
   const scrollContainer = (direction) => {
-    const container = document.getElementById('dashboard-scroll');
-    const scrollAmount = 300;
+    const container = document.getElementById('dashboard-scroll')
+    const scrollAmount = 300
     if (container) {
       container.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
-      });
+      })
     }
-  };
-
+  }
 
   // cards details
 
@@ -333,9 +309,7 @@ const Dashboard = () => {
       top: (
         <>
           Available: {dashboardData?.availableDrivers} |{' '}
-          <span className="text-danger">
-            Unavailable: {dashboardData?.unavailableDrivers}
-          </span>
+          <span className="text-danger">Unavailable: {dashboardData?.unavailableDrivers}</span>
         </>
       ),
       bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
@@ -344,13 +318,11 @@ const Dashboard = () => {
     },
     {
       label: 'Vehicles',
-      icon: <FaTruckMoving className="dashboard-icon" />,
+      icon: <FaCar className="dashboard-icon" />,
       top: (
         <>
           Available: {dashboardData?.availableVehicles} |{' '}
-          <span className="text-danger">
-            Unavailable: {dashboardData?.unavailableVehicles}
-          </span>
+          <span className="text-danger">Unavailable: {dashboardData?.unavailableVehicles}</span>
         </>
       ),
       bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
@@ -362,7 +334,8 @@ const Dashboard = () => {
       icon: <IoSettingsSharp className="dashboard-icon" />,
       top: (
         <>
-          Good: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} |{' '}
+          Good:{' '}
+          {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} |{' '}
           <span className="text-danger">
             Need Services: {dashboardData?.vehiclesUnderMaintenance ?? 0}
           </span>
@@ -370,12 +343,12 @@ const Dashboard = () => {
       ),
 
       bottom: (() => {
-        const total = dashboardData?.totalVehicles ?? 0;
-        const under = dashboardData?.vehiclesUnderMaintenance ?? 0;
-        const good = total - under;
-        const totalChecked = total;
-        const healthyPercent = totalChecked ? Math.floor((good / totalChecked) * 100) : 0;
-        return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`;
+        const total = dashboardData?.totalVehicles ?? 0
+        const under = dashboardData?.vehiclesUnderMaintenance ?? 0
+        const good = total - under
+        const totalChecked = total
+        const healthyPercent = totalChecked ? Math.floor((good / totalChecked) * 100) : 0
+        return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`
       })(),
       color: 'text-success',
       onClick: () => handleViewServicelog('Maintenance'),
@@ -413,81 +386,78 @@ const Dashboard = () => {
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
-      label: 'Roadside Assistance',
-      icon: <FaHandshakeSimple className="dashboard-icon" />,
-      top: `Used: 0`,
-      bottom: 'Service Calls',
+      label: 'Transport Recipt',
+      icon: <BsPassFill className="dashboard-icon" />,
+      top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount}`,
+      bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount} `,
       color: 'text-primary',
-      onClick: () => handleRoadside('Roadside Assistance'),
+      onClick: () => handleTP('Transport Recipt'),
     },
-  ];
-
+  ]
 
   // useeffect for scrolling card
   useEffect(() => {
-    let interval;
-    const scrollAmount = 300;
+    let interval
+    const scrollAmount = 300
 
     const setupAutoScroll = () => {
-      const container = document.getElementById('dashboard-scroll');
-      if (!container) return;
+      const container = document.getElementById('dashboard-scroll')
+      if (!container) return
 
       const autoScroll = () => {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+        const maxScrollLeft = container.scrollWidth - container.clientWidth
         if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
+          container.scrollTo({ left: 0, behavior: 'smooth' })
         } else {
-          container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
         }
-      };
+      }
 
       // Start scrolling
-      interval = setInterval(autoScroll, 5000);
+      interval = setInterval(autoScroll, 5000)
 
       // Pause on hover
-      container.addEventListener('mouseenter', pauseScroll);
-      container.addEventListener('mouseleave', resumeScroll);
-    };
+      container.addEventListener('mouseenter', pauseScroll)
+      container.addEventListener('mouseleave', resumeScroll)
+    }
 
-    const pauseScroll = () => clearInterval(interval);
+    const pauseScroll = () => clearInterval(interval)
 
     const resumeScroll = () => {
       interval = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll');
-        if (!container) return;
+        const container = document.getElementById('dashboard-scroll')
+        if (!container) return
 
-        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+        const maxScrollLeft = container.scrollWidth - container.clientWidth
         if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
+          container.scrollTo({ left: 0, behavior: 'smooth' })
         } else {
-          container.scrollBy({ left: 300, behavior: 'smooth' });
+          container.scrollBy({ left: 300, behavior: 'smooth' })
         }
-      }, 5000);
-    };
+      }, 5000)
+    }
 
     const waitForElementAndStart = () => {
       const check = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll');
+        const container = document.getElementById('dashboard-scroll')
         if (container) {
-          clearInterval(check);
-          setupAutoScroll();
+          clearInterval(check)
+          setupAutoScroll()
         }
-      }, 100);
-    };
+      }, 100)
+    }
 
-    waitForElementAndStart();
+    waitForElementAndStart()
 
     return () => {
-      clearInterval(interval);
-      const container = document.getElementById('dashboard-scroll');
+      clearInterval(interval)
+      const container = document.getElementById('dashboard-scroll')
       if (container) {
-        container.removeEventListener('mouseenter', pauseScroll);
-        container.removeEventListener('mouseleave', resumeScroll);
+        container.removeEventListener('mouseenter', pauseScroll)
+        container.removeEventListener('mouseleave', resumeScroll)
       }
-    };
-  }, []);
-
-
+    }
+  }, [])
 
   return token ? (
     <>
@@ -598,7 +568,7 @@ const Dashboard = () => {
                 height: '70px',
                 backgroundColor: '#fff',
                 border: '2px solid #eee',
-                overflow: 'hidden'
+                overflow: 'hidden',
               }}
             >
               <img
@@ -608,14 +578,16 @@ const Dashboard = () => {
                   width: '100%',
                   height: '100%',
                   objectFit: 'contain', // keeps the image ratio
-                  padding: '6px',       // space inside the circle
-                  backgroundColor: '#fff'
+                  padding: '6px', // space inside the circle
+                  backgroundColor: '#fff',
                 }}
               />
             </div>
             <div>
               <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
-              <div className="text-muted small">Track, maintain, and manage your entire fleet in real-time</div>
+              <div className="text-muted small">
+                Track, maintain, and manage your entire fleet in real-time
+              </div>
             </div>
           </div>
 
@@ -666,14 +638,13 @@ const Dashboard = () => {
                 fontSize: '14px',
                 backgroundColor: '#0a2d63',
                 color: '#fff',
-                border: '1px solid #0a2d63'
+                border: '1px solid #0a2d63',
               }}
               onClick={() => setIsStatic((prev) => !prev)}
             >
               {isStatic ? 'Scroll' : 'Expand'}
             </button>
           </div>
-
         </div>
 
         <div
@@ -697,13 +668,11 @@ const Dashboard = () => {
         </div>
       </CCard>
 
-
       {/* trips table */}
 
       <CCard className="mb-3 shadow-sm border-0">
         <CCardBody className="p-3">
           <div className="row align-items-center gy-3">
-
             {/* Heading */}
             <div className="col-12 col-md-3">
               <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
@@ -712,15 +681,16 @@ const Dashboard = () => {
             {/* Filters */}
             <div className="col-12 col-md-9">
               <div className="d-flex flex-column flex-sm-row justify-content-end align-items-start align-items-sm-center gap-3">
-                <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
+                <DateRangeFilterCredence
+                  title="Date Range"
+                  onDateRangeChange={handleDateRangeChange}
+                />
                 <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
               </div>
             </div>
-
           </div>
         </CCardBody>
       </CCard>
-
 
       <CContainer className="px-2" fluid>
         <Table
@@ -742,9 +712,8 @@ const Dashboard = () => {
           </button>
         </div>
       </CContainer>
-
     </>
-  ) : null;
-};
+  ) : null
+}
 
-export default Dashboard;
+export default Dashboard
