@@ -386,12 +386,12 @@ const Dashboard = () => {
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
-      label: 'Transport Recipt',
+      label: 'Transport Receipt',
       icon: <BsPassFill className="dashboard-icon" />,
       top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount || '0'}`,
       bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount || '0'} `,
       color: 'text-primary',
-      onClick: () => handleTP('Transport Recipt'),
+      onClick: () => handleTP('Transport Receipt'),
     },
   ]
 
