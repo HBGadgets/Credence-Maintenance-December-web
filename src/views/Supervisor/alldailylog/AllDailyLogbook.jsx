@@ -59,14 +59,10 @@ const AllDailyLogbook = () => {
   // Fetch Data
   const { data: alldailylog, isFetching } = useQuery({
     queryKey: ['alldailylog'],
-    queryFn: () => getAllDriverDailyLogbookApi(null, token), // ✅ token passed here
+    queryFn: () => getAllDriverDailyLogbookApi(),
     staleTime: 1000 * 60 * 30,
-    enabled: !!token, //  only run if token is available
-    onError: (err) => {
-      console.error('Error fetching logbook data:', err)
-    },
+    retry: 0,
   })
-  console.log(alldailylog)
 
   // supervisor fetch
   const { data: supervisorOptions = [] } = useQuery({

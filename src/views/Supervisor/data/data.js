@@ -502,12 +502,11 @@ export const deleteSubtripApi = async (id) => {
 //     }));
 // };
 
-export const getAllDriverDailyLogbookApi = async (userId = null, TOKEN) => {
+export const getAllDriverDailyLogbookApi = async () => {
   if (!TOKEN) throw new Error('Authentication token not found')
 
-  const query = userId ? `?id=${userId}` : ''
   const { data } = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs${query}`,
+    `${import.meta.env.VITE_API_URL}/api/dailylogs/get-all-daily-logs`,
     {
       headers: { Authorization: `Bearer ${TOKEN}` },
     },
