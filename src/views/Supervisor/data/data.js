@@ -637,12 +637,11 @@ export const getAllDriverDailyLogbookSign = async (signatureId) => {
 
 // Get Api for All Vehicle Inpection List
 
-export const getAllVehicleInpectionApi = async (userId = null, TOKEN) => {
+export const getAllVehicleInpectionApi = async () => {
   if (!TOKEN) throw new Error('Authentication token not found')
 
-  const query = userId ? `?id=${userId}` : ''
   const { data } = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/inspection/get-all-inspection${query}`,
+    `${import.meta.env.VITE_API_URL}/api/inspection/get-all-inspection`,
     {
       headers: { Authorization: `Bearer ${TOKEN}` },
     },
@@ -793,13 +792,12 @@ export const getAllFailInpectionImageApi = async (Image) => {
 
 //  Get all Vehicle Service odometer List section
 
-export const getAllServiceHistoryApi = async (userId = null, TOKEN) => {
+export const getAllServiceHistoryApi = async () => {
   try {
     if (!TOKEN) throw new Error('Authentication token not found')
 
-    const query = userId ? `?id=${userId}` : ''
     const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/service/get-all-services${query}`,
+      `${import.meta.env.VITE_API_URL}/api/service/get-all-services`,
       {
         headers: { Authorization: `Bearer ${TOKEN}` },
       },

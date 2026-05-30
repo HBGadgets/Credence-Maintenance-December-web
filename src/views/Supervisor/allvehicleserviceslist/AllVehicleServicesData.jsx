@@ -40,13 +40,8 @@ const AllVehicleServicesData = () => {
   // fetch data
   const { data: serviceLogs, isFetching } = useQuery({
     queryKey: ['vehicleServiceLogs'],
-    queryFn: () => getAllServiceHistoryApi(null, token),
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-    cacheTime: 1000 * 60 * 60,
-    enabled: !!token, //  only run if token is available
+    queryFn: () => getAllServiceHistoryApi(),
+    staleTime: 1000 * 60 * 10,
   })
 
   // supervisor fetch
