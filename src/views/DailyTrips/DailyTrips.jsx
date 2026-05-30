@@ -41,10 +41,20 @@ const DailyTrips = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
+  // for status filter
+  const [selectedStatus, setSelectedStatus] = useState(null)
+
   // superadmin role
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
+
+  // Status options for dropdown
+  const statusOptions = [
+    { label: 'Started', value: 'started' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' },
+  ]
 
   // Debug effect to track dateRange changes
   useEffect(() => {
@@ -81,16 +91,15 @@ const DailyTrips = () => {
       dateRange.startDate,
       dateRange.endDate,
       selectedName?.value,
+      selectedStatus?.value, // Status in queryKey for refetching
     ],
     queryFn: () => {
       const payload = {
         search: searchQuery,
         page: currentPage,
-        // Send limit as is - API should handle -1 or use a large number
         limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
       }
 
-      // Only add date filters if they have values
       if (dateRange.startDate) {
         payload.startDate = formatDateForAPI(dateRange.startDate)
       }
@@ -98,14 +107,18 @@ const DailyTrips = () => {
         payload.endDate = formatDateForAPI(dateRange.endDate, true)
       }
 
-      // Add supervisor filter if selected
       if (selectedName?.value) {
         payload.supervisorId = selectedName.value
       }
 
+      //  Status filter sent to backend API
+      if (selectedStatus?.value) {
+        payload.status = selectedStatus.value
+      }
+
       console.log('📤 Sending payload to API:', payload)
 
-      return getAllDailyReadingApi(payload)
+      return getAllDailyReadingApi(payload) // API call with status filter
     },
     keepPreviousData: true,
     staleTime: 1000 * 60 * 5,
@@ -135,7 +148,7 @@ const DailyTrips = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedName, searchQuery, dateRange])
+  }, [selectedName, selectedStatus, searchQuery, dateRange])
 
   // Handle Date Range Change
   const handleDateRangeChange = (start, end) => {
@@ -345,6 +358,15 @@ const DailyTrips = () => {
               />
             </div>
           )}
+          <div style={{ width: '160px' }}>
+            <SingleSelectDropdown
+              options={statusOptions}
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              isClearable
+              placeholder="Filter Status.."
+            />
+          </div>
         </div>
 
         <div className="d-flex justify-content-end align-items-center gap-2 w-75">

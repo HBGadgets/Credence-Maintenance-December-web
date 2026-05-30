@@ -12,6 +12,7 @@ import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence
 import AddFormButton from './component/AddFormButton'
 import {
   deleteVehicleServiceApi,
+  getServerOdometerApi,
   getVehicleServiceBillApi,
   getVehicleServiceHistoryApi,
   patchVehicleServiceApi,
@@ -43,15 +44,19 @@ const ServiceList = () => {
   const [filteredData, setFilteredData] = useState([])
   const [loadingView, setLoadingView] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
 
   // Use state for modal
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
-  //Fetch api
-  const { data, isFetching, refetch } = useQuery({
+  // Fetch service data with retry logic
+  const {
+    data: serviceDataResponse,
+    isFetching,
+    refetch: refetchService,
+  } = useQuery({
     queryKey: ['serviceData', id],
     queryFn: () => getVehicleServiceHistoryApi(id),
     enabled: !!id,
@@ -60,13 +65,70 @@ const ServiceList = () => {
     refetchOnReconnect: true,
     staleTime: Infinity,
     cacheTime: 1000 * 60 * 60,
+    retry: 1, // Retry 2 times on failure (total 3 attempts: 1 initial + 2 retries)
+    retryDelay: (attemptIndex) => {
+      // Optional: Add delay between retries
+      return Math.min(1000 * 1 ** attemptIndex, 30000) // Exponential backoff: 1s, 2s, 4s...
+    },
+    onError: (error) => {
+      console.error('Service data fetch failed after retries:', error)
+      // Optional: Show toast notification to user
+      toast.error('Failed to load service data after multiple attempts')
+    },
   })
 
-  const serviceData = data?.serviceData || []
-  const odometerSummary = data?.odometerSummary || {}
+  // fetch odometer with retry logic
+  const {
+    data: odometerData,
+    isFetching: isFetchingOdometer,
+    refetch: refetchOdometer,
+  } = useQuery({
+    queryKey: ['odosystem', id],
+    queryFn: () => getServerOdometerApi(id),
+    enabled: !!id,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: Infinity,
+    cacheTime: 1000 * 60 * 60,
+    retry: 1, // Retry 2 times on failure (total 3 attempts)
+    retryDelay: (attemptIndex) => {
+      return Math.min(1000 * 1 ** attemptIndex, 30000) // Exponential backoff
+    },
+    onError: (error) => {
+      console.error('Odometer data fetch failed after retries:', error)
+      toast.error('Failed to load odometer data after multiple attempts')
+    },
+  })
+
+  const serviceData = serviceDataResponse?.serviceData || []
+  const odometerDataList = odometerData || []
+
+  // Calculate odometer summary
+  const odometerSummary = useMemo(() => {
+    if (!odometerDataList || odometerDataList.length === 0) {
+      return {
+        currentOdometer: 0,
+        nextServiceDue: 0,
+        lastService: 0,
+      }
+    }
+
+    // Get the most recent odometer record
+    const latestOdometer = odometerDataList[0]
+
+    // Calculate next service due and last service from service data
+    const lastServiceRecord = serviceData.length > 0 ? serviceData[serviceData.length - 1] : null
+
+    return {
+      currentOdometer: latestOdometer?.totalKm || 0,
+      nextServiceDue: lastServiceRecord?.nextServiceKm || 0,
+      lastService: lastServiceRecord?.odometer || 0,
+    }
+  }, [odometerDataList, serviceData])
 
   useEffect(() => {
-    let filtered = [...serviceData] // Start from original data
+    let filtered = [...serviceData]
 
     // Filter by date range
     if (dateRange.startDate && dateRange.endDate) {
@@ -145,7 +207,7 @@ const ServiceList = () => {
     onSuccess: (data) => {
       Swal.fire('Deleted!', data.message || 'Service deleted successfully.', 'success')
       queryClient.invalidateQueries(['serviceData', id])
-      refetch()
+      refetchService()
     },
     onError: (error) => {
       Swal.fire('Error!', error?.response?.data?.message || 'Failed to delete service.', 'error')
@@ -160,15 +222,13 @@ const ServiceList = () => {
     onSuccess: () => {
       Swal.fire('Success!', 'Odometer updated successfully.', 'success')
       queryClient.invalidateQueries(['serviceData', id])
+      queryClient.invalidateQueries(['odosystem', id])
+      refetchOdometer()
     },
     onError: (error) => {
       Swal.fire('Error!', error?.message || 'Failed to update odometer.', 'error')
     },
   })
-
-  // useEffect(() => {
-  //   console.log('token', token)
-  // }, [token])
 
   const fields = [
     { name: 'date', label: 'Date', type: 'date', required: true },
@@ -312,7 +372,7 @@ const ServiceList = () => {
 
   // Handle View
   const handleView = async (id) => {
-    setLoadingView(true) // Start loading
+    setLoadingView(true)
 
     const selectedRow = filteredData.find((item) => item.id === id)
     if (!selectedRow) {
@@ -330,7 +390,6 @@ const ServiceList = () => {
     try {
       const response = await getVehicleServiceBillApi(selectedRow.serviceImg)
 
-      //  Extract nested data
       const { base64Data, contentType } = response?.data || {}
 
       if (base64Data && contentType) {
@@ -353,7 +412,7 @@ const ServiceList = () => {
       console.error('Failed to fetch bill image:', error)
       toast.error('No bill image found.')
     } finally {
-      setLoadingView(false) // Always stop loading
+      setLoadingView(false)
     }
   }
 
@@ -370,21 +429,80 @@ const ServiceList = () => {
       cancelButtonText: 'Cancel',
     })
 
-    if (result.isConfirmed) {
-      const payload = new FormData()
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'serviceImg' && value instanceof File) {
-          payload.append('serviceImg', value)
-        } else {
-          payload.append(key, value)
-        }
-      })
+    if (!result.isConfirmed) return
+
+    // Validate required fields
+    const requiredFields = [
+      'date',
+      'serviceType',
+      'description',
+      'nextService',
+      'vendor',
+      'amount',
+      'paymentMode',
+    ]
+
+    const missingFields = requiredFields.filter((field) => !formData[field])
+
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`)
+      return
+    }
+
+    if (parseFloat(formData.amount) <= 0) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
+
+    if (parseFloat(formData.nextService) < 0) {
+      toast.error('Next service KM cannot be negative')
+      return
+    }
+
+    const payload = new FormData()
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'serviceImg' && value instanceof File) {
+        payload.append('serviceImg', value)
+      } else if (value !== undefined && value !== null && value !== '') {
+        payload.append(key, value)
+      }
+    })
+
+    try {
+      let response
 
       if (editData) {
-        updateService({ id: editData.id, formData: payload })
+        response = await updateService({
+          id: editData.id,
+          formData: payload,
+        })
       } else {
-        createService(payload)
+        response = await createService(payload)
       }
+
+      console.log('API Response:', response)
+
+      // Check API response
+      if (response?.success === false || response?.status === false || response?.error) {
+        throw new Error(response?.message || response?.error || 'Operation failed')
+      }
+
+      toast.success(
+        response?.message ||
+          (editData
+            ? 'Service record updated successfully!'
+            : 'Service record added successfully!'),
+      )
+
+      // Refresh data here if needed
+      // await fetchServiceList()
+    } catch (error) {
+      console.error('Submit error:', error)
+
+      toast.error(
+        error?.response?.data?.message || error?.message || 'Failed to submit service record',
+      )
     }
   }
 
@@ -398,7 +516,7 @@ const ServiceList = () => {
     setDateRange({ startDate, endDate })
   }
 
-  // Define the columns for export (match your service data keys)
+  // Define the columns for export
   const columns = [
     { label: 'Date', key: 'date' },
     { label: 'Service Type', key: 'serviceType' },
@@ -414,21 +532,18 @@ const ServiceList = () => {
 
   // Handle Logout
   const handleLogout = () => {
-    // Clear sessionStorage and localStorage
     sessionStorage.clear()
     localStorage.clear()
 
-    // Optional: Clear cookies (will only clear cookies accessible via JavaScript)
     document.cookie.split(';').forEach((c) => {
       const base = c.trim().split('=')[0]
       document.cookie = `${base}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
     })
 
-    // Redirect to Credence
     window.history.replaceState(null, '', '/')
-    // window.location.href = 'http://localhost:3000'
     window.location.href = import.meta.env.VITE_API_CREDENCE_URL
   }
+
   // Memoized dropdown items for export
   const dropdownItems = useMemo(
     () => [
@@ -531,51 +646,23 @@ const ServiceList = () => {
               <div className="card rounded-3 border-1 p-3">
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <h6 className="text-muted mb-0">
-                    <strong>Current Odometer</strong>
+                    <strong>Odometer</strong>
                   </h6>
                   <ImMeter size={18} color="#0d6efd" />
                 </div>
 
-                <h4>{odometerSummary.currentOdometer?.toLocaleString() || 0} km</h4>
+                <h4>
+                  {odometerSummary.currentOdometer
+                    ? typeof odometerSummary.currentOdometer === 'number'
+                      ? odometerSummary.currentOdometer.toFixed(2).toLocaleString()
+                      : Number(odometerSummary.currentOdometer).toFixed(2).toLocaleString()
+                    : 0}{' '}
+                  km
+                </h4>
 
-                {/* 👇 Description for normal users */}
-                {userRole !== 'superadmin' && (
-                  <div className="text fw-semibold mt-1" style={{ fontSize: '0.9rem' }}>
-                    Current Odometer Kilometer Reading.
-                  </div>
-                )}
-
-                {/* 👇 Odometer update input for superadmin */}
-                {userRole === 'superadmin' && (
-                  <div className="mt-3">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        const value = e.target.currentOdometer.value
-
-                        if (!value || value <= 0) {
-                          Swal.fire('Invalid', 'Please enter a valid odometer value.', 'warning')
-                          return
-                        }
-
-                        updateOdometer({ id, currentOdometer: value })
-                        e.target.reset()
-                      }}
-                    >
-                      <div className="d-flex gap-2">
-                        <input
-                          type="number"
-                          name="currentOdometer"
-                          className="form-control"
-                          placeholder="Update odometer"
-                        />
-                        <button type="submit" className="btn btn-primary">
-                          Update
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
+                <div className="text fw-semibold mt-1" style={{ fontSize: '0.9rem' }}>
+                  Odometer Kilometer Reading.
+                </div>
               </div>
             </div>
 
@@ -627,7 +714,6 @@ const ServiceList = () => {
         />
       </div>
 
-      {/* Modal Component */}
       {showModal && (
         <BillShow
           showModal={showModal}
