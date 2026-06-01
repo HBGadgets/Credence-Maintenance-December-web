@@ -63,6 +63,7 @@ const DailyReading = ({ id }) => {
     keepPreviousData: true,
     staleTime: 1000 * 60 * 5,
     enabled: !!id,
+    retry: 0,
   })
 
   const dailyTrips = apiResponse.data || []

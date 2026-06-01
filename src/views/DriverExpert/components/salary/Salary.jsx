@@ -36,6 +36,7 @@ const Salary = ({ id }) => {
   } = useQuery({
     queryKey: ['DriverSalary', id],
     queryFn: () => driverSalary(id),
+    retry: 0,
   })
 
   useEffect(() => {

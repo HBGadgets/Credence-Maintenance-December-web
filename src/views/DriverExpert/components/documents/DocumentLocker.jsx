@@ -38,6 +38,7 @@ const DocumentLocker = ({ id }) => {
     queryKey: ['documents', id],
     queryFn: () => getDocuments(id),
     enabled: !!id,
+    retry: 0,
     onError: (error) => {
       console.error('Error fetching documents:', error)
       setError('Failed to fetch documents.')

@@ -47,6 +47,7 @@ const DocumentViewModal = ({
     queryKey: ['documentImage', document.id],
     queryFn: () => getDocumentImage(document.id),
     enabled: visible && !!document.id,
+    retry: 0,
   })
 
   // Create a URL for the Blob and clean it up

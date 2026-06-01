@@ -56,6 +56,7 @@ const LogsDriver = () => {
     queryKey: ['logbook', id, selectedMonth],
     queryFn: () => driverLogbook(id, selectedMonth),
     staleTime: 1000 * 60 * 30,
+    retry: 0,
   })
 
   // POST Daily Log

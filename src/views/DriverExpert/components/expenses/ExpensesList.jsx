@@ -36,6 +36,7 @@ const ExpensesList = () => {
     queryKey: ['DriverExpenses', id],
     queryFn: () => driverExpenses(id),
     staleTime: 1000 * 60 * 30,
+    retry: 0,
   })
 
   useEffect(() => {

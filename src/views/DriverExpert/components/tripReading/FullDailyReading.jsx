@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
 import { useQuery } from '@tanstack/react-query'
 import Table from '../../../components/Table'
@@ -13,6 +13,7 @@ import usePdfExporter from '../../../customhooks/usePdfExporter'
 import useExcelExporter from '../../../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import SingleSelectDropdown from '../../../components/SingleSelectDropdown'
 
 const FullDailyReading = () => {
   const { id } = useParams()
@@ -23,6 +24,8 @@ const FullDailyReading = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
+  // for status filter
+  const [selectedStatus, setSelectedStatus] = useState(null)
 
   console.log(' Driver ID in component:', id)
 
@@ -44,6 +47,7 @@ const FullDailyReading = () => {
       searchQuery,
       dateRange.startDate,
       dateRange.endDate,
+      selectedStatus?.value,
     ],
     queryFn: () => {
       if (!id) return { data: [], total: 0, totalPages: 1 }
@@ -57,6 +61,9 @@ const FullDailyReading = () => {
 
       if (dateRange.startDate) payload.startDate = formatDateForAPI(dateRange.startDate)
       if (dateRange.endDate) payload.endDate = formatDateForAPI(dateRange.endDate, true)
+      if (selectedStatus?.value) {
+        payload.status = selectedStatus.value
+      }
 
       console.log('📤 Sending payload to API:', payload)
       return getDailyReadingApi(payload)
@@ -64,11 +71,23 @@ const FullDailyReading = () => {
     keepPreviousData: true,
     staleTime: 1000 * 60 * 5,
     enabled: !!id,
+    retry: 0,
   })
 
   const dailyTrips = apiResponse.data || []
   const totalItems = apiResponse.total || 0
   const totalPages = apiResponse.totalPages || 1
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedStatus, searchQuery, dateRange])
+
+  // Status options for dropdown
+  const statusOptions = [
+    { label: 'Started', value: 'started' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' },
+  ]
 
   const handleDateRangeChange = (start, end) => {
     setDateRange({ startDate: start, endDate: end })
@@ -173,16 +192,28 @@ const FullDailyReading = () => {
     <>
       <ToastContainer />
       {/* Top filters row */}
-      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <div className="me-2">
-          <DateRangeFilterCredence
-            title="Date Range"
-            onDateRangeChange={handleDateRangeChange}
-            value={dateRange}
-          />
+      <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap">
+        <div className="d-flex align-items-center" style={{ gap: '20px' }}>
+          <div>
+            <DateRangeFilterCredence
+              title="Date Range"
+              onDateRangeChange={handleDateRangeChange}
+              value={dateRange}
+            />
+          </div>
+
+          <div style={{ minWidth: '180px' }}>
+            <SingleSelectDropdown
+              options={statusOptions}
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              isClearable
+              placeholder="Filter Status..."
+            />
+          </div>
         </div>
 
-        <div className="ms-2 flex-grow-1" style={{ maxWidth: '300px' }}>
+        <div style={{ maxWidth: '300px' }}>
           <SearchInput
             searchQuery={searchQuery}
             setSearchQuery={handleSearch}
