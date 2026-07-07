@@ -110,13 +110,16 @@ function Table({
   reportButton,
   handleReportButton,
   action = 'Action',
+  serverPagination = false,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
 
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage)
+  const currentData = serverPagination
+    ? filteredData
+    : filteredData.slice(startIndex, startIndex + itemsPerPage)
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -362,10 +365,12 @@ Table.propTypes = {
   isFetching: PropTypes.bool,
   reportButton: PropTypes.bool,
   handleReportButton: PropTypes.func,
+  serverPagination: PropTypes.bool,
 }
 
 Table.defaultProps = {
   isFetching: false,
+  serverPagination: false,
 }
 
 export default Table

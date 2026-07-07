@@ -93,6 +93,7 @@ const InventoryList = () => {
         // deleteButton={true}
         // handleEditButton={handleEditButton}
         // handleDeleteButton={handleDeleteButton}
+        serverPagination={true}
       />
 
       <SmartPagination

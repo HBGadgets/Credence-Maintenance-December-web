@@ -218,6 +218,7 @@ const RailHead = () => {
         isFetching={isFetching}
         editButton={true}
         handleEditButton={handleEditButton}
+        serverPagination={true}
       />
 
       <SmartPagination

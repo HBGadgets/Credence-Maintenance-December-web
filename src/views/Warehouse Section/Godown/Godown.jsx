@@ -252,6 +252,7 @@ const Godown = () => {
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
         handleViewButton={handleViewButton}
+        serverPagination={true}
       />
 
       <SmartPagination
