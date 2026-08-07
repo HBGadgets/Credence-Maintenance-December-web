@@ -241,7 +241,7 @@ const ProductList = () => {
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
         editButton={true}
-        deleteButton={true}
+        deleteButton={false}
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
         serverPagination={true}
