@@ -7,9 +7,16 @@ import { ToastContainer } from 'react-toastify'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getAllDriverAttendenceApi } from '../data/data'
+import IconDropdown from '../IconDropdown'
+import usePdfExporter from '../../customhooks/usePdfExporter'
+import useExcelExporter from '../../customhooks/useExcelExporter'
+import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 
 const AllDriverAttendance = () => {
   const navigate = useNavigate()
+  const { exportToPDF } = usePdfExporter()
+  const { exportToExcel } = useExcelExporter()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -55,6 +62,41 @@ const AllDriverAttendance = () => {
     navigate(`/DriverProfile/${id}`)
   }
 
+  const dropdownItems = [
+    {
+      icon: FaRegFilePdf,
+      label: 'Download PDF',
+      onClick: () =>
+        exportToPDF({
+          title: 'Driver Attendance Details',
+          columns: columns,
+          data: filteredData,
+          fileName: 'Driver_Attendance_Report',
+        }),
+    },
+    {
+      icon: PiMicrosoftExcelLogo,
+      label: 'Download Excel',
+      onClick: () =>
+        exportToExcel({
+          title: 'Driver Attendance Details',
+          columns: columns,
+          data: filteredData,
+          fileName: 'Driver_Attendance_Report',
+        }),
+    },
+    {
+      icon: FaPrint,
+      label: 'Print Page',
+      onClick: () => window.print(),
+    },
+    {
+      icon: FaArrowUp,
+      label: 'Scroll To Top',
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    },
+  ]
+
   return (
     <div>
       <ToastContainer />
@@ -93,6 +135,10 @@ const AllDriverAttendance = () => {
           setCurrentPage(1)
         }}
       />
+
+      <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
+        <IconDropdown items={dropdownItems} />
+      </div>
     </div>
   )
 }
