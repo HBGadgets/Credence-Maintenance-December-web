@@ -837,3 +837,42 @@ export const getAllServiceHistoryApi = async () => {
     throw error
   }
 }
+
+// --------------------------------------------------------------------------------------
+
+// Get all driver attendace api by month
+
+export const getAllDriverAttendenceApi = async ({ queryKey }) => {
+  const [_key, { search, page, limit, month, year }] = queryKey
+
+  if (!TOKEN) throw new Error('Authentication token not found')
+
+  const { data } = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/report/driver-attendance-summary`,
+    {
+      params: {
+        search: search || '',
+        page,
+        limit,
+        month,
+        year,
+      },
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    },
+  )
+
+  // The API response has { count, consignees } structure
+  return {
+    data: data.report.map((item) => ({
+      id: item.driverId,
+      presentCount: item.presentCount || '0',
+      absentCount: item.absentCount || '0',
+      leaveCount: item.leaveCount || '0',
+      totalDays: item.totalDays || '0',
+      driverName: item.driverName || '0',
+    })),
+    total: data.pagination?.totalRecords || 0,
+    totalPages: data.pagination?.totalPages || 1,
+    page: data.pagination?.currentPage || page,
+  }
+}

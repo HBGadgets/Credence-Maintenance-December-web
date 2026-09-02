@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const DateRangePicker = ({ onMonthChange, label, value }) => {
+const DateRangePicker = ({ onMonthChange, label, value, style, className }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 7)) // Default: Current Month
 
   const handleDateChange = (event) => {
@@ -10,7 +10,7 @@ const DateRangePicker = ({ onMonthChange, label, value }) => {
   }
 
   return (
-    <div className="container-fluid">
+    <div className={`container-fluid ${className || ''}`} style={style}>
       <div className="row align-items-center g-2">
         {label && (
           <div className="col-12 col-sm-auto">

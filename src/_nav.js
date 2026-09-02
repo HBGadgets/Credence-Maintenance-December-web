@@ -1,12 +1,12 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 import { LayoutDashboard, LucideClipboardList } from 'lucide-react'
-import { LuMessageSquareQuote, LuReceiptText } from "react-icons/lu";
-import { PiUserListBold, PiWarehouseDuotone } from "react-icons/pi";
-import { HiOutlineTicket } from "react-icons/hi2";
-import { IoReceiptOutline } from "react-icons/io5";
-import { LuChartSpline } from "react-icons/lu";
-import { TbBuildingWarehouse } from "react-icons/tb";
+import { LuMessageSquareQuote, LuReceiptText } from 'react-icons/lu'
+import { PiUserListBold, PiWarehouseDuotone } from 'react-icons/pi'
+import { HiOutlineTicket } from 'react-icons/hi2'
+import { IoReceiptOutline } from 'react-icons/io5'
+import { LuChartSpline } from 'react-icons/lu'
+import { TbBuildingWarehouse } from 'react-icons/tb'
 
 const _nav = [
   {
@@ -25,18 +25,12 @@ const _nav = [
     name: 'Maintenance',
   },
 
-
   // SUPERVISOR
   {
     component: CNavGroup,
     name: 'Masters',
     to: '/buttons',
-    icon: (
-      <PiUserListBold
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px' }}
-      />
-    ),
+    icon: <PiUserListBold className="nav-icon" style={{ color: '#ec7426', marginRight: '10px' }} />,
     items: [
       {
         component: CNavItem,
@@ -81,7 +75,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Driver Attendence Mark',
-        to: '/Attendence'
+        to: '/Attendence',
       },
       {
         component: CNavItem,
@@ -102,6 +96,11 @@ const _nav = [
       />
     ),
     items: [
+      {
+        component: CNavItem,
+        name: 'All Drivers Attendence',
+        to: '/AllDriverAttendence',
+      },
       {
         component: CNavItem,
         name: 'Drivers Salary',
@@ -135,7 +134,6 @@ const _nav = [
     ],
   },
 
-
   //  Daily Trips KM
   {
     component: CNavGroup,
@@ -154,7 +152,6 @@ const _nav = [
       },
     ],
   },
-
 
   // Good Recipt
   {
@@ -180,7 +177,6 @@ const _nav = [
     ],
   },
 
-
   // Transport Pass
   {
     component: CNavGroup,
@@ -202,10 +198,8 @@ const _nav = [
         name: 'Transport Pass Recipt',
         to: '/GodownLr',
       },
-
     ],
   },
-
 
   // Warehouse
   {
@@ -234,8 +228,6 @@ const _nav = [
         to: '/Godown',
       },
 
-
-
       // {
       //   component: CNavItem,
       //   name: 'Inventory',
@@ -243,7 +235,6 @@ const _nav = [
       // }
     ],
   },
-
 
   // ROAD SIDE ASSISTANCE
   // {
@@ -274,8 +265,6 @@ const _nav = [
   //   ],
   // },
 
-
-
   // Help and Supports
   {
     component: CNavGroup,
@@ -286,7 +275,8 @@ const _nav = [
         style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
       />
     ),
-    items: [,
+    items: [
+      ,
       {
         component: CNavItem,
         name: 'Tickets Raised',
@@ -301,7 +291,6 @@ const _nav = [
     ],
   },
 
-
   {
     component: CNavItem,
     name: 'Chat Box',
@@ -313,8 +302,6 @@ const _nav = [
       />
     ),
   },
-
-
 ]
 
 export default _nav

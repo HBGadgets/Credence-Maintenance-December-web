@@ -14,7 +14,9 @@ const ManageTyre = React.lazy(() => import('./views/vehicle/TyreSystem/ManageTyr
 const Fuelsystem = React.lazy(() => import('./views/vehicle/FuelSystem/Fuelsystem.jsx'))
 const Servicelist = React.lazy(() => import('./views/vehicle/ServicesChecklist/Servicelist.jsx'))
 const InpectionList = React.lazy(() => import('./views/vehicle/VehicleInpection/InpectionList.jsx'))
-const AllVehicleInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/AllVehicleInpection.jsx'))
+const AllVehicleInpection = React.lazy(
+  () => import('./views/Supervisor/vehicleinpections/AllVehicleInpection.jsx'),
+)
 const DocumentAlert = React.lazy(() => import('./views/vehicle/AlertDoc/DocumentAlert.jsx'))
 const VehicleAssign = React.lazy(() => import('./views/vehicle/AssignVehicle/AssignVehicle.jsx'))
 
@@ -29,11 +31,17 @@ const CurrentAttendence = React.lazy(
 
 const TableSubTrip = React.lazy(() => import('./views/Supervisor/trip/componets/TableSubTrip.jsx'))
 
-const AllDailyLogbook = React.lazy(() => import('./views/Supervisor/alldailylog/AllDailyLogbook.jsx'))
+const AllDailyLogbook = React.lazy(
+  () => import('./views/Supervisor/alldailylog/AllDailyLogbook.jsx'),
+)
 
-const AnalayisInpection = React.lazy(() => import('./views/Supervisor/vehicleinpections/components/AnalayisInpection.jsx'))
+const AnalayisInpection = React.lazy(
+  () => import('./views/Supervisor/vehicleinpections/components/AnalayisInpection.jsx'),
+)
 
-const AllVehicleServicesData = React.lazy(() => import('./views/Supervisor/allvehicleserviceslist/AllVehicleServicesData.jsx'))
+const AllVehicleServicesData = React.lazy(
+  () => import('./views/Supervisor/allvehicleserviceslist/AllVehicleServicesData.jsx'),
+)
 
 // Expenses Management
 
@@ -53,7 +61,6 @@ const CompanyName = React.lazy(() => import('./views/TransportPass/CompanyName.j
 
 const Worker = React.lazy(() => import('./views/TransportPass/Worker.jsx'))
 
-
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/total-expenses/TotalExpenses.js'),
@@ -62,9 +69,13 @@ const BudgetAllocation = React.lazy(
   () => import('./views/road-side-assistance/expense-sheet/budget-allocation/BudgetAllocation.jsx'),
 )
 
-const ServiceCall = React.lazy(() => import('./views/road-side-assistance/asstiance/ServiceCall.jsx'))
+const ServiceCall = React.lazy(
+  () => import('./views/road-side-assistance/asstiance/ServiceCall.jsx'),
+)
 
-const RoadSideAssistance = React.lazy(() => import('./views/road-side-assistance/roadside/RoadSideAssistance.jsx'))
+const RoadSideAssistance = React.lazy(
+  () => import('./views/road-side-assistance/roadside/RoadSideAssistance.jsx'),
+)
 
 // Help and Support
 const HelpAndSupport = React.lazy(() => import('./views/pages/help-&-support/HelpAndSupport.js'))
@@ -93,17 +104,29 @@ const ViewAllSalary = React.lazy(
   () => import('./views/DriverExpert/components/salary/ViewAllSalary.jsx'),
 )
 
-const DriverStatus = React.lazy(() => import('./views/DriverExpert/components/status/DriverStatus.jsx'))
+const DriverStatus = React.lazy(
+  () => import('./views/DriverExpert/components/status/DriverStatus.jsx'),
+)
 
-const DriverLocation = React.lazy(() => import('./views/DriverExpert/components/driverlocation/DriverLocation.jsx'))
+const DriverLocation = React.lazy(
+  () => import('./views/DriverExpert/components/driverlocation/DriverLocation.jsx'),
+)
 
-const PresentTable = React.lazy(() => import('./views/DriverExpert/components/attendance/PresentTable.jsx'))
+const PresentTable = React.lazy(
+  () => import('./views/DriverExpert/components/attendance/PresentTable.jsx'),
+)
 
-const AbsentTable = React.lazy(() => import('./views/DriverExpert/components/attendance/AbsentTable.jsx'))
+const AbsentTable = React.lazy(
+  () => import('./views/DriverExpert/components/attendance/AbsentTable.jsx'),
+)
 
-const ApprovedLeaveTable = React.lazy(() => import('./views/DriverExpert/components/attendance/ApprovedLeaveTable.jsx'))
+const ApprovedLeaveTable = React.lazy(
+  () => import('./views/DriverExpert/components/attendance/ApprovedLeaveTable.jsx'),
+)
 
-const FullDailyReading = React.lazy(() => import('./views/DriverExpert/components/tripReading/FullDailyReading.jsx'))
+const FullDailyReading = React.lazy(
+  () => import('./views/DriverExpert/components/tripReading/FullDailyReading.jsx'),
+)
 
 // Profile Section
 const ProfileSection = React.lazy(() => import('./views/Profile/ProfileSection.jsx'))
@@ -113,9 +136,13 @@ const DailyTrips = React.lazy(() => import('./views/DailyTrips/DailyTrips.jsx'))
 
 // Warehouse Section
 const Godown = React.lazy(() => import('./views/Warehouse Section/Godown/Godown.jsx'))
-const ProductList = React.lazy(() => import('./views/Warehouse Section/ProductList/ProductList.jsx'))
+const ProductList = React.lazy(
+  () => import('./views/Warehouse Section/ProductList/ProductList.jsx'),
+)
 const GodownLR = React.lazy(() => import('./views/Warehouse Section/GodownLR/GodownLr.jsx'))
-const InventoryList = React.lazy(() => import('./views/Warehouse Section/Godown/components/InventoryList.jsx'))
+const InventoryList = React.lazy(
+  () => import('./views/Warehouse Section/Godown/components/InventoryList.jsx'),
+)
 const RailHead = React.lazy(() => import('./views/Warehouse Section/RailHead/RailHead.jsx'))
 // const Inventory = React.lazy(() => import('./views/Warehouse Section/Inventory/InventoryList.jsx'))
 
@@ -124,7 +151,6 @@ const RailHead = React.lazy(() => import('./views/Warehouse Section/RailHead/Rai
 const GrByRail = React.lazy(() => import('./views/GoodRecipts/GRByRail/GrByRail.jsx'))
 const GrByRoad = React.lazy(() => import('./views/GoodRecipts/GRByRoad/GrByRoad.jsx'))
 
-
 // Consignor / Consignee
 
 const Consignor = React.lazy(() => import('./views/Consignee_Consignor/Consignor/Consignor'))
@@ -132,6 +158,11 @@ const Consignee = React.lazy(() => import('./views/Consignee_Consignor/Consignee
 
 // Material Owner
 const MaterialOwner = React.lazy(() => import('./views/Material_Owner/MaterialOwner.jsx'))
+
+// All driver atendance
+const AllDriverAttendence = React.lazy(
+  () => import('./views/Supervisor/AllDriverAttendence/AllDriverAttendence.jsx'),
+)
 
 // routes
 const routes = [
@@ -166,8 +197,17 @@ const routes = [
   { path: '/TableSubTrip/:id', name: 'Sub Trips Table', element: TableSubTrip },
   { path: '/AllDailyLogbook', name: 'All Drives LogBooks', element: AllDailyLogbook },
   { path: '/AllVehicleInpection', name: 'All Vehicle Inpections', element: AllVehicleInpection },
-  { path: '/AnalayisInpection/:id', name: 'All Analayis Vehicle Inpection', element: AnalayisInpection },
-  { path: '/AllVehicleServicesData', name: 'All Vehicle Service Data', element: AllVehicleServicesData },
+  {
+    path: '/AnalayisInpection/:id',
+    name: 'All Analayis Vehicle Inpection',
+    element: AnalayisInpection,
+  },
+  {
+    path: '/AllVehicleServicesData',
+    name: 'All Vehicle Service Data',
+    element: AllVehicleServicesData,
+  },
+  { path: '/AllDriverAttendence', name: 'All Drivers Attendence', element: AllDriverAttendence },
 
   /**EXPENSES MANAGEMENT */
 
@@ -182,12 +222,14 @@ const routes = [
 
   { path: '/Worker', name: 'Employees Details', element: Worker },
 
-
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },
   { path: '/BudgetAllocation', name: 'Budget Allocation', element: BudgetAllocation },
-  { path: '/RoadSideAssistance', name: 'Roadside Assistances Services', element: RoadSideAssistance },
-
+  {
+    path: '/RoadSideAssistance',
+    name: 'Roadside Assistances Services',
+    element: RoadSideAssistance,
+  },
 
   //new
   { path: '/ServiceCall', name: 'Roadside Assitance Services', element: ServiceCall },
@@ -227,7 +269,6 @@ const routes = [
   { path: '/RailHead', name: 'Rail Head', element: RailHead },
   // { path: '/InventoryList', name: 'Inventory List', element: Inventory },
 
-
   // Good recipt
   { path: '/GrByRail', name: 'Good Recipt Rail', element: GrByRail },
   { path: '/GrByRoad', name: 'Good Recipt Road', element: GrByRoad },
@@ -238,7 +279,6 @@ const routes = [
 
   // Material Owner
   { path: '/MaterialOwner', name: 'Material Owner', element: MaterialOwner },
-
 ]
 
 export default routes

@@ -11,6 +11,8 @@ yarn.lock
 # production
 /build
 
+vite.config.mjs.timestamp*
+
 # misc
 .eslintcache
 .DS_Store
