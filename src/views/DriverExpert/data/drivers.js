@@ -5,14 +5,11 @@ import { useFormattedTime } from '../../customhooks/useFormattedTime'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 import { useDateTime } from '../../customhooks/useDateTime'
 
-
 // const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
 const token = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
 
 export const addDriver = async (data) => {
   try {
-
-
     if (!token) throw new Error('Authentication token not found')
 
     const { data: response } = await axios.post(
@@ -46,11 +43,11 @@ export const fetchDrivers = async () => {
       password: driver.password,
       id: driver._id,
       supervisor: driver.supervisor,
-      licenseNumber: driver.licenseNumber || "N/A",
-      licenseExpiryDate: formatDateToDDMMYYYY(driver.licenseExpiryDate) || "N/A",
+      licenseNumber: driver.licenseNumber || 'N/A',
+      licenseExpiryDate: formatDateToDDMMYYYY(driver.licenseExpiryDate) || 'N/A',
     }))
   } catch (error) {
-    alert(error.message)
+    console.log(error, 'error')
     throw error
   }
 }
@@ -74,7 +71,6 @@ export const fetchSupervisor = async () => {
     throw error
   }
 }
-
 
 export const deleteDriver = async (id) => {
   try {
@@ -242,7 +238,6 @@ export const driverLogbook = async (id, month) => {
 
 export const getDailyLogSign = async (signatureId) => {
   try {
-
     if (!token) throw new Error('Authentication token not found')
 
     const res = await axios.get(
@@ -260,7 +255,6 @@ export const getDailyLogSign = async (signatureId) => {
   }
 }
 
-
 // Post Subtrip
 
 export const postDailyLogApi = async (id, dailylogData) => {
@@ -273,7 +267,7 @@ export const postDailyLogApi = async (id, dailylogData) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-      }
+      },
     )
 
     if (response.status === 201 || response.status === 200) {
@@ -286,14 +280,11 @@ export const postDailyLogApi = async (id, dailylogData) => {
     console.error('API Error:', error.response?.data?.message || error.message)
 
     // Properly throw the error to be caught in parent function
-    const err = new Error(
-      error.response?.data?.message || 'Failed to create daily log'
-    )
+    const err = new Error(error.response?.data?.message || 'Failed to create daily log')
     err.response = error.response // Attach the original response if needed
     throw err
   }
 }
-
 
 // PATCH subtrip
 
@@ -314,11 +305,14 @@ export const patchDailyLogApi = async (id, data) => {
 
     return response
   } catch (error) {
-    console.error('Update daily logs failed:', error, error.response?.data?.message || error.message)
+    console.error(
+      'Update daily logs failed:',
+      error,
+      error.response?.data?.message || error.message,
+    )
     throw error
   }
 }
-
 
 // Delete driver expense
 
@@ -335,15 +329,13 @@ export const deleteDailyLogApi = async (id) => {
       },
     )
 
-    return console.log("done", data.message)
+    return console.log('done', data.message)
   } catch (error) {
     throw error
   }
 }
 
-// ------------------------------------------------------------------------------------ 
-
-
+// ------------------------------------------------------------------------------------
 
 export const driverSalary = async (id) => {
   try {
@@ -408,40 +400,46 @@ export const driverTripDetails = async (id) => {
 
 export const getDocuments = async (id) => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-all/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/document-locker/get-all/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+    return response.data
   } catch (error) {
-    throw error.response?.data || error.message;
+    throw error.response?.data || error.message
   }
-};
+}
 
 export const getDocumentImage = async (id) => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/document-locker/get-image-by-id/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/document-locker/get-image-by-id/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+    return response.data
   } catch (error) {
-    throw error.response?.data || error.message;
+    throw error.response?.data || error.message
   }
-};
+}
 
 export const uploadDocuments = async (driverId, documentData) => {
-  if (!driverId || !documentData || typeof documentData !== "object") {
-    console.error("Invalid parameters: driver ID or document data is missing.");
-    throw new Error("Invalid parameters: driver ID or document data is missing.");
+  if (!driverId || !documentData || typeof documentData !== 'object') {
+    console.error('Invalid parameters: driver ID or document data is missing.')
+    throw new Error('Invalid parameters: driver ID or document data is missing.')
   }
 
-  const documentType = Object.keys(documentData)[0]; // Get the document type (e.g., "Aadhar Card")
-  console.log("this is document data", documentData);
+  const documentType = Object.keys(documentData)[0] // Get the document type (e.g., "Aadhar Card")
+  console.log('this is document data', documentData)
 
-  const formData = new FormData();
-  formData.append("driverId", driverId);
-  formData.append("documentName", documentData.documentName);
-  formData.append("document", documentData.document)
-  console.log("Uploading Document:", documentType);
+  const formData = new FormData()
+  formData.append('driverId', driverId)
+  formData.append('documentName', documentData.documentName)
+  formData.append('document', documentData.document)
+  console.log('Uploading Document:', documentType)
 
   try {
     const response = await axios.post(
@@ -450,25 +448,25 @@ export const uploadDocuments = async (driverId, documentData) => {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
-        }
-      }
-    );
-    return response.data;
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+    return response.data
   } catch (error) {
-    console.error("Error uploading document:", error.response?.data || error.message);
-    throw error.response?.data || error.message;
+    console.error('Error uploading document:', error.response?.data || error.message)
+    throw error.response?.data || error.message
   }
-};
+}
 
 export const editDocument = async (documentId, documentData) => {
   try {
-    const formData = new FormData();
+    const formData = new FormData()
     if (documentData.documentName) {
-      formData.append('documentName', documentData.documentName);
+      formData.append('documentName', documentData.documentName)
     }
     if (documentData.document) {
-      formData.append('document', documentData.document); // File field matches backend expectation
+      formData.append('document', documentData.document) // File field matches backend expectation
     }
 
     const response = await axios.patch(
@@ -479,33 +477,38 @@ export const editDocument = async (documentId, documentData) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-      }
-    );
-    return response.data;
+      },
+    )
+    return response.data
   } catch (error) {
-    throw error.response?.data || { message: error.message };
+    throw error.response?.data || { message: error.message }
   }
-};
+}
 
 export const deleteDocumentAPI = async (id) => {
   try {
-    const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/document-locker/delete/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    const response = await axios.delete(
+      `${import.meta.env.VITE_API_URL}/api/document-locker/delete/${id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+    return response.data
   } catch (error) {
-    throw error.response?.data || error.message;
+    throw error.response?.data || error.message
   }
-};
-
+}
 
 export const fetchDriverStatus = async () => {
   try {
-    if (!token) throw new Error('Authentication token not found');
+    if (!token) throw new Error('Authentication token not found')
 
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/get-driver/status`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/drivers/get-driver/status`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
 
     const mapDriver = (driverStatus) => ({
       id: driverStatus._id,
@@ -513,37 +516,37 @@ export const fetchDriverStatus = async () => {
       contactNumber: driverStatus.contactNumber,
       email: driverStatus.email ?? '',
       supervisor: driverStatus.supervisor,
-    });
+    })
 
     return {
       available: data.availableDrivers.map(mapDriver),
       unavailable: data.unavailableDrivers.map(mapDriver),
-    };
+    }
   } catch (error) {
-    alert(error.message);
-    throw error;
+    alert(error.message)
+    throw error
   }
-};
+}
 
 // Driver Get Location
 
 export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
   try {
-    if (!token) throw new Error('Authentication token not found');
+    if (!token) throw new Error('Authentication token not found')
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams()
 
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
 
     const response = await axios.get(
       `${import.meta.env.VITE_API_URL}/api/attendance/get-attendance-location?${params.toString()}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
 
-    const data = response.data?.attendanceLocations;
-    if (!Array.isArray(data)) throw new Error('Invalid API response: attendanceLocations must be an array');
-
+    const data = response.data?.attendanceLocations
+    if (!Array.isArray(data))
+      throw new Error('Invalid API response: attendanceLocations must be an array')
 
     // formated time for check out
     const formatDateTime = (timeString) => {
@@ -581,7 +584,7 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
       originalDate: attendanceLoc.createdAt,
       date: formatDateToDDMMYYYY(attendanceLoc.createdAt),
       checkInTime: useDateTime(attendanceLoc.createdAt),
-      checkOutTime: formatDateTime(attendanceLoc.checkoutTime) || "Trip In-Progress",
+      checkOutTime: formatDateTime(attendanceLoc.checkoutTime) || 'Trip In-Progress',
       name: attendanceLoc.driverId?.name || 'N/A',
       lat: attendanceLoc.lat || 'N/A',
       long: attendanceLoc.long || '',
@@ -591,32 +594,30 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
       status: attendanceLoc.status || 'N/A',
       supervisor: attendanceLoc.driverId?.supervisor || 'N/A',
       attendanceImageId: attendanceLoc.attendanceImageId,
-    }));
+    }))
   } catch (error) {
-    console.error(error.message);
-    throw error;
+    console.error(error.message)
+    throw error
   }
-};
-
+}
 
 export const getAddressApi = async (latitude, longitude) => {
   try {
-    const apiKey = 'zstIsERMom7VAfZNEAhP'; // Your MapTiler API Key
+    const apiKey = 'zstIsERMom7VAfZNEAhP' // Your MapTiler API Key
     const response = await axios.get(
-      `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${apiKey}`
-    );
+      `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${apiKey}`,
+    )
 
     if (response.data?.features?.length > 0) {
-      return response.data.features[0].place_name;
+      return response.data.features[0].place_name
     } else {
-      return 'Address not available';
+      return 'Address not available'
     }
   } catch (error) {
-    console.error('Geocoding Error:', error.message);
-    return 'Address not available';
+    console.error('Geocoding Error:', error.message)
+    return 'Address not available'
   }
-};
-
+}
 
 export const getDriverLocationApi = async (attendanceImageId) => {
   try {
@@ -633,13 +634,11 @@ export const getDriverLocationApi = async (attendanceImageId) => {
     return res.data
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
-    return 'Data not available';
-
+    return 'Data not available'
   }
 }
 
-
-// ------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------
 
 // Get API trip reading
 export const getDailyReadingApi = async ({
@@ -662,13 +661,10 @@ export const getDailyReadingApi = async ({
 
     console.log('📤 API Params:', params)
 
-    const { data } = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver`,
-      {
-        params,
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    )
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver`, {
+      params,
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
     console.log('📦 API Response (Daily Reading):', data)
 
