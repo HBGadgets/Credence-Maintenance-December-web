@@ -22,7 +22,14 @@ const AllDriverAttendance = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
 
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    return sessionStorage.getItem('allDriverAttendanceMonth') || new Date().toISOString().slice(0, 7)
+  })
+
+  useEffect(() => {
+    sessionStorage.setItem('allDriverAttendanceMonth', selectedMonth)
+  }, [selectedMonth])
+
   const [year, month] = selectedMonth.split('-')
 
   const { data, isFetching } = useQuery({
