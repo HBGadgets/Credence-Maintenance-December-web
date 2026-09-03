@@ -59,7 +59,7 @@ const AllDriverAttendance = () => {
   ]
 
   const handleViewButton = (id) => {
-    navigate(`/DriverProfile/${id}`)
+    navigate(`/DriverAttendance/${id}`, { state: { selectedMonth } })
   }
 
   const dropdownItems = [

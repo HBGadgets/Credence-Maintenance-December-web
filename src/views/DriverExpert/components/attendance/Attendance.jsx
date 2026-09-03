@@ -10,10 +10,10 @@ import AttendanceCalendar from './AttendanceCalendar'
 function Attendance() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
+  const location = useLocation()
+  const [selectedMonth, setSelectedMonth] = useState(location.state?.selectedMonth || new Date().toISOString().slice(0, 7))
 
   // pending data pass through AttendanceSummary.jsx
-  const location = useLocation()
   const pendingFromSummary = location.state?.pendingCount
 
   // Fetch driver details
