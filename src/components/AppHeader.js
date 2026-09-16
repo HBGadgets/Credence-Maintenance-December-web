@@ -338,7 +338,7 @@ const AppHeader = () => {
   };
 
   return (
-    <CHeader position="sticky" className="mb-0 p-0 navy-navbar border-0 position-relative" ref={headerRef}>
+    <CHeader position="sticky" className="mb-0 p-0 navy-navbar border-0" ref={headerRef}>
       <CContainer className="px-3 px-md-4 h-100 d-flex align-items-center justify-content-between position-relative" fluid>
         {/* Left: Mobile Toggler, Desktop Sidebar Toggle, Logo & Vertical Divider */}
         <div className="d-flex align-items-center z-1">
