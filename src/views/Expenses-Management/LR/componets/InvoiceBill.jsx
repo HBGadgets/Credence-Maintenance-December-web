@@ -1,7 +1,76 @@
-import React, { useRef } from 'react'
+i
+
+  const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled]);mport React, { useRef, useMemo } from 'react'
 import html2pdf from 'html2pdf.js'
 import './InvoiceBill.css'
 import logo from '../../../../assets/brand/2.png'
+
+
+const getCancelledStamp = () => {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 260;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(300, 130);
+  ctx.rotate((-22 * Math.PI) / 180);
+
+  const bw = 460;
+  const bh = 104;
+  const r = 12;
+
+  const drawRoundRect = (x, y, w, h, radius) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + w - radius, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+    ctx.lineTo(x + w, y + h - radius);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    ctx.lineTo(x + radius, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+  };
+
+  // Outer border
+  ctx.strokeStyle = '#dc2626';
+  ctx.lineWidth = 5;
+  drawRoundRect(-bw / 2, -bh / 2, bw, bh, r);
+  ctx.stroke();
+
+  // Inner border
+  ctx.lineWidth = 2;
+  drawRoundRect(-bw / 2 + 5, -bh / 2 + 5, bw - 10, bh - 10, r - 3);
+  ctx.stroke();
+
+  // Text
+  ctx.fillStyle = '#dc2626';
+  ctx.font = '900 52px "Arial Black", Impact, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const text = 'CANCELLED';
+  const charSpacing = 10;
+  let totalWidth = 0;
+  for (let i = 0; i < text.length; i++) {
+    totalWidth += ctx.measureText(text[i]).width + (i < text.length - 1 ? charSpacing : 0);
+  }
+  let currentX = -totalWidth / 2;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const charWidth = ctx.measureText(char).width;
+    ctx.fillText(char, currentX + charWidth / 2, 2);
+    currentX += charWidth + charSpacing;
+  }
+
+  ctx.restore();
+  return canvas.toDataURL('image/png');
+};
 
 const InvoiceBill = ({ invoiceData }) => {
   const invoiceRef = useRef()
@@ -43,7 +112,12 @@ const InvoiceBill = ({ invoiceData }) => {
     driverId,
     driverName,
     driverContact,
+    status,
   } = invoiceData || {}
+
+  const isCancelled = Boolean(
+    status && typeof status === 'string' && status.trim().toLowerCase().startsWith('cancel')
+  )
 
   const handleDownloadPDF = () => {
     const element = invoiceRef.current.cloneNode(true)
@@ -54,11 +128,33 @@ const InvoiceBill = ({ invoiceData }) => {
     element.style.backgroundColor = 'white'
     element.style.fontFamily = "'Segoe UI', sans-serif"
     element.style.fontSize = '12px'
+    element.style.position = 'relative'
+    element.style.width = '100%'
+    element.style.maxWidth = '100%'
+    element.style.boxSizing = 'border-box'
+    element.style.margin = '0 auto'
+    element.style.transform = 'none'
 
-    // Scale down the content for PDF
-    element.style.transform = 'scale(0.95)'
-    element.style.transformOrigin = 'top left'
-    element.style.width = '105%'
+    const stampOverlay = element.querySelector('.cancel-stamp-overlay')
+    if (stampOverlay) {
+      stampOverlay.style.position = 'absolute'
+      stampOverlay.style.top = '36%'
+      stampOverlay.style.left = '0px'
+      stampOverlay.style.right = '0px'
+      stampOverlay.style.width = '100%'
+      stampOverlay.style.display = 'flex'
+      stampOverlay.style.justifyContent = 'center'
+      stampOverlay.style.alignItems = 'center'
+      stampOverlay.style.textAlign = 'center'
+      stampOverlay.style.margin = '0 auto'
+    }
+    const stampImg = element.querySelector('.cancel-stamp-img')
+    if (stampImg) {
+      stampImg.style.display = 'block'
+      stampImg.style.margin = '0 auto'
+      stampImg.style.maxWidth = '440px'
+      stampImg.style.width = '60%'
+    }
 
     const signature = element.querySelector('.signature-section')
     if (signature) {
@@ -69,14 +165,15 @@ const InvoiceBill = ({ invoiceData }) => {
 
     const opt = {
       margin: [10, 10, 10, 10],
-      filename: `Transport Pass Receipt - ${companyName || 'Transport Pass'} - ${date || 'N/A'}.pdf`,
+      filename: `Transport Pass Receipt - ${
+        companyName || 'Transport Pass'
+      } - ${date || 'N/A'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
         scrollX: 0,
         scrollY: 0,
-        width: 794,
       },
       jsPDF: {
         unit: 'mm',
@@ -103,6 +200,19 @@ const InvoiceBill = ({ invoiceData }) => {
   return (
     <div className="invoice-wrapper">
       <div className="invoice" ref={invoiceRef}>
+        {isCancelled && (
+          <div className="cancel-stamp-overlay">
+            {stampImage ? (
+              <img
+                src={stampImage}
+                alt="CANCELLED"
+                className="cancel-stamp-img"
+              />
+            ) : (
+              <div className="cancel-stamp">CANCELLED</div>
+            )}
+          </div>
+        )}
         {/* Header */}
         <div className="invoice-header">
           <div className="header-left">
