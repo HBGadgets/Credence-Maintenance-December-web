@@ -93,10 +93,13 @@ const RequireAuth = ({ children }) => {
 };
 
 
-const AppContent = () => {
+const AppContent = React.memo(() => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
-  if (!socket.connected) socket.connect()
+
+  useEffect(() => {
+    if (!socket.connected) socket.connect()
+  }, [])
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -125,7 +128,7 @@ const AppContent = () => {
       />
     </Routes>
   )
-}
+})
 
 const App = () => (
   <HashRouter>

@@ -202,3 +202,59 @@
         box-shadow: 4px 0 18px rgba(0, 0, 0, 0.35);
     }
 }
+
+/* Sidebar Header & Toggle Buttons */
+.sidebar-collapse-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.sidebar-header-toggle-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-header-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ec7426;
+    transform: translateY(-1px);
+}
+
+.sidebar-expand-pill {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    color: #0a2d63;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-expand-pill:hover {
+    background: #0a2d63;
+    color: #ffffff;
+    border-color: #0a2d63;
+    box-shadow: 0 4px 10px rgba(10, 45, 99, 0.25);
+    transform: translateY(-1px);
+}

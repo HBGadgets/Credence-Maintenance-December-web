@@ -1,8 +1,9 @@
-import React, { useContext } from 'react'
+import React, { useContext, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { NavLink } from 'react-router-dom'
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
+import { PanelLeftClose } from 'lucide-react'
 
 import navigation from '../_nav'
 import { TokenContext } from '../context/TokenContext'
@@ -29,21 +30,24 @@ const AppSidebar = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
-  let userRole = null
-  if (token && typeof token === 'string') {
+  
+  const userRole = useMemo(() => {
+    if (!token || typeof token !== 'string') return null
     try {
       const decoded = jwtDecode(token)
-      userRole = decoded?.role
+      return decoded?.role || null
     } catch {
-      userRole = null
+      return null
     }
-  }
+  }, [token])
 
-  const filteredNav = filterNavByRole(navigation, userRole)
+  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole])
 
-  const currentSection = filteredNav.find(
-    (item) => item.name && item.name.trim().toLowerCase() === activeSection.trim().toLowerCase()
-  )
+  const currentSection = useMemo(() => {
+    return filteredNav.find(
+      (item) => item.name && item.name.trim().toLowerCase() === activeSection.trim().toLowerCase()
+    )
+  }, [filteredNav, activeSection])
 
   const subItems = currentSection?.items || []
 
@@ -66,10 +70,13 @@ const AppSidebar = () => {
         </div>
         <button
           type="button"
-          className="btn-close btn-close-white d-lg-none"
+          className="sidebar-collapse-btn d-flex align-items-center justify-content-center"
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
-          aria-label="Close"
-        />
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
+        >
+          <PanelLeftClose size={18} />
+        </button>
       </div>
 
       {/* Suboptions List */}

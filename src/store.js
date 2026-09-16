@@ -32,8 +32,16 @@ const initialState = {
 
 const changeState = (state = initialState, { type, ...rest }) => {
   switch (type) {
-    case "set":
-      return { ...state, ...rest };
+    case "set": {
+      let hasChanged = false;
+      for (const key of Object.keys(rest)) {
+        if (state[key] !== rest[key]) {
+          hasChanged = true;
+          break;
+        }
+      }
+      return hasChanged ? { ...state, ...rest } : state;
+    }
     default:
       return state;
   }

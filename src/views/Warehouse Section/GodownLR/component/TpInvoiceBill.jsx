@@ -1,6 +1,4 @@
-i
-
-  const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled]);mport React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo } from 'react'
 import html2pdf from 'html2pdf.js'
 import './TpInvoiceBill.css'
 import logo from '../../../../assets/brand/2.png'
@@ -122,6 +120,8 @@ const TpInvoiceBill = ({ invoiceData }) => {
   const isCancelled = Boolean(
     status && typeof status === 'string' && status.trim().toLowerCase().startsWith('cancel')
   )
+
+  const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled])
 
   // Format currency
   const formatCurrency = (amount) => {

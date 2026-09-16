@@ -276,7 +276,6 @@ const _nav = [
       />
     ),
     items: [
-      ,
       {
         component: CNavItem,
         name: 'Tickets Raised',
@@ -288,19 +287,18 @@ const _nav = [
         to: '/AnsweredTicket',
         role: 'superadmin',
       },
+      {
+        component: CNavItem,
+        name: 'Chat Box',
+        to: '/ChatBot',
+        icon: (
+          <LuMessageSquareQuote
+            className="nav-icon"
+            style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+          />
+        ),
+      },
     ],
-  },
-
-  {
-    component: CNavItem,
-    name: 'Chat Box',
-    to: '/ChatBot',
-    icon: (
-      <LuMessageSquareQuote
-        className="nav-icon"
-        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
-      />
-    ),
   },
 ]
 

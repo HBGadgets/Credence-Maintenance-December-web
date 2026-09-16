@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useContext } from 'react';
+import React, { useRef, useEffect, useState, useContext, useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -28,8 +28,7 @@ import {
   cilMoon,
   cilSun,
 } from '@coreui/icons';
-import { AppBreadcrumb } from './index';
-import { User, Headset, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { User, Headset, LogOut, Volume2, VolumeX, PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react';
 import '../index.css';
 import './header.css';
 import routes from '../routes';
@@ -131,32 +130,23 @@ const AppHeader = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Superadmin / Role filter
-  let userRole = null;
-  if (token && typeof token === 'string') {
+  const userRole = useMemo(() => {
+    if (!token || typeof token !== 'string') return null;
     try {
       const decoded = jwtDecode(token);
-      userRole = decoded?.role;
+      return decoded?.role || null;
     } catch {
-      userRole = null;
+      return null;
     }
-  }
+  }, [token]);
 
-  const filteredNav = filterNavByRole(navigation, userRole);
+  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole]);
 
   useEffect(() => {
-    setMobileNavOpen(false);
-  }, [currentPathname]);
-
-  const isGroupActive = (groupItem) => {
-    if (!groupItem.items) return false;
-    return groupItem.items.some((sub) => {
-      if (!sub.to) return false;
-      return (
-        currentPathname.toLowerCase() === sub.to.toLowerCase() ||
-        currentPathname.toLowerCase().startsWith(sub.to.toLowerCase() + '/')
-      );
-    });
-  };
+    if (mobileNavOpen) {
+      setMobileNavOpen(false);
+    }
+  }, [currentPathname, mobileNavOpen]);
 
   // Function to clear all storage
   const clearAllStorage = () => {
@@ -293,6 +283,14 @@ const AppHeader = () => {
 
   const activeSection = useSelector((state) => state.activeSection || 'Dashboard');
 
+  const currentSection = useMemo(() => {
+    return filteredNav.find(
+      (item) => item.name && item.name.trim().toLowerCase() === activeSection.trim().toLowerCase()
+    );
+  }, [filteredNav, activeSection]);
+
+  const hasSubItems = Boolean(currentSection?.items && currentSection.items.length > 0);
+
   useEffect(() => {
     for (const item of filteredNav) {
       if (item.items) {
@@ -303,7 +301,9 @@ const AppHeader = () => {
           )
         );
         if (match) {
-          dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
+          if (activeSection !== item.name) {
+            dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
+          }
           return;
         }
       } else if (item.to) {
@@ -311,12 +311,14 @@ const AppHeader = () => {
           currentPathname.toLowerCase() === item.to.toLowerCase() ||
           currentPathname.toLowerCase().startsWith(item.to.toLowerCase() + '/')
         ) {
-          dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
+          if (activeSection !== item.name) {
+            dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
+          }
           return;
         }
       }
     }
-  }, [currentPathname, dispatch, filteredNav]);
+  }, [currentPathname, dispatch, filteredNav, activeSection]);
 
   const handleNavbarOptionClick = (item) => {
     if (item.items && item.items.length > 0) {
@@ -339,15 +341,31 @@ const AppHeader = () => {
   return (
     <CHeader position="sticky" className="mb-0 p-0 navy-navbar border-0 position-relative" ref={headerRef}>
       <CContainer className="px-3 px-md-4 h-100 d-flex align-items-center justify-content-between position-relative" fluid>
-        {/* Left: Mobile Toggler, Logo & Vertical Divider */}
+        {/* Left: Mobile Toggler, Desktop Sidebar Toggle, Logo & Vertical Divider */}
         <div className="d-flex align-items-center z-1">
-          <CHeaderToggler
-            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-            className="d-lg-none border-0 bg-transparent p-0 me-2"
-            aria-label="Toggle navigation"
+          {/* Mobile Drawer Toggler */}
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="d-lg-none border-0 bg-transparent p-0 me-2 text-white"
+            aria-label="Toggle navigation drawer"
+            title="Navigation Menu"
           >
-            <CIcon icon={cilMenu} size="lg" style={{ color: '#ffffff' }} />
-          </CHeaderToggler>
+            <Menu size={22} />
+          </button>
+
+          {/* Desktop Sidebar Toggle Button (when section has sub-options) */}
+          {hasSubItems && (
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+              className="d-none d-lg-inline-flex align-items-center justify-content-center sidebar-header-toggle-btn me-2"
+              aria-label={sidebarShow ? "Collapse sidebar" : "Open sidebar"}
+              title={sidebarShow ? "Collapse sidebar" : "Open sidebar"}
+            >
+              {sidebarShow ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+            </button>
+          )}
 
           <NavLink to="/dashboard" className="d-flex align-items-center text-decoration-none me-2">
             <img src={logo} alt="Credence FMS" height={34} style={{ objectFit: 'contain' }} />
@@ -488,4 +506,4 @@ const AppHeader = () => {
   );
 };
 
-export default AppHeader;
+export default React.memo(AppHeader);
