@@ -291,7 +291,13 @@ const AppHeader = () => {
 
   const hasSubItems = Boolean(currentSection?.items && currentSection.items.length > 0);
 
+  const prevPathnameRef = useRef(null);
+
   useEffect(() => {
+    // Only synchronize activeSection when the actual route/pathname changes
+    if (prevPathnameRef.current === currentPathname) return;
+    prevPathnameRef.current = currentPathname;
+
     for (const item of filteredNav) {
       if (item.items) {
         const match = item.items.some(
@@ -301,9 +307,7 @@ const AppHeader = () => {
           )
         );
         if (match) {
-          if (activeSection !== item.name) {
-            dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
-          }
+          dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
           return;
         }
       } else if (item.to) {
@@ -311,26 +315,21 @@ const AppHeader = () => {
           currentPathname.toLowerCase() === item.to.toLowerCase() ||
           currentPathname.toLowerCase().startsWith(item.to.toLowerCase() + '/')
         ) {
-          if (activeSection !== item.name) {
-            dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
-          }
+          dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
           return;
         }
       }
     }
-  }, [currentPathname, dispatch, filteredNav, activeSection]);
+  }, [currentPathname, dispatch, filteredNav]);
 
   const handleNavbarOptionClick = (item) => {
     if (item.items && item.items.length > 0) {
-      dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
-      const isAlreadyInSection = item.items.some(
-        (sub) => sub.to && (
-          currentPathname.toLowerCase() === sub.to.toLowerCase() ||
-          currentPathname.toLowerCase().startsWith(sub.to.toLowerCase() + '/')
-        )
-      );
-      if (!isAlreadyInSection && item.items[0]?.to) {
-        navigate(item.items[0].to);
+      if (activeSection.trim().toLowerCase() === item.name.trim().toLowerCase()) {
+        // Toggle sidebar if clicking the already active section
+        dispatch({ type: 'set', sidebarShow: !sidebarShow });
+      } else {
+        // Switch section and open its sidebar without redirecting to the first sub-page
+        dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
       }
     } else if (item.to) {
       dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
