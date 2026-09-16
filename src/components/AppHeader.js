@@ -225,6 +225,79 @@ const AppHeader = () => {
     }
   };
 
+  const isDirectActive = (to) => {
+    if (!to) return false;
+    return (
+      currentPathname.toLowerCase() === to.toLowerCase() ||
+      currentPathname.toLowerCase().startsWith(to.toLowerCase() + '/')
+    );
+  };
+
+  const getInitials = (name) => {
+    if (!name || name === 'User') return 'PA';
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const activeSection = useSelector((state) => state.activeSection || 'Dashboard');
+
+  const currentSection = useMemo(() => {
+    return filteredNav.find(
+      (item) => item.name && item.name.trim().toLowerCase() === activeSection.trim().toLowerCase()
+    );
+  }, [filteredNav, activeSection]);
+
+  const hasSubItems = Boolean(currentSection?.items && currentSection.items.length > 0);
+
+  const prevPathnameRef = useRef(null);
+
+  useEffect(() => {
+    // Only synchronize activeSection when the actual route/pathname changes
+    if (prevPathnameRef.current === currentPathname) return;
+    prevPathnameRef.current = currentPathname;
+
+    for (const item of filteredNav) {
+      if (item.items) {
+        const match = item.items.some(
+          (sub) => sub.to && (
+            currentPathname.toLowerCase() === sub.to.toLowerCase() ||
+            currentPathname.toLowerCase().startsWith(sub.to.toLowerCase() + '/')
+          )
+        );
+        if (match) {
+          dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
+          return;
+        }
+      } else if (item.to) {
+        if (
+          currentPathname.toLowerCase() === item.to.toLowerCase() ||
+          currentPathname.toLowerCase().startsWith(item.to.toLowerCase() + '/')
+        ) {
+          dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
+          return;
+        }
+      }
+    }
+  }, [currentPathname, dispatch, filteredNav]);
+
+  const handleNavbarOptionClick = (item) => {
+    if (item.items && item.items.length > 0) {
+      if (activeSection.trim().toLowerCase() === item.name.trim().toLowerCase()) {
+        // Toggle sidebar if clicking the already active section
+        dispatch({ type: 'set', sidebarShow: !sidebarShow });
+      } else {
+        // Switch section and open its sidebar without redirecting to the first sub-page
+        dispatch({ type: 'set', activeSection: item.name, sidebarShow: true });
+      }
+    } else if (item.to) {
+      dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
+      navigate(item.to);
+    }
+  };
+
   return (
     <CHeader position="sticky" className="mb-4 p-0 darkBackground" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
