@@ -389,3 +389,60 @@ h3 {
     }
 }
 
+
+/* Cancel Stamp Styles */
+.cancel-stamp-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+    z-index: 50;
+}
+
+.cancel-stamp-img {
+    display: block;
+    max-width: 680px;
+    width: 85%;
+    height: auto;
+    margin: 0 auto;
+    opacity: 0.42;
+    filter: drop-shadow(0px 2px 4px rgba(220, 38, 38, 0.15));
+}
+
+.cancel-stamp {
+    border: 6px solid #dc2626;
+    color: #dc2626;
+    font-size: 64px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 12px;
+    padding: 12px 48px;
+    border-radius: 16px;
+    opacity: 0.42;
+    transform: rotate(-25deg);
+    text-align: center;
+    line-height: 1;
+    font-family: 'Arial Black', Impact, 'Segoe UI', sans-serif;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.25), inset 0 0 0 4px rgba(220, 38, 38, 0.25);
+    display: inline-block;
+    white-space: nowrap;
+    max-width: 90%;
+}
+
+@media (max-width: 640px) {
+    .cancel-stamp {
+        font-size: 36px;
+        letter-spacing: 6px;
+        padding: 8px 24px;
+        border-width: 4px;
+    }
+}

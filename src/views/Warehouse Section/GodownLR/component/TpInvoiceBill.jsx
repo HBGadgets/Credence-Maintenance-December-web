@@ -49,6 +49,15 @@ const TpInvoiceBill = ({ invoiceData }) => {
     products = [],
   } = invoiceData || {}
 
+  const isCancelled = Boolean(
+    status && (
+      (typeof status === 'string' && status.trim().toLowerCase().includes('cancel')) ||
+      (typeof status === 'object' && String(status?.value || status?.label || '').toLowerCase().includes('cancel'))
+    )
+  )
+
+  const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled])
+
   // Format currency
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '₹0'
