@@ -105,7 +105,7 @@ const useDebounce = (value, delay) => {
 const calculateQuantityFromBags = (bagSize, totalBags) => {
   if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
   const quantityInMT = (bagSize * totalBags) / 1000
-  return quantityInMT.toFixed(2)
+  return quantityInMT.toFixed(3)
 }
 
 // Calculate total bags from bag size and quantity in MT
@@ -1054,11 +1054,11 @@ const WarehouseForm = ({
           driverName: selected.label,
         }))
       } else {
-        const selectedDriver = drivers.find((d) => d.id === selected.value)
+        const selectedDriver = drivers.find((d) => (d.id || d._id) === selected.value)
         setFormData((prev) => ({
           ...prev,
           driverId: selected.value,
-          driverName: selectedDriver?.name || selected.label,
+          driverName: selectedDriver?.name || selected.name || selected.label,
         }))
       }
     } else {
@@ -1581,7 +1581,11 @@ const WarehouseForm = ({
   const driverOptions = Array.isArray(drivers)
     ? drivers.map((d) => ({
         value: d.id || d._id,
-        label: d.name || 'Unnamed Driver',
+        label:
+          d.contactNumber && d.contactNumber !== 'N/A'
+            ? `${d.name || 'Unnamed Driver'} (${d.contactNumber})`
+            : d.name || 'Unnamed Driver',
+        name: d.name || 'Unnamed Driver',
       }))
     : []
 
@@ -1884,6 +1888,7 @@ const WarehouseForm = ({
         size="xl"
         centered
         scrollable
+        backdrop="static"
         dialogClassName="modal-dialog-scrollable"
       >
         <Modal.Header closeButton className="border-0 pb-0">
@@ -2566,7 +2571,7 @@ const WarehouseForm = ({
                               placeholder="Enter quantity MT"
                               required
                               min="0"
-                              step="0.01"
+                              step="0.001"
                             />
                             {quantityHint && (
                               <Form.Text className="text-info">

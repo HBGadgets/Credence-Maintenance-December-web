@@ -1140,11 +1140,11 @@ const WarehouseToPartyForm = ({
         }))
         setIsCustomDriver(true)
       } else {
-        const selectedDriver = drivers.find((d) => d.id === selected.value)
+        const selectedDriver = drivers.find((d) => (d.id || d._id) === selected.value)
         setFormData((prev) => ({
           ...prev,
           driverId: selected.value,
-          driverName: selectedDriver?.name || selected.label,
+          driverName: selectedDriver?.name || selected.name || selected.label,
         }))
         setIsCustomDriver(false)
       }
@@ -1428,9 +1428,9 @@ const WarehouseToPartyForm = ({
       consigneeId: formData.consigneeId || '',
       // IMPORTANT FIX: Only include materialOwnerId if it has a valid value
       ...(formData.materialOwnerId &&
-      formData.materialOwnerId.trim() !== '' &&
-      formData.materialOwnerId !== 'null' &&
-      formData.materialOwnerId !== 'undefined'
+        formData.materialOwnerId.trim() !== '' &&
+        formData.materialOwnerId !== 'null' &&
+        formData.materialOwnerId !== 'undefined'
         ? { materialOwnerId: formData.materialOwnerId }
         : {}),
       martialOwnerName: formData.martialOwnerName || '',
@@ -1727,16 +1727,20 @@ const WarehouseToPartyForm = ({
 
   const vehicleOptions = Array.isArray(vehicles)
     ? vehicles.map((v) => ({
-        value: v.id || v._id,
-        label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
-      }))
+      value: v.id || v._id,
+      label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
+    }))
     : []
 
   const driverOptions = Array.isArray(drivers)
     ? drivers.map((d) => ({
-        value: d.id || d._id,
-        label: d.name || 'Unnamed Driver',
-      }))
+      value: d.id || d._id,
+      label:
+        d.contactNumber && d.contactNumber !== 'N/A'
+          ? `${d.name || 'Unnamed Driver'} (${d.contactNumber})`
+          : d.name || 'Unnamed Driver',
+      name: d.name || 'Unnamed Driver',
+    }))
     : []
 
   const getVehicleValue = () => {
@@ -1910,6 +1914,7 @@ const WarehouseToPartyForm = ({
         size="xl"
         centered
         scrollable
+        backdrop="static"
         dialogClassName="modal-dialog-scrollable"
       >
         <Modal.Header closeButton className="border-0 pb-0">
