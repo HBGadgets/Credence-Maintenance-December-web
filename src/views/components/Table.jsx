@@ -111,6 +111,9 @@ function Table({
   handleReportButton,
   action = 'Action',
   serverPagination = false,
+  setCurrentPage,
+  setItemsPerPage,
+  onViewReport,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -120,6 +123,14 @@ function Table({
   const currentData = serverPagination
     ? filteredData
     : filteredData.slice(startIndex, startIndex + itemsPerPage)
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
+
+  const goToFirstPage = () => setCurrentPage?.(1)
+  const goToLastPage = () => setCurrentPage?.(totalPages)
+  const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
+
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -152,14 +163,14 @@ function Table({
   }
 
   return (
-    <CRow>
+    <CRow className="h-100 m-0">
       <style>{skeletonStyles}</style>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader className="d-flex justify-content-between align-items-center">
-            <strong>{title}</strong>
+      <CCol xs={12} className="h-100 p-0">
+        <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
+          <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
+            {typeof title === 'string' ? <strong>{title}</strong> : title}
           </CCardHeader>
-          <CCardBody>
+          <CCardBody className="flex-grow-1">
             <CTable striped hover responsive bordered>
               <CTableHead>
                 <CTableRow>
@@ -340,6 +351,84 @@ function Table({
               </CTableBody>
             </CTable>
           </CCardBody>
+
+          {/* Pagination Footer */}
+          <div className="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-white w-100">
+            <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
+              <div className="text-muted text-nowrap" style={{ fontSize: '13px' }}>
+                Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} results
+              </div>
+              {onViewReport && (
+                <button
+                  onClick={onViewReport}
+                  className="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 text-nowrap"
+                  style={{ borderRadius: '6px', fontSize: '12px' }}
+                >
+                  View Detailed Report
+                </button>
+              )}
+            </div>
+
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: '65px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    if (setItemsPerPage) setItemsPerPage(Number(e.target.value))
+                    if (setCurrentPage) setCurrentPage(1)
+                  }}
+                >
+                  <option value="5">5</option>
+                  <option value="7">7</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+
+              <div className="fw-bold text-dark text-nowrap" style={{ fontSize: '13px' }}>
+                Page {currentPage} of {totalPages}
+              </div>
+
+              <div className="d-flex gap-1">
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToFirstPage}
+                  disabled={currentPage === 1}
+                >
+                  {'<<'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToPrevPage}
+                  disabled={currentPage === 1}
+                >
+                  {'<'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  {'>'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToLastPage}
+                  disabled={currentPage === totalPages}
+                >
+                  {'>>'}
+                </button>
+              </div>
+            </div>
+          </div>
         </CCard>
       </CCol>
     </CRow>

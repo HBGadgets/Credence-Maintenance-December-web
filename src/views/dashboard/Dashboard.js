@@ -41,12 +41,84 @@ import { NotificationContext } from '../../context/NotificationContext'
 import notificationSound from '../../../mario_up.mp3'
 import Cookies from 'js-cookie'
 import { BsPassFill } from 'react-icons/bs'
+import { PieChart, Pie, Cell, Tooltip, AreaChart, Area, ResponsiveContainer } from 'recharts'
+import vehiclesIcon from 'src/assets/images/vehicles-icon.png'
+import driversIcon from 'src/assets/images/drivers-icon.png'
+import maintenanceIcon from 'src/assets/images/maintenance-icon.png'
+import attendanceIcon from 'src/assets/images/attendance-icon.png'
+import expenseIcon from 'src/assets/images/expense-icon.png'
+import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
+import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
+import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
+
+const FleetAnalyticsChart = ({ data }) => {
+  const pieData = [
+    { name: 'Active', value: data?.availableVehicles || 35, color: '#0d2550' },
+    { name: 'Idle', value: data?.vehiclesUnderMaintenance || 12, color: '#008080' },
+    { name: 'Offline', value: data?.unavailableVehicles || 8, color: '#dc3545' },
+    { name: 'Otlive', value: 5, color: '#fd7e14' },
+  ]
+
+  const areaData = [
+    { name: 'Jan', Active: 4000, Idle: 2400, Otlive: 1000, Offline: 2400 },
+    { name: 'Feb', Active: 3000, Idle: 1398, Otlive: 2000, Offline: 2210 },
+    { name: 'Mar', Active: 2000, Idle: 9800, Otlive: 1500, Offline: 2290 },
+    { name: 'Apr', Active: 2780, Idle: 3908, Otlive: 1200, Offline: 2000 },
+    { name: 'May', Active: 1890, Idle: 4800, Otlive: 1800, Offline: 2181 },
+    { name: 'Jun', Active: 2390, Idle: 3800, Otlive: 2200, Offline: 2500 },
+    { name: 'Jul', Active: 3490, Idle: 4300, Otlive: 1700, Offline: 2100 },
+  ]
+
+  return (
+    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100 gap-3 w-100">
+      <div style={{ width: '100%', height: '220px', flex: 1 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              innerRadius={50}
+              outerRadius={80}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={{ width: '100%', height: '220px', flex: 1.5 }}>
+        <div className="d-flex justify-content-center flex-wrap gap-2 mb-2" style={{ fontSize: '11px' }}>
+           {pieData.map(item => (
+             <div key={item.name} className="d-flex align-items-center gap-1">
+               <div style={{ width: '8px', height: '8px', backgroundColor: item.color, borderRadius: '2px' }}></div>
+               <span>{item.name}</span>
+             </div>
+           ))}
+        </div>
+        <ResponsiveContainer width="100%" height="80%">
+          <AreaChart data={areaData}>
+            <Area type="monotone" dataKey="Active" stroke="#0d2550" fill="#0d2550" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Idle" stroke="#008080" fill="#008080" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Otlive" stroke="#fd7e14" fill="#fd7e14" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Offline" stroke="#dc3545" fill="#dc3545" fillOpacity={0.3} />
+            <Tooltip />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
 
 const Dashboard = () => {
   const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected)
 
+  const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
   const { notifications, addNotification, unreadCounts, setUnreadCounts } =
     useContext(NotificationContext)
@@ -285,382 +357,284 @@ const Dashboard = () => {
     navigate('/GodownLr')
   }
 
-  // cards container
-
-  const [isStatic, setIsStatic] = useState(false)
-
-  const scrollContainer = (direction) => {
-    const container = document.getElementById('dashboard-scroll')
-    const scrollAmount = 300
-    if (container) {
-      container.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      })
-    }
-  }
-
   // cards details
 
   const cards = [
     {
       label: 'Drivers',
-      icon: <IoPersonSharp className="dashboard-icon" />,
-      top: (
+      icon: <img src={driversIcon} alt="Drivers" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Available: {dashboardData?.availableDrivers} |{' '}
-          <span className="text-danger">Unavailable: {dashboardData?.unavailableDrivers}</span>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableDrivers ?? 0}
         </>
       ),
-      bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
-      color: 'text-success',
+      count: dashboardData?.totalDrivers ?? 0,
+      borders: {
+        borderTop: '2px solid #28a745',
+        borderLeft: '2px solid #28a745',
+        borderBottom: '2px solid #dc3545',
+        borderRight: '2px solid #dc3545',
+      },
       onClick: () => handleDriveStatus('Drivers Aavailablity'),
     },
     {
       label: 'Vehicles',
-      icon: <FaCar className="dashboard-icon" />,
-      top: (
+      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Available: {dashboardData?.availableVehicles} |{' '}
-          <span className="text-danger">Unavailable: {dashboardData?.unavailableVehicles}</span>
+          <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableVehicles ?? 0}
         </>
       ),
-      bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
-      color: 'text-success',
+      count: dashboardData?.totalVehicles ?? 0,
+      borders: { border: '2px solid #17a2b8' },
       onClick: () => handleViewVehicles('Vehicles'),
     },
     {
       label: 'Maintenance',
-      icon: <IoSettingsSharp className="dashboard-icon" />,
-      top: (
+      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Good:{' '}
-          {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} |{' '}
-          <span className="text-danger">
-            Need Services: {dashboardData?.vehiclesUnderMaintenance ?? 0}
-          </span>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert: {dashboardData?.vehiclesUnderMaintenance ?? 0}
         </>
       ),
-
-      bottom: (() => {
-        const total = dashboardData?.totalVehicles ?? 0
-        const under = dashboardData?.vehiclesUnderMaintenance ?? 0
-        const good = total - under
-        const totalChecked = total
-        const healthyPercent = totalChecked ? Math.floor((good / totalChecked) * 100) : 0
-        return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`
-      })(),
-      color: 'text-success',
+      count: dashboardData?.totalVehicles ?? 0,
+      borders: { border: '2px solid #2b5c8c' },
       onClick: () => handleViewServicelog('Maintenance'),
     },
     {
-      label: 'Driver Locations',
-      icon: <FaMapLocationDot className="dashboard-icon" />,
-      top: `Locations : ${dashboardData?.driverLocations}`,
-      bottom: 'Driver Today Attendances',
-      color: 'text-primary',
+      label: 'Attendance',
+      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present: {dashboardData?.driverLocations ?? 0}
+        </>
+      ),
+      count: dashboardData?.driverLocations ?? 0,
+      borders: { border: '2px solid #4b2c82' },
       onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
       label: 'Expenses',
-      icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
-      top: `Today Expenses: ₹${dashboardData?.expenses?.total.toLocaleString()}`,
-      bottom: 'Fleet Expenses',
-      color: 'text-primary',
+      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹{dashboardData?.expenses?.total?.toLocaleString() ?? 0}
+        </>
+      ),
+      count: dashboardData?.expenses?.total >= 1000
+        ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
+        : `₹${dashboardData?.expenses?.total ?? 0}`,
+      borders: { border: '2px solid #fd7e14' },
       onClick: () => handleExpenses('Expenses'),
     },
     {
       label: 'Live on Work',
-      icon: <TbTruckDelivery className="dashboard-icon" />,
-      top: `On Duty: ${dashboardData?.driversLiveOnWork}`,
-      bottom: `Total Marked: ${dashboardData?.totalDrivers}`,
-      color: 'text-primary',
+      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty: {dashboardData?.driversLiveOnWork ?? 0}
+          <br />
+          <span style={{ color: '#6c757d', fontSize: '10px' }}>●</span> Total: {dashboardData?.totalDrivers ?? 0}
+        </>
+      ),
+      count: dashboardData?.driversLiveOnWork ?? 0,
+      borders: { border: '2px solid #008080' },
       onClick: () => handleViewDrives('Live on Work'),
     },
     {
       label: 'Document Alert',
-      icon: <IoAlertCircle className="dashboard-icon" />,
-      top: `Expiring: ${dashboardData?.documentAlerts}`,
-      bottom: 'Expiring Soon',
-      color: 'text-danger',
+      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
+        </>
+      ),
+      count: dashboardData?.documentAlerts ?? 0,
+      borders: { border: '2px solid #dc3545' },
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
       label: 'Transport Receipt',
-      icon: <BsPassFill className="dashboard-icon" />,
-      top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount || '0'}`,
-      bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount || '0'} `,
-      color: 'text-primary',
+      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass: {dashboardData?.todayGodownLorryReceiptCount || '0'}
+        </>
+      ),
+      count: dashboardData?.totalGodownLorryReceiptCount || '0',
+      borders: { border: '2px solid #0d6efd' },
       onClick: () => handleTP('Transport Receipt'),
     },
   ]
 
-  // useeffect for scrolling card
-  useEffect(() => {
-    let interval
-    const scrollAmount = 300
 
-    const setupAutoScroll = () => {
-      const container = document.getElementById('dashboard-scroll')
-      if (!container) return
-
-      const autoScroll = () => {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
-        }
-      }
-
-      // Start scrolling
-      interval = setInterval(autoScroll, 5000)
-
-      // Pause on hover
-      container.addEventListener('mouseenter', pauseScroll)
-      container.addEventListener('mouseleave', resumeScroll)
-    }
-
-    const pauseScroll = () => clearInterval(interval)
-
-    const resumeScroll = () => {
-      interval = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (!container) return
-
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: 300, behavior: 'smooth' })
-        }
-      }, 5000)
-    }
-
-    const waitForElementAndStart = () => {
-      const check = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (container) {
-          clearInterval(check)
-          setupAutoScroll()
-        }
-      }, 100)
-    }
-
-    waitForElementAndStart()
-
-    return () => {
-      clearInterval(interval)
-      const container = document.getElementById('dashboard-scroll')
-      if (container) {
-        container.removeEventListener('mouseenter', pauseScroll)
-        container.removeEventListener('mouseleave', resumeScroll)
-      }
-    }
-  }, [])
 
   return token ? (
     <>
       <style>{`
+        .hover-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 12px;
+          background-color: #fff;
+        }
 
-       .hover-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 16px;
-}
+        .hover-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+        }
 
-.hover-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
+        .card-label {
+          font-weight: 700;
+          font-size: 13px;
+          color: #1a1a1a;
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-.dashboard-icon {
-  font-size: 26px;
-  color: #000;
-}
+        .card-count {
+          font-size: 20px;
+          font-weight: 800;
+          color: #000;
+          line-height: 1.2;
+        }
 
-.card-label {
-  font-weight: 600;
-  font-size: 16px;
-}
+        .card-subtext {
+          font-size: 11px;
+          color: #555;
+          margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-.card-count {
-  font-size: 17px;
-  font-weight: 600;
-}
+        .side-handle-btn {
+          background-color: #fff !important;
+          color: #1a1a1a !important;
+          border: 1px solid #ddd !important;
+          transition: all 0.2s ease-in-out;
+        }
 
-.card-subtext {
-  font-size: 14px;
-  color: #6c757d;
-}
+        .side-handle-btn:hover {
+          background-color: #fd7e14 !important;
+          color: #fff !important;
+          border-color: #fd7e14 !important;
+        }
 
-.dashboard-scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 0 1rem 1rem 1rem;
-  gap: 1rem;
-}
+        .dashboard-scroll-container {
+          display: flex;
+          flex-wrap: wrap;
+          padding: 0.5rem 1rem 1.5rem 1rem;
+          gap: 1rem;
+        }
 
-.dashboard-scroll-container::-webkit-scrollbar {
-  display: none;
-}
+        /* Responsive card width: 8 cards per row on large screens */
+        .dashboard-card-wrapper {
+          flex: 0 0 calc(12.5% - 0.875rem);
+          max-width: calc(12.5% - 0.875rem);
+          min-width: 130px;
+        }
 
-.dashboard-scroll-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+        @media (max-width: 1400px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(16.666% - 0.85rem);
+            max-width: calc(16.666% - 0.85rem);
+          }
+        }
 
-/* Static mode — grid layout */
-.dashboard-scroll-container.static-mode {
-  overflow-x: hidden !important;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
+        @media (max-width: 1200px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(20% - 0.8rem);
+            max-width: calc(20% - 0.8rem);
+          }
+        }
 
-/* Responsive card width */
-.dashboard-card-wrapper {
-  flex: 0 0 calc(25% - 1rem);
-  max-width: calc(25% - 1rem);
-}
+        @media (max-width: 992px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(25% - 0.75rem);
+            max-width: calc(25% - 0.75rem);
+          }
+        }
 
-@media (max-width: 1200px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 calc(33.333% - 1rem);
-    max-width: calc(33.333% - 1rem);
-  }
-}
+        @media (max-width: 768px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(33.333% - 0.66rem);
+            max-width: calc(33.333% - 0.66rem);
+          }
+        }
 
-@media (max-width: 992px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 calc(50% - 1rem);
-    max-width: calc(50% - 1rem);
-  }
-}
+        @media (max-width: 576px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(50% - 0.5rem);
+            max-width: calc(50% - 0.5rem);
+          }
+        }
 
-@media (max-width: 576px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-}
-
-/* Button improvements */
-.scroll-buttons .btn {
-  min-width: 34px;
-  height: 34px;
-  font-size: 14px;
-  padding: 0;
-  line-height: 1;
-}
-
-
-
+        /* Auto-adjusting full screen layout for Table and Analytics */
+        @media (min-width: 1200px) {
+          .dashboard-main-container {
+             height: calc(100vh - 280px);
+             min-height: 450px;
+          }
+          .dashboard-main-col {
+             height: 100%;
+          }
+        }
+        @media (max-width: 1199px) {
+          .dashboard-main-col {
+             height: 550px;
+             margin-bottom: 1.5rem;
+          }
+        }
       `}</style>
-
-      <CCard className="mb-4 shadow-sm border-0 bg-white">
-        <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
-          {/* Left side: icon and title */}
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: '70px',
-                height: '70px',
-                backgroundColor: '#fff',
-                border: '2px solid #eee',
-                overflow: 'hidden',
-              }}
-            >
-              <img
-                src={logo}
-                alt="Fleet Logo"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain', // keeps the image ratio
-                  padding: '6px', // space inside the circle
-                  backgroundColor: '#fff',
-                }}
-              />
-            </div>
-            <div>
-              <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
-              <div className="text-muted small">
-                Track, maintain, and manage your entire fleet in real-time
-              </div>
-            </div>
-          </div>
-
-          {/* Right side: dropdown */}
-          {userRole === 'superadmin' && (
-            <div style={{ width: '320px' }}>
-              <SingleSelectDropdown
-                options={supervisorOptions}
-                value={selectedName}
-                onChange={setSelectedName}
-                isClearable
-                placeholder="Filter by Supervisor Name..."
-              />
-            </div>
-          )}
-        </CCardBody>
-      </CCard>
 
       {/*  cards */}
 
-      <CCard className="mb-4 border-0 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3 px-3">
-          <h5 className="fw-bold text-dark">Fleet Overview</h5>
-          <div className="scroll-buttons d-flex gap-2">
-            {!isStatic && (
-              <>
-                <button
-                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                  style={{ width: '34px', height: '34px' }}
-                  onClick={() => scrollContainer('left')}
-                >
-                  <IoIosArrowBack />
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                  style={{ width: '34px', height: '34px' }}
-                  onClick={() => scrollContainer('right')}
-                >
-                  <IoIosArrowForward />
-                </button>
-              </>
+      <CCard className="mb-4 border-0 shadow-sm mt-2">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 px-3 pt-3 gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <h5 className="fw-bold text-dark mb-0">Fleet Overview</h5>
+            {userRole === 'superadmin' && (
+              <div style={{ width: '250px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
             )}
-            <button
-              className="btn btn-sm d-flex align-items-center justify-content-center"
-              style={{
-                height: '34px',
-                padding: '0 12px',
-                fontSize: '14px',
-                backgroundColor: '#0a2d63',
-                color: '#fff',
-                border: '1px solid #0a2d63',
-              }}
-              onClick={() => setIsStatic((prev) => !prev)}
-            >
-              {isStatic ? 'Scroll' : 'Expand'}
-            </button>
           </div>
         </div>
 
         <div
-          className={`dashboard-scroll-container ${isStatic ? 'static-mode' : ''}`}
+          className="dashboard-scroll-container"
           id="dashboard-scroll"
         >
           {cards.map((card, idx) => (
             <div className="dashboard-card-wrapper" key={idx}>
-              <CCard className="hover-card shadow-sm border-0 h-100" onClick={card.onClick}>
-                <CCardBody>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
+              <CCard
+                className="hover-card shadow-sm h-100"
+                style={{ cursor: 'pointer', ...card.borders }}
+                onClick={card.onClick}
+              >
+                <CCardBody className="p-2 d-flex align-items-center">
+                  <div className="me-2 flex-shrink-0">
                     {card.icon}
-                    <span className="card-label">{card.label}</span>
                   </div>
-                  <div className={`card-count ${card.color}`}>{card.top}</div>
-                  <div className="card-subtext">{card.bottom}</div>
+                  <div className="card-details overflow-hidden">
+                    <div className="card-label">{card.label}</div>
+                    <div className="card-subtext">{card.subtext}</div>
+                    <div className="card-count">{card.count}</div>
+                  </div>
                 </CCardBody>
               </CCard>
             </div>
@@ -670,46 +644,104 @@ const Dashboard = () => {
 
       {/* trips table */}
 
-      <CCard className="mb-3 shadow-sm border-0">
-        <CCardBody className="p-3">
-          <div className="row align-items-center gy-3">
-            {/* Heading */}
-            <div className="col-12 col-md-3">
-              <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+      <CContainer className="px-2 dashboard-main-container pb-3" fluid>
+        <div className="row h-100">
+          {splitView !== 'analytics' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'table' ? "col-12" : "col-12 col-xl-7"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% + 18px)', right: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('table')}
+                  title="Expand Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'table' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+
+              <Table
+                title={
+                  <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
+                    <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                      <DateRangeFilterCredence
+                        title="Date Range"
+                        onDateRangeChange={handleDateRangeChange}
+                      />
+                      <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+                    </div>
+                  </div>
+                }
+                columns={columns}
+                filteredData={filteredData}
+                setFilteredData={setFilteredData}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                isFetching={isFetching}
+                onViewReport={() => handleViewDetailedReport()}
+              />
             </div>
+          )}
 
-            {/* Filters */}
-            <div className="col-12 col-md-9">
-              <div className="d-flex flex-column flex-sm-row justify-content-end align-items-start align-items-sm-center gap-3">
-                <DateRangeFilterCredence
-                  title="Date Range"
-                  onDateRangeChange={handleDateRangeChange}
-                />
-                <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-              </div>
+          {splitView !== 'table' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'analytics' ? "col-12" : "col-12 col-xl-5"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% - 18px)', left: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('analytics')}
+                  title="Expand Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'analytics' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+
+              <CCard className="mb-4 shadow-sm border-0 h-100">
+                <CCardHeader className="bg-white border-0 pt-3 px-4">
+                  <strong>Fleet Analytics</strong>
+                </CCardHeader>
+                <CCardBody className="px-4 pb-4 d-flex flex-column justify-content-center">
+                  <FleetAnalyticsChart data={dashboardData} />
+                </CCardBody>
+              </CCard>
             </div>
-          </div>
-        </CCardBody>
-      </CCard>
-
-      <CContainer className="px-2" fluid>
-        <Table
-          title="All Vehicles Trips"
-          columns={columns}
-          filteredData={filteredData}
-          setFilteredData={setFilteredData}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={isFetching}
-        />
-
-        <div className="text-end mb-4">
-          <button
-            onClick={() => handleViewDetailedReport()}
-            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
-          >
-            View Detailed Report
-          </button>
+          )}
         </div>
       </CContainer>
     </>
