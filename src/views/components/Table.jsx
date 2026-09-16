@@ -120,6 +120,9 @@ function Table({
   setCurrentPage,
   setItemsPerPage,
   onViewReport,
+  setCurrentPage,
+  setItemsPerPage,
+  onViewReport,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -129,6 +132,14 @@ function Table({
   const currentData = serverPagination
     ? filteredData
     : filteredData.slice(startIndex, startIndex + itemsPerPage)
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
+
+  const goToFirstPage = () => setCurrentPage?.(1)
+  const goToLastPage = () => setCurrentPage?.(totalPages)
+  const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
+
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
 
@@ -170,16 +181,20 @@ function Table({
 
   return (
     <CRow className="h-100 m-0">
+    <CRow className="h-100 m-0">
       <style>{skeletonStyles}</style>
       <CCol xs={12} className="h-100 p-0">
         <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
           <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
             {typeof title === 'string' ? <strong>{title}</strong> : title}
+      <CCol xs={12} className="h-100 p-0">
+        <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
+          <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
+            {typeof title === 'string' ? <strong>{title}</strong> : title}
           </CCardHeader>
-          <CCardBody className="flex-grow-1 p-0 d-flex flex-column overflow-hidden">
-            <div className="table-responsive flex-grow-1" style={{ overflowY: 'auto', minHeight: 0 }}>
-              <CTable striped hover bordered className="mb-0">
-                <CTableHead>
+          <CCardBody className="flex-grow-1">
+            <CTable striped hover responsive bordered>
+              <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
                   {columns
@@ -382,8 +397,8 @@ function Table({
                 <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
-                  value={itemsPerPage >= 1000000 ? 1000000 : itemsPerPage}
+                  style={{ width: '65px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
+                  value={itemsPerPage}
                   onChange={(e) => {
                     if (setItemsPerPage) setItemsPerPage(Number(e.target.value))
                     if (setCurrentPage) setCurrentPage(1)
@@ -394,7 +409,6 @@ function Table({
                   <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="50">50</option>
-                  <option value="1000000">All</option>
                 </select>
               </div>
 

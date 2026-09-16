@@ -52,135 +52,62 @@ import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
 
 const FleetAnalyticsChart = ({ data }) => {
-  const [filterCategory, setFilterCategory] = useState('All')
+  const pieData = [
+    { name: 'Active', value: data?.availableVehicles || 35, color: '#0d2550' },
+    { name: 'Idle', value: data?.vehiclesUnderMaintenance || 12, color: '#008080' },
+    { name: 'Offline', value: data?.unavailableVehicles || 8, color: '#dc3545' },
+    { name: 'Otlive', value: 5, color: '#fd7e14' },
+  ]
 
-  const pieData = useMemo(() => {
-    switch (filterCategory) {
-      case 'Vehicles':
-        return [
-          { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
-          { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
-          { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
-        ]
-      case 'Drivers':
-        return [
-          { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
-          { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
-          { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
-        ]
-      case 'Documents':
-        return [
-          { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-          { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
-        ]
-      case 'All':
-      default:
-        return [
-          { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
-          { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
-          { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-        ]
-    }
-  }, [filterCategory, data])
-
-  const areaData = useMemo(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-
-    // Deterministic random so the dummy graph doesn't change on re-render
-    const seedRandom = (seed) => {
-      let x = Math.sin(seed++) * 10000
-      return x - Math.floor(x)
-    }
-
-    return months.map((month, mIdx) => {
-      let obj = { name: month }
-      pieData.forEach((item, kIdx) => {
-        const currentValue = item.value || 0
-        if (currentValue === 0) {
-          obj[item.name] = 0
-        } else {
-          // fluctuate between 70% and 130% of the current value
-          const fluctuation = 0.7 + seedRandom(mIdx * 10 + kIdx) * 0.6
-          obj[item.name] = Math.max(0, Math.floor(currentValue * fluctuation))
-        }
-      })
-      return obj
-    })
-  }, [pieData])
+  const areaData = [
+    { name: 'Jan', Active: 4000, Idle: 2400, Otlive: 1000, Offline: 2400 },
+    { name: 'Feb', Active: 3000, Idle: 1398, Otlive: 2000, Offline: 2210 },
+    { name: 'Mar', Active: 2000, Idle: 9800, Otlive: 1500, Offline: 2290 },
+    { name: 'Apr', Active: 2780, Idle: 3908, Otlive: 1200, Offline: 2000 },
+    { name: 'May', Active: 1890, Idle: 4800, Otlive: 1800, Offline: 2181 },
+    { name: 'Jun', Active: 2390, Idle: 3800, Otlive: 2200, Offline: 2500 },
+    { name: 'Jul', Active: 3490, Idle: 4300, Otlive: 1700, Offline: 2100 },
+  ]
 
   return (
-    <div className="w-100 h-100 d-flex flex-column">
-      {/* Filter Dropdown */}
-      <div className="d-flex justify-content-end mb-2 px-2">
-        <select
-          className="form-select form-select-sm"
-          style={{ width: '150px' }}
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-        >
-          <option value="All">All Overview</option>
-          <option value="Vehicles">Vehicles</option>
-          <option value="Drivers">Drivers</option>
-          <option value="Documents">Documents</option>
-        </select>
+    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100 gap-3 w-100">
+      <div style={{ width: '100%', height: '220px', flex: 1 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              innerRadius={50}
+              outerRadius={80}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
 
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
-        <div style={{ width: '100%', height: '180px', flex: 1 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={pieData}
-                innerRadius={50}
-                outerRadius={75}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+      <div style={{ width: '100%', height: '220px', flex: 1.5 }}>
+        <div className="d-flex justify-content-center flex-wrap gap-2 mb-2" style={{ fontSize: '11px' }}>
+           {pieData.map(item => (
+             <div key={item.name} className="d-flex align-items-center gap-1">
+               <div style={{ width: '8px', height: '8px', backgroundColor: item.color, borderRadius: '2px' }}></div>
+               <span>{item.name}</span>
+             </div>
+           ))}
         </div>
-
-        <div style={{ width: '100%', height: '200px', flex: 1.5, display: 'flex', flexDirection: 'column' }}>
-          <div className="d-flex justify-content-center flex-wrap gap-3 mb-2" style={{ fontSize: '12px', fontWeight: '500' }}>
-            {pieData.map((item) => (
-              <div key={item.name} className="d-flex align-items-center gap-1">
-                <div
-                  style={{
-                    width: '10px',
-                    height: '10px',
-                    backgroundColor: item.color,
-                    borderRadius: '2px',
-                  }}
-                ></div>
-                <span>
-                  {item.name}: <span style={{ color: '#666' }}>{item.value}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={areaData}>
-                {pieData.map((item, index) => (
-                  <Area
-                    key={index}
-                    type="monotone"
-                    dataKey={item.name}
-                    stroke={item.color}
-                    fill={item.color}
-                    fillOpacity={0.3}
-                  />
-                ))}
-                <Tooltip />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <ResponsiveContainer width="100%" height="80%">
+          <AreaChart data={areaData}>
+            <Area type="monotone" dataKey="Active" stroke="#0d2550" fill="#0d2550" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Idle" stroke="#008080" fill="#008080" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Otlive" stroke="#fd7e14" fill="#fd7e14" fillOpacity={0.3} />
+            <Area type="monotone" dataKey="Offline" stroke="#dc3545" fill="#dc3545" fillOpacity={0.3} />
+            <Tooltip />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   )
@@ -191,6 +118,7 @@ const Dashboard = () => {
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected)
 
+  const [splitView, setSplitView] = useState('both')
   const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
   const { notifications, addNotification, unreadCounts, setUnreadCounts } =
@@ -443,9 +371,12 @@ const Dashboard = () => {
   const cards = [
     {
       label: 'Drivers',
-      icon: <img src={driversIcon} alt="Drivers" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={driversIcon} alt="Drivers" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableDrivers ?? 0}
           <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
           <br />
           <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableDrivers ?? 0}
@@ -458,14 +389,16 @@ const Dashboard = () => {
         borderBottom: '2px solid #dc3545',
         borderRight: '2px solid #dc3545',
       },
-      shadow: 'inset 0 0 20px rgba(40, 167, 69, 0.4)',
       onClick: () => handleDriveStatus('Drivers Aavailablity'),
     },
     {
       label: 'Vehicles',
-      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
+      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
+          <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableVehicles ?? 0}
           <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
           <br />
           <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableVehicles ?? 0}
@@ -473,14 +406,16 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalVehicles ?? 0,
       borders: { border: '2px solid #17a2b8' },
-      shadow: 'inset 0 0 20px rgba(23, 162, 184, 0.5)',
       onClick: () => handleViewVehicles('Vehicles'),
     },
     {
       label: 'Maintenance',
-      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert: {dashboardData?.vehiclesUnderMaintenance ?? 0}
           <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
           <br />
           <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert: {dashboardData?.vehiclesUnderMaintenance ?? 0}
@@ -488,12 +423,11 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalVehicles ?? 0,
       borders: { border: '2px solid #2b5c8c' },
-      shadow: 'inset 0 0 20px rgba(43, 92, 140, 0.5)',
       onClick: () => handleViewServicelog('Maintenance'),
     },
     {
       label: 'Attendance',
-      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present: {dashboardData?.driverLocations ?? 0}
@@ -501,12 +435,11 @@ const Dashboard = () => {
       ),
       count: dashboardData?.driverLocations ?? 0,
       borders: { border: '2px solid #4b2c82' },
-      shadow: 'inset 0 0 20px rgba(75, 44, 130, 0.5)',
       onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
       label: 'Expenses',
-      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹{dashboardData?.expenses?.total?.toLocaleString() ?? 0}
@@ -516,12 +449,11 @@ const Dashboard = () => {
         ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
         : `₹${dashboardData?.expenses?.total ?? 0}`,
       borders: { border: '2px solid #fd7e14' },
-      shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
       onClick: () => handleExpenses('Expenses'),
     },
     {
       label: 'Live on Work',
-      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
+      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty: {dashboardData?.driversLiveOnWork ?? 0}
@@ -531,12 +463,11 @@ const Dashboard = () => {
       ),
       count: dashboardData?.driversLiveOnWork ?? 0,
       borders: { border: '2px solid #008080' },
-      shadow: 'inset 0 0 20px rgba(0, 128, 128, 0.5)',
       onClick: () => handleViewDrives('Live on Work'),
     },
     {
       label: 'Document Alert',
-      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
@@ -544,12 +475,11 @@ const Dashboard = () => {
       ),
       count: dashboardData?.documentAlerts ?? 0,
       borders: { border: '2px solid #dc3545' },
-      shadow: 'inset 0 0 20px rgba(220, 53, 69, 0.5)',
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
       label: 'Transport Receipt',
-      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass: {dashboardData?.todayGodownLorryReceiptCount || '0'}
@@ -557,10 +487,10 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalGodownLorryReceiptCount || '0',
       borders: { border: '2px solid #0d6efd' },
-      shadow: 'inset 0 0 20px rgba(13, 110, 253, 0.5)',
       onClick: () => handleTP('Transport Receipt'),
     },
   ]
+
 
 
 
@@ -572,10 +502,15 @@ const Dashboard = () => {
           border-radius: 12px;
           background-color: #fff;
         }
+        .hover-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 12px;
+          background-color: #fff;
+        }
 
         .hover-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), var(--hover-shadow, transparent) !important;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
         }
 
         .card-label {
@@ -583,9 +518,17 @@ const Dashboard = () => {
           font-size: 13px;
           color: #1a1a1a;
           margin-bottom: 2px;
-          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
+        .card-count {
+          font-size: 20px;
+          font-weight: 800;
+          color: #000;
+          line-height: 1.2;
+        }
         .card-count {
           font-size: 20px;
           font-weight: 800;
@@ -597,7 +540,9 @@ const Dashboard = () => {
           font-size: 11px;
           color: #555;
           margin-bottom: 4px;
-          line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .side-handle-btn {
@@ -619,7 +564,26 @@ const Dashboard = () => {
           padding: 0.5rem 1rem 1.5rem 1rem;
           gap: 1rem;
         }
+        .dashboard-scroll-container {
+          display: flex;
+          flex-wrap: wrap;
+          padding: 0.5rem 1rem 1.5rem 1rem;
+          gap: 1rem;
+        }
 
+        /* Responsive card width: 8 cards per row on large screens */
+        .dashboard-card-wrapper {
+          flex: 0 0 calc(12.5% - 0.875rem);
+          max-width: calc(12.5% - 0.875rem);
+          min-width: 130px;
+        }
+
+        @media (max-width: 1400px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(16.666% - 0.85rem);
+            max-width: calc(16.666% - 0.85rem);
+          }
+        }
         /* Responsive card width: 8 cards per row on large screens */
         .dashboard-card-wrapper {
           flex: 0 0 calc(12.5% - 0.875rem);
@@ -640,7 +604,26 @@ const Dashboard = () => {
             max-width: calc(20% - 0.8rem);
           }
         }
+        @media (max-width: 1200px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(20% - 0.8rem);
+            max-width: calc(20% - 0.8rem);
+          }
+        }
 
+        @media (max-width: 992px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(25% - 0.75rem);
+            max-width: calc(25% - 0.75rem);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(33.333% - 0.66rem);
+            max-width: calc(33.333% - 0.66rem);
+          }
+        }
         @media (max-width: 992px) {
           .dashboard-card-wrapper {
             flex: 0 0 calc(25% - 0.75rem);
@@ -678,8 +661,35 @@ const Dashboard = () => {
              margin-bottom: 1.5rem;
           }
         }
+        @media (max-width: 576px) {
+          .dashboard-card-wrapper {
+            flex: 0 0 calc(50% - 0.5rem);
+            max-width: calc(50% - 0.5rem);
+          }
+        }
+
+        /* Auto-adjusting full screen layout for Table and Analytics */
+        @media (min-width: 1200px) {
+          .dashboard-main-container {
+             height: calc(100vh - 280px);
+             min-height: 450px;
+          }
+          .dashboard-main-col {
+             height: 100%;
+          }
+        }
+        @media (max-width: 1199px) {
+          .dashboard-main-col {
+             height: 550px;
+             margin-bottom: 1.5rem;
+          }
+        }
       `}</style>
 
+      {/*  cards */}
+
+      <CCard className="mb-4 border-0 shadow-sm mt-2">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 px-3 pt-3 gap-3">
       {/*  cards */}
 
       <CCard className="mb-4 border-0 shadow-sm mt-2">
@@ -697,10 +707,23 @@ const Dashboard = () => {
                 />
               </div>
             )}
+            <h5 className="fw-bold text-dark mb-0">Fleet Overview</h5>
+            {userRole === 'superadmin' && (
+              <div style={{ width: '250px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
+            )}
           </div>
         </div>
 
         <div
+          className="dashboard-scroll-container"
           className="dashboard-scroll-container"
           id="dashboard-scroll"
         >
@@ -708,12 +731,17 @@ const Dashboard = () => {
             <div className="dashboard-card-wrapper" key={idx}>
               <CCard
                 className="hover-card shadow-sm h-100"
-                style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
+                style={{ cursor: 'pointer', ...card.borders }}
                 onClick={card.onClick}
               >
                 <CCardBody className="p-2 d-flex align-items-center">
                   <div className="me-2 flex-shrink-0">
                     {card.icon}
+                  </div>
+                  <div className="card-details overflow-hidden">
+                    <div className="card-label">{card.label}</div>
+                    <div className="card-subtext">{card.subtext}</div>
+                    <div className="card-count">{card.count}</div>
                   </div>
                   <div className="card-details overflow-hidden">
                     <div className="card-label">{card.label}</div>
@@ -729,6 +757,104 @@ const Dashboard = () => {
 
       {/* trips table */}
 
+      <CContainer className="px-2 dashboard-main-container pb-3" fluid>
+        <div className="row h-100">
+          {splitView !== 'analytics' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'table' ? "col-12" : "col-12 col-xl-7"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% + 18px)', right: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('table')}
+                  title="Expand Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'table' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+
+              <Table
+                title={
+                  <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
+                    <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                      <DateRangeFilterCredence
+                        title="Date Range"
+                        onDateRangeChange={handleDateRangeChange}
+                      />
+                      <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+                    </div>
+                  </div>
+                }
+                columns={columns}
+                filteredData={filteredData}
+                setFilteredData={setFilteredData}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                isFetching={isFetching}
+                onViewReport={() => handleViewDetailedReport()}
+              />
+            </div>
+          )}
+
+          {splitView !== 'table' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'analytics' ? "col-12" : "col-12 col-xl-5"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% - 18px)', left: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('analytics')}
+                  title="Expand Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'analytics' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+
+              <CCard className="mb-4 shadow-sm border-0 h-100">
+                <CCardHeader className="bg-white border-0 pt-3 px-4">
+                  <strong>Fleet Analytics</strong>
+                </CCardHeader>
+                <CCardBody className="px-4 pb-4 d-flex flex-column justify-content-center">
+                  <FleetAnalyticsChart data={dashboardData} />
+                </CCardBody>
+              </CCard>
+            </div>
+          )}
       <CContainer className="px-2 dashboard-main-container pb-3" fluid>
         <div className="row h-100">
           {splitView !== 'analytics' && (
