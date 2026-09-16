@@ -13,11 +13,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import SearchInput from '../components/SearchInput'
 import AddDriverModel from './components/AddDriverModel'
 import UpdateDriverModel from './components/UpdateDriverModel'
+import BulkUploadDriverModal from './components/BulkUploadDriverModal'
 import Swal from 'sweetalert2'
 import AddButton from '../components/AddButton'
 import ReusableModal from '../components/ReusableModal'
 import { toast, ToastContainer } from 'react-toastify'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { FaArrowUp, FaPrint, FaRegFilePdf, FaFileUpload } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
 import IconDropdown from '../Supervisor/IconDropdown'
@@ -34,6 +35,7 @@ function DriversPage() {
   // const [isFetching, setIsFetching] = useState(true)
   const [filteredData, setFilteredData] = useState([])
   const [visible, setVisible] = useState(false)
+  const [bulkUploadVisible, setBulkUploadVisible] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -121,8 +123,11 @@ function DriversPage() {
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter((driver) =>
-        driver.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+      filtered = filtered.filter(
+        (driver) =>
+          driver.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          driver.contactNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+          driver.aadharNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()),
       )
     }
 
@@ -198,6 +203,7 @@ function DriversPage() {
     { label: 'Password', key: 'password', sortable: false },
     { label: 'License Number', key: 'licenseNumber', sortable: false },
     { label: 'License Expiry', key: 'licenseExpiryDate', sortable: false },
+    { label: 'Aadhar Number', key: 'aadharNumber', sortable: false },
   ]
 
   // Handle view button click
@@ -356,7 +362,7 @@ function DriversPage() {
 
       <div className="mb-4">
         <div className="row g-3 align-items-center justify-content-between">
-          <div className="col-lg-6 col-md-12 d-flex flex-wrap align-items-center gap-2">
+          <div className="col-lg-5 col-md-12 d-flex flex-wrap align-items-center gap-2">
             {userRole === 'superadmin' && (
               <div>
                 <SingleSelectDropdown
@@ -369,8 +375,14 @@ function DriversPage() {
               </div>
             )}
           </div>
-          <div className="col-lg-4 col-md-12 d-flex justify-content-end gap-2">
+          <div className="col-lg-7 col-md-12 d-flex justify-content-end align-items-center flex-wrap gap-2">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+            <AddButton
+              label="Bulk Upload"
+              icon={<FaFileUpload />}
+              variant="outline-primary"
+              onClick={() => setBulkUploadVisible(true)}
+            />
             <AddButton
               label="Add Driver"
               onClick={() => {
@@ -441,6 +453,11 @@ function DriversPage() {
           if (!val) setSelectedDriver(null) // Clear driver when modal is closed
         }}
         driver={selectedDriver}
+      />
+      <BulkUploadDriverModal
+        visible={bulkUploadVisible}
+        setVisible={setBulkUploadVisible}
+        onUploadSuccess={() => queryClient.invalidateQueries(['drivers'])}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
