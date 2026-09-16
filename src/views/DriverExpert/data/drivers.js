@@ -45,6 +45,7 @@ export const fetchDrivers = async () => {
       supervisor: driver.supervisor,
       licenseNumber: driver.licenseNumber || 'N/A',
       licenseExpiryDate: formatDateToDDMMYYYY(driver.licenseExpiryDate) || 'N/A',
+      aadharNumber: driver.aadharNumber || 'N/A',
     }))
   } catch (error) {
     console.log(error, 'error')
@@ -709,3 +710,31 @@ export const getDailyReadingApi = async ({
     throw error.response?.data || { message: 'Failed to fetch daily readings' }
   }
 }
+
+// Bulk Upload Drivers
+export const bulkUploadDrivers = async (file) => {
+  try {
+    const authToken = sessionStorage.getItem('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const { data: response } = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/drivers/bulk-upload`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    return response
+  } catch (error) {
+    console.error('Bulk upload drivers failed:', error)
+    throw error
+  }
+}
+
