@@ -24,7 +24,9 @@ import vehicleReducer from "./slices/vehicleSlice";
 
 // Legacy reducer
 const initialState = {
-  sidebarShow: true,
+  sidebarShow: false,
+  activeSection: 'Dashboard',
+  sidebarUnfoldable: false,
   theme: "light",
 };
 

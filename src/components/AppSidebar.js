@@ -1,94 +1,100 @@
 import React, { useContext } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { NavLink } from 'react-router-dom'
+import SimpleBar from 'simplebar-react'
+import 'simplebar-react/dist/simplebar.min.css'
 
-import {
-  CCloseButton,
-  CImage,
-  CSidebar,
-  CSidebarBrand,
-  CSidebarFooter,
-  CSidebarHeader,
-  CSidebarToggler,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-
-import { AppSidebarNav } from './AppSidebarNav'
-
-import logo from 'src/assets/brand/fmslogo.svg'
-import logo1 from 'src/assets/credenceLoader/Maintenance_Logo.gif'
-// import { sygnet } from 'src/assets/brand/sygnet'
-
-// sidebar nav config
 import navigation from '../_nav'
 import { TokenContext } from '../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import Cookies from 'js-cookie'
 
 // Helper: Recursively filter items by role
 const filterNavByRole = (items, role) => {
   return items
     .map(item => {
       if (item.items) {
-        // Recursively filter nested items
         const filteredItems = filterNavByRole(item.items, role)
         return filteredItems.length ? { ...item, items: filteredItems } : null
       }
-      // Show item if no role is required OR matches userRole
       if (!item.role || item.role === role) return item
       return null
     })
     .filter(Boolean)
 }
 
-
 const AppSidebar = () => {
   const dispatch = useDispatch()
-  const unfoldable = useSelector((state) => state.sidebarUnfoldable)
+  const activeSection = useSelector((state) => state.activeSection || 'Dashboard')
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
-  // superadmin role filter
-  const token = useContext(TokenContext)
-  const decodedToken = token ? jwtDecode(token) : null
-  const userRole = decodedToken?.role
+  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
+  let userRole = null
+  if (token && typeof token === 'string') {
+    try {
+      const decoded = jwtDecode(token)
+      userRole = decoded?.role
+    } catch {
+      userRole = null
+    }
+  }
 
   const filteredNav = filterNavByRole(navigation, userRole)
 
+  const currentSection = filteredNav.find(
+    (item) => item.name && item.name.trim().toLowerCase() === activeSection.trim().toLowerCase()
+  )
+
+  const subItems = currentSection?.items || []
+
+  // If sidebarShow is false or this section has no sub-options (like Dashboard), hide sidebar
+  if (!sidebarShow || subItems.length === 0) {
+    return null
+  }
 
   return (
-    <CSidebar
-      className="border-end"
-      style={{ backgroundColor: '#0a2d63' }}
-      colorScheme="dark"
-      position="fixed"
-      unfoldable={!unfoldable}
-      visible={sidebarShow}
-      onVisibleChange={(visible) => {
-        dispatch({ type: 'set', sidebarShow: visible })
-      }}
-    >
-      {/* logo */}
-      <CSidebarHeader className="borderless-bottom">
-        <CSidebarBrand to="/">
-          {/* <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} /> */}
-          <img src={logo} alt="Logo" className="sidebar-brand-full" height={50} width={200} />
-          <img src={logo1} alt="Logo" className="sidebar-brand-narrow" height={70} style={{ marginTop: '-15px' }} />
-
-          {/* <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} /> */}
-        </CSidebarBrand>
-
-        <CCloseButton
-          className="d-lg-none"
-          dark
+    <aside className="section-sidebar d-flex flex-column">
+      {/* Section Header */}
+      <div className="section-sidebar-header d-flex align-items-center justify-content-between px-3 py-3">
+        <div className="d-flex align-items-center gap-2 overflow-hidden">
+          {currentSection.icon && (
+            <span className="section-icon">{currentSection.icon}</span>
+          )}
+          <span className="section-title text-uppercase fw-bold text-truncate">
+            {currentSection.name.trim()}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="btn-close btn-close-white d-lg-none"
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
+          aria-label="Close"
         />
-      </CSidebarHeader>
-      <AppSidebarNav items={filteredNav} />
-      {/* <CSidebarFooter className="border-top d-none d-lg-flex">
-        <CSidebarToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-        />
-      </CSidebarFooter> */}
-    </CSidebar>
+      </div>
+
+      {/* Suboptions List */}
+      <SimpleBar className="flex-grow-1" style={{ maxHeight: 'calc(100vh - 110px)' }}>
+        <ul className="sidebar-sub-list list-unstyled p-2 m-0">
+          {subItems.map((sub, idx) => (
+            <li key={idx} className="mb-1">
+              <NavLink
+                to={sub.to}
+                className={({ isActive }) =>
+                  `sidebar-sub-link d-flex align-items-center px-3 py-2 text-decoration-none ${
+                    isActive ? 'active' : ''
+                  }`
+                }
+              >
+                <span className="sub-bullet me-2">•</span>
+                <span className="sub-text text-truncate">{sub.name}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </SimpleBar>
+    </aside>
   )
 }
 
 export default React.memo(AppSidebar)
+

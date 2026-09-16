@@ -1,36 +1,204 @@
-.darkBackground {
-    background-color: #0a2d63;
+/* Original Navy Blue & Orange Theme Navbar with Pill-style Navigation */
+.navy-navbar {
+    background-color: #0a2d63 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    min-height: 56px;
+    height: 58px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.toggle-container {
+.nav-links-center {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-/* .filter-btn {
-  color: black !important;
-} */
-
-/* Custom hover color for CDropdownItem */
-.custom-dropdown-item:hover {
-    background-color: white;
-    /* Gray color on hover */
-    color: black;
-    /* Text color for better contrast */
+/* Nav Item Link & Dropdown Toggle */
+.pill-nav-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88) !important;
+    text-decoration: none;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease-in-out;
 }
 
-.custom-dropdown-item.active {
-    background-color: #6c757d;
-    /* Optionally keep active state blue */
-    color: white;
+.pill-nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
 }
 
-/* Global override for all dropdown items */
-.dropdown-item:hover {
-    background-color: #6c757d !important;
-    /* Grey on hover */
-    color: white !important;
-    /* Text color */
+/* Active State - Orange Pill highlight (matching the layout from screenshot, with original orange theme) */
+.pill-nav-item.active,
+.pill-nav-item:focus-visible {
+    background-color: #ec7426 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(236, 116, 38, 0.35);
+}
+
+/* Dropdown Menu */
+.navy-dropdown-menu {
+    background-color: #0a2d63 !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    padding: 6px 0 !important;
+    min-width: 210px !important;
+    max-height: 75vh;
+    overflow-y: auto;
+    z-index: 1060 !important;
+}
+
+.navy-dropdown-item {
+    color: rgba(255, 255, 255, 0.88) !important;
+    padding: 8px 18px !important;
+    font-size: 0.84rem !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: all 0.15s ease-in-out !important;
+    text-decoration: none !important;
+}
+
+.navy-dropdown-item:hover {
+    background-color: #ec7426 !important;
+    color: #ffffff !important;
+    padding-left: 22px !important;
+}
+
+.navy-dropdown-item.active {
+    background-color: #ec7426 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* User Avatar PA Pill */
+.user-avatar-pill {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #ec7426;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.84rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(236, 116, 38, 0.4);
+    transition: transform 0.18s ease;
+}
+
+.user-avatar-pill:hover {
+    transform: scale(1.06);
+}
+
+/* Chatbot Flower Button */
+.chatbot-flower-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.chatbot-flower-btn:hover {
+    transform: scale(1.12) rotate(15deg);
+    filter: drop-shadow(0 0 6px rgba(0, 102, 255, 0.5));
+}
+
+/* Section Sidebar for Suboptions */
+.section-sidebar {
+    width: 240px;
+    min-width: 240px;
+    background-color: #0a2d63;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    z-index: 1020;
+    transition: width 0.2s ease, opacity 0.2s ease;
+}
+
+.section-sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+.section-sidebar-header .section-title {
+    color: #ec7426;
+    font-size: 0.8rem;
+    letter-spacing: 0.8px;
+}
+
+.section-sidebar-header .section-icon svg {
+    color: #ec7426 !important;
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-sub-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sidebar-sub-link {
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.18s ease-in-out;
+}
+
+.sidebar-sub-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding-left: 18px !important;
+}
+
+.sidebar-sub-link.active {
+    background-color: #ec7426 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.sidebar-sub-link .sub-bullet {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.18s ease;
+}
+
+.sidebar-sub-link.active .sub-bullet {
+    color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+    .section-sidebar {
+        position: fixed;
+        left: 0;
+        top: 58px;
+        bottom: 0;
+        box-shadow: 4px 0 18px rgba(0, 0, 0, 0.35);
+    }
 }

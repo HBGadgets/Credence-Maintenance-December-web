@@ -2,7 +2,7 @@ import React from 'react'
 import { Bell } from 'lucide-react'
 import { CBadge, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 
-const NotificationDropdown = ({ notifications, onClear, unreadCounts }) => {
+const NotificationDropdown = ({ notifications, onClear, unreadCounts, bellColor = 'white' }) => {
   const totalUnread = Object.values(unreadCounts || {}).reduce((a, b) => a + b, 0)
 
   return (
@@ -18,8 +18,8 @@ const NotificationDropdown = ({ notifications, onClear, unreadCounts }) => {
       </style>
 
       <CDropdown variant="nav-item">
-        <CDropdownToggle placement="bottom-end" className="py-0 fs-5 pe-0" caret={false}>
-          <Bell color="white" className="mx-0" />
+        <CDropdownToggle placement="bottom-end" className="py-0 fs-5 pe-0 bg-transparent border-0 d-flex align-items-center" caret={false}>
+          <Bell color={bellColor} size={20} className="mx-0" />
           {totalUnread > 0 && (
             <CBadge
               color="danger"
