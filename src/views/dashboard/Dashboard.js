@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react'
+import React, { useState, useContext, useEffect, useMemo, useRef } from 'react'
 import {
   CAvatar,
   CButton,
@@ -273,6 +273,32 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const [tableMode, setTableMode] = useState('Trip')
   const [filteredData, setFilteredData] = useState([])
+
+  const sliderContainerRef = useRef(null)
+  const [startIndex, setStartIndex] = useState(0)
+  const [visibleCount, setVisibleCount] = useState(6)
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        let newCount = 8;
+        if (width >= 1350) newCount = 8;
+        else if (width >= 1150) newCount = 6;
+        else if (width >= 950) newCount = 5;
+        else if (width >= 750) newCount = 4;
+        else if (width >= 550) newCount = 3;
+        else newCount = 2;
+        
+        setVisibleCount(newCount);
+        setStartIndex((prev) => Math.min(prev, Math.max(0, 8 - newCount)));
+      }
+    });
+    if (sliderContainerRef.current) {
+      observer.observe(sliderContainerRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -732,55 +758,6 @@ const Dashboard = () => {
           border-color: #fd7e14 !important;
         }
 
-        .dashboard-scroll-container {
-          display: flex;
-          flex-wrap: wrap;
-          padding: 0.5rem 1rem 1.5rem 1rem;
-          gap: 1rem;
-        }
-
-        /* Responsive card width: 8 cards per row on large screens */
-        .dashboard-card-wrapper {
-          flex: 0 0 calc(12.5% - 0.875rem);
-          max-width: calc(12.5% - 0.875rem);
-          min-width: 130px;
-        }
-
-        @media (max-width: 1400px) {
-          .dashboard-card-wrapper {
-            flex: 0 0 calc(16.666% - 0.85rem);
-            max-width: calc(16.666% - 0.85rem);
-          }
-        }
-
-        @media (max-width: 1200px) {
-          .dashboard-card-wrapper {
-            flex: 0 0 calc(20% - 0.8rem);
-            max-width: calc(20% - 0.8rem);
-          }
-        }
-
-        @media (max-width: 992px) {
-          .dashboard-card-wrapper {
-            flex: 0 0 calc(25% - 0.75rem);
-            max-width: calc(25% - 0.75rem);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .dashboard-card-wrapper {
-            flex: 0 0 calc(33.333% - 0.66rem);
-            max-width: calc(33.333% - 0.66rem);
-          }
-        }
-
-        @media (max-width: 576px) {
-          .dashboard-card-wrapper {
-            flex: 0 0 calc(50% - 0.5rem);
-            max-width: calc(50% - 0.5rem);
-          }
-        }
-
         /* Auto-adjusting full screen layout for Table and Analytics */
         @media (min-width: 1200px) {
           .dashboard-wrapper {
@@ -825,29 +802,74 @@ const Dashboard = () => {
         </div>
 
         <div
-          className="dashboard-scroll-container"
-          id="dashboard-scroll"
+          ref={sliderContainerRef}
+          className="position-relative w-100 px-3 pb-3 pt-1"
         >
-          {cards.map((card, idx) => (
-            <div className="dashboard-card-wrapper" key={idx}>
-              <CCard
-                className="hover-card shadow-sm h-100"
-                style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
-                onClick={card.onClick}
-              >
-                <CCardBody className="p-2 d-flex align-items-center">
-                  <div className="me-2 flex-shrink-0">
-                    {card.icon}
-                  </div>
-                  <div className="card-details overflow-hidden">
-                    <div className="card-label">{card.label}</div>
-                    <div className="card-subtext">{card.subtext}</div>
-                    <div className="card-count">{card.count}</div>
-                  </div>
-                </CCardBody>
-              </CCard>
+          <div className="overflow-hidden w-100 py-1" style={{ padding: '0 0.5rem' }}>
+            <div 
+              style={{
+                display: 'flex',
+                transition: 'transform 0.4s ease-in-out',
+                transform: `translateX(-${startIndex * (100 / visibleCount)}%)`,
+                width: '100%',
+              }}
+            >
+              {cards.map((card, idx) => (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    flex: `0 0 ${100 / visibleCount}%`,
+                    padding: '0 0.5rem',
+                  }}
+                >
+                  <CCard
+                    className="hover-card shadow-sm h-100"
+                    style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
+                    onClick={card.onClick}
+                  >
+                    <CCardBody className="p-2 d-flex align-items-center">
+                      <div className="me-2 flex-shrink-0">
+                        {card.icon}
+                      </div>
+                      <div className="card-details overflow-hidden">
+                        <div className="card-label">{card.label}</div>
+                        <div className="card-subtext">{card.subtext}</div>
+                        <div className="card-count">{card.count}</div>
+                      </div>
+                    </CCardBody>
+                  </CCard>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {startIndex > 0 && (
+            <button
+              onClick={() => setStartIndex(prev => Math.max(prev - 1, 0))}
+              className="btn btn-light shadow-sm border rounded-circle d-flex align-items-center justify-content-center"
+              style={{
+                position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
+                width: '36px', height: '36px', zIndex: 5, padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)'
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+          )}
+
+          {startIndex < cards.length - visibleCount && (
+            <button
+              onClick={() => setStartIndex(prev => Math.min(prev + 1, cards.length - visibleCount))}
+              className="btn btn-light shadow-sm border rounded-circle d-flex align-items-center justify-content-center"
+              style={{
+                position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
+                width: '36px', height: '36px', zIndex: 5, padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)'
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          )}
         </div>
       </CCard>
 
