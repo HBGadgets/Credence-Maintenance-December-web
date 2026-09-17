@@ -192,7 +192,6 @@ const Dashboard = () => {
   console.log('Socket connected:', socket.connected)
 
   const [splitView, setSplitView] = useState('both')
-  const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
   const { notifications, addNotification, unreadCounts, setUnreadCounts } =
     useContext(NotificationContext)
