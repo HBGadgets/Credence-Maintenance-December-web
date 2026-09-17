@@ -117,6 +117,7 @@ function Table({
   handleReportButton,
   action = 'Action',
   serverPagination = false,
+  totalServerItems = 0,
   setCurrentPage,
   setItemsPerPage,
   onViewReport,
@@ -133,7 +134,9 @@ function Table({
     ? filteredData
     : filteredData.slice(startIndex, startIndex + itemsPerPage)
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
+  const totalPages = serverPagination
+    ? Math.ceil((totalServerItems || 0) / itemsPerPage) || 1
+    : Math.ceil(filteredData.length / itemsPerPage) || 1
 
   const goToFirstPage = () => setCurrentPage?.(1)
   const goToLastPage = () => setCurrentPage?.(totalPages)
