@@ -684,7 +684,7 @@ const Dashboard = () => {
 
 
   return token ? (
-    <>
+    <div className="dashboard-wrapper">
       <style>{`
         .hover-card {
           transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -783,9 +783,14 @@ const Dashboard = () => {
 
         /* Auto-adjusting full screen layout for Table and Analytics */
         @media (min-width: 1200px) {
+          .dashboard-wrapper {
+             display: flex;
+             flex-direction: column;
+             height: calc(100vh - 110px);
+          }
           .dashboard-main-container {
-             height: calc(100vh - 280px);
-             min-height: 450px;
+             flex: 1;
+             min-height: 0;
           }
           .dashboard-main-col {
              height: 100%;
@@ -963,7 +968,7 @@ const Dashboard = () => {
           )}
         </div>
       </CContainer>
-    </>
+    </div>
   ) : null
 }
 
