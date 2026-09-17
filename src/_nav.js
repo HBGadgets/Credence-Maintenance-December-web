@@ -253,7 +253,7 @@ const _nav = [
   // Help and Supports
   {
     component: CNavGroup,
-    name: 'Query Ticket',
+    name: 'Support',
     icon: (
       <HiOutlineTicket
         className="nav-icon"

@@ -239,8 +239,73 @@ const AppHeader = () => {
             {currentRouteName}
           </span>
         </div>
-        <CHeaderNav className="ms-auto d-flex align-items-center">
-          <div className="position-relative">
+
+        {/* Center: Desktop Navigation Links (centered horizontally & vertically) */}
+        <div className="d-none d-lg-flex align-items-center justify-content-center position-absolute start-50 top-50 translate-middle">
+          <ul className="nav-links-center">
+            {filteredNav.map((item, index) => {
+              // Skip section titles
+              if (item.component?.name === 'CNavTitle' || item.name === 'Maintenance') {
+                return null;
+              }
+
+              const isSectionActive =
+                activeSection &&
+                item.name &&
+                activeSection.trim().toLowerCase() === item.name.trim().toLowerCase();
+
+              return (
+                <li key={index}>
+                  <button
+                    type="button"
+                    onClick={() => handleNavbarOptionClick(item)}
+                    className={`pill-nav-item ${isSectionActive ? 'active' : ''}`}
+                  >
+                    {item.name.trim()}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Right: Blue Flower Button, Notification Bell, User Avatar PA Pill */}
+        <CHeaderNav className="ms-auto d-flex align-items-center z-1">
+          {/* Blue Flower Button (AI Chat / Assistant)
+          <button
+            type="button"
+            onClick={() => navigate('/ChatBot')}
+            className="chatbot-flower-btn me-2"
+            title="Chat Assistant"
+            aria-label="Chat Assistant"
+          >
+            <svg width="25" height="25" viewBox="0 0 100 100" fill="none">
+              <defs>
+                <radialGradient id="blueFlowerGrad" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="50%" stopColor="#2563eb" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </radialGradient>
+              </defs>
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                <ellipse
+                  key={deg}
+                  cx="50"
+                  cy="30"
+                  rx="11"
+                  ry="22"
+                  fill="url(#blueFlowerGrad)"
+                  transform={`rotate(${deg} 50 50)`}
+                  opacity="0.95"
+                />
+              ))}
+              <circle cx="50" cy="50" r="10" fill="#bfdbfe" />
+              <circle cx="50" cy="50" r="6" fill="#ffffff" />
+            </svg>
+          </button> */}
+
+          {/* Notifications Bell */}
+          <div className="position-relative me-2">
             <NotificationDropdown
               notifications={notifications}
               unreadCounts={unreadCounts}
