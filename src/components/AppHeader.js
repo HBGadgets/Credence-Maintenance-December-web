@@ -408,6 +408,39 @@ const AppHeader = () => {
 
         {/* Right: Notification Bell & User Avatar */}
         <CHeaderNav className="ms-auto d-flex align-items-center z-1">
+          {/* Blue Flower Button (AI Chat / Assistant)
+          <button
+            type="button"
+            onClick={() => navigate('/ChatBot')}
+            className="chatbot-flower-btn me-2"
+            title="Chat Assistant"
+            aria-label="Chat Assistant"
+          >
+            <svg width="25" height="25" viewBox="0 0 100 100" fill="none">
+              <defs>
+                <radialGradient id="blueFlowerGrad" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="50%" stopColor="#2563eb" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </radialGradient>
+              </defs>
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                <ellipse
+                  key={deg}
+                  cx="50"
+                  cy="30"
+                  rx="11"
+                  ry="22"
+                  fill="url(#blueFlowerGrad)"
+                  transform={`rotate(${deg} 50 50)`}
+                  opacity="0.95"
+                />
+              ))}
+              <circle cx="50" cy="50" r="10" fill="#bfdbfe" />
+              <circle cx="50" cy="50" r="6" fill="#ffffff" />
+            </svg>
+          </button> */}
+
           {/* Notifications Bell */}
           <div className="position-relative me-2">
             <NotificationDropdown
