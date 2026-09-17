@@ -408,7 +408,7 @@ const AppHeader = () => {
 
         {/* Right: Blue Flower Button, Notification Bell, User Avatar PA Pill */}
         <CHeaderNav className="ms-auto d-flex align-items-center z-1">
-          {/* Blue Flower Button (AI Chat / Assistant) */}
+          {/* Blue Flower Button (AI Chat / Assistant)
           <button
             type="button"
             onClick={() => navigate('/ChatBot')}
@@ -439,7 +439,7 @@ const AppHeader = () => {
               <circle cx="50" cy="50" r="10" fill="#bfdbfe" />
               <circle cx="50" cy="50" r="6" fill="#ffffff" />
             </svg>
-          </button>
+          </button> */}
 
           {/* Notifications Bell */}
           <div className="position-relative me-2">
