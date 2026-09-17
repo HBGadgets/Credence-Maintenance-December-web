@@ -1,7 +1,74 @@
-import React, { useRef } from 'react'
+import React, { useRef, useMemo } from 'react'
 import html2pdf from 'html2pdf.js'
 import './TpInvoiceBill.css'
 import logo from '../../../../assets/brand/2.png'
+
+
+const getCancelledStamp = () => {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = 900;
+  canvas.height = 420;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(450, 210);
+  ctx.rotate((-25 * Math.PI) / 180);
+
+  const bw = 700;
+  const bh = 140;
+  const r = 16;
+
+  const drawRoundRect = (x, y, w, h, radius) => {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + w - radius, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+    ctx.lineTo(x + w, y + h - radius);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    ctx.lineTo(x + radius, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+  };
+
+  // Outer border
+  ctx.strokeStyle = '#dc2626';
+  ctx.lineWidth = 6;
+  drawRoundRect(-bw / 2, -bh / 2, bw, bh, r);
+  ctx.stroke();
+
+  // Inner border
+  ctx.lineWidth = 3;
+  drawRoundRect(-bw / 2 + 8, -bh / 2 + 8, bw - 16, bh - 16, r - 4);
+  ctx.stroke();
+
+  // Text
+  ctx.fillStyle = '#dc2626';
+  ctx.font = '900 70px "Arial Black", Impact, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const text = 'CANCELLED';
+  const charSpacing = 14;
+  let totalWidth = 0;
+  for (let i = 0; i < text.length; i++) {
+    totalWidth += ctx.measureText(text[i]).width + (i < text.length - 1 ? charSpacing : 0);
+  }
+  let currentX = -totalWidth / 2;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const charWidth = ctx.measureText(char).width;
+    ctx.fillText(char, currentX + charWidth / 2, 2);
+    currentX += charWidth + charSpacing;
+  }
+
+  ctx.restore();
+  return canvas.toDataURL('image/png');
+};
 
 const TpInvoiceBill = ({ invoiceData }) => {
   const invoiceRef = useRef()
@@ -46,6 +113,7 @@ const TpInvoiceBill = ({ invoiceData }) => {
     receiptNo,
     issuedBy,
     receivedBy,
+    status,
     products = [],
   } = invoiceData || {}
 
@@ -74,11 +142,35 @@ const TpInvoiceBill = ({ invoiceData }) => {
     element.style.backgroundColor = 'white'
     element.style.fontFamily = "'Segoe UI', sans-serif"
     element.style.fontSize = '12px'
+    element.style.position = 'relative'
+    element.style.width = '100%'
+    element.style.maxWidth = '100%'
+    element.style.boxSizing = 'border-box'
+    element.style.margin = '0 auto'
+    element.style.transform = 'none'
 
-    // Scale down the content for PDF
-    element.style.transform = 'scale(0.95)'
-    element.style.transformOrigin = 'top left'
-    element.style.width = '105%'
+    const stampOverlay = element.querySelector('.cancel-stamp-overlay')
+    if (stampOverlay) {
+      stampOverlay.style.position = 'absolute'
+      stampOverlay.style.top = '0px'
+      stampOverlay.style.bottom = '0px'
+      stampOverlay.style.left = '0px'
+      stampOverlay.style.right = '0px'
+      stampOverlay.style.width = '100%'
+      stampOverlay.style.height = '100%'
+      stampOverlay.style.display = 'flex'
+      stampOverlay.style.justifyContent = 'center'
+      stampOverlay.style.alignItems = 'center'
+      stampOverlay.style.textAlign = 'center'
+      stampOverlay.style.margin = '0 auto'
+    }
+    const stampImg = element.querySelector('.cancel-stamp-img')
+    if (stampImg) {
+      stampImg.style.display = 'block'
+      stampImg.style.margin = '0 auto'
+      stampImg.style.maxWidth = '680px'
+      stampImg.style.width = '85%'
+    }
 
     const signature = element.querySelector('.signature-section')
     if (signature) {
@@ -96,7 +188,6 @@ const TpInvoiceBill = ({ invoiceData }) => {
         useCORS: true,
         scrollX: 0,
         scrollY: 0,
-        width: 794,
       },
       jsPDF: {
         unit: 'mm',
@@ -123,6 +214,19 @@ const TpInvoiceBill = ({ invoiceData }) => {
   return (
     <div className="invoice-wrapper">
       <div className="invoice" ref={invoiceRef}>
+        {isCancelled && (
+          <div className="cancel-stamp-overlay">
+            {stampImage ? (
+              <img
+                src={stampImage}
+                alt="CANCELLED"
+                className="cancel-stamp-img"
+              />
+            ) : (
+              <div className="cancel-stamp">CANCELLED</div>
+            )}
+          </div>
+        )}
         {/* Header */}
         <div className="invoice-header">
           <div className="header-left">
