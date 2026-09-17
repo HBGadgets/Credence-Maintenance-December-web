@@ -377,7 +377,37 @@ const AppHeader = () => {
           </span>
         </div>
 
-        <CHeaderNav className="ms-auto d-flex align-items-center">
+        {/* Center: Desktop Navigation Links (centered horizontally & vertically) */}
+        <div className="d-none d-lg-flex align-items-center justify-content-center position-absolute start-50 top-50 translate-middle">
+          <ul className="nav-links-center">
+            {filteredNav.map((item, index) => {
+              // Skip section titles
+              if (item.component?.name === 'CNavTitle' || item.name === 'Maintenance') {
+                return null;
+              }
+
+              const isSectionActive =
+                activeSection &&
+                item.name &&
+                activeSection.trim().toLowerCase() === item.name.trim().toLowerCase();
+
+              return (
+                <li key={index}>
+                  <button
+                    type="button"
+                    onClick={() => handleNavbarOptionClick(item)}
+                    className={`pill-nav-item ${isSectionActive ? 'active' : ''}`}
+                  >
+                    {item.name.trim()}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Right: Notification Bell & User Avatar */}
+        <CHeaderNav className="ms-auto d-flex align-items-center z-1">
           {/* Notifications Bell */}
           <div className="position-relative me-2">
             <NotificationDropdown
