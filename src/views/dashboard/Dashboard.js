@@ -443,7 +443,7 @@ const Dashboard = () => {
   const cards = [
     {
       label: 'Drivers',
-      icon: <img src={driversIcon} alt="Drivers" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={driversIcon} alt="Drivers" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
@@ -461,11 +461,12 @@ const Dashboard = () => {
         borderBottom: '2px solid #dc3545',
         borderRight: '2px solid #dc3545',
       },
+      shadow: 'inset 0 0 20px rgba(40, 167, 69, 0.4)',
       onClick: () => handleDriveStatus('Drivers Aavailablity'),
     },
     {
       label: 'Vehicles',
-      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
@@ -478,11 +479,12 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalVehicles ?? 0,
       borders: { border: '2px solid #17a2b8' },
+      shadow: 'inset 0 0 20px rgba(23, 162, 184, 0.5)',
       onClick: () => handleViewVehicles('Vehicles'),
     },
     {
       label: 'Maintenance',
-      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
@@ -495,11 +497,12 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalVehicles ?? 0,
       borders: { border: '2px solid #2b5c8c' },
+      shadow: 'inset 0 0 20px rgba(43, 92, 140, 0.5)',
       onClick: () => handleViewServicelog('Maintenance'),
     },
     {
       label: 'Attendance',
-      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present: {dashboardData?.driverLocations ?? 0}
@@ -507,11 +510,12 @@ const Dashboard = () => {
       ),
       count: dashboardData?.driverLocations ?? 0,
       borders: { border: '2px solid #4b2c82' },
+      shadow: 'inset 0 0 20px rgba(75, 44, 130, 0.5)',
       onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
       label: 'Expenses',
-      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹{dashboardData?.expenses?.total?.toLocaleString() ?? 0}
@@ -521,11 +525,12 @@ const Dashboard = () => {
         ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
         : `₹${dashboardData?.expenses?.total ?? 0}`,
       borders: { border: '2px solid #fd7e14' },
+      shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
       onClick: () => handleExpenses('Expenses'),
     },
     {
       label: 'Live on Work',
-      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty: {dashboardData?.driversLiveOnWork ?? 0}
@@ -535,11 +540,12 @@ const Dashboard = () => {
       ),
       count: dashboardData?.driversLiveOnWork ?? 0,
       borders: { border: '2px solid #008080' },
+      shadow: 'inset 0 0 20px rgba(0, 128, 128, 0.5)',
       onClick: () => handleViewDrives('Live on Work'),
     },
     {
       label: 'Document Alert',
-      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
@@ -547,11 +553,12 @@ const Dashboard = () => {
       ),
       count: dashboardData?.documentAlerts ?? 0,
       borders: { border: '2px solid #dc3545' },
+      shadow: 'inset 0 0 20px rgba(220, 53, 69, 0.5)',
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
       label: 'Transport Receipt',
-      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '64px', height: '54px', objectFit: 'contain' }} />,
+      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
       subtext: (
         <>
           <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass: {dashboardData?.todayGodownLorryReceiptCount || '0'}
@@ -559,6 +566,7 @@ const Dashboard = () => {
       ),
       count: dashboardData?.totalGodownLorryReceiptCount || '0',
       borders: { border: '2px solid #0d6efd' },
+      shadow: 'inset 0 0 20px rgba(13, 110, 253, 0.5)',
       onClick: () => handleTP('Transport Receipt'),
     },
   ]
@@ -582,7 +590,7 @@ const Dashboard = () => {
 
         .hover-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), var(--hover-shadow, transparent) !important;
         }
 
         .card-label {
@@ -590,9 +598,7 @@ const Dashboard = () => {
           font-size: 13px;
           color: #1a1a1a;
           margin-bottom: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          line-height: 1.2;
         }
 
         .card-count {
@@ -612,9 +618,7 @@ const Dashboard = () => {
           font-size: 11px;
           color: #555;
           margin-bottom: 4px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          line-height: 1.3;
         }
 
         .side-handle-btn {
@@ -803,7 +807,7 @@ const Dashboard = () => {
             <div className="dashboard-card-wrapper" key={idx}>
               <CCard
                 className="hover-card shadow-sm h-100"
-                style={{ cursor: 'pointer', ...card.borders }}
+                style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
                 onClick={card.onClick}
               >
                 <CCardBody className="p-2 d-flex align-items-center">
