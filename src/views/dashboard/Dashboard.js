@@ -254,16 +254,6 @@ const Dashboard = () => {
   const DailyTripLogsList = DailyTripLogsResponse?.data || []
   const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
 
-  // Fetch Daily Trip Logs for Analytics (All logs)
-  const { data: DailyTripLogsAnalyticsData } = useQuery({
-    queryKey: ['DailyTripLogsAnalytics', token, 1, 10000, ''],
-    queryFn: getDailyTripLogsApi,
-    staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken,
-  })
-
-  const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || []
-
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
   const metadata = data?.metadata || {}
@@ -376,6 +366,17 @@ const Dashboard = () => {
 
     // Add calculated fields
     const styledData = filtered.map((data) => {
+      if (tableMode === 'Daily Trip Logs') {
+        return {
+          ...data,
+          status: data.status ? <span className={getStatusBadge(data.status)}>{data.status}</span> : data.status,
+          driverName: data.driverId?.name || 'N/A',
+          contactNumber: data.driverId?.contactNumber || 'N/A',
+          vehicleName: data.driverId?.currentVehicleName || 'N/A',
+          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A'
+        }
+      }
+
       if (tableMode === 'Daily Trip Logs') {
         return {
           ...data,
@@ -880,7 +881,20 @@ const Dashboard = () => {
               <Table
                 title={
                   <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
-                    <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+                    <div className="d-flex align-items-center gap-2">
+                      <select 
+                        className="form-select form-select-sm shadow-sm bg-light"
+                        style={{ width: '160px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
+                        value={tableMode}
+                        onChange={(e) => {
+                          setTableMode(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value="Trip">Trips Details</option>
+                        <option value="Daily Trip Logs">Daily Trip Logs</option>
+                      </select>
+                    </div>
                     <div className="d-flex align-items-center gap-3 flex-wrap">
                       <DateRangeFilterCredence
                         title="Date Range"
@@ -897,8 +911,10 @@ const Dashboard = () => {
                 setCurrentPage={setCurrentPage}
                 itemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
-                isFetching={isFetching}
+                isFetching={tableMode === 'Trip' ? isFetching : isFetchingDailyLogs}
                 onViewReport={() => handleViewDetailedReport()}
+                serverPagination={tableMode === 'Daily Trip Logs'}
+                totalServerItems={tableMode === 'Daily Trip Logs' ? totalDailyTripLogs : filteredData.length}
               />
             </div>
           )}
