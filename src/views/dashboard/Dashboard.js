@@ -51,37 +51,79 @@ import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
 import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
 
-const FleetAnalyticsChart = ({ data }) => {
+const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
+  const [overviewMode, setOverviewMode] = useState('Resource Overview')
   const [filterCategory, setFilterCategory] = useState('All')
+  const [tripCategory, setTripCategory] = useState('Trip')
+
+  const tripStats = useMemo(() => {
+    let pending = 0, started = 0, completed = 0;
+    (tripsData || []).forEach(trip => {
+      const st = trip.status?.toLowerCase() || '';
+      if (st.includes('pending')) pending++;
+      else if (st.includes('start') || st.includes('live') || st.includes('ongoing')) started++;
+      else if (st.includes('complete') || st.includes('finish')) completed++;
+      else pending++; // fallback
+    })
+    return { pending, started, completed }
+  }, [tripsData])
+
+  const dailyTripStats = useMemo(() => {
+    let started = 0, completed = 0;
+    (dailyTripsData || []).forEach(trip => {
+      const st = trip.status?.toLowerCase() || '';
+      if (st.includes('complete') || st.includes('finish')) {
+        completed++;
+      } else {
+        started++; // 'started' hi 'pending' h
+      }
+    })
+    return { started, completed }
+  }, [dailyTripsData])
 
   const pieData = useMemo(() => {
-    switch (filterCategory) {
-      case 'Vehicles':
+    if (overviewMode === 'Trips Overview') {
+      if (tripCategory === 'Trip') {
         return [
-          { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
-          { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
-          { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
+          { name: 'Pending', value: tripStats.pending, color: '#ffc107' },
+          { name: 'Started', value: tripStats.started, color: '#17a2b8' },
+          { name: 'Completed', value: tripStats.completed, color: '#28a745' },
         ]
-      case 'Drivers':
+      } else {
         return [
-          { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
-          { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
-          { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
+          { name: 'Started Logs', value: dailyTripStats.started, color: '#17a2b8' },
+          { name: 'Completed Logs', value: dailyTripStats.completed, color: '#28a745' },
         ]
-      case 'Documents':
-        return [
-          { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-          { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
-        ]
-      case 'All':
-      default:
-        return [
-          { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
-          { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
-          { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-        ]
+      }
+    } else {
+      switch (filterCategory) {
+        case 'Vehicles':
+          return [
+            { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
+            { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
+            { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
+          ]
+        case 'Drivers':
+          return [
+            { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
+            { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
+            { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
+          ]
+        case 'Documents':
+          return [
+            { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+            { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
+          ]
+        case 'All':
+        default:
+          return [
+            { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
+            { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
+            { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+          ]
+      }
     }
-  }, [filterCategory, data])
+  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats])
 
   const areaData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
@@ -110,19 +152,41 @@ const FleetAnalyticsChart = ({ data }) => {
 
   return (
     <div className="w-100 h-100 d-flex flex-column">
-      {/* Filter Dropdown */}
-      <div className="d-flex justify-content-end mb-2 px-2">
+      {/* Filter Dropdowns */}
+      <div className="d-flex justify-content-end gap-2 mb-2 px-2">
         <select
-          className="form-select form-select-sm"
-          style={{ width: '150px' }}
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
+          className="form-select form-select-sm shadow-sm"
+          style={{ width: '160px', fontWeight: '500' }}
+          value={overviewMode}
+          onChange={(e) => setOverviewMode(e.target.value)}
         >
-          <option value="All">All Overview</option>
-          <option value="Vehicles">Vehicles</option>
-          <option value="Drivers">Drivers</option>
-          <option value="Documents">Documents</option>
+          <option value="Resource Overview">Resource Overview</option>
+          <option value="Trips Overview">Trips Overview</option>
         </select>
+
+        {overviewMode === 'Resource Overview' ? (
+          <select
+            className="form-select form-select-sm shadow-sm"
+            style={{ width: '150px' }}
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          >
+            <option value="All">All Overview</option>
+            <option value="Vehicles">Vehicles</option>
+            <option value="Drivers">Drivers</option>
+            <option value="Documents">Documents</option>
+          </select>
+        ) : (
+          <select
+            className="form-select form-select-sm shadow-sm"
+            style={{ width: '150px' }}
+            value={tripCategory}
+            onChange={(e) => setTripCategory(e.target.value)}
+          >
+            <option value="Trip">Trips</option>
+            <option value="Daily Trip">Daily Trips Logs</option>
+          </select>
+        )}
       </div>
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
@@ -253,6 +317,16 @@ const Dashboard = () => {
 
   const DailyTripLogsList = DailyTripLogsResponse?.data || []
   const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
+
+  // Fetch Daily Trip Logs for Analytics (All logs)
+  const { data: DailyTripLogsAnalyticsData } = useQuery({
+    queryKey: ['DailyTripLogsAnalytics', token, 1, 10000, ''],
+    queryFn: getDailyTripLogsApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken,
+  })
+
+  const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || []
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
@@ -954,7 +1028,7 @@ const Dashboard = () => {
                   <strong>Fleet Analytics</strong>
                 </CCardHeader>
                 <CCardBody className="px-4 pb-4 d-flex flex-column justify-content-center">
-                  <FleetAnalyticsChart data={dashboardData} />
+                  <FleetAnalyticsChart data={dashboardData} tripsData={TripsList} dailyTripsData={dailyTripsAnalyticsList} />
                 </CCardBody>
               </CCard>
             </div>
