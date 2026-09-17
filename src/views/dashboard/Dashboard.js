@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useMemo } from 'react'
 import {
   CAvatar,
   CButton,
@@ -52,62 +52,135 @@ import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
 
 const FleetAnalyticsChart = ({ data }) => {
-  const pieData = [
-    { name: 'Active', value: data?.availableVehicles || 35, color: '#0d2550' },
-    { name: 'Idle', value: data?.vehiclesUnderMaintenance || 12, color: '#008080' },
-    { name: 'Offline', value: data?.unavailableVehicles || 8, color: '#dc3545' },
-    { name: 'Otlive', value: 5, color: '#fd7e14' },
-  ]
+  const [filterCategory, setFilterCategory] = useState('All')
 
-  const areaData = [
-    { name: 'Jan', Active: 4000, Idle: 2400, Otlive: 1000, Offline: 2400 },
-    { name: 'Feb', Active: 3000, Idle: 1398, Otlive: 2000, Offline: 2210 },
-    { name: 'Mar', Active: 2000, Idle: 9800, Otlive: 1500, Offline: 2290 },
-    { name: 'Apr', Active: 2780, Idle: 3908, Otlive: 1200, Offline: 2000 },
-    { name: 'May', Active: 1890, Idle: 4800, Otlive: 1800, Offline: 2181 },
-    { name: 'Jun', Active: 2390, Idle: 3800, Otlive: 2200, Offline: 2500 },
-    { name: 'Jul', Active: 3490, Idle: 4300, Otlive: 1700, Offline: 2100 },
-  ]
+  const pieData = useMemo(() => {
+    switch (filterCategory) {
+      case 'Vehicles':
+        return [
+          { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
+          { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
+          { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
+        ]
+      case 'Drivers':
+        return [
+          { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
+          { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
+          { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
+        ]
+      case 'Documents':
+        return [
+          { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+          { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
+        ]
+      case 'All':
+      default:
+        return [
+          { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
+          { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
+          { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+        ]
+    }
+  }, [filterCategory, data])
+
+  const areaData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+
+    // Deterministic random so the dummy graph doesn't change on re-render
+    const seedRandom = (seed) => {
+      let x = Math.sin(seed++) * 10000
+      return x - Math.floor(x)
+    }
+
+    return months.map((month, mIdx) => {
+      let obj = { name: month }
+      pieData.forEach((item, kIdx) => {
+        const currentValue = item.value || 0
+        if (currentValue === 0) {
+          obj[item.name] = 0
+        } else {
+          // fluctuate between 70% and 130% of the current value
+          const fluctuation = 0.7 + seedRandom(mIdx * 10 + kIdx) * 0.6
+          obj[item.name] = Math.max(0, Math.floor(currentValue * fluctuation))
+        }
+      })
+      return obj
+    })
+  }, [pieData])
 
   return (
-    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center h-100 gap-3 w-100">
-      <div style={{ width: '100%', height: '220px', flex: 1 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieData}
-              innerRadius={50}
-              outerRadius={80}
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="w-100 h-100 d-flex flex-column">
+      {/* Filter Dropdown */}
+      <div className="d-flex justify-content-end mb-2 px-2">
+        <select
+          className="form-select form-select-sm"
+          style={{ width: '150px' }}
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        >
+          <option value="All">All Overview</option>
+          <option value="Vehicles">Vehicles</option>
+          <option value="Drivers">Drivers</option>
+          <option value="Documents">Documents</option>
+        </select>
       </div>
 
-      <div style={{ width: '100%', height: '220px', flex: 1.5 }}>
-        <div className="d-flex justify-content-center flex-wrap gap-2 mb-2" style={{ fontSize: '11px' }}>
-           {pieData.map(item => (
-             <div key={item.name} className="d-flex align-items-center gap-1">
-               <div style={{ width: '8px', height: '8px', backgroundColor: item.color, borderRadius: '2px' }}></div>
-               <span>{item.name}</span>
-             </div>
-           ))}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
+        <div style={{ width: '100%', height: '180px', flex: 1 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                innerRadius={50}
+                outerRadius={75}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-        <ResponsiveContainer width="100%" height="80%">
-          <AreaChart data={areaData}>
-            <Area type="monotone" dataKey="Active" stroke="#0d2550" fill="#0d2550" fillOpacity={0.3} />
-            <Area type="monotone" dataKey="Idle" stroke="#008080" fill="#008080" fillOpacity={0.3} />
-            <Area type="monotone" dataKey="Otlive" stroke="#fd7e14" fill="#fd7e14" fillOpacity={0.3} />
-            <Area type="monotone" dataKey="Offline" stroke="#dc3545" fill="#dc3545" fillOpacity={0.3} />
-            <Tooltip />
-          </AreaChart>
-        </ResponsiveContainer>
+
+        <div style={{ width: '100%', height: '200px', flex: 1.5, display: 'flex', flexDirection: 'column' }}>
+          <div className="d-flex justify-content-center flex-wrap gap-3 mb-2" style={{ fontSize: '12px', fontWeight: '500' }}>
+            {pieData.map((item) => (
+              <div key={item.name} className="d-flex align-items-center gap-1">
+                <div
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: item.color,
+                    borderRadius: '2px',
+                  }}
+                ></div>
+                <span>
+                  {item.name}: <span style={{ color: '#666' }}>{item.value}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaData}>
+                {pieData.map((item, index) => (
+                  <Area
+                    key={index}
+                    type="monotone"
+                    dataKey={item.name}
+                    stroke={item.color}
+                    fill={item.color}
+                    fillOpacity={0.3}
+                  />
+                ))}
+                <Tooltip />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -251,9 +324,17 @@ const Dashboard = () => {
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
+      const start = new Date(dateRange.startDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(dateRange.endDate)
+      end.setHours(23, 59, 59, 999)
+
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.orginalDate)
-        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+        const dateStr = item.date || item.orginalDate || item.createdAt || item.startDate
+        if (!dateStr) return false
+        
+        const itemDate = new Date(dateStr)
+        return itemDate >= start && itemDate <= end
       })
     }
 

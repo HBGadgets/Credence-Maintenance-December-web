@@ -61,9 +61,10 @@ const skeletonStyles = `
     gap: 4px;
   }
 
-  /* 🔹 Thin horizontal scrollbar */
+  /* 🔹 Thin scrollbar */
   .table-responsive::-webkit-scrollbar {
     height: 6px;
+    width: 6px;
   }
   .table-responsive::-webkit-scrollbar-thumb {
     background: #c1c1c1;
@@ -87,6 +88,11 @@ const skeletonStyles = `
     padding: 10px 8px !important;
     line-height: 1.2;
     height: 45px;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: inset 0 -1px 0 #dee2e6;
   }
 `
 
@@ -170,9 +176,10 @@ function Table({
           <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
             {typeof title === 'string' ? <strong>{title}</strong> : title}
           </CCardHeader>
-          <CCardBody className="flex-grow-1">
-            <CTable striped hover responsive bordered>
-              <CTableHead>
+          <CCardBody className="flex-grow-1 p-0 d-flex flex-column overflow-hidden">
+            <div className="table-responsive flex-grow-1" style={{ overflowY: 'auto', minHeight: 0 }}>
+              <CTable striped hover bordered className="mb-0">
+                <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
                   {columns
@@ -349,7 +356,8 @@ function Table({
                   ))
                 )}
               </CTableBody>
-            </CTable>
+              </CTable>
+            </div>
           </CCardBody>
 
           {/* Pagination Footer */}
@@ -374,8 +382,8 @@ function Table({
                 <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: '65px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
-                  value={itemsPerPage}
+                  style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
+                  value={itemsPerPage >= 1000000 ? 1000000 : itemsPerPage}
                   onChange={(e) => {
                     if (setItemsPerPage) setItemsPerPage(Number(e.target.value))
                     if (setCurrentPage) setCurrentPage(1)
@@ -386,6 +394,7 @@ function Table({
                   <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="50">50</option>
+                  <option value="1000000">All</option>
                 </select>
               </div>
 
