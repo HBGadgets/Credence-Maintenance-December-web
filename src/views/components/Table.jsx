@@ -121,9 +121,6 @@ function Table({
   setCurrentPage,
   setItemsPerPage,
   onViewReport,
-  setCurrentPage,
-  setItemsPerPage,
-  onViewReport,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -142,15 +139,6 @@ function Table({
   const goToLastPage = () => setCurrentPage?.(totalPages)
   const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
   const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
-
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
-
-  const goToFirstPage = () => setCurrentPage?.(1)
-  const goToLastPage = () => setCurrentPage?.(totalPages)
-  const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
-  const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
-
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -184,12 +172,7 @@ function Table({
 
   return (
     <CRow className="h-100 m-0">
-    <CRow className="h-100 m-0">
       <style>{skeletonStyles}</style>
-      <CCol xs={12} className="h-100 p-0">
-        <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
-          <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
-            {typeof title === 'string' ? <strong>{title}</strong> : title}
       <CCol xs={12} className="h-100 p-0">
         <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
           <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
