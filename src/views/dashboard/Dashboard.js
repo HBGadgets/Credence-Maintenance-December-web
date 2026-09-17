@@ -26,7 +26,7 @@ import { TbTruckDelivery } from 'react-icons/tb'
 import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TokenContext } from '../../context/TokenContext'
 import { useQuery } from '@tanstack/react-query'
-import { fetchAllAdmin, fetchDashboardData, getAllTripListApi } from './data/data'
+import { fetchAllAdmin, fetchDashboardData, getAllTripListApi, getDailyTripLogsApi } from './data/data'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { jwtDecode } from 'jwt-decode'
 import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers'
@@ -207,6 +207,7 @@ const Dashboard = () => {
   }
 
   const navigate = useNavigate()
+  const [tableMode, setTableMode] = useState('Trip')
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -242,6 +243,17 @@ const Dashboard = () => {
     staleTime: 1000 * 60 * 30,
     enabled: !!token && !!decodedToken,
   })
+
+  // Fetch Daily Trip Logs
+  const { data: DailyTripLogsResponse, isFetching: isFetchingDailyLogs } = useQuery({
+    queryKey: ['DailyTripLogs', token, currentPage, itemsPerPage, searchQuery],
+    queryFn: getDailyTripLogsApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs',
+  })
+
+  const DailyTripLogsList = DailyTripLogsResponse?.data || []
+  const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
@@ -313,9 +325,14 @@ const Dashboard = () => {
   }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts])
 
   useEffect(() => {
-    if (!TripsList || TripsList.length === 0) return
+    const activeList = tableMode === 'Trip' ? TripsList : DailyTripLogsList
+    
+    if (!activeList || activeList.length === 0) {
+      setFilteredData([])
+      return
+    }
 
-    let filtered = TripsList
+    let filtered = activeList
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
@@ -350,6 +367,17 @@ const Dashboard = () => {
 
     // Add calculated fields
     const styledData = filtered.map((data) => {
+      if (tableMode === 'Daily Trip Logs') {
+        return {
+          ...data,
+          status: data.status ? <span className={getStatusBadge(data.status)}>{data.status}</span> : data.status,
+          driverName: data.driverId?.name || 'N/A',
+          contactNumber: data.driverId?.contactNumber || 'N/A',
+          vehicleName: data.driverId?.currentVehicleName || 'N/A',
+          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A'
+        }
+      }
+
       const budgetAllocated = Number(data.budgetAllocated) || 0
       const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
       const spentAmount = Number(data.spentAmount) || 0
@@ -365,10 +393,10 @@ const Dashboard = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, selectedName, searchQuery, dateRange])
+  }, [TripsList, DailyTripLogsList, selectedName, searchQuery, dateRange, tableMode])
 
   // Table view
-  const columns = [
+  const baseTripColumns = [
     { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
     { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
@@ -383,6 +411,19 @@ const Dashboard = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
+  const dailyTripColumns = [
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Contact Number', key: 'contactNumber', sortable: true },
+    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Odometer Start', key: 'odometerStart', sortable: true },
+    { label: 'Start Time', key: 'startTime', sortable: true },
+    { label: 'Total Distance', key: 'totalDistance', sortable: true },
+    { label: 'GPS KM', key: 'gpsKM', sortable: true },
+    { label: 'Status', key: 'status', sortable: true },
+  ]
+
+  const columns = tableMode === 'Trip' ? baseTripColumns : dailyTripColumns
+
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -395,7 +436,11 @@ const Dashboard = () => {
 
   // handle navigate
   const handleViewDetailedReport = () => {
-    navigate(`/Trip`)
+    if (tableMode === 'Daily Trip Logs') {
+      navigate('/DailyTrips')
+    } else {
+      navigate('/Trip')
+    }
   }
 
   //handle navigate driver
@@ -764,7 +809,20 @@ const Dashboard = () => {
               <Table
                 title={
                   <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
-                    <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+                    <div className="d-flex align-items-center gap-2">
+                      <select 
+                        className="form-select form-select-sm shadow-sm bg-light"
+                        style={{ width: '160px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
+                        value={tableMode}
+                        onChange={(e) => {
+                          setTableMode(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value="Trip">Trips Details</option>
+                        <option value="Daily Trip Logs">Daily Trip Logs</option>
+                      </select>
+                    </div>
                     <div className="d-flex align-items-center gap-3 flex-wrap">
                       <DateRangeFilterCredence
                         title="Date Range"
@@ -781,8 +839,10 @@ const Dashboard = () => {
                 setCurrentPage={setCurrentPage}
                 itemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
-                isFetching={isFetching}
+                isFetching={tableMode === 'Trip' ? isFetching : isFetchingDailyLogs}
                 onViewReport={() => handleViewDetailedReport()}
+                serverPagination={tableMode === 'Daily Trip Logs'}
+                totalServerItems={tableMode === 'Daily Trip Logs' ? totalDailyTripLogs : filteredData.length}
               />
             </div>
           )}
