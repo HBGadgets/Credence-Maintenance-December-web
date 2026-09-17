@@ -51,79 +51,37 @@ import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
 import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
 
-const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
-  const [overviewMode, setOverviewMode] = useState('Resource Overview')
+const FleetAnalyticsChart = ({ data }) => {
   const [filterCategory, setFilterCategory] = useState('All')
-  const [tripCategory, setTripCategory] = useState('Trip')
-
-  const tripStats = useMemo(() => {
-    let pending = 0, started = 0, completed = 0;
-    (tripsData || []).forEach(trip => {
-      const st = trip.status?.toLowerCase() || '';
-      if (st.includes('pending')) pending++;
-      else if (st.includes('start') || st.includes('live') || st.includes('ongoing')) started++;
-      else if (st.includes('complete') || st.includes('finish')) completed++;
-      else pending++; // fallback
-    })
-    return { pending, started, completed }
-  }, [tripsData])
-
-  const dailyTripStats = useMemo(() => {
-    let started = 0, completed = 0;
-    (dailyTripsData || []).forEach(trip => {
-      const st = trip.status?.toLowerCase() || '';
-      if (st.includes('complete') || st.includes('finish')) {
-        completed++;
-      } else {
-        started++; // 'started' hi 'pending' h
-      }
-    })
-    return { started, completed }
-  }, [dailyTripsData])
 
   const pieData = useMemo(() => {
-    if (overviewMode === 'Trips Overview') {
-      if (tripCategory === 'Trip') {
+    switch (filterCategory) {
+      case 'Vehicles':
         return [
-          { name: 'Pending', value: tripStats.pending, color: '#ffc107' },
-          { name: 'Started', value: tripStats.started, color: '#17a2b8' },
-          { name: 'Completed', value: tripStats.completed, color: '#28a745' },
+          { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
+          { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
+          { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
         ]
-      } else {
+      case 'Drivers':
         return [
-          { name: 'Started Logs', value: dailyTripStats.started, color: '#17a2b8' },
-          { name: 'Completed Logs', value: dailyTripStats.completed, color: '#28a745' },
+          { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
+          { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
+          { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
         ]
-      }
-    } else {
-      switch (filterCategory) {
-        case 'Vehicles':
-          return [
-            { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
-            { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
-            { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
-          ]
-        case 'Drivers':
-          return [
-            { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
-            { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
-            { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
-          ]
-        case 'Documents':
-          return [
-            { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-            { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
-          ]
-        case 'All':
-        default:
-          return [
-            { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
-            { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
-            { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-          ]
-      }
+      case 'Documents':
+        return [
+          { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+          { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
+        ]
+      case 'All':
+      default:
+        return [
+          { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
+          { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
+          { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+        ]
     }
-  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats])
+  }, [filterCategory, data])
 
   const areaData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
@@ -152,41 +110,19 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
 
   return (
     <div className="w-100 h-100 d-flex flex-column">
-      {/* Filter Dropdowns */}
-      <div className="d-flex justify-content-end gap-2 mb-2 px-2">
+      {/* Filter Dropdown */}
+      <div className="d-flex justify-content-end mb-2 px-2">
         <select
-          className="form-select form-select-sm shadow-sm"
-          style={{ width: '160px', fontWeight: '500' }}
-          value={overviewMode}
-          onChange={(e) => setOverviewMode(e.target.value)}
+          className="form-select form-select-sm"
+          style={{ width: '150px' }}
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
         >
-          <option value="Resource Overview">Resource Overview</option>
-          <option value="Trips Overview">Trips Overview</option>
+          <option value="All">All Overview</option>
+          <option value="Vehicles">Vehicles</option>
+          <option value="Drivers">Drivers</option>
+          <option value="Documents">Documents</option>
         </select>
-
-        {overviewMode === 'Resource Overview' ? (
-          <select
-            className="form-select form-select-sm shadow-sm"
-            style={{ width: '150px' }}
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="All">All Overview</option>
-            <option value="Vehicles">Vehicles</option>
-            <option value="Drivers">Drivers</option>
-            <option value="Documents">Documents</option>
-          </select>
-        ) : (
-          <select
-            className="form-select form-select-sm shadow-sm"
-            style={{ width: '150px' }}
-            value={tripCategory}
-            onChange={(e) => setTripCategory(e.target.value)}
-          >
-            <option value="Trip">Trips</option>
-            <option value="Daily Trip">Daily Trips Logs</option>
-          </select>
-        )}
       </div>
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
