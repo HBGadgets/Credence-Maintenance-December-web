@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useMemo, useRef } from 'react'
 import {
   CAvatar,
   CButton,
@@ -26,7 +26,7 @@ import { TbTruckDelivery } from 'react-icons/tb'
 import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TokenContext } from '../../context/TokenContext'
 import { useQuery } from '@tanstack/react-query'
-import { fetchAllAdmin, fetchDashboardData, getAllTripListApi } from './data/data'
+import { fetchAllAdmin, fetchDashboardData, getAllTripListApi, getDailyTripLogsApi } from './data/data'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { jwtDecode } from 'jwt-decode'
 import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers'
@@ -34,6 +34,7 @@ import Table from '../components/Table'
 import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import logo from 'src/assets/brand/fmslogo.svg'
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
 import { socket } from '../customhooks/useSocket'
@@ -41,12 +42,226 @@ import { NotificationContext } from '../../context/NotificationContext'
 import notificationSound from '../../../mario_up.mp3'
 import Cookies from 'js-cookie'
 import { BsPassFill } from 'react-icons/bs'
+import { PieChart, Pie, Cell, Tooltip, AreaChart, Area, ResponsiveContainer } from 'recharts'
+import vehiclesIcon from 'src/assets/images/vehicles-icon.png'
+import driversIcon from 'src/assets/images/drivers-icon.png'
+import maintenanceIcon from 'src/assets/images/maintenance-icon.png'
+import attendanceIcon from 'src/assets/images/attendance-icon.png'
+import expenseIcon from 'src/assets/images/expense-icon.png'
+import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
+import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
+import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
+
+const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
+  const [overviewMode, setOverviewMode] = useState('Resource Overview')
+  const [filterCategory, setFilterCategory] = useState('All')
+  const [tripCategory, setTripCategory] = useState('Trip')
+
+  const tripStats = useMemo(() => {
+    let pending = 0, started = 0, completed = 0;
+    (tripsData || []).forEach(trip => {
+      const st = trip.status?.toLowerCase() || '';
+      if (st.includes('pending')) pending++;
+      else if (st.includes('start') || st.includes('live') || st.includes('ongoing')) started++;
+      else if (st.includes('complete') || st.includes('finish')) completed++;
+      else pending++; // fallback
+    })
+    return { pending, started, completed }
+  }, [tripsData])
+
+  const dailyTripStats = useMemo(() => {
+    let started = 0, completed = 0;
+    (dailyTripsData || []).forEach(trip => {
+      const st = trip.status?.toLowerCase() || '';
+      if (st.includes('complete') || st.includes('finish')) {
+        completed++;
+      } else {
+        started++; // 'started' hi 'pending' h
+      }
+    })
+    return { started, completed }
+  }, [dailyTripsData])
+
+  const pieData = useMemo(() => {
+    if (overviewMode === 'Trips Overview') {
+      if (tripCategory === 'Trip') {
+        return [
+          { name: 'Pending', value: tripStats.pending, color: '#ffc107' },
+          { name: 'Started', value: tripStats.started, color: '#17a2b8' },
+          { name: 'Completed', value: tripStats.completed, color: '#28a745' },
+        ]
+      } else {
+        return [
+          { name: 'Started Logs', value: dailyTripStats.started, color: '#17a2b8' },
+          { name: 'Completed Logs', value: dailyTripStats.completed, color: '#28a745' },
+        ]
+      }
+    } else {
+      switch (filterCategory) {
+        case 'Vehicles':
+          return [
+            { name: 'Available', value: data?.availableVehicles || 0, color: '#17a2b8' },
+            { name: 'Unavailable', value: data?.unavailableVehicles || 0, color: '#dc3545' },
+            { name: 'Maintenance', value: data?.vehiclesUnderMaintenance || 0, color: '#fd7e14' },
+          ]
+        case 'Drivers':
+          return [
+            { name: 'Available', value: data?.availableDrivers || 0, color: '#28a745' },
+            { name: 'Unavailable', value: data?.unavailableDrivers || 0, color: '#dc3545' },
+            { name: 'Live on Work', value: data?.driversLiveOnWork || 0, color: '#008080' },
+          ]
+        case 'Documents':
+          return [
+            { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+            { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
+          ]
+        case 'All':
+        default:
+          return [
+            { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
+            { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
+            { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+          ]
+      }
+    }
+  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats])
+
+  const areaData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+
+    // Deterministic random so the dummy graph doesn't change on re-render
+    const seedRandom = (seed) => {
+      let x = Math.sin(seed++) * 10000
+      return x - Math.floor(x)
+    }
+
+    return months.map((month, mIdx) => {
+      let obj = { name: month }
+      pieData.forEach((item, kIdx) => {
+        const currentValue = item.value || 0
+        if (currentValue === 0) {
+          obj[item.name] = 0
+        } else {
+          // fluctuate between 70% and 130% of the current value
+          const fluctuation = 0.7 + seedRandom(mIdx * 10 + kIdx) * 0.6
+          obj[item.name] = Math.max(0, Math.floor(currentValue * fluctuation))
+        }
+      })
+      return obj
+    })
+  }, [pieData])
+
+  return (
+    <div className="w-100 h-100 d-flex flex-column">
+      {/* Filter Dropdowns */}
+      <div className="d-flex justify-content-end gap-2 mb-2 px-2">
+        <select
+          className="form-select form-select-sm shadow-sm"
+          style={{ width: '160px', fontWeight: '500' }}
+          value={overviewMode}
+          onChange={(e) => setOverviewMode(e.target.value)}
+        >
+          <option value="Resource Overview">Resource Overview</option>
+          <option value="Trips Overview">Trips Overview</option>
+        </select>
+
+        {overviewMode === 'Resource Overview' ? (
+          <select
+            className="form-select form-select-sm shadow-sm"
+            style={{ width: '150px' }}
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          >
+            <option value="All">All Overview</option>
+            <option value="Vehicles">Vehicles</option>
+            <option value="Drivers">Drivers</option>
+            <option value="Documents">Documents</option>
+          </select>
+        ) : (
+          <select
+            className="form-select form-select-sm shadow-sm"
+            style={{ width: '150px' }}
+            value={tripCategory}
+            onChange={(e) => setTripCategory(e.target.value)}
+          >
+            <option value="Trip">Trips</option>
+            <option value="Daily Trip">Daily Trips Logs</option>
+          </select>
+        )}
+      </div>
+
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
+        <div style={{ width: '100%', height: '180px', flex: 1 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                innerRadius={50}
+                outerRadius={75}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div style={{ width: '100%', height: '200px', flex: 1.5, display: 'flex', flexDirection: 'column' }}>
+          <div className="d-flex justify-content-center flex-wrap gap-3 mb-2" style={{ fontSize: '12px', fontWeight: '500' }}>
+            {pieData.map((item) => (
+              <div key={item.name} className="d-flex align-items-center gap-1">
+                <div
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: item.color,
+                    borderRadius: '2px',
+                  }}
+                ></div>
+                <span>
+                  {item.name}: <span style={{ color: '#666' }}>{item.value}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaData}>
+                {pieData.map((item, index) => (
+                  <Area
+                    key={index}
+                    type="monotone"
+                    dataKey={item.name}
+                    stroke={item.color}
+                    fill={item.color}
+                    fillOpacity={0.3}
+                  />
+                ))}
+                <Tooltip />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const Dashboard = () => {
   const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected)
 
+  const sidebarShow = useSelector((state) => state.sidebarShow)
+  const activeSection = useSelector((state) => state.activeSection || 'Dashboard')
+  // The sidebar is rendered only when sidebarShow is true AND the active section has sub-items (i.e. not Dashboard)
+  const isSidebarOpen = Boolean(sidebarShow && activeSection && activeSection.trim().toLowerCase() !== 'dashboard')
+
+  const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
   const { notifications, addNotification, unreadCounts, setUnreadCounts } =
     useContext(NotificationContext)
@@ -62,7 +277,86 @@ const Dashboard = () => {
   }
 
   const navigate = useNavigate()
+  const [tableMode, setTableMode] = useState('Trip')
   const [filteredData, setFilteredData] = useState([])
+
+  const scrollContainerRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftRef = useRef(0)
+  const dragDistanceRef = useRef(0)
+
+  const checkScroll = () => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const hasScroll = el.scrollWidth > el.clientWidth + 5
+    setCanScrollLeft(hasScroll && el.scrollLeft > 10)
+    setCanScrollRight(hasScroll && el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+  }
+
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    checkScroll()
+    const handleScrollEvent = () => checkScroll()
+    el.addEventListener('scroll', handleScrollEvent, { passive: true })
+
+    const observer = new ResizeObserver(() => checkScroll())
+    observer.observe(el)
+
+    return () => {
+      el.removeEventListener('scroll', handleScrollEvent)
+      observer.disconnect()
+    }
+  }, [isSidebarOpen])
+
+  const handleScroll = (direction) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const scrollAmount = Math.max(el.clientWidth * 0.7, 300)
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    })
+  }
+
+  const handleWheel = (e) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft += e.deltaY
+      checkScroll()
+    }
+  }
+
+  const handleMouseDown = (e) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    isDraggingRef.current = true
+    dragDistanceRef.current = 0
+    startXRef.current = e.pageX - el.offsetLeft
+    scrollLeftRef.current = el.scrollLeft
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current) return
+    const el = scrollContainerRef.current
+    if (!el) return
+    e.preventDefault()
+    const x = e.pageX - el.offsetLeft
+    const walk = (x - startXRef.current) * 1.2
+    dragDistanceRef.current = Math.abs(walk)
+    el.scrollLeft = scrollLeftRef.current - walk
+    checkScroll()
+  }
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false
+  }
+
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -97,6 +391,27 @@ const Dashboard = () => {
     staleTime: 1000 * 60 * 30,
     enabled: !!token && !!decodedToken,
   })
+
+  // Fetch Daily Trip Logs
+  const { data: DailyTripLogsResponse, isFetching: isFetchingDailyLogs } = useQuery({
+    queryKey: ['DailyTripLogs', token, currentPage, itemsPerPage, searchQuery],
+    queryFn: getDailyTripLogsApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs',
+  })
+
+  const DailyTripLogsList = DailyTripLogsResponse?.data || []
+  const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
+
+  // Fetch Daily Trip Logs for Analytics (All logs)
+  const { data: DailyTripLogsAnalyticsData } = useQuery({
+    queryKey: ['DailyTripLogsAnalytics', token, 1, 10000, ''],
+    queryFn: getDailyTripLogsApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken,
+  })
+
+  const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || []
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
@@ -168,9 +483,14 @@ const Dashboard = () => {
   }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts])
 
   useEffect(() => {
-    if (!TripsList || TripsList.length === 0) return
+    const activeList = tableMode === 'Trip' ? TripsList : DailyTripLogsList
+    
+    if (!activeList || activeList.length === 0) {
+      setFilteredData([])
+      return
+    }
 
-    let filtered = TripsList
+    let filtered = activeList
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
@@ -179,9 +499,17 @@ const Dashboard = () => {
 
     // Filter by date range if available
     if (dateRange.startDate && dateRange.endDate) {
+      const start = new Date(dateRange.startDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(dateRange.endDate)
+      end.setHours(23, 59, 59, 999)
+
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.orginalDate)
-        return itemDate >= new Date(dateRange.startDate) && itemDate <= new Date(dateRange.endDate)
+        const dateStr = item.date || item.orginalDate || item.createdAt || item.startDate
+        if (!dateStr) return false
+        
+        const itemDate = new Date(dateStr)
+        return itemDate >= start && itemDate <= end
       })
     }
 
@@ -197,6 +525,17 @@ const Dashboard = () => {
 
     // Add calculated fields
     const styledData = filtered.map((data) => {
+      if (tableMode === 'Daily Trip Logs') {
+        return {
+          ...data,
+          status: data.status ? <span className={getStatusBadge(data.status)}>{data.status}</span> : data.status,
+          driverName: data.driverId?.name || 'N/A',
+          contactNumber: data.driverId?.contactNumber || 'N/A',
+          vehicleName: data.driverId?.currentVehicleName || 'N/A',
+          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A'
+        }
+      }
+
       const budgetAllocated = Number(data.budgetAllocated) || 0
       const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
       const spentAmount = Number(data.spentAmount) || 0
@@ -212,10 +551,10 @@ const Dashboard = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, selectedName, searchQuery, dateRange])
+  }, [TripsList, DailyTripLogsList, selectedName, searchQuery, dateRange, tableMode])
 
   // Table view
-  const columns = [
+  const baseTripColumns = [
     { label: 'Trip ID', key: 'tripId', sortable: false, hidden: true },
     { label: 'Start Date', key: 'date', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
@@ -230,6 +569,19 @@ const Dashboard = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
+  const dailyTripColumns = [
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Contact Number', key: 'contactNumber', sortable: true },
+    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Odometer Start', key: 'odometerStart', sortable: true },
+    { label: 'Start Time', key: 'startTime', sortable: true },
+    { label: 'Total Distance', key: 'totalDistance', sortable: true },
+    { label: 'GPS KM', key: 'gpsKM', sortable: true },
+    { label: 'Status', key: 'status', sortable: true },
+  ]
+
+  const columns = tableMode === 'Trip' ? baseTripColumns : dailyTripColumns
+
   // Handle Search
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -242,7 +594,11 @@ const Dashboard = () => {
 
   // handle navigate
   const handleViewDetailedReport = () => {
-    navigate(`/Trip`)
+    if (tableMode === 'Daily Trip Logs') {
+      navigate('/DailyTrips')
+    } else {
+      navigate('/Trip')
+    }
   }
 
   //handle navigate driver
@@ -285,434 +641,515 @@ const Dashboard = () => {
     navigate('/GodownLr')
   }
 
-  // cards container
-
-  const [isStatic, setIsStatic] = useState(false)
-
-  const scrollContainer = (direction) => {
-    const container = document.getElementById('dashboard-scroll')
-    const scrollAmount = 300
-    if (container) {
-      container.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      })
-    }
-  }
-
   // cards details
 
   const cards = [
     {
       label: 'Drivers',
-      icon: <IoPersonSharp className="dashboard-icon" />,
-      top: (
+      icon: <img src={driversIcon} alt="Drivers" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Available: {dashboardData?.availableDrivers} |{' '}
-          <span className="text-danger">Unavailable: {dashboardData?.unavailableDrivers}</span>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableDrivers ?? 0}
         </>
       ),
-      bottom: `Total: ${dashboardData?.totalDrivers} (${((dashboardData?.availableDrivers / dashboardData?.totalDrivers) * 100).toFixed(0)}% Active)`,
-      color: 'text-success',
+      count: dashboardData?.totalDrivers ?? 0,
+      borders: {
+        borderTop: '2px solid #28a745',
+        borderLeft: '2px solid #28a745',
+        borderBottom: '2px solid #dc3545',
+        borderRight: '2px solid #dc3545',
+      },
+      shadow: 'inset 0 0 20px rgba(40, 167, 69, 0.4)',
       onClick: () => handleDriveStatus('Drivers Aavailablity'),
     },
     {
       label: 'Vehicles',
-      icon: <FaCar className="dashboard-icon" />,
-      top: (
+      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Available: {dashboardData?.availableVehicles} |{' '}
-          <span className="text-danger">Unavailable: {dashboardData?.unavailableVehicles}</span>
+          <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableVehicles ?? 0}
         </>
       ),
-      bottom: `Total: ${dashboardData?.totalVehicles} (${Math.floor((dashboardData?.availableVehicles / dashboardData?.totalVehicles) * 100)}% Running)`,
-      color: 'text-success',
+      count: dashboardData?.totalVehicles ?? 0,
+      borders: { border: '2px solid #17a2b8' },
+      shadow: 'inset 0 0 20px rgba(23, 162, 184, 0.5)',
       onClick: () => handleViewVehicles('Vehicles'),
     },
     {
       label: 'Maintenance',
-      icon: <IoSettingsSharp className="dashboard-icon" />,
-      top: (
+      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
         <>
-          Good:{' '}
-          {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)} |{' '}
-          <span className="text-danger">
-            Need Services: {dashboardData?.vehiclesUnderMaintenance ?? 0}
-          </span>
+          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
+          <br />
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert: {dashboardData?.vehiclesUnderMaintenance ?? 0}
         </>
       ),
-
-      bottom: (() => {
-        const total = dashboardData?.totalVehicles ?? 0
-        const under = dashboardData?.vehiclesUnderMaintenance ?? 0
-        const good = total - under
-        const totalChecked = total
-        const healthyPercent = totalChecked ? Math.floor((good / totalChecked) * 100) : 0
-        return `Total Checked: ${totalChecked} (${healthyPercent}% Healthy)`
-      })(),
-      color: 'text-success',
+      count: dashboardData?.totalVehicles ?? 0,
+      borders: { border: '2px solid #2b5c8c' },
+      shadow: 'inset 0 0 20px rgba(43, 92, 140, 0.5)',
       onClick: () => handleViewServicelog('Maintenance'),
     },
     {
-      label: 'Driver Locations',
-      icon: <FaMapLocationDot className="dashboard-icon" />,
-      top: `Locations : ${dashboardData?.driverLocations}`,
-      bottom: 'Driver Today Attendances',
-      color: 'text-primary',
+      label: 'Attendance',
+      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present: {dashboardData?.driverLocations ?? 0}
+        </>
+      ),
+      count: dashboardData?.driverLocations ?? 0,
+      borders: { border: '2px solid #4b2c82' },
+      shadow: 'inset 0 0 20px rgba(75, 44, 130, 0.5)',
       onClick: () => handleDriverLoc('Driver Attendance Location'),
     },
     {
       label: 'Expenses',
-      icon: <RiMoneyRupeeCircleFill className="dashboard-icon" />,
-      top: `Today Expenses: ₹${dashboardData?.expenses?.total.toLocaleString()}`,
-      bottom: 'Fleet Expenses',
-      color: 'text-primary',
+      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹{dashboardData?.expenses?.total?.toLocaleString() ?? 0}
+        </>
+      ),
+      count: dashboardData?.expenses?.total >= 1000
+        ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
+        : `₹${dashboardData?.expenses?.total ?? 0}`,
+      borders: { border: '2px solid #fd7e14' },
+      shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
       onClick: () => handleExpenses('Expenses'),
     },
     {
       label: 'Live on Work',
-      icon: <TbTruckDelivery className="dashboard-icon" />,
-      top: `On Duty: ${dashboardData?.driversLiveOnWork}`,
-      bottom: `Total Marked: ${dashboardData?.totalDrivers}`,
-      color: 'text-primary',
+      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty: {dashboardData?.driversLiveOnWork ?? 0}
+          <br />
+          <span style={{ color: '#6c757d', fontSize: '10px' }}>●</span> Total: {dashboardData?.totalDrivers ?? 0}
+        </>
+      ),
+      count: dashboardData?.driversLiveOnWork ?? 0,
+      borders: { border: '2px solid #008080' },
+      shadow: 'inset 0 0 20px rgba(0, 128, 128, 0.5)',
       onClick: () => handleViewDrives('Live on Work'),
     },
     {
       label: 'Document Alert',
-      icon: <IoAlertCircle className="dashboard-icon" />,
-      top: `Expiring: ${dashboardData?.documentAlerts}`,
-      bottom: 'Expiring Soon',
-      color: 'text-danger',
+      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
+        </>
+      ),
+      count: dashboardData?.documentAlerts ?? 0,
+      borders: { border: '2px solid #dc3545' },
+      shadow: 'inset 0 0 20px rgba(220, 53, 69, 0.5)',
       onClick: () => handleDocExp('Insurance Alert'),
     },
     {
       label: 'Transport Receipt',
-      icon: <BsPassFill className="dashboard-icon" />,
-      top: `Today Pass: ${dashboardData?.todayGodownLorryReceiptCount || '0'}`,
-      bottom: `Total Pass: ${dashboardData?.totalGodownLorryReceiptCount || '0'} `,
-      color: 'text-primary',
+      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
+      subtext: (
+        <>
+          <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass: {dashboardData?.todayGodownLorryReceiptCount || '0'}
+        </>
+      ),
+      count: dashboardData?.totalGodownLorryReceiptCount || '0',
+      borders: { border: '2px solid #0d6efd' },
+      shadow: 'inset 0 0 20px rgba(13, 110, 253, 0.5)',
       onClick: () => handleTP('Transport Receipt'),
     },
   ]
 
-  // useeffect for scrolling card
-  useEffect(() => {
-    let interval
-    const scrollAmount = 300
 
-    const setupAutoScroll = () => {
-      const container = document.getElementById('dashboard-scroll')
-      if (!container) return
-
-      const autoScroll = () => {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
-        }
-      }
-
-      // Start scrolling
-      interval = setInterval(autoScroll, 5000)
-
-      // Pause on hover
-      container.addEventListener('mouseenter', pauseScroll)
-      container.addEventListener('mouseleave', resumeScroll)
-    }
-
-    const pauseScroll = () => clearInterval(interval)
-
-    const resumeScroll = () => {
-      interval = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (!container) return
-
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: 300, behavior: 'smooth' })
-        }
-      }, 5000)
-    }
-
-    const waitForElementAndStart = () => {
-      const check = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (container) {
-          clearInterval(check)
-          setupAutoScroll()
-        }
-      }, 100)
-    }
-
-    waitForElementAndStart()
-
-    return () => {
-      clearInterval(interval)
-      const container = document.getElementById('dashboard-scroll')
-      if (container) {
-        container.removeEventListener('mouseenter', pauseScroll)
-        container.removeEventListener('mouseleave', resumeScroll)
-      }
-    }
-  }, [])
 
   return token ? (
-    <>
+    <div className="dashboard-wrapper">
       <style>{`
+        .hover-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 12px;
+          background-color: #fff;
+        }
 
-       .hover-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 16px;
-}
+        .hover-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), var(--hover-shadow, transparent) !important;
+        }
 
-.hover-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
+        .card-label {
+          font-weight: 700;
+          font-size: 13px;
+          color: #1a1a1a;
+          margin-bottom: 2px;
+          line-height: 1.2;
+        }
 
-.dashboard-icon {
-  font-size: 26px;
-  color: #000;
-}
+        .card-count {
+          font-size: 20px;
+          font-weight: 800;
+          color: #000;
+          line-height: 1.2;
+        }
 
-.card-label {
-  font-weight: 600;
-  font-size: 16px;
-}
+        .card-subtext {
+          font-size: 11px;
+          color: #555;
+          margin-bottom: 4px;
+          line-height: 1.3;
+        }
 
-.card-count {
-  font-size: 17px;
-  font-weight: 600;
-}
+        .side-handle-btn {
+          background-color: #fff !important;
+          color: #1a1a1a !important;
+          border: 1px solid #ddd !important;
+          transition: all 0.2s ease-in-out;
+        }
 
-.card-subtext {
-  font-size: 14px;
-  color: #6c757d;
-}
+        .side-handle-btn:hover {
+          background-color: #fd7e14 !important;
+          color: #fff !important;
+          border-color: #fd7e14 !important;
+        }
 
-.dashboard-scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 0 1rem 1rem 1rem;
-  gap: 1rem;
-}
+        .dashboard-scroll-container {
+          display: flex;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          gap: 0.85rem;
+          padding: 0.35rem 0.5rem 0.85rem 0.5rem;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+          user-select: none;
+        }
 
-.dashboard-scroll-container::-webkit-scrollbar {
-  display: none;
-}
+        .dashboard-scroll-container::-webkit-scrollbar {
+          display: none;
+        }
 
-.dashboard-scroll-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+        .dashboard-card-wrapper {
+          flex: 0 0 210px;
+          min-width: 210px;
+        }
 
-/* Static mode — grid layout */
-.dashboard-scroll-container.static-mode {
-  overflow-x: hidden !important;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
+        /* When sidebar is closed on desktop: display all 8 cards in a single line */
+        @media (min-width: 1100px) {
+          .dashboard-scroll-container.sidebar-closed {
+            overflow-x: visible;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+          }
 
-/* Responsive card width */
-.dashboard-card-wrapper {
-  flex: 0 0 calc(25% - 1rem);
-  max-width: calc(25% - 1rem);
-}
+          .dashboard-scroll-container.sidebar-closed .dashboard-card-wrapper {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: none;
+          }
 
-@media (max-width: 1200px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 calc(33.333% - 1rem);
-    max-width: calc(33.333% - 1rem);
-  }
-}
+          .dashboard-scroll-container.sidebar-closed .hover-card .p-2 {
+            padding: 0.5rem 0.35rem !important;
+          }
 
-@media (max-width: 992px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 calc(50% - 1rem);
-    max-width: calc(50% - 1rem);
-  }
-}
+          .dashboard-scroll-container.sidebar-closed .card-label {
+            font-size: 11.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
 
-@media (max-width: 576px) {
-  .dashboard-card-wrapper {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-}
+          .dashboard-scroll-container.sidebar-closed .card-count {
+            font-size: 16px;
+          }
 
-/* Button improvements */
-.scroll-buttons .btn {
-  min-width: 34px;
-  height: 34px;
-  font-size: 14px;
-  padding: 0;
-  line-height: 1;
-}
+          .dashboard-scroll-container.sidebar-closed .card-subtext {
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
 
+          .dashboard-scroll-container.sidebar-closed img {
+            width: 38px !important;
+            height: 38px !important;
+          }
+        }
 
-
+        /* Auto-adjusting full screen layout for Table and Analytics */
+        @media (min-width: 1200px) {
+          .dashboard-wrapper {
+             display: flex;
+             flex-direction: column;
+             height: calc(100vh - 110px);
+          }
+          .dashboard-main-container {
+             flex: 1;
+             min-height: 0;
+          }
+          .dashboard-main-col {
+             height: 100%;
+          }
+        }
+        @media (max-width: 1199px) {
+          .dashboard-main-col {
+             height: 550px;
+             margin-bottom: 1.5rem;
+          }
+        }
       `}</style>
-
-      <CCard className="mb-4 shadow-sm border-0 bg-white">
-        <CCardBody className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-4">
-          {/* Left side: icon and title */}
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: '70px',
-                height: '70px',
-                backgroundColor: '#fff',
-                border: '2px solid #eee',
-                overflow: 'hidden',
-              }}
-            >
-              <img
-                src={logo}
-                alt="Fleet Logo"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain', // keeps the image ratio
-                  padding: '6px', // space inside the circle
-                  backgroundColor: '#fff',
-                }}
-              />
-            </div>
-            <div>
-              <h4 className="mb-1 fw-bold text-dark">Fleets Management Systems</h4>
-              <div className="text-muted small">
-                Track, maintain, and manage your entire fleet in real-time
-              </div>
-            </div>
-          </div>
-
-          {/* Right side: dropdown */}
-          {userRole === 'superadmin' && (
-            <div style={{ width: '320px' }}>
-              <SingleSelectDropdown
-                options={supervisorOptions}
-                value={selectedName}
-                onChange={setSelectedName}
-                isClearable
-                placeholder="Filter by Supervisor Name..."
-              />
-            </div>
-          )}
-        </CCardBody>
-      </CCard>
 
       {/*  cards */}
 
-      <CCard className="mb-4 border-0 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3 px-3">
-          <h5 className="fw-bold text-dark">Fleet Overview</h5>
-          <div className="scroll-buttons d-flex gap-2">
-            {!isStatic && (
-              <>
-                <button
-                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                  style={{ width: '34px', height: '34px' }}
-                  onClick={() => scrollContainer('left')}
-                >
-                  <IoIosArrowBack />
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                  style={{ width: '34px', height: '34px' }}
-                  onClick={() => scrollContainer('right')}
-                >
-                  <IoIosArrowForward />
-                </button>
-              </>
+      <CCard className="mb-4 border-0 shadow-sm mt-2">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 px-3 pt-3 gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <h5 className="fw-bold text-dark mb-0">Fleet Overview</h5>
+            {userRole === 'superadmin' && (
+              <div style={{ width: '250px' }}>
+                <SingleSelectDropdown
+                  options={supervisorOptions}
+                  value={selectedName}
+                  onChange={setSelectedName}
+                  isClearable
+                  placeholder="Filter by Supervisor Name..."
+                />
+              </div>
             )}
-            <button
-              className="btn btn-sm d-flex align-items-center justify-content-center"
-              style={{
-                height: '34px',
-                padding: '0 12px',
-                fontSize: '14px',
-                backgroundColor: '#0a2d63',
-                color: '#fff',
-                border: '1px solid #0a2d63',
-              }}
-              onClick={() => setIsStatic((prev) => !prev)}
-            >
-              {isStatic ? 'Scroll' : 'Expand'}
-            </button>
           </div>
+          {(canScrollLeft || canScrollRight) && (
+            <div className="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style={{ width: '32px', height: '32px', padding: 0 }}
+                onClick={() => handleScroll('left')}
+                disabled={!canScrollLeft}
+                title="Scroll left"
+              >
+                <IoIosArrowBack size={18} />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style={{ width: '32px', height: '32px', padding: 0 }}
+                onClick={() => handleScroll('right')}
+                disabled={!canScrollRight}
+                title="Scroll right"
+              >
+                <IoIosArrowForward size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
-        <div
-          className={`dashboard-scroll-container ${isStatic ? 'static-mode' : ''}`}
-          id="dashboard-scroll"
-        >
-          {cards.map((card, idx) => (
-            <div className="dashboard-card-wrapper" key={idx}>
-              <CCard className="hover-card shadow-sm border-0 h-100" onClick={card.onClick}>
-                <CCardBody>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    {card.icon}
-                    <span className="card-label">{card.label}</span>
-                  </div>
-                  <div className={`card-count ${card.color}`}>{card.top}</div>
-                  <div className="card-subtext">{card.bottom}</div>
-                </CCardBody>
-              </CCard>
-            </div>
-          ))}
+        <div className="position-relative w-100 px-3 pb-3 pt-1">
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => handleScroll('left')}
+              className="btn btn-light shadow border rounded-circle d-flex align-items-center justify-content-center"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '8px',
+                transform: 'translateY(-50%)',
+                width: '36px',
+                height: '36px',
+                zIndex: 10,
+                padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              }}
+              title="Scroll left"
+              aria-label="Scroll left"
+            >
+              <IoIosArrowBack size={20} />
+            </button>
+          )}
+
+          <div
+            ref={scrollContainerRef}
+            id="dashboard-scroll"
+            className={`dashboard-scroll-container ${!isSidebarOpen ? 'sidebar-closed' : ''}`}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            style={{ cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+          >
+            {cards.map((card, idx) => (
+              <div className="dashboard-card-wrapper" key={idx}>
+                <CCard
+                  className="hover-card shadow-sm h-100"
+                  style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
+                  onClick={() => {
+                    if (dragDistanceRef.current < 5) {
+                      card.onClick()
+                    }
+                  }}
+                >
+                  <CCardBody className="p-2 d-flex align-items-center">
+                    <div className="me-2 flex-shrink-0">
+                      {card.icon}
+                    </div>
+                    <div className="card-details overflow-hidden">
+                      <div className="card-label">{card.label}</div>
+                      <div className="card-subtext">{card.subtext}</div>
+                      <div className="card-count">{card.count}</div>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </div>
+            ))}
+          </div>
+
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              className="btn btn-light shadow border rounded-circle d-flex align-items-center justify-content-center"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '8px',
+                transform: 'translateY(-50%)',
+                width: '36px',
+                height: '36px',
+                zIndex: 10,
+                padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              }}
+              title="Scroll right"
+              aria-label="Scroll right"
+            >
+              <IoIosArrowForward size={20} />
+            </button>
+          )}
         </div>
       </CCard>
 
       {/* trips table */}
 
-      <CCard className="mb-3 shadow-sm border-0">
-        <CCardBody className="p-3">
-          <div className="row align-items-center gy-3">
-            {/* Heading */}
-            <div className="col-12 col-md-3">
-              <h5 className="fw-bold text-dark mb-0">Trips Details</h5>
+      <CContainer className="px-2 dashboard-main-container pb-3" fluid>
+        <div className="row h-100">
+          {splitView !== 'analytics' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'table' ? "col-12" : "col-12 col-xl-7"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% + 18px)', right: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('table')}
+                  title="Expand Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'table' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Table"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+
+              <Table
+                title={
+                  <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
+                    <div className="d-flex align-items-center gap-2">
+                      <select 
+                        className="form-select form-select-sm shadow-sm bg-light"
+                        style={{ width: '160px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
+                        value={tableMode}
+                        onChange={(e) => {
+                          setTableMode(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value="Trip">Trips Details</option>
+                        <option value="Daily Trip Logs">Daily Trip Logs</option>
+                      </select>
+                    </div>
+                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                      <DateRangeFilterCredence
+                        title="Date Range"
+                        onDateRangeChange={handleDateRangeChange}
+                      />
+                      <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
+                    </div>
+                  </div>
+                }
+                columns={columns}
+                filteredData={filteredData}
+                setFilteredData={setFilteredData}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                isFetching={tableMode === 'Trip' ? isFetching : isFetchingDailyLogs}
+                onViewReport={() => handleViewDetailedReport()}
+                serverPagination={tableMode === 'Daily Trip Logs'}
+                totalServerItems={tableMode === 'Daily Trip Logs' ? totalDailyTripLogs : filteredData.length}
+              />
             </div>
+          )}
 
-            {/* Filters */}
-            <div className="col-12 col-md-9">
-              <div className="d-flex flex-column flex-sm-row justify-content-end align-items-start align-items-sm-center gap-3">
-                <DateRangeFilterCredence
-                  title="Date Range"
-                  onDateRangeChange={handleDateRangeChange}
-                />
-                <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
-              </div>
+          {splitView !== 'table' && (
+            <div className={`position-relative dashboard-main-col ${splitView === 'analytics' ? "col-12" : "col-12 col-xl-5"}`}>
+              {/* Expand Handle */}
+              {splitView === 'both' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: 'calc(50% - 18px)', left: '-15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('analytics')}
+                  title="Expand Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                </button>
+              )}
+              {splitView === 'analytics' && (
+                <button
+                  className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
+                  style={{
+                    position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
+                    zIndex: 10, width: '32px', height: '32px'
+                  }}
+                  onClick={() => setSplitView('both')}
+                  title="Collapse Analytics"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                </button>
+              )}
+
+              <CCard className="mb-4 shadow-sm border-0 h-100">
+                <CCardHeader className="bg-white border-0 pt-3 px-4">
+                  <strong>Fleet Analytics</strong>
+                </CCardHeader>
+                <CCardBody className="px-4 pb-4 d-flex flex-column justify-content-center">
+                  <FleetAnalyticsChart data={dashboardData} tripsData={TripsList} dailyTripsData={dailyTripsAnalyticsList} />
+                </CCardBody>
+              </CCard>
             </div>
-          </div>
-        </CCardBody>
-      </CCard>
-
-      <CContainer className="px-2" fluid>
-        <Table
-          title="All Vehicles Trips"
-          columns={columns}
-          filteredData={filteredData}
-          setFilteredData={setFilteredData}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          isFetching={isFetching}
-        />
-
-        <div className="text-end mb-4">
-          <button
-            onClick={() => handleViewDetailedReport()}
-            className="rounded ps-3 pe-3 btn btn-outline-primary custom-hover"
-          >
-            View Detailed Report
-          </button>
+          )}
         </div>
       </CContainer>
-    </>
+    </div>
   ) : null
 }
 

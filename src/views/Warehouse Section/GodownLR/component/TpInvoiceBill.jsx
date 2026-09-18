@@ -7,19 +7,19 @@ import logo from '../../../../assets/brand/2.png'
 const getCancelledStamp = () => {
   if (typeof document === 'undefined') return null;
   const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 260;
+  canvas.width = 900;
+  canvas.height = 420;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
-  ctx.translate(300, 130);
-  ctx.rotate((-22 * Math.PI) / 180);
+  ctx.translate(450, 210);
+  ctx.rotate((-25 * Math.PI) / 180);
 
-  const bw = 460;
-  const bh = 104;
-  const r = 12;
+  const bw = 700;
+  const bh = 140;
+  const r = 16;
 
   const drawRoundRect = (x, y, w, h, radius) => {
     ctx.beginPath();
@@ -37,23 +37,23 @@ const getCancelledStamp = () => {
 
   // Outer border
   ctx.strokeStyle = '#dc2626';
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 6;
   drawRoundRect(-bw / 2, -bh / 2, bw, bh, r);
   ctx.stroke();
 
   // Inner border
-  ctx.lineWidth = 2;
-  drawRoundRect(-bw / 2 + 5, -bh / 2 + 5, bw - 10, bh - 10, r - 3);
+  ctx.lineWidth = 3;
+  drawRoundRect(-bw / 2 + 8, -bh / 2 + 8, bw - 16, bh - 16, r - 4);
   ctx.stroke();
 
   // Text
   ctx.fillStyle = '#dc2626';
-  ctx.font = '900 52px "Arial Black", Impact, "Segoe UI", sans-serif';
+  ctx.font = '900 70px "Arial Black", Impact, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   const text = 'CANCELLED';
-  const charSpacing = 10;
+  const charSpacing = 14;
   let totalWidth = 0;
   for (let i = 0; i < text.length; i++) {
     totalWidth += ctx.measureText(text[i]).width + (i < text.length - 1 ? charSpacing : 0);
@@ -118,7 +118,10 @@ const TpInvoiceBill = ({ invoiceData }) => {
   } = invoiceData || {}
 
   const isCancelled = Boolean(
-    status && typeof status === 'string' && status.trim().toLowerCase().startsWith('cancel')
+    status && (
+      (typeof status === 'string' && status.trim().toLowerCase().includes('cancel')) ||
+      (typeof status === 'object' && String(status?.value || status?.label || '').toLowerCase().includes('cancel'))
+    )
   )
 
   const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled])
@@ -149,10 +152,12 @@ const TpInvoiceBill = ({ invoiceData }) => {
     const stampOverlay = element.querySelector('.cancel-stamp-overlay')
     if (stampOverlay) {
       stampOverlay.style.position = 'absolute'
-      stampOverlay.style.top = '36%'
+      stampOverlay.style.top = '0px'
+      stampOverlay.style.bottom = '0px'
       stampOverlay.style.left = '0px'
       stampOverlay.style.right = '0px'
       stampOverlay.style.width = '100%'
+      stampOverlay.style.height = '100%'
       stampOverlay.style.display = 'flex'
       stampOverlay.style.justifyContent = 'center'
       stampOverlay.style.alignItems = 'center'
@@ -163,8 +168,8 @@ const TpInvoiceBill = ({ invoiceData }) => {
     if (stampImg) {
       stampImg.style.display = 'block'
       stampImg.style.margin = '0 auto'
-      stampImg.style.maxWidth = '440px'
-      stampImg.style.width = '60%'
+      stampImg.style.maxWidth = '680px'
+      stampImg.style.width = '85%'
     }
 
     const signature = element.querySelector('.signature-section')

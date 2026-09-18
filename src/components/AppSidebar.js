@@ -13,7 +13,7 @@ import Cookies from 'js-cookie'
 // Helper: Recursively filter items by role
 const filterNavByRole = (items, role) => {
   return items
-    .map(item => {
+    .map((item) => {
       if (item.items) {
         const filteredItems = filterNavByRole(item.items, role)
         return filteredItems.length ? { ...item, items: filteredItems } : null
@@ -30,7 +30,7 @@ const AppSidebar = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
-  
+
   const userRole = useMemo(() => {
     if (!token || typeof token !== 'string') return null
     try {

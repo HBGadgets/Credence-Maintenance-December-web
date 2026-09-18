@@ -60,6 +60,24 @@ export const getAllTripListApi = async (userId = null) => {
   }))
 }
 
+// GET API for Daily Trip Logs
+export const getDailyTripLogsApi = async ({ queryKey }) => {
+  const [_key, token, page, limit, search] = queryKey
+
+  if (!token) throw new Error('Authentication token not found')
+
+  const { data } = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver?search=${search || ''}&status=&page=${page || 1}&limit=${limit || 10}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  return data
+}
+
 // Get supervisor id
 export const fetchAllAdmin = async (userId = null) => {
   const token = sessionStorage.getItem('crdnsMaintToken')

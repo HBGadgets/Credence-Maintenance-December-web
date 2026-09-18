@@ -786,7 +786,7 @@ const GodownLr = () => {
 
   // Update handleViewButton function
   const handleViewButton = async (id) => {
-    const selectedRow = filteredData.find((item) => item.id === id)
+    const selectedRow = filteredData.find((item) => item.id === id || item._id === id)
 
     if (!selectedRow) {
       return toast.error('Data not found for this ID')

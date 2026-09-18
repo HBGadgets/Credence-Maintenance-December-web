@@ -61,9 +61,10 @@ const skeletonStyles = `
     gap: 4px;
   }
 
-  /* 🔹 Thin horizontal scrollbar */
+  /* 🔹 Thin scrollbar */
   .table-responsive::-webkit-scrollbar {
     height: 6px;
+    width: 6px;
   }
   .table-responsive::-webkit-scrollbar-thumb {
     background: #c1c1c1;
@@ -87,6 +88,11 @@ const skeletonStyles = `
     padding: 10px 8px !important;
     line-height: 1.2;
     height: 45px;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: inset 0 -1px 0 #dee2e6;
   }
 `
 
@@ -111,6 +117,10 @@ function Table({
   handleReportButton,
   action = 'Action',
   serverPagination = false,
+  totalServerItems = 0,
+  setCurrentPage,
+  setItemsPerPage,
+  onViewReport,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -120,6 +130,16 @@ function Table({
   const currentData = serverPagination
     ? filteredData
     : filteredData.slice(startIndex, startIndex + itemsPerPage)
+
+  const totalPages = serverPagination
+    ? Math.ceil((totalServerItems || 0) / itemsPerPage) || 1
+    : Math.ceil(filteredData.length / itemsPerPage) || 1
+
+  const goToFirstPage = () => setCurrentPage?.(1)
+  const goToLastPage = () => setCurrentPage?.(totalPages)
+  const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
+
 
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
@@ -152,194 +172,275 @@ function Table({
   }
 
   return (
-    <CRow>
+    <CRow className="h-100 m-0">
       <style>{skeletonStyles}</style>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader className="d-flex justify-content-between align-items-center">
-            <strong>{title}</strong>
+      <CCol xs={12} className="h-100 p-0">
+        <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
+          <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
+            {typeof title === 'string' ? <strong>{title}</strong> : title}
           </CCardHeader>
-          <CCardBody>
-            <CTable striped hover responsive bordered>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
-                  {columns
-                    .filter((col) => !col.hidden)
-                    .map((column, index) => (
-                      <CTableHeaderCell
-                        key={index}
-                        className="text-center"
-                        onClick={() => column.sortable && handleSort(column.key)}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
-                      >
-                        {column.label} {column.sortable && getSortIcon(column.key)}
-                      </CTableHeaderCell>
-                    ))}
-                  {(editButton || deleteButton || viewButton || reportButton) && (
-                    <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
-                  )}
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {isFetching ? (
-                  Array.from({ length: itemsPerPage }).map((_, index) => (
-                    <CTableRow key={`skeleton-${index}`}>
-                      <CTableDataCell className="text-center">
-                        <div className="skeleton-loader" style={{ height: '20px' }} />
-                      </CTableDataCell>
-                      {columns.map((_, colIndex) => (
-                        <CTableDataCell key={colIndex} className="text-center">
+          <CCardBody className="flex-grow-1 p-0 d-flex flex-column overflow-hidden">
+            <div className="table-responsive flex-grow-1" style={{ overflowY: 'auto', minHeight: 0 }}>
+              <CTable striped hover bordered className="mb-0">
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
+                    {columns
+                      .filter((col) => !col.hidden)
+                      .map((column, index) => (
+                        <CTableHeaderCell
+                          key={index}
+                          className="text-center"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                          style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        >
+                          {column.label} {column.sortable && getSortIcon(column.key)}
+                        </CTableHeaderCell>
+                      ))}
+                    {(editButton || deleteButton || viewButton || reportButton) && (
+                      <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
+                    )}
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {isFetching ? (
+                    Array.from({ length: itemsPerPage }).map((_, index) => (
+                      <CTableRow key={`skeleton-${index}`}>
+                        <CTableDataCell className="text-center">
                           <div className="skeleton-loader" style={{ height: '20px' }} />
                         </CTableDataCell>
-                      ))}
-                      {(editButton || deleteButton || viewButton || reportButton) && (
-                        <CTableDataCell className="action-cell">
-                          <div className="action-buttons">
-                            {editButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {deleteButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {reportButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {viewButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '60px', height: '30px' }}
-                              />
-                            )}
-                          </div>
-                        </CTableDataCell>
-                      )}
-                    </CTableRow>
-                  ))
-                ) : filteredData.length === 0 ? (
-                  <CTableRow>
-                    <CTableDataCell colSpan={columns.length + 2} className="text-center">
-                      No {title} found.
-                    </CTableDataCell>
-                  </CTableRow>
-                ) : (
-                  currentData.map((row, rowIndex) => (
-                    <CTableRow key={rowIndex}>
-                      <CTableDataCell className="text-center">
-                        {(currentPage - 1) * itemsPerPage + rowIndex + 1}
-                      </CTableDataCell>
-                      {columns
-                        .filter((col) => !col.hidden)
-                        .map((column) => (
-                          <CTableDataCell key={column.key} className="text-center">
-                            {column.key === 'password' ? (
-                              <div className="d-flex align-items-center justify-content-center gap-2">
-                                <span>
-                                  {visiblePasswordRowId === row.id || row._id
-                                    ? row.password
-                                    : '••••••••'}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    setVisiblePasswordRowId(
-                                      visiblePasswordRowId === row.id ? null : row.id,
-                                    )
-                                  }
-                                  className="btn btn-sm btn-link p-0"
-                                  title={
-                                    visiblePasswordRowId === row.id || row._id
-                                      ? 'Show password'
-                                      : 'Hide password'
-                                  }
-                                >
-                                  {visiblePasswordRowId === row.id || row._id ? (
-                                    <Eye size={18} />
-                                  ) : (
-                                    <EyeOff size={18} />
-                                  )}
-                                </button>
-                              </div>
-                            ) : column.render ? (
-                              column.render(row)
-                            ) : (
-                              row[column.key]
-                            )}
+                        {columns.map((_, colIndex) => (
+                          <CTableDataCell key={colIndex} className="text-center">
+                            <div className="skeleton-loader" style={{ height: '20px' }} />
                           </CTableDataCell>
                         ))}
-                      {(editButton || deleteButton || viewButton || reportButton) && (
-                        <CTableDataCell className="action-cell">
-                          <div className="action-buttons">
-                            {editButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleEditButton(row.id || row._id)}
-                                aria-label="Edit"
-                              >
-                                <Pencil color="#2D336B" size={18} />
-                              </button>
-                            )}
-                            {deleteButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleDeleteButton(row.id || row._id)}
-                                aria-label="Delete"
-                              >
-                                <Trash2 color="#2D336B" size={18} />
-                              </button>
-                            )}
-
-                            {reportButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleReportButton(row.id || row._id)}
-                                aria-label="Report"
-                              >
-                                <FileText color="#2D336B" size={18} />
-                              </button>
-                            )}
-
-                            {viewButton && (
-                              <button
-                                className="action-view-button"
-                                onClick={async () => {
-                                  setViewLoadingId(row.id || row._id)
-                                  await handleViewButton(row.id || row._id)
-                                  setViewLoadingId(null)
-                                }}
-                                disabled={viewLoadingId === row.id || row._id}
-                                style={{
-                                  backgroundColor: viewButtonColor,
-                                  color: 'white',
-                                  opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
-                                  border: 'none',
-                                }}
-                              >
-                                {viewButtonIcon}
-                                <span>
-                                  {viewLoadingId === row.id || row._id
-                                    ? 'Loading...'
-                                    : viewButtonLabel}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                        </CTableDataCell>
-                      )}
+                        {(editButton || deleteButton || viewButton || reportButton) && (
+                          <CTableDataCell className="action-cell">
+                            <div className="action-buttons">
+                              {editButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {deleteButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {reportButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {viewButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '60px', height: '30px' }}
+                                />
+                              )}
+                            </div>
+                          </CTableDataCell>
+                        )}
+                      </CTableRow>
+                    ))
+                  ) : filteredData.length === 0 ? (
+                    <CTableRow>
+                      <CTableDataCell colSpan={columns.length + 2} className="text-center">
+                        No {title} found.
+                      </CTableDataCell>
                     </CTableRow>
-                  ))
-                )}
-              </CTableBody>
-            </CTable>
+                  ) : (
+                    currentData.map((row, rowIndex) => (
+                      <CTableRow key={rowIndex}>
+                        <CTableDataCell className="text-center">
+                          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+                        </CTableDataCell>
+                        {columns
+                          .filter((col) => !col.hidden)
+                          .map((column) => (
+                            <CTableDataCell key={column.key} className="text-center">
+                              {column.key === 'password' ? (
+                                <div className="d-flex align-items-center justify-content-center gap-2">
+                                  <span>
+                                    {visiblePasswordRowId === row.id || row._id
+                                      ? row.password
+                                      : '••••••••'}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      setVisiblePasswordRowId(
+                                        visiblePasswordRowId === row.id ? null : row.id,
+                                      )
+                                    }
+                                    className="btn btn-sm btn-link p-0"
+                                    title={
+                                      visiblePasswordRowId === row.id || row._id
+                                        ? 'Show password'
+                                        : 'Hide password'
+                                    }
+                                  >
+                                    {visiblePasswordRowId === row.id || row._id ? (
+                                      <Eye size={18} />
+                                    ) : (
+                                      <EyeOff size={18} />
+                                    )}
+                                  </button>
+                                </div>
+                              ) : column.render ? (
+                                column.render(row)
+                              ) : (
+                                row[column.key]
+                              )}
+                            </CTableDataCell>
+                          ))}
+                        {(editButton || deleteButton || viewButton || reportButton) && (
+                          <CTableDataCell className="action-cell">
+                            <div className="action-buttons">
+                              {editButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleEditButton(row.id || row._id)}
+                                  aria-label="Edit"
+                                >
+                                  <Pencil color="#2D336B" size={18} />
+                                </button>
+                              )}
+                              {deleteButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleDeleteButton(row.id || row._id)}
+                                  aria-label="Delete"
+                                >
+                                  <Trash2 color="#2D336B" size={18} />
+                                </button>
+                              )}
+
+                              {reportButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleReportButton(row.id || row._id)}
+                                  aria-label="Report"
+                                >
+                                  <FileText color="#2D336B" size={18} />
+                                </button>
+                              )}
+
+                              {viewButton && (
+                                <button
+                                  className="action-view-button"
+                                  onClick={async () => {
+                                    setViewLoadingId(row.id || row._id)
+                                    await handleViewButton(row.id || row._id)
+                                    setViewLoadingId(null)
+                                  }}
+                                  disabled={viewLoadingId === row.id || row._id}
+                                  style={{
+                                    backgroundColor: viewButtonColor,
+                                    color: 'white',
+                                    opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
+                                    border: 'none',
+                                  }}
+                                >
+                                  {viewButtonIcon}
+                                  <span>
+                                    {viewLoadingId === row.id || row._id
+                                      ? 'Loading...'
+                                      : viewButtonLabel}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          </CTableDataCell>
+                        )}
+                      </CTableRow>
+                    ))
+                  )}
+                </CTableBody>
+              </CTable>
+            </div>
           </CCardBody>
+
+          {/* Pagination Footer */}
+          <div className="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-white w-100">
+            <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
+              <div className="text-muted text-nowrap" style={{ fontSize: '13px' }}>
+                Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} results
+              </div>
+              {onViewReport && (
+                <button
+                  onClick={onViewReport}
+                  className="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 text-nowrap"
+                  style={{ borderRadius: '6px', fontSize: '12px' }}
+                >
+                  View Detailed Report
+                </button>
+              )}
+            </div>
+
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
+                  value={itemsPerPage >= 1000000 ? 1000000 : itemsPerPage}
+                  onChange={(e) => {
+                    if (setItemsPerPage) setItemsPerPage(Number(e.target.value))
+                    if (setCurrentPage) setCurrentPage(1)
+                  }}
+                >
+                  <option value="5">5</option>
+                  <option value="7">7</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="1000000">All</option>
+                </select>
+              </div>
+
+              <div className="fw-bold text-dark text-nowrap" style={{ fontSize: '13px' }}>
+                Page {currentPage} of {totalPages}
+              </div>
+
+              <div className="d-flex gap-1">
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToFirstPage}
+                  disabled={currentPage === 1}
+                >
+                  {'<<'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToPrevPage}
+                  disabled={currentPage === 1}
+                >
+                  {'<'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  {'>'}
+                </button>
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                  onClick={goToLastPage}
+                  disabled={currentPage === totalPages}
+                >
+                  {'>>'}
+                </button>
+              </div>
+            </div>
+          </div>
         </CCard>
       </CCol>
     </CRow>
