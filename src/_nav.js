@@ -261,7 +261,6 @@ const _nav = [
       />
     ),
     items: [
-      ,
       {
         component: CNavItem,
         name: 'Tickets Raised',
