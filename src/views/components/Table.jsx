@@ -140,6 +140,7 @@ function Table({
   const goToPrevPage = () => setCurrentPage?.((prev) => Math.max(prev - 1, 1))
   const goToNextPage = () => setCurrentPage?.((prev) => Math.min(prev + 1, totalPages))
 
+
   const handleSort = (key) => {
     if (!columns.find((column) => column.key === key && column.sortable)) return
 
@@ -182,182 +183,182 @@ function Table({
             <div className="table-responsive flex-grow-1" style={{ overflowY: 'auto', minHeight: 0 }}>
               <CTable striped hover bordered className="mb-0">
                 <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
-                  {columns
-                    .filter((col) => !col.hidden)
-                    .map((column, index) => (
-                      <CTableHeaderCell
-                        key={index}
-                        className="text-center"
-                        onClick={() => column.sortable && handleSort(column.key)}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
-                      >
-                        {column.label} {column.sortable && getSortIcon(column.key)}
-                      </CTableHeaderCell>
-                    ))}
-                  {(editButton || deleteButton || viewButton || reportButton) && (
-                    <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
-                  )}
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {isFetching ? (
-                  Array.from({ length: itemsPerPage }).map((_, index) => (
-                    <CTableRow key={`skeleton-${index}`}>
-                      <CTableDataCell className="text-center">
-                        <div className="skeleton-loader" style={{ height: '20px' }} />
-                      </CTableDataCell>
-                      {columns.map((_, colIndex) => (
-                        <CTableDataCell key={colIndex} className="text-center">
+                  <CTableRow>
+                    <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
+                    {columns
+                      .filter((col) => !col.hidden)
+                      .map((column, index) => (
+                        <CTableHeaderCell
+                          key={index}
+                          className="text-center"
+                          onClick={() => column.sortable && handleSort(column.key)}
+                          style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        >
+                          {column.label} {column.sortable && getSortIcon(column.key)}
+                        </CTableHeaderCell>
+                      ))}
+                    {(editButton || deleteButton || viewButton || reportButton) && (
+                      <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
+                    )}
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {isFetching ? (
+                    Array.from({ length: itemsPerPage }).map((_, index) => (
+                      <CTableRow key={`skeleton-${index}`}>
+                        <CTableDataCell className="text-center">
                           <div className="skeleton-loader" style={{ height: '20px' }} />
                         </CTableDataCell>
-                      ))}
-                      {(editButton || deleteButton || viewButton || reportButton) && (
-                        <CTableDataCell className="action-cell">
-                          <div className="action-buttons">
-                            {editButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {deleteButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {reportButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '20px', height: '20px' }}
-                              />
-                            )}
-                            {viewButton && (
-                              <div
-                                className="skeleton-loader"
-                                style={{ width: '60px', height: '30px' }}
-                              />
-                            )}
-                          </div>
-                        </CTableDataCell>
-                      )}
-                    </CTableRow>
-                  ))
-                ) : filteredData.length === 0 ? (
-                  <CTableRow>
-                    <CTableDataCell colSpan={columns.length + 2} className="text-center">
-                      No {title} found.
-                    </CTableDataCell>
-                  </CTableRow>
-                ) : (
-                  currentData.map((row, rowIndex) => (
-                    <CTableRow key={rowIndex}>
-                      <CTableDataCell className="text-center">
-                        {(currentPage - 1) * itemsPerPage + rowIndex + 1}
-                      </CTableDataCell>
-                      {columns
-                        .filter((col) => !col.hidden)
-                        .map((column) => (
-                          <CTableDataCell key={column.key} className="text-center">
-                            {column.key === 'password' ? (
-                              <div className="d-flex align-items-center justify-content-center gap-2">
-                                <span>
-                                  {visiblePasswordRowId === row.id || row._id
-                                    ? row.password
-                                    : '••••••••'}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    setVisiblePasswordRowId(
-                                      visiblePasswordRowId === row.id ? null : row.id,
-                                    )
-                                  }
-                                  className="btn btn-sm btn-link p-0"
-                                  title={
-                                    visiblePasswordRowId === row.id || row._id
-                                      ? 'Show password'
-                                      : 'Hide password'
-                                  }
-                                >
-                                  {visiblePasswordRowId === row.id || row._id ? (
-                                    <Eye size={18} />
-                                  ) : (
-                                    <EyeOff size={18} />
-                                  )}
-                                </button>
-                              </div>
-                            ) : column.render ? (
-                              column.render(row)
-                            ) : (
-                              row[column.key]
-                            )}
+                        {columns.map((_, colIndex) => (
+                          <CTableDataCell key={colIndex} className="text-center">
+                            <div className="skeleton-loader" style={{ height: '20px' }} />
                           </CTableDataCell>
                         ))}
-                      {(editButton || deleteButton || viewButton || reportButton) && (
-                        <CTableDataCell className="action-cell">
-                          <div className="action-buttons">
-                            {editButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleEditButton(row.id || row._id)}
-                                aria-label="Edit"
-                              >
-                                <Pencil color="#2D336B" size={18} />
-                              </button>
-                            )}
-                            {deleteButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleDeleteButton(row.id || row._id)}
-                                aria-label="Delete"
-                              >
-                                <Trash2 color="#2D336B" size={18} />
-                              </button>
-                            )}
-
-                            {reportButton && (
-                              <button
-                                className="action-button"
-                                onClick={() => handleReportButton(row.id || row._id)}
-                                aria-label="Report"
-                              >
-                                <FileText color="#2D336B" size={18} />
-                              </button>
-                            )}
-
-                            {viewButton && (
-                              <button
-                                className="action-view-button"
-                                onClick={async () => {
-                                  setViewLoadingId(row.id || row._id)
-                                  await handleViewButton(row.id || row._id)
-                                  setViewLoadingId(null)
-                                }}
-                                disabled={viewLoadingId === row.id || row._id}
-                                style={{
-                                  backgroundColor: viewButtonColor,
-                                  color: 'white',
-                                  opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
-                                  border: 'none',
-                                }}
-                              >
-                                {viewButtonIcon}
-                                <span>
-                                  {viewLoadingId === row.id || row._id
-                                    ? 'Loading...'
-                                    : viewButtonLabel}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                        </CTableDataCell>
-                      )}
+                        {(editButton || deleteButton || viewButton || reportButton) && (
+                          <CTableDataCell className="action-cell">
+                            <div className="action-buttons">
+                              {editButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {deleteButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {reportButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {viewButton && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '60px', height: '30px' }}
+                                />
+                              )}
+                            </div>
+                          </CTableDataCell>
+                        )}
+                      </CTableRow>
+                    ))
+                  ) : filteredData.length === 0 ? (
+                    <CTableRow>
+                      <CTableDataCell colSpan={columns.length + 2} className="text-center">
+                        No {title} found.
+                      </CTableDataCell>
                     </CTableRow>
-                  ))
-                )}
-              </CTableBody>
+                  ) : (
+                    currentData.map((row, rowIndex) => (
+                      <CTableRow key={rowIndex}>
+                        <CTableDataCell className="text-center">
+                          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+                        </CTableDataCell>
+                        {columns
+                          .filter((col) => !col.hidden)
+                          .map((column) => (
+                            <CTableDataCell key={column.key} className="text-center">
+                              {column.key === 'password' ? (
+                                <div className="d-flex align-items-center justify-content-center gap-2">
+                                  <span>
+                                    {visiblePasswordRowId === row.id || row._id
+                                      ? row.password
+                                      : '••••••••'}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      setVisiblePasswordRowId(
+                                        visiblePasswordRowId === row.id ? null : row.id,
+                                      )
+                                    }
+                                    className="btn btn-sm btn-link p-0"
+                                    title={
+                                      visiblePasswordRowId === row.id || row._id
+                                        ? 'Show password'
+                                        : 'Hide password'
+                                    }
+                                  >
+                                    {visiblePasswordRowId === row.id || row._id ? (
+                                      <Eye size={18} />
+                                    ) : (
+                                      <EyeOff size={18} />
+                                    )}
+                                  </button>
+                                </div>
+                              ) : column.render ? (
+                                column.render(row)
+                              ) : (
+                                row[column.key]
+                              )}
+                            </CTableDataCell>
+                          ))}
+                        {(editButton || deleteButton || viewButton || reportButton) && (
+                          <CTableDataCell className="action-cell">
+                            <div className="action-buttons">
+                              {editButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleEditButton(row.id || row._id)}
+                                  aria-label="Edit"
+                                >
+                                  <Pencil color="#2D336B" size={18} />
+                                </button>
+                              )}
+                              {deleteButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleDeleteButton(row.id || row._id)}
+                                  aria-label="Delete"
+                                >
+                                  <Trash2 color="#2D336B" size={18} />
+                                </button>
+                              )}
+
+                              {reportButton && (
+                                <button
+                                  className="action-button"
+                                  onClick={() => handleReportButton(row.id || row._id)}
+                                  aria-label="Report"
+                                >
+                                  <FileText color="#2D336B" size={18} />
+                                </button>
+                              )}
+
+                              {viewButton && (
+                                <button
+                                  className="action-view-button"
+                                  onClick={async () => {
+                                    setViewLoadingId(row.id || row._id)
+                                    await handleViewButton(row.id || row._id)
+                                    setViewLoadingId(null)
+                                  }}
+                                  disabled={viewLoadingId === row.id || row._id}
+                                  style={{
+                                    backgroundColor: viewButtonColor,
+                                    color: 'white',
+                                    opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
+                                    border: 'none',
+                                  }}
+                                >
+                                  {viewButtonIcon}
+                                  <span>
+                                    {viewLoadingId === row.id || row._id
+                                      ? 'Loading...'
+                                      : viewButtonLabel}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          </CTableDataCell>
+                        )}
+                      </CTableRow>
+                    ))
+                  )}
+                </CTableBody>
               </CTable>
             </div>
           </CCardBody>

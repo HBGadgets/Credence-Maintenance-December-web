@@ -34,6 +34,7 @@ import Table from '../components/Table'
 import SearchInput from '../components/SearchInput'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import logo from 'src/assets/brand/fmslogo.svg'
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
 import { socket } from '../customhooks/useSocket'
@@ -255,6 +256,11 @@ const Dashboard = () => {
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected)
 
+  const sidebarShow = useSelector((state) => state.sidebarShow)
+  const activeSection = useSelector((state) => state.activeSection || 'Dashboard')
+  // The sidebar is rendered only when sidebarShow is true AND the active section has sub-items (i.e. not Dashboard)
+  const isSidebarOpen = Boolean(sidebarShow && activeSection && activeSection.trim().toLowerCase() !== 'dashboard')
+
   const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
   const { notifications, addNotification, unreadCounts, setUnreadCounts } =
@@ -274,31 +280,83 @@ const Dashboard = () => {
   const [tableMode, setTableMode] = useState('Trip')
   const [filteredData, setFilteredData] = useState([])
 
-  const sliderContainerRef = useRef(null)
-  const [startIndex, setStartIndex] = useState(0)
-  const [visibleCount, setVisibleCount] = useState(6)
+  const scrollContainerRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftRef = useRef(0)
+  const dragDistanceRef = useRef(0)
+
+  const checkScroll = () => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const hasScroll = el.scrollWidth > el.clientWidth + 5
+    setCanScrollLeft(hasScroll && el.scrollLeft > 10)
+    setCanScrollRight(hasScroll && el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+  }
 
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const width = entry.contentRect.width;
-        let newCount = 8;
-        if (width >= 1350) newCount = 8;
-        else if (width >= 1150) newCount = 6;
-        else if (width >= 950) newCount = 5;
-        else if (width >= 750) newCount = 4;
-        else if (width >= 550) newCount = 3;
-        else newCount = 2;
-        
-        setVisibleCount(newCount);
-        setStartIndex((prev) => Math.min(prev, Math.max(0, 8 - newCount)));
-      }
-    });
-    if (sliderContainerRef.current) {
-      observer.observe(sliderContainerRef.current);
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    checkScroll()
+    const handleScrollEvent = () => checkScroll()
+    el.addEventListener('scroll', handleScrollEvent, { passive: true })
+
+    const observer = new ResizeObserver(() => checkScroll())
+    observer.observe(el)
+
+    return () => {
+      el.removeEventListener('scroll', handleScrollEvent)
+      observer.disconnect()
     }
-    return () => observer.disconnect();
-  }, []);
+  }, [isSidebarOpen])
+
+  const handleScroll = (direction) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const scrollAmount = Math.max(el.clientWidth * 0.7, 300)
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    })
+  }
+
+  const handleWheel = (e) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft += e.deltaY
+      checkScroll()
+    }
+  }
+
+  const handleMouseDown = (e) => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    isDraggingRef.current = true
+    dragDistanceRef.current = 0
+    startXRef.current = e.pageX - el.offsetLeft
+    scrollLeftRef.current = el.scrollLeft
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current) return
+    const el = scrollContainerRef.current
+    if (!el) return
+    e.preventDefault()
+    const x = e.pageX - el.offsetLeft
+    const walk = (x - startXRef.current) * 1.2
+    dragDistanceRef.current = Math.abs(walk)
+    el.scrollLeft = scrollLeftRef.current - walk
+    checkScroll()
+  }
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false
+  }
+
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
@@ -467,17 +525,6 @@ const Dashboard = () => {
 
     // Add calculated fields
     const styledData = filtered.map((data) => {
-      if (tableMode === 'Daily Trip Logs') {
-        return {
-          ...data,
-          status: data.status ? <span className={getStatusBadge(data.status)}>{data.status}</span> : data.status,
-          driverName: data.driverId?.name || 'N/A',
-          contactNumber: data.driverId?.contactNumber || 'N/A',
-          vehicleName: data.driverId?.currentVehicleName || 'N/A',
-          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A'
-        }
-      }
-
       if (tableMode === 'Daily Trip Logs') {
         return {
           ...data,
@@ -718,69 +765,7 @@ const Dashboard = () => {
     },
   ]
 
-  // useeffect for scrolling card
-  useEffect(() => {
-    let interval
-    const scrollAmount = 300
 
-    const setupAutoScroll = () => {
-      const container = document.getElementById('dashboard-scroll')
-      if (!container) return
-
-      const autoScroll = () => {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
-        }
-      }
-
-      // Start scrolling
-      interval = setInterval(autoScroll, 5000)
-
-      // Pause on hover
-      container.addEventListener('mouseenter', pauseScroll)
-      container.addEventListener('mouseleave', resumeScroll)
-    }
-
-    const pauseScroll = () => clearInterval(interval)
-
-    const resumeScroll = () => {
-      interval = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (!container) return
-
-        const maxScrollLeft = container.scrollWidth - container.clientWidth
-        if (container.scrollLeft + 5 >= maxScrollLeft) {
-          container.scrollTo({ left: 0, behavior: 'smooth' })
-        } else {
-          container.scrollBy({ left: 300, behavior: 'smooth' })
-        }
-      }, 5000)
-    }
-
-    const waitForElementAndStart = () => {
-      const check = setInterval(() => {
-        const container = document.getElementById('dashboard-scroll')
-        if (container) {
-          clearInterval(check)
-          setupAutoScroll()
-        }
-      }, 100)
-    }
-
-    waitForElementAndStart()
-
-    return () => {
-      clearInterval(interval)
-      const container = document.getElementById('dashboard-scroll')
-      if (container) {
-        container.removeEventListener('mouseenter', pauseScroll)
-        container.removeEventListener('mouseleave', resumeScroll)
-      }
-    }
-  }, [])
 
   return token ? (
     <div className="dashboard-wrapper">
@@ -831,6 +816,69 @@ const Dashboard = () => {
           border-color: #fd7e14 !important;
         }
 
+        .dashboard-scroll-container {
+          display: flex;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          gap: 0.85rem;
+          padding: 0.35rem 0.5rem 0.85rem 0.5rem;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+          user-select: none;
+        }
+
+        .dashboard-scroll-container::-webkit-scrollbar {
+          display: none;
+        }
+
+        .dashboard-card-wrapper {
+          flex: 0 0 210px;
+          min-width: 210px;
+        }
+
+        /* When sidebar is closed on desktop: display all 8 cards in a single line */
+        @media (min-width: 1100px) {
+          .dashboard-scroll-container.sidebar-closed {
+            overflow-x: visible;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+          }
+
+          .dashboard-scroll-container.sidebar-closed .dashboard-card-wrapper {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: none;
+          }
+
+          .dashboard-scroll-container.sidebar-closed .hover-card .p-2 {
+            padding: 0.5rem 0.35rem !important;
+          }
+
+          .dashboard-scroll-container.sidebar-closed .card-label {
+            font-size: 11.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .dashboard-scroll-container.sidebar-closed .card-count {
+            font-size: 16px;
+          }
+
+          .dashboard-scroll-container.sidebar-closed .card-subtext {
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .dashboard-scroll-container.sidebar-closed img {
+            width: 38px !important;
+            height: 38px !important;
+          }
+        }
+
         /* Auto-adjusting full screen layout for Table and Analytics */
         @media (min-width: 1200px) {
           .dashboard-wrapper {
@@ -872,75 +920,113 @@ const Dashboard = () => {
               </div>
             )}
           </div>
+          {(canScrollLeft || canScrollRight) && (
+            <div className="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style={{ width: '32px', height: '32px', padding: 0 }}
+                onClick={() => handleScroll('left')}
+                disabled={!canScrollLeft}
+                title="Scroll left"
+              >
+                <IoIosArrowBack size={18} />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                style={{ width: '32px', height: '32px', padding: 0 }}
+                onClick={() => handleScroll('right')}
+                disabled={!canScrollRight}
+                title="Scroll right"
+              >
+                <IoIosArrowForward size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
-        <div
-          ref={sliderContainerRef}
-          className="position-relative w-100 px-3 pb-3 pt-1"
-        >
-          <div className="overflow-hidden w-100 py-1" style={{ padding: '0 0.5rem' }}>
-            <div 
-              style={{
-                display: 'flex',
-                transition: 'transform 0.4s ease-in-out',
-                transform: `translateX(-${startIndex * (100 / visibleCount)}%)`,
-                width: '100%',
-              }}
-            >
-              {cards.map((card, idx) => (
-                <div 
-                  key={idx} 
-                  style={{ 
-                    flex: `0 0 ${100 / visibleCount}%`,
-                    padding: '0 0.5rem',
-                  }}
-                >
-                  <CCard
-                    className="hover-card shadow-sm h-100"
-                    style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
-                    onClick={card.onClick}
-                  >
-                    <CCardBody className="p-2 d-flex align-items-center">
-                      <div className="me-2 flex-shrink-0">
-                        {card.icon}
-                      </div>
-                      <div className="card-details overflow-hidden">
-                        <div className="card-label">{card.label}</div>
-                        <div className="card-subtext">{card.subtext}</div>
-                        <div className="card-count">{card.count}</div>
-                      </div>
-                    </CCardBody>
-                  </CCard>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {startIndex > 0 && (
+        <div className="position-relative w-100 px-3 pb-3 pt-1">
+          {canScrollLeft && (
             <button
-              onClick={() => setStartIndex(prev => Math.max(prev - 1, 0))}
-              className="btn btn-light shadow-sm border rounded-circle d-flex align-items-center justify-content-center"
+              type="button"
+              onClick={() => handleScroll('left')}
+              className="btn btn-light shadow border rounded-circle d-flex align-items-center justify-content-center"
               style={{
-                position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
-                width: '36px', height: '36px', zIndex: 5, padding: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                position: 'absolute',
+                top: '50%',
+                left: '8px',
+                transform: 'translateY(-50%)',
+                width: '36px',
+                height: '36px',
+                zIndex: 10,
+                padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
               }}
+              title="Scroll left"
+              aria-label="Scroll left"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              <IoIosArrowBack size={20} />
             </button>
           )}
 
-          {startIndex < cards.length - visibleCount && (
+          <div
+            ref={scrollContainerRef}
+            id="dashboard-scroll"
+            className={`dashboard-scroll-container ${!isSidebarOpen ? 'sidebar-closed' : ''}`}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            style={{ cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+          >
+            {cards.map((card, idx) => (
+              <div className="dashboard-card-wrapper" key={idx}>
+                <CCard
+                  className="hover-card shadow-sm h-100"
+                  style={{ cursor: 'pointer', ...card.borders, '--hover-shadow': card.shadow }}
+                  onClick={() => {
+                    if (dragDistanceRef.current < 5) {
+                      card.onClick()
+                    }
+                  }}
+                >
+                  <CCardBody className="p-2 d-flex align-items-center">
+                    <div className="me-2 flex-shrink-0">
+                      {card.icon}
+                    </div>
+                    <div className="card-details overflow-hidden">
+                      <div className="card-label">{card.label}</div>
+                      <div className="card-subtext">{card.subtext}</div>
+                      <div className="card-count">{card.count}</div>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </div>
+            ))}
+          </div>
+
+          {canScrollRight && (
             <button
-              onClick={() => setStartIndex(prev => Math.min(prev + 1, cards.length - visibleCount))}
-              className="btn btn-light shadow-sm border rounded-circle d-flex align-items-center justify-content-center"
+              type="button"
+              onClick={() => handleScroll('right')}
+              className="btn btn-light shadow border rounded-circle d-flex align-items-center justify-content-center"
               style={{
-                position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
-                width: '36px', height: '36px', zIndex: 5, padding: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                position: 'absolute',
+                top: '50%',
+                right: '8px',
+                transform: 'translateY(-50%)',
+                width: '36px',
+                height: '36px',
+                zIndex: 10,
+                padding: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
               }}
+              title="Scroll right"
+              aria-label="Scroll right"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <IoIosArrowForward size={20} />
             </button>
           )}
         </div>
