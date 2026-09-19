@@ -64,6 +64,11 @@ class PermissionService {
     const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
     if (!storedWorker) return true
 
+    // Employees should never have access to employee management module
+    if (permissionPath === 'masters.employee' || permissionPath.startsWith('masters.employee')) {
+      return false
+    }
+
     const permissions = usePermissionStore.getState().permissions
     if (!permissions) return false
 

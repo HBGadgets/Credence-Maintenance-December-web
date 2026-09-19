@@ -1,20 +1,20 @@
-import React, { useState, useMemo, useContext } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
-import { FaArrowUp, FaCheck, FaPrint, FaRegFilePdf, FaTimes } from 'react-icons/fa'
-import SearchInput from '../../components/SearchInput'
-import Table from '../../components/Table'
-import SmartPagination from '../../components/SmartPagination'
-import Page404 from '../../pages/page404/Page404'
-import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
+import React, { useContext, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import Swal from 'sweetalert2'
-import { HiOutlineLogout } from 'react-icons/hi'
+import Cookies from 'js-cookie'
+import Table from '../../components/Table'
+import SearchInput from '../../components/SearchInput'
+import SmartPagination from '../../components/SmartPagination'
+import { getLeaveResquestDriverApi, updateLeaveRequestStatus } from '../data/data'
+import { FaArrowUp, FaCheck, FaPrint, FaRegFilePdf, FaTimes } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import IconDropdown from '../IconDropdown'
+import Swal from 'sweetalert2'
+import { toast, ToastContainer } from 'react-toastify'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
-import IconDropdown from '../IconDropdown'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import { HiOutlineLogout } from 'react-icons/hi'
 
 const LeaveRequests = () => {
   const queryClient = useQueryClient()
@@ -45,8 +45,14 @@ const LeaveRequests = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
-  // superadmin role
-  const token = useContext(TokenContext)
+  // Token resolution with fallback
+  const contextToken = useContext(TokenContext)
+  const token =
+    contextToken ||
+    sessionStorage.getItem('crdnsMaintToken') ||
+    localStorage.getItem('crdnsMaintToken') ||
+    Cookies.get('crdnsMaintToken')
+
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
@@ -59,7 +65,7 @@ const LeaveRequests = () => {
     queryKey: ['driverleaveRequests'],
     queryFn: () => getLeaveResquestDriverApi(null, token),
     staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
-    enabled: !!token, //  only run if token is available
+    enabled: Boolean(token), // only run if token is available
   })
 
   // Approve function
@@ -88,9 +94,9 @@ const LeaveRequests = () => {
     try {
       await updateLeaveRequestStatus(id, 'Rejected')
       Swal.fire({
-        title: 'Rejected!',
+        title: 'Success!',
         text: 'Leave Rejected Successfully.',
-        icon: 'error',
+        icon: 'success',
         confirmButtonText: 'OK',
       })
       // Invalidate query to refetch data
@@ -102,31 +108,33 @@ const LeaveRequests = () => {
     }
   }
 
-  // Process and format data for display
+  // Filter and map responseData
   const displayData = useMemo(() => {
     return responseData
-      .reverse()
       .filter((item) => {
-        if (!searchQuery) return true
-        const driverName = item.driverId?.name || 'Unknown'
-        return driverName.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesSearch =
+          item.driverId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.status?.toLowerCase().includes(searchQuery.toLowerCase())
+        return matchesSearch
       })
       .map((item) => ({
-        _id: item._id,
-        name: item.driverId?.name || 'Unknown',
+        id: item._id,
+        name: item.driverId?.name || 'N/A',
         startDate: formatDate(item.startDate),
         endDate: formatDate(item.endDate),
-        description: item.description || '',
-        status: item.status, // Keep raw status for badge generation
-        statusBadge: getStatusBadge(item.status || 'Pending'),
+        description: item.description,
+        statusBadge: getStatusBadge(item.status),
+        status: item.status, // Raw status for export
         actions: (
-          <div className="d-flex justify-content-center gap-2">
+          <div className="d-flex gap-2">
             <button
-              className="btn btn-sm btn-success"
+              className="btn btn-success btn-sm d-flex align-items-center justify-content-center"
               onClick={() => handleApprove(item._id)}
-              disabled={item.status !== 'Pending' || updatingId === item._id}
+              disabled={updatingId === item._id || item.status === 'Approved'}
+              title="Approve Leave"
             >
-              {updatingId === item._id ? (
+              {updatingId === item._id && item.status !== 'Approved' ? (
                 <span
                   className="spinner-border spinner-border-sm"
                   role="status"
@@ -137,11 +145,12 @@ const LeaveRequests = () => {
               )}
             </button>
             <button
-              className="btn btn-sm btn-danger"
+              className="btn btn-danger btn-sm d-flex align-items-center justify-content-center"
               onClick={() => handleReject(item._id)}
-              disabled={item.status !== 'Pending' || updatingId === item._id}
+              disabled={updatingId === item._id || item.status === 'Rejected'}
+              title="Reject Leave"
             >
-              {updatingId === item._id ? (
+              {updatingId === item._id && item.status !== 'Rejected' ? (
                 <span
                   className="spinner-border spinner-border-sm"
                   role="status"
@@ -167,8 +176,6 @@ const LeaveRequests = () => {
     // Implement your logout logic here
     console.log('Logout clicked')
   }
-
-  if (error) return <Page404 />
 
   // Dropdown items for export
   const dropdownItems = [

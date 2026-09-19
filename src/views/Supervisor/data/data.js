@@ -60,7 +60,17 @@ export const markAttendanceBySupervisorApi = async (id) => {
 // GET API for Leave Request list for supervisor.
 
 export const getLeaveResquestDriverApi = async (userId = null, TOKEN) => {
-  if (!TOKEN) throw new Error('Authentication token not found')
+  const authToken =
+    TOKEN ||
+    sessionStorage.getItem('crdnsMaintToken') ||
+    localStorage.getItem('crdnsMaintToken') ||
+    (typeof document !== 'undefined' &&
+      document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('crdnsMaintToken='))
+        ?.split('=')[1])
+
+  if (!authToken) throw new Error('Authentication token not found')
 
   const query = userId ? `?id=${userId}` : ''
   try {
@@ -68,14 +78,14 @@ export const getLeaveResquestDriverApi = async (userId = null, TOKEN) => {
       `${import.meta.env.VITE_API_URL}/api/leave/get-leaves-for-approval${query}`,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${authToken}`,
         },
       },
     )
     console.log('This is leave request of Driver : ', response.data)
     return response.data
   } catch (error) {
-    console.error('Error:', error.message?.data || error.message)
+    console.error('Error:', error.response?.data || error.message)
     throw error
   }
 }

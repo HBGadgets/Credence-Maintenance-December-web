@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import SmartPagination from '../../components/SmartPagination.jsx'
-import Page404 from '../../pages/page404/Page404.js'
 import SearchInput from '../../components/SearchInput.jsx'
 import Table from '../../components/Table'
 import DateRangePicker from '../../components/DateRangePicker.jsx'
@@ -100,14 +99,6 @@ const DriverSalary = () => {
     enabled: Boolean(month), // only run if month is truthy
     retry: 1,
   })
-
-  if (isError) {
-    if (!error?.response) {
-      return <Page404 message="Network Error: Please check your internet connection." />
-    } else if (error.response.status === 500) {
-      return <Page404 message="Server Error: Something went wrong on our end." />
-    }
-  }
 
   const transformedData = useMemo(
     () =>
@@ -223,8 +214,6 @@ const DriverSalary = () => {
       }
     }
   }
-
-  if (error) return <Page404 />
 
   // Dropdown items for export
   const dropdownItems = [

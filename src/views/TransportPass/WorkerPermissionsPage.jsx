@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Card, Button, Form, Tabs, Tab, Table, Badge } from 'react-bootstrap'
 import { Shield, ArrowLeft, Check, Filter } from 'lucide-react'
 import PermissionService from '../Services/Service'
+import usePermissionStore from '../../store/permission'
 import { toast } from 'react-toastify'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -83,7 +84,7 @@ const MASTERS_MODULES = [
   { section: 'masters', item: 'trip', label: 'Trips' },
   { section: 'masters', item: 'company', label: 'Company Name' },
   { section: 'masters', item: 'materialOwner', label: 'Material Owner' },
-  { section: 'masters', item: 'employee', label: 'Employees Details' },
+  // { section: 'masters', item: 'employee', label: 'Employees Details' },
   { section: 'masters', item: 'consignor', label: 'Consignor' },
   { section: 'masters', item: 'consignee', label: 'Consignee' },
   { section: 'masters', item: 'attendance', label: 'Driver Attendance Mark' },
@@ -114,6 +115,21 @@ const SUPPORT_MODULES = [
   { section: 'tickets', item: 'answer', label: 'Tickets (Answer)' },
   { section: 'chat', item: null, label: 'Chat Box' },
 ]
+
+const deepMerge = (target, source) => {
+  if (!source) return target
+  const merged = { ...target }
+  Object.keys(target).forEach((key) => {
+    if (source[key] !== undefined) {
+      if (typeof target[key] === 'object' && target[key] !== null) {
+        merged[key] = deepMerge(target[key], source[key])
+      } else {
+        merged[key] = source[key]
+      }
+    }
+  })
+  return merged
+}
 
 const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSaveSuccess: onSaveSuccessProp }) => {
   const { id } = useParams()
@@ -151,20 +167,36 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   // Target worker ID: from route param, prop, or logged-in worker
   const effectiveId = id || workerProp?.id || loggedInWorkerInfo?.id
 
-  // Fetch worker list if not passed via props and not employee login
+  // Self-view: employee viewing their own permissions (read-only)
+  const isSelf = Boolean(
+    isEmployeeLogin && (effectiveId === loggedInWorkerInfo?.id || (!id && !workerProp))
+  )
+
+  // Fetch logged-in employee's own permissions to know what they can grant
+  const { data: myPermissionsResponse } = useQuery({
+    queryKey: ['myPermissions'],
+    queryFn: PermissionService.getAll,
+    enabled: isEmployeeLogin,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const storedPermissions = usePermissionStore((state) => state.permissions)
+  const myPermissions = myPermissionsResponse?.permissions || storedPermissions || {}
+
+  // Fetch worker list if not passed via props and not self-view
   const { data: workerList = [], isLoading: isLoadingWorker } = useQuery({
     queryKey: ['workerList'],
     queryFn: getWorkerApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !workerProp && !isEmployeeLogin,
+    enabled: !workerProp && !isSelf,
   })
 
-  // Fetch permissions
+  // Fetch target worker permissions
   const { data: singleWorkerPermissions, isLoading: isLoadingPermissions } = useQuery({
     queryKey: ['workerPermissions', effectiveId],
     queryFn: () => {
-      if (isEmployeeLogin) {
-        return PermissionService.getAll()
+      if (isSelf) {
+        return myPermissionsResponse || PermissionService.getAll()
       }
       return PermissionService.getByWorkerId(effectiveId)
     },
@@ -172,13 +204,13 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     staleTime: 1000 * 60 * 5,
   })
 
-  const worker = workerProp || (id ? workerList.find((w) => w.id === id) : null) || loggedInWorkerInfo
+  const targetWorker = workerProp || (id ? workerList.find((w) => w.id === id) : null) || (isSelf ? loggedInWorkerInfo : null)
 
   const [permissions, setPermissions] = useState(defaultPermissions)
   const [customPermissions, setCustomPermissions] = useState(defaultCustomPermissions)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Show only accessible permissions: default true for employee login
+  // Toggle for accessible-only view
   const [showOnlyAccessible, setShowOnlyAccessible] = useState(isEmployeeLogin)
 
   useEffect(() => {
@@ -187,41 +219,66 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     }
   }, [isEmployeeLogin])
 
-  // Initialize permissions when worker or fetched permissions change
+  // Initialize permissions when target worker's fetched permissions change
   useEffect(() => {
-    if (singleWorkerPermissions || worker) {
-      const deepMerge = (target, source) => {
-        if (!source) return target
-        const merged = { ...target }
-        Object.keys(target).forEach((key) => {
-          if (source[key] !== undefined) {
-            if (typeof target[key] === 'object' && target[key] !== null) {
-              merged[key] = deepMerge(target[key], source[key])
-            } else {
-              merged[key] = source[key]
-            }
-          }
-        })
-        return merged
-      }
-
-      const sourcePermissions = singleWorkerPermissions?.permissions || worker?.permissions
-      const sourceCustomPermissions = singleWorkerPermissions?.customPermissions || worker?.customPermissions
+    if (singleWorkerPermissions || targetWorker) {
+      const sourcePermissions = singleWorkerPermissions?.permissions || targetWorker?.permissions
+      const sourceCustomPermissions = singleWorkerPermissions?.customPermissions || targetWorker?.customPermissions
 
       setPermissions(deepMerge(defaultPermissions, sourcePermissions))
       setCustomPermissions(deepMerge(defaultCustomPermissions, sourceCustomPermissions))
     }
-  }, [worker, singleWorkerPermissions])
+  }, [targetWorker, singleWorkerPermissions])
 
-  // Helper to check if a permission item has any access
+  // Check if current user has access to a specific module
+  const doesCurrentUserHaveModuleAccess = (section, item) => {
+    if (!isEmployeeLogin) return true // Superadmin has full access
+
+    if (section === 'chat') {
+      return Boolean(myPermissions?.chat?.read)
+    }
+
+    if (item === null) {
+      const targetObj = myPermissions?.[section]
+      if (!targetObj) return false
+      return Boolean(targetObj.read || targetObj.create || targetObj.update || targetObj.delete)
+    }
+
+    const targetObj = myPermissions?.[section]?.[item]
+    if (!targetObj) return false
+    return Boolean(targetObj.read || targetObj.create || targetObj.update || targetObj.delete)
+  }
+
+  // Check if current user can grant a specific action on a module
+  const canCurrentUserGrant = (section, item, action) => {
+    if (!isEmployeeLogin) return true // Superadmin can grant any action
+    if (isSelf) return false // Self-view is read-only
+
+    if (section === 'chat') {
+      return Boolean(myPermissions?.chat?.read)
+    }
+
+    if (item === null) {
+      return Boolean(myPermissions?.[section]?.[action])
+    }
+
+    return Boolean(myPermissions?.[section]?.[item]?.[action])
+  }
+
+  // Helper to check if a permission item has any active access (in the local state)
   const hasAccess = (section, item) => {
     const targetObj = item ? permissions[section]?.[item] : permissions[section]
     if (!targetObj) return false
     return Boolean(targetObj.read || targetObj.create || targetObj.update || targetObj.delete)
   }
 
+  // Handle single checkbox toggle
   const handleCheckboxChange = (section, item, action, isCustom = false) => {
-    if (isEmployeeLogin) return // Read-only for employee
+    if (isSelf) return
+    if (isEmployeeLogin && !canCurrentUserGrant(section, item, action)) {
+      toast.warning('You do not have permission to grant or modify this action.')
+      return
+    }
 
     if (isCustom) {
       setCustomPermissions((prev) => {
@@ -263,161 +320,185 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     }
   }
 
+  // Handle Select All for a tab section
   const handleSelectAll = (section, isCustom = false, value = true) => {
-    if (isEmployeeLogin) return
-    if (isCustom) {
-      setCustomPermissions((prev) => {
-        const updated = {}
-        Object.keys(prev).forEach((key) => {
-          updated[key] = { create: value, read: value, update: value, delete: value }
-        })
-        return updated
-      })
-    } else {
-      setPermissions((prev) => {
-        const updated = { ...prev }
-        if (section === 'masters' || section === 'reports') {
-          const updatedSection = {}
-          Object.keys(prev[section]).forEach((key) => {
-            updatedSection[key] = { create: value, read: value, update: value, delete: value }
-          })
-          updated[section] = updatedSection
-        } else {
-          if (typeof prev[section] === 'object' && prev[section] !== null) {
-            const updatedSection = {}
-            Object.keys(prev[section]).forEach((key) => {
-              if (typeof prev[section][key] === 'object' && prev[section][key] !== null) {
-                updatedSection[key] = { create: value, read: value, update: value, delete: value }
-              } else {
-                updatedSection[key] = value
-              }
-            })
-            updated[section] = updatedSection
-          }
-        }
-        return updated
-      })
-    }
-  }
-
-  const handleSelectAllOperational = (value = true) => {
-    if (isEmployeeLogin) return
+    if (isSelf) return
     setPermissions((prev) => {
       const updated = { ...prev }
-      updated.dailyTrips = { create: value, read: value, update: value, delete: value }
-      if (prev.goodReceipts) {
-        const updatedGR = {}
-        Object.keys(prev.goodReceipts).forEach((key) => {
-          updatedGR[key] = { create: value, read: value, update: value, delete: value }
-        })
-        updated.goodReceipts = updatedGR
-      }
-      if (prev.transportPass) {
-        const updatedTP = {}
-        Object.keys(prev.transportPass).forEach((key) => {
-          updatedTP[key] = { create: value, read: value, update: value, delete: value }
-        })
-        updated.transportPass = updatedTP
-      }
-      if (prev.warehouse) {
-        const updatedWH = {}
-        Object.keys(prev.warehouse).forEach((key) => {
-          updatedWH[key] = { create: value, read: value, update: value, delete: value }
-        })
-        updated.warehouse = updatedWH
-      }
-      return updated
-    })
-  }
-
-  const handleSelectAllSupport = (value = true) => {
-    if (isEmployeeLogin) return
-    setPermissions((prev) => {
-      const updated = { ...prev }
-      updated.tickets = {
-        raise: { create: value, read: value, update: value, delete: value },
-        answer: { create: value, read: value, update: value, delete: value },
-      }
-      updated.chat = { read: value }
-      return updated
-    })
-  }
-
-  const handleGrantAdminAccess = (value = true) => {
-    if (isEmployeeLogin) return
-    setPermissions((prev) => {
-      const updated = { ...prev }
-      Object.keys(prev).forEach((sectionKey) => {
-        const section = prev[sectionKey]
-        if (sectionKey === 'chat') {
-          updated[sectionKey] = { read: value }
-        } else if (sectionKey === 'dailyTrips') {
-          updated[sectionKey] = { create: value, read: value, update: value, delete: value }
-        } else if (typeof section === 'object' && section !== null) {
-          const updatedSection = {}
-          Object.keys(section).forEach((itemKey) => {
-            if (typeof section[itemKey] === 'object' && section[itemKey] !== null) {
-              updatedSection[itemKey] = { create: value, read: value, update: value, delete: value }
-            } else {
-              updatedSection[itemKey] = value
+      const currentSection = prev[section] || {}
+      const updatedSection = { ...currentSection }
+      Object.keys(currentSection).forEach((key) => {
+        if (typeof currentSection[key] === 'object' && currentSection[key] !== null) {
+          const updatedItem = { ...currentSection[key] }
+          Object.keys(updatedItem).forEach((action) => {
+            if (canCurrentUserGrant(section, key, action)) {
+              updatedItem[action] = value
             }
           })
-          updated[sectionKey] = updatedSection
+          updatedSection[key] = updatedItem
+        }
+      })
+      updated[section] = updatedSection
+      return updated
+    })
+  }
+
+  // Handle Select All for Operational
+  const handleSelectAllOperational = (value = true) => {
+    if (isSelf) return
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      if (prev.dailyTrips) {
+        const dt = { ...prev.dailyTrips }
+        Object.keys(dt).forEach((act) => {
+          if (canCurrentUserGrant('dailyTrips', null, act)) {
+            dt[act] = value
+          }
+        })
+        updated.dailyTrips = dt
+      }
+      ;['goodReceipts', 'transportPass', 'warehouse'].forEach((sec) => {
+        if (prev[sec]) {
+          const updatedSec = { ...prev[sec] }
+          Object.keys(prev[sec]).forEach((key) => {
+            if (typeof prev[sec][key] === 'object' && prev[sec][key] !== null) {
+              const updatedItem = { ...prev[sec][key] }
+              Object.keys(updatedItem).forEach((act) => {
+                if (canCurrentUserGrant(sec, key, act)) {
+                  updatedItem[act] = value
+                }
+              })
+              updatedSec[key] = updatedItem
+            }
+          })
+          updated[sec] = updatedSec
         }
       })
       return updated
     })
+  }
 
-    setCustomPermissions((prev) => {
-      const updated = {}
-      Object.keys(prev || {}).forEach((key) => {
-        updated[key] = { create: value, read: value, update: value, delete: value }
-      })
+  // Handle Select All for Support
+  const handleSelectAllSupport = (value = true) => {
+    if (isSelf) return
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      if (prev.tickets) {
+        const updatedTickets = { ...prev.tickets }
+        ;['raise', 'answer'].forEach((k) => {
+          if (updatedTickets[k]) {
+            const item = { ...updatedTickets[k] }
+            Object.keys(item).forEach((act) => {
+              if (canCurrentUserGrant('tickets', k, act)) {
+                item[act] = value
+              }
+            })
+            updatedTickets[k] = item
+          }
+        })
+        updated.tickets = updatedTickets
+      }
+      if (canCurrentUserGrant('chat', null, 'read')) {
+        updated.chat = { read: value }
+      }
       return updated
     })
   }
 
-  const handleClose = () => {
-    if (onCloseProp) {
-      onCloseProp()
-    } else {
-      navigate('/Worker')
-    }
+  // Handle Grant Admin Access / Quick Action
+  const handleGrantAdminAccess = (value = true) => {
+    if (isSelf) return
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      // Masters
+      if (prev.masters) {
+        const updatedMasters = { ...prev.masters }
+        Object.keys(updatedMasters).forEach((k) => {
+          const item = { ...updatedMasters[k] }
+          Object.keys(item).forEach((act) => {
+            if (canCurrentUserGrant('masters', k, act)) {
+              item[act] = value
+            }
+          })
+          updatedMasters[k] = item
+        })
+        updated.masters = updatedMasters
+      }
+      // Reports
+      if (prev.reports) {
+        const updatedReports = { ...prev.reports }
+        Object.keys(updatedReports).forEach((k) => {
+          const item = { ...updatedReports[k] }
+          Object.keys(item).forEach((act) => {
+            if (canCurrentUserGrant('reports', k, act)) {
+              item[act] = value
+            }
+          })
+          updatedReports[k] = item
+        })
+        updated.reports = updatedReports
+      }
+      // Operational
+      if (prev.dailyTrips) {
+        const dt = { ...prev.dailyTrips }
+        Object.keys(dt).forEach((act) => {
+          if (canCurrentUserGrant('dailyTrips', null, act)) {
+            dt[act] = value
+          }
+        })
+        updated.dailyTrips = dt
+      }
+      ;['goodReceipts', 'transportPass', 'warehouse'].forEach((sec) => {
+        if (prev[sec]) {
+          const updatedSec = { ...prev[sec] }
+          Object.keys(prev[sec]).forEach((k) => {
+            if (typeof prev[sec][k] === 'object' && prev[sec][k] !== null) {
+              const item = { ...prev[sec][k] }
+              Object.keys(item).forEach((act) => {
+                if (canCurrentUserGrant(sec, k, act)) {
+                  item[act] = value
+                }
+              })
+              updatedSec[k] = item
+            }
+          })
+          updated[sec] = updatedSec
+        }
+      })
+      // Support
+      if (prev.tickets) {
+        const updatedTickets = { ...prev.tickets }
+        ;['raise', 'answer'].forEach((k) => {
+          if (updatedTickets[k]) {
+            const item = { ...updatedTickets[k] }
+            Object.keys(item).forEach((act) => {
+              if (canCurrentUserGrant('tickets', k, act)) {
+                item[act] = value
+              }
+            })
+            updatedTickets[k] = item
+          }
+        })
+        updated.tickets = updatedTickets
+      }
+      if (canCurrentUserGrant('chat', null, 'read')) {
+        updated.chat = { read: value }
+      }
+      return updated
+    })
   }
 
-  const handleSave = async () => {
-    if (!effectiveId) return
-    setIsSaving(true)
-    try {
-      const payload = {
-        workerId: effectiveId,
-        permissions,
-        customPermissions,
-      }
-      await PermissionService.addOrUpdatePermissions(payload)
-      toast.success(`Permissions updated successfully for ${worker?.name || 'employee'}!`)
-      if (onSaveSuccessProp) {
-        onSaveSuccessProp()
-      } else {
-        queryClient.invalidateQueries(['workerList'])
-      }
-      handleClose()
-    } catch (error) {
-      console.error('Error saving permissions:', error)
-      toast.error(error.message || 'Failed to update permissions')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
+  // Handle Row Select All
   const handleRowSelectAll = (section, item, isCustom, value) => {
-    if (isEmployeeLogin) return
+    if (isSelf) return
     const updater = (prev) => {
       if (isCustom) {
         const currentItem = prev[section] || {}
-        const updatedItem = {}
+        const updatedItem = { ...currentItem }
         Object.keys(currentItem).forEach((action) => {
-          updatedItem[action] = value
+          if (canCurrentUserGrant(section, item, action)) {
+            updatedItem[action] = value
+          }
         })
         return {
           ...prev,
@@ -426,9 +507,11 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
       } else {
         if (item === null) {
           const currentItem = prev[section] || {}
-          const updatedItem = {}
+          const updatedItem = { ...currentItem }
           Object.keys(currentItem).forEach((action) => {
-            updatedItem[action] = value
+            if (canCurrentUserGrant(section, item, action)) {
+              updatedItem[action] = value
+            }
           })
           return {
             ...prev,
@@ -437,9 +520,11 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         } else {
           const currentSection = prev[section] || {}
           const currentItem = currentSection[item] || {}
-          const updatedItem = {}
+          const updatedItem = { ...currentItem }
           Object.keys(currentItem).forEach((action) => {
-            updatedItem[action] = value
+            if (canCurrentUserGrant(section, item, action)) {
+              updatedItem[action] = value
+            }
           })
           return {
             ...prev,
@@ -459,6 +544,80 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     }
   }
 
+  // Build safe permissions payload preserving ungrantable actions/modules from target worker's original permissions
+  const buildPermissionsForSave = () => {
+    if (!isEmployeeLogin) {
+      return permissions
+    }
+
+    const original = deepMerge(defaultPermissions, singleWorkerPermissions?.permissions || targetWorker?.permissions || {})
+    const result = JSON.parse(JSON.stringify(original))
+
+    const applyGrantable = (sourceObj, targetObj, path = []) => {
+      Object.keys(sourceObj).forEach((key) => {
+        const currentPath = [...path, key]
+        const sourceVal = sourceObj[key]
+        if (typeof sourceVal === 'object' && sourceVal !== null) {
+          if (!targetObj[key]) targetObj[key] = {}
+          applyGrantable(sourceVal, targetObj[key], currentPath)
+        } else {
+          let section = currentPath[0]
+          let item = null
+          let action = null
+
+          if (currentPath.length === 2) {
+            action = currentPath[1]
+          } else if (currentPath.length === 3) {
+            item = currentPath[1]
+            action = currentPath[2]
+          }
+
+          if (canCurrentUserGrant(section, item, action)) {
+            targetObj[key] = sourceVal
+          }
+        }
+      })
+    }
+
+    applyGrantable(permissions, result)
+    return result
+  }
+
+  const handleClose = () => {
+    if (onCloseProp) {
+      onCloseProp()
+    } else {
+      navigate('/Worker')
+    }
+  }
+
+  const handleSave = async () => {
+    if (!effectiveId || isSelf) return
+    setIsSaving(true)
+    try {
+      const finalPermissions = buildPermissionsForSave()
+      const payload = {
+        workerId: effectiveId,
+        permissions: finalPermissions,
+        customPermissions,
+      }
+      await PermissionService.addOrUpdatePermissions(payload)
+      toast.success(`Permissions updated successfully for ${targetWorker?.name || 'employee'}!`)
+      if (onSaveSuccessProp) {
+        onSaveSuccessProp()
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['workerList'] })
+        queryClient.invalidateQueries({ queryKey: ['workerPermissions', effectiveId] })
+      }
+      handleClose()
+    } catch (error) {
+      console.error('Error saving permissions:', error)
+      toast.error(error.message || 'Failed to update permissions')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const renderPermissionRow = (section, label, item = null, isCustom = false) => {
     const currentData = isCustom ? customPermissions : permissions
     const targetObj = item ? currentData[section]?.[item] : currentData[section]
@@ -470,24 +629,38 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     const hasUpdate = targetObj.update !== undefined
     const hasDelete = targetObj.delete !== undefined
 
+    // Calculate grantable actions for this row
+    const grantableActions = ['read', 'create', 'update', 'delete'].filter((action) => {
+      if (action === 'read' && !hasRead) return false
+      if (action === 'create' && !hasCreate) return false
+      if (action === 'update' && !hasUpdate) return false
+      if (action === 'delete' && !hasDelete) return false
+      return canCurrentUserGrant(section, item, action)
+    })
+
     const isAllChecked =
-      (!hasRead || targetObj.read) &&
-      (!hasCreate || targetObj.create) &&
-      (!hasUpdate || targetObj.update) &&
-      (!hasDelete || targetObj.delete)
+      grantableActions.length > 0 &&
+      grantableActions.every((action) => targetObj[action])
+
+    const isRowDisabled = grantableActions.length === 0
 
     return (
       <tr key={item || section} className="align-middle">
-        <td className="fw-semibold text-secondary" style={{ fontSize: '0.9rem', width: isEmployeeLogin ? '40%' : '30%' }}>
+        <td
+          className="fw-semibold text-secondary"
+          style={{ fontSize: '0.9rem', width: isSelf ? '40%' : '30%' }}
+        >
           {label}
         </td>
 
-        {/* 'All' checkbox column only shown in admin/edit mode */}
-        {!isEmployeeLogin && (
+        {/* 'All' checkbox column only shown in edit mode */}
+        {!isSelf && (
           <td className="text-center" style={{ backgroundColor: '#f8fafc', width: '10%' }}>
             <Form.Check
               type="checkbox"
               checked={isAllChecked}
+              disabled={isRowDisabled}
+              title={isRowDisabled ? 'You do not have any permissions to grant for this module' : 'Toggle all your grantable permissions'}
               onChange={(e) => handleRowSelectAll(section, item, isCustom, e.target.checked)}
             />
           </td>
@@ -496,7 +669,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         {/* Read */}
         <td className="text-center">
           {hasRead ? (
-            isEmployeeLogin ? (
+            isSelf ? (
               targetObj.read ? (
                 <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
                   <Check size={13} className="me-1" /> Allowed
@@ -507,7 +680,9 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <Form.Check
                 type="checkbox"
-                checked={targetObj.read}
+                checked={Boolean(targetObj.read)}
+                disabled={!canCurrentUserGrant(section, item, 'read')}
+                title={!canCurrentUserGrant(section, item, 'read') ? 'You do not have permission to grant Read access' : ''}
                 onChange={() => handleCheckboxChange(section, item, 'read', isCustom)}
               />
             )
@@ -517,7 +692,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         {/* Create */}
         <td className="text-center">
           {hasCreate ? (
-            isEmployeeLogin ? (
+            isSelf ? (
               targetObj.create ? (
                 <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
                   <Check size={13} className="me-1" /> Allowed
@@ -528,7 +703,9 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <Form.Check
                 type="checkbox"
-                checked={targetObj.create}
+                checked={Boolean(targetObj.create)}
+                disabled={!canCurrentUserGrant(section, item, 'create')}
+                title={!canCurrentUserGrant(section, item, 'create') ? 'You do not have permission to grant Create access' : ''}
                 onChange={() => handleCheckboxChange(section, item, 'create', isCustom)}
               />
             )
@@ -538,7 +715,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         {/* Update */}
         <td className="text-center">
           {hasUpdate ? (
-            isEmployeeLogin ? (
+            isSelf ? (
               targetObj.update ? (
                 <span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill fw-semibold">
                   <Check size={13} className="me-1" /> Allowed
@@ -549,7 +726,9 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <Form.Check
                 type="checkbox"
-                checked={targetObj.update}
+                checked={Boolean(targetObj.update)}
+                disabled={!canCurrentUserGrant(section, item, 'update')}
+                title={!canCurrentUserGrant(section, item, 'update') ? 'You do not have permission to grant Update access' : ''}
                 onChange={() => handleCheckboxChange(section, item, 'update', isCustom)}
               />
             )
@@ -559,7 +738,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         {/* Delete */}
         <td className="text-center">
           {hasDelete ? (
-            isEmployeeLogin ? (
+            isSelf ? (
               targetObj.delete ? (
                 <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill fw-semibold">
                   <Check size={13} className="me-1" /> Allowed
@@ -570,7 +749,9 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <Form.Check
                 type="checkbox"
-                checked={targetObj.delete}
+                checked={Boolean(targetObj.delete)}
+                disabled={!canCurrentUserGrant(section, item, 'delete')}
+                title={!canCurrentUserGrant(section, item, 'delete') ? 'You do not have permission to grant Delete access' : ''}
                 onChange={() => handleCheckboxChange(section, item, 'delete', isCustom)}
               />
             )
@@ -580,8 +761,16 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     )
   }
 
-  // Filter modules based on showOnlyAccessible
+  // Filter modules based on accessibility
   const getVisibleModules = (modules) => {
+    // For employee login, strictly only show modules the current employee has access to
+    // and do not show employee module to employee
+    if (isEmployeeLogin) {
+      return modules.filter(
+        (m) => m.item !== 'employee' && doesCurrentUserHaveModuleAccess(m.section, m.item)
+      )
+    }
+    // For admin, filter if showOnlyAccessible toggle is active
     if (showOnlyAccessible) {
       return modules.filter((m) => hasAccess(m.section, m.item))
     }
@@ -593,10 +782,10 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   const visibleOperational = getVisibleModules(OPERATIONAL_MODULES)
   const visibleSupport = getVisibleModules(SUPPORT_MODULES)
 
-  const mastersCount = MASTERS_MODULES.filter((m) => hasAccess(m.section, m.item)).length
-  const reportsCount = REPORTS_MODULES.filter((m) => hasAccess(m.section, m.item)).length
-  const operationalCount = OPERATIONAL_MODULES.filter((m) => hasAccess(m.section, m.item)).length
-  const supportCount = SUPPORT_MODULES.filter((m) => hasAccess(m.section, m.item)).length
+  const mastersCount = visibleMasters.length
+  const reportsCount = visibleReports.length
+  const operationalCount = visibleOperational.length
+  const supportCount = visibleSupport.length
   const totalAccessibleCount = mastersCount + reportsCount + operationalCount + supportCount
 
   if (isLoadingWorker || isLoadingPermissions) {
@@ -609,7 +798,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     )
   }
 
-  if (!worker && !isEmployeeLogin) {
+  if (!targetWorker && !isSelf) {
     return (
       <Card className="shadow mb-4">
         <Card.Body className="text-center py-5">
@@ -622,13 +811,13 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
     )
   }
 
-  const displayName = worker?.name || loggedInWorkerInfo?.name || 'Employee'
+  const displayName = targetWorker?.name || loggedInWorkerInfo?.name || 'Employee'
 
   return (
     <Card className="shadow mb-4 borderless-bottom">
       <Card.Header className="d-flex align-items-center justify-content-between bg-white py-3">
         <div className="d-flex align-items-center gap-2">
-          {!isEmployeeLogin && (
+          {!isSelf && (
             <>
               <Button variant="outline-secondary" size="sm" onClick={handleClose} className="d-flex align-items-center gap-1">
                 <ArrowLeft size={16} />
@@ -639,11 +828,18 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
           )}
           <Shield size={22} className="text-primary" />
           <h5 className="m-0 text-dark fw-bold">
-            {isEmployeeLogin ? `My Assigned Permissions (${displayName})` : `Manage Permissions for ${displayName}`}
+            {isSelf
+              ? `My Assigned Permissions (${displayName})`
+              : `Manage Permissions for ${displayName}`}
           </h5>
-          {isEmployeeLogin && (
+          {isSelf && (
             <Badge bg="success" className="ms-2 px-2 py-1 fw-normal">
               Active Access ({totalAccessibleCount} Modules)
+            </Badge>
+          )}
+          {isEmployeeLogin && !isSelf && (
+            <Badge bg="info" className="ms-2 px-2 py-1 fw-normal">
+              Delegated Access ({totalAccessibleCount} Grantable Modules)
             </Badge>
           )}
         </div>
@@ -662,7 +858,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             </Button>
           )}
 
-          {!isEmployeeLogin ? (
+          {!isSelf ? (
             <>
               <Button variant="secondary" size="sm" onClick={handleClose} disabled={isSaving}>
                 Cancel
@@ -678,16 +874,37 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
       </Card.Header>
 
       <Card.Body>
-        {/* Quick Actions for Admin */}
-        {!isEmployeeLogin && (
-          <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border">
-            <span className="text-dark fw-bold" style={{ fontSize: '0.9rem' }}>Quick Actions:</span>
+        {/* Notice for employee delegating permissions */}
+        {isEmployeeLogin && !isSelf && (
+          <div className="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+            <Shield size={16} className="text-primary flex-shrink-0" />
+            <div>
+              <strong>Delegated Access Mode:</strong> You can only grant permissions for modules and actions you have access to. Modules and actions outside your permission scope are hidden or disabled.
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions in Edit Mode */}
+        {!isSelf && (
+          <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3 bg-light rounded border gap-2">
+            <span className="text-dark fw-bold" style={{ fontSize: '0.9rem' }}>
+              {isEmployeeLogin ? 'Quick Actions (Your Accessible Modules):' : 'Quick Actions:'}
+            </span>
             <div className="d-flex gap-2">
-              <Button size="sm" variant="success" className="text-white" onClick={() => handleGrantAdminAccess(true)}>
-                Grant Admin Access (Select All)
+              <Button
+                size="sm"
+                variant="success"
+                className="text-white"
+                onClick={() => handleGrantAdminAccess(true)}
+              >
+                {isEmployeeLogin ? 'Grant All My Permissions' : 'Grant Admin Access (Select All)'}
               </Button>
-              <Button size="sm" variant="outline-danger" onClick={() => handleGrantAdminAccess(false)}>
-                Clear All Access
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() => handleGrantAdminAccess(false)}
+              >
+                {isEmployeeLogin ? 'Clear All My Permissions' : 'Clear All Access'}
               </Button>
             </div>
           </div>
@@ -696,7 +913,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
         <Tabs defaultActiveKey="masters" className="mb-3 premium-tabs">
           {/* MASTERS */}
           <Tab eventKey="masters" title={`Masters (${mastersCount})`}>
-            {!isEmployeeLogin && (
+            {!isSelf && visibleMasters.length > 0 && (
               <div className="d-flex justify-content-end gap-2 mb-2">
                 <Button size="sm" variant="outline-primary" onClick={() => handleSelectAll('masters', false, true)}>
                   Select All
@@ -711,7 +928,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
                 <thead className="table-light text-center">
                   <tr>
                     <th>Feature</th>
-                    {!isEmployeeLogin && <th>All</th>}
+                    {!isSelf && <th>All</th>}
                     <th>Read</th>
                     <th>Create</th>
                     <th>Update</th>
@@ -725,14 +942,18 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <div className="text-center py-4 text-muted bg-light rounded border border-dashed my-2">
                 <Shield size={32} className="text-secondary opacity-50 mb-2 d-block mx-auto" />
-                <p className="mb-0 fw-semibold">No permissions granted in Masters category.</p>
+                <p className="mb-0 fw-semibold">
+                  {isEmployeeLogin
+                    ? 'You do not have access to grant permissions in the Masters category.'
+                    : 'No permissions granted in Masters category.'}
+                </p>
               </div>
             )}
           </Tab>
 
           {/* REPORTS */}
           <Tab eventKey="reports" title={`Reports (${reportsCount})`}>
-            {!isEmployeeLogin && (
+            {!isSelf && visibleReports.length > 0 && (
               <div className="d-flex justify-content-end gap-2 mb-2">
                 <Button size="sm" variant="outline-primary" onClick={() => handleSelectAll('reports', false, true)}>
                   Select All
@@ -747,7 +968,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
                 <thead className="table-light text-center">
                   <tr>
                     <th>Feature</th>
-                    {!isEmployeeLogin && <th>All</th>}
+                    {!isSelf && <th>All</th>}
                     <th>Read</th>
                     <th>Create</th>
                     <th>Update</th>
@@ -761,14 +982,18 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <div className="text-center py-4 text-muted bg-light rounded border border-dashed my-2">
                 <Shield size={32} className="text-secondary opacity-50 mb-2 d-block mx-auto" />
-                <p className="mb-0 fw-semibold">No permissions granted in Reports category.</p>
+                <p className="mb-0 fw-semibold">
+                  {isEmployeeLogin
+                    ? 'You do not have access to grant permissions in the Reports category.'
+                    : 'No permissions granted in Reports category.'}
+                </p>
               </div>
             )}
           </Tab>
 
           {/* OPERATIONAL */}
           <Tab eventKey="operational" title={`Operational Modules (${operationalCount})`}>
-            {!isEmployeeLogin && (
+            {!isSelf && visibleOperational.length > 0 && (
               <div className="d-flex justify-content-end gap-2 mb-2">
                 <Button size="sm" variant="outline-primary" onClick={() => handleSelectAllOperational(true)}>
                   Select All
@@ -783,7 +1008,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
                 <thead className="table-light text-center">
                   <tr>
                     <th>Feature</th>
-                    {!isEmployeeLogin && <th>All</th>}
+                    {!isSelf && <th>All</th>}
                     <th>Read</th>
                     <th>Create</th>
                     <th>Update</th>
@@ -797,14 +1022,18 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <div className="text-center py-4 text-muted bg-light rounded border border-dashed my-2">
                 <Shield size={32} className="text-secondary opacity-50 mb-2 d-block mx-auto" />
-                <p className="mb-0 fw-semibold">No permissions granted in Operational Modules category.</p>
+                <p className="mb-0 fw-semibold">
+                  {isEmployeeLogin
+                    ? 'You do not have access to grant permissions in the Operational Modules category.'
+                    : 'No permissions granted in Operational Modules category.'}
+                </p>
               </div>
             )}
           </Tab>
 
           {/* SUPPORT & CHAT */}
           <Tab eventKey="support" title={`Support & Chat (${supportCount})`}>
-            {!isEmployeeLogin && (
+            {!isSelf && visibleSupport.length > 0 && (
               <div className="d-flex justify-content-end gap-2 mb-2">
                 <Button size="sm" variant="outline-primary" onClick={() => handleSelectAllSupport(true)}>
                   Select All
@@ -819,7 +1048,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
                 <thead className="table-light text-center">
                   <tr>
                     <th>Feature</th>
-                    {!isEmployeeLogin && <th>All</th>}
+                    {!isSelf && <th>All</th>}
                     <th>Read</th>
                     <th>Create</th>
                     <th>Update</th>
@@ -833,7 +1062,11 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
             ) : (
               <div className="text-center py-4 text-muted bg-light rounded border border-dashed my-2">
                 <Shield size={32} className="text-secondary opacity-50 mb-2 d-block mx-auto" />
-                <p className="mb-0 fw-semibold">No permissions granted in Support & Chat category.</p>
+                <p className="mb-0 fw-semibold">
+                  {isEmployeeLogin
+                    ? 'You do not have access to grant permissions in the Support & Chat category.'
+                    : 'No permissions granted in Support & Chat category.'}
+                </p>
               </div>
             )}
           </Tab>

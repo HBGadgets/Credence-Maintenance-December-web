@@ -46,8 +46,25 @@ import PermissionService from '../views/Services/Service';
 
 // Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
+  const isEmployee = Boolean(
+    sessionStorage.getItem('workerInfo') ||
+    localStorage.getItem('workerInfo') ||
+    (role || '').toString().toLowerCase() === 'worker' ||
+    (role || '').toString().toLowerCase() === 'employee'
+  );
+
   return items
     .map((item) => {
+      // 0. Do not show employee section or module to employee
+      if (
+        isEmployee &&
+        (item.permission === 'masters.employee' ||
+          item.to === '/Worker' ||
+          (item.name && item.name.trim().toLowerCase() === 'employees'))
+      ) {
+        return null;
+      }
+
       // 1. Check role if specified
       if (item.role && item.role.toString().toLowerCase() !== (role || '').toString().toLowerCase()) return null;
 

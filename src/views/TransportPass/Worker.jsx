@@ -58,11 +58,26 @@ const Worker = () => {
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
+  const isEmployee = Boolean(
+    sessionStorage.getItem('workerInfo') ||
+    localStorage.getItem('workerInfo') ||
+    userRole === 'worker' ||
+    userRole === 'employee'
+  )
+
+  useEffect(() => {
+    if (isEmployee) {
+      toast.warning('Employees do not have access to the Employees section.')
+      navigate('/')
+    }
+  }, [isEmployee, navigate])
+
   // Fetch workers
   const { data: workerList = [], isFetching } = useQuery({
     queryKey: ['workerList'],
     queryFn: getWorkerApi,
     staleTime: 1000 * 60 * 30,
+    enabled: !isEmployee,
   })
 
   // supervisor fetch
@@ -343,6 +358,10 @@ const Worker = () => {
     selectedValue: selectedName?.value,
     selectedLabel: selectedName?.label,
   })
+
+  if (isEmployee) {
+    return null
+  }
 
   return (
     <>
