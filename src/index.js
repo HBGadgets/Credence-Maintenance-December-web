@@ -9,7 +9,14 @@ import store from './store'
 import { NotificationProvider } from './context/NotificationContext'
 // import appStore from './store/redux/appStore'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>

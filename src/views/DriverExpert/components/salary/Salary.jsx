@@ -35,7 +35,10 @@ const Salary = ({ id }) => {
   } = useQuery({
     queryKey: ['DriverSalary', id],
     queryFn: () => driverSalary(id),
-    retry: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     enabled: !!id,
   })
 
@@ -168,7 +171,7 @@ const Salary = ({ id }) => {
             title="Driver Salary"
             columns={columns}
             filteredData={paginatedData}
-            setFilteredData={setFilteredData}
+            setFilteredData={() => {}}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             isFetching={isFetching}

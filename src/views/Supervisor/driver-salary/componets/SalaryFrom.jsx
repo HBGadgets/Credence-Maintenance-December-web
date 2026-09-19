@@ -107,7 +107,7 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
       {/* <CButton color="primary" onClick={() => setVisible(true)}>
         Create Driver Salary
       </CButton> */}
-      <CModal visible={visible} onClose={onClose}>
+      <CModal backdrop="static" visible={visible} onClose={onClose}>
         <CModalHeader closeButton>
           <CModalTitle>{formData._id ? 'Edit' : 'Create'} Driver Salary</CModalTitle>
         </CModalHeader>

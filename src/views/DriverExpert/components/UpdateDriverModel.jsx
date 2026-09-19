@@ -122,6 +122,7 @@ function UpdateDriverModel({ visible, setVisible, driver }) {
       alignment="center"
       scrollable
       visible={visible}
+      backdrop="static"
       size="lg"
       onClose={() => setVisible(false)}
     >

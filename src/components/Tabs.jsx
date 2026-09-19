@@ -48,7 +48,7 @@ function Tabs({ tabs }) {
           {/* Tab Content */}
           <Tab.Content className="mt-3">
             {tabs.map((tab, index) => (
-              <Tab.Pane key={index} eventKey={index}>
+              <Tab.Pane key={index} eventKey={index} mountOnEnter>
                 <div
                   className="border rounded mt-3"
                   style={{

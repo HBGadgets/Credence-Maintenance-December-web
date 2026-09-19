@@ -21,7 +21,6 @@ const ViewAllSalary = () => {
   const { id } = useParams()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
-  const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
@@ -32,20 +31,23 @@ const ViewAllSalary = () => {
   const [searchQuery, setSearchQuery] = useState('')
 
   const {
-    data: driverSalaryData = [],
+    data: driverSalaryData,
     isFetching,
     isFetched,
     isError,
   } = useQuery({
     queryKey: ['DriverSalary', id],
     queryFn: () => driverSalary(id),
-    retry: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    enabled: !!id,
   })
 
-  useEffect(() => {
+  const filteredData = useMemo(() => {
     if (!driverSalaryData || driverSalaryData.length === 0) {
-      setFilteredData([])
-      return
+      return []
     }
 
     let filtered = [...driverSalaryData]
@@ -71,8 +73,8 @@ const ViewAllSalary = () => {
       )
     }
 
-    setFilteredData(filtered)
-  }, [driverSalaryData, dateRange, searchQuery])
+    return filtered
+  }, [driverSalaryData, dateRange.startDate, dateRange.endDate, searchQuery])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const paginatedData = filteredData.slice(
@@ -191,7 +193,7 @@ const ViewAllSalary = () => {
             title="Driver Salary"
             columns={columns}
             filteredData={paginatedData}
-            setFilteredData={setFilteredData}
+            setFilteredData={() => {}}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             isFetching={isFetching}

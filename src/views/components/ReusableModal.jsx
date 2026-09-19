@@ -10,6 +10,9 @@ const ReusableModal = ({
   title = 'Form',
   fields = [],
   size = 'lg',
+  backdrop = 'static',
+  keyboard = false,
+  isSubmitting = false,
 }) => {
   const initialFormState = fields.reduce((acc, field) => {
     if (field.type === 'multiselect') acc[field.name] = []
@@ -103,7 +106,7 @@ const ReusableModal = ({
   }
 
   return (
-    <Modal show={show} onHide={onClose} size={size} centered>
+    <Modal show={show} onHide={onClose} size={size} centered backdrop={backdrop} keyboard={keyboard}>
       <Modal.Header closeButton>
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>

@@ -128,6 +128,7 @@ function AddDriverModel({ visible, setVisible }) {
       alignment="center"
       scrollable
       visible={visible}
+      backdrop="static"
       size="lg"
       onClose={() => setVisible(false)}
       aria-labelledby="AddDriverModal"

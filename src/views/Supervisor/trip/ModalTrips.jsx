@@ -242,7 +242,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   }, [cities])
 
   return (
-    <Modal show={true} onHide={onClose} centered size="xl" className="trip-modal">
+    <Modal show={true} onHide={onClose} centered size="xl" className="trip-modal" backdrop="static" keyboard={false}>
       <Modal.Header>
         <Modal.Title className="fw-bold">
           {mode === 'add' ? 'Add New Trip' : 'Edit Trip'}

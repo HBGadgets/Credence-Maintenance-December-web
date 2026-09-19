@@ -49,7 +49,7 @@ const InspectionForm = ({
   const vehicleField = inspectionItems.find((item) => item.type === 'select')
 
   return (
-    <Modal show={show} onHide={onClose} size="xl" centered scrollable>
+    <Modal show={show} onHide={onClose} size="xl" centered scrollable backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title>{isEditMode ? `Edit Inspection ` : 'New Inspection Checklist'}</Modal.Title>
       </Modal.Header>

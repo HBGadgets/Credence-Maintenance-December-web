@@ -63,7 +63,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Employees Details',
+        name: 'Employees',
         to: '/Worker',
         permission: 'masters.employee',
       },
