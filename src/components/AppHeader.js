@@ -46,11 +46,22 @@ import PermissionService from '../views/Services/Service';
 
 // Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
+  const roleLower = (role || '').toString().toLowerCase().trim();
+  const isSuperAdmin =
+    roleLower === 'superadmin' ||
+    roleLower.includes('superadmin') ||
+    roleLower === 'admin';
+
+  // If superadmin, completely bypass all permission and role restrictions
+  if (isSuperAdmin) {
+    return items;
+  }
+
   const isEmployee = Boolean(
     sessionStorage.getItem('workerInfo') ||
     localStorage.getItem('workerInfo') ||
-    (role || '').toString().toLowerCase() === 'worker' ||
-    (role || '').toString().toLowerCase() === 'employee'
+    roleLower === 'worker' ||
+    roleLower === 'employee'
   );
 
   return items
@@ -66,7 +77,7 @@ const filterNavByRole = (items, role) => {
       }
 
       // 1. Check role if specified
-      if (item.role && item.role.toString().toLowerCase() !== (role || '').toString().toLowerCase()) return null;
+      if (item.role && item.role.toString().toLowerCase() !== roleLower) return null;
 
       // 2. Check permission if specified
       if (item.permission && !PermissionService.hasPermission(item.permission, 'read')) {
@@ -95,7 +106,12 @@ const AppHeader = () => {
     setUnreadCounts({}); //clear unread counts
   };
 
-  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext);
+  const contextToken = useContext(TokenContext);
+  const token =
+    Cookies.get('crdnsMaintToken') ||
+    sessionStorage.getItem('crdnsMaintToken') ||
+    localStorage.getItem('crdnsMaintToken') ||
+    contextToken;
 
   // Helper to get a cookie by name
   const getCookie = (name) => {
@@ -179,7 +195,7 @@ const AppHeader = () => {
     if (!token || typeof token !== 'string') return null;
     try {
       const decoded = jwtDecode(token);
-      return decoded?.role || null;
+      return (decoded?.role || '').toString().toLowerCase().trim();
     } catch {
       return null;
     }

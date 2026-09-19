@@ -18,6 +18,7 @@ import Cookies from 'js-cookie'
 import PermissionService from '../../Services/Service'
 import usePermissionStore from '../../../store/permission'
 import { SetTokenContext } from '../../../context/TokenContext'
+import { jwtDecode } from 'jwt-decode'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -64,8 +65,23 @@ const Login = () => {
           sameSite: 'Strict',
         })
 
-        // If worker logged in, fetch and store permissions
-        if (response?.worker) {
+        // Check user role from decoded token
+        let userRole = ''
+        try {
+          const decoded = jwtDecode(token)
+          userRole = (decoded?.role || '').toString().toLowerCase().trim()
+        } catch {}
+
+        const isSuperAdmin =
+          userRole === 'superadmin' ||
+          userRole.includes('superadmin') ||
+          userRole === 'admin'
+
+        // Superadmin has full unrestricted access — do not check permissions
+        if (isSuperAdmin) {
+          usePermissionStore.getState().clearPermissions()
+        } else if (response?.worker) {
+          // If worker logged in, fetch and store permissions
           try {
             const permissionRes = await PermissionService.getAll()
             if (permissionRes && permissionRes.permissions) {
@@ -82,7 +98,7 @@ const Login = () => {
               usePermissionStore.getState().setPermissions(permissionRes.permissions)
             }
           } catch (supErr) {
-            // Superadmins or users without assigned restrictions will skip
+            // Non-supervisor users without assigned restrictions will skip
           }
         }
 

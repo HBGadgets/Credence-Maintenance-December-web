@@ -85,11 +85,28 @@ class PermissionService {
   }
 
   static async getMySupervisorPermissions() {
+    const token =
+      sessionStorage.getItem('crdnsMaintToken') ||
+      localStorage.getItem('crdnsMaintToken') ||
+      Cookies.get('crdnsMaintToken')
+
+    let role = null
+    try {
+      if (token) {
+        const decoded = jwtDecode(token)
+        role = (decoded?.role || '').toString().toLowerCase().trim()
+      }
+    } catch {}
+
+    if (role === 'superadmin' || role.includes('superadmin') || role === 'admin') {
+      return null
+    }
+
     return await getMySupervisorPermissions()
   }
 
   static async getMyPermissions() {
-    return await getMySupervisorPermissions()
+    return await this.getMySupervisorPermissions()
   }
 
   static async deleteSupervisorPermissions(supervisorId) {
@@ -110,12 +127,14 @@ class PermissionService {
     try {
       if (token) {
         const decoded = jwtDecode(token)
-        role = decoded?.role
+        role = (decoded?.role || '').toString().toLowerCase().trim()
       }
     } catch {}
 
-    // Superadmin has full access
-    if (role === 'superadmin') return true
+    // Superadmin has full unrestricted access - do not check permissions for superadmin
+    if (role === 'superadmin' || role.includes('superadmin') || role === 'admin') {
+      return true
+    }
 
     const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
     const permissions = usePermissionStore.getState().permissions
