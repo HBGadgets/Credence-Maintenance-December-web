@@ -370,11 +370,18 @@ const Dashboard = () => {
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
+  const isWorker = !!(
+    sessionStorage.getItem('workerInfo') ||
+    localStorage.getItem('workerInfo') ||
+    decodedToken?.worker ||
+    decodedToken?.role === 'worker'
+  )
+
   // Fetch dashboard data using React Query
   const { data } = useQuery({
     queryKey: ['dashboardData', token, selectedName?.value],
     queryFn: () => fetchDashboardData(selectedName?.value),
-    enabled: !!token,
+    enabled: !!token && !isWorker,
   })
 
   // supervisor fetch
@@ -382,6 +389,7 @@ const Dashboard = () => {
     queryKey: ['supervisors'],
     queryFn: fetchAllAdmin,
     staleTime: 1000 * 60 * 10,
+    enabled: !!token && !isWorker,
   })
 
   // Fetch Trip Data
@@ -389,7 +397,7 @@ const Dashboard = () => {
     queryKey: ['TripsList', token],
     queryFn: getAllTripListApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken,
+    enabled: !!token && !!decodedToken && !isWorker,
   })
 
   // Fetch Daily Trip Logs
@@ -397,7 +405,7 @@ const Dashboard = () => {
     queryKey: ['DailyTripLogs', token, currentPage, itemsPerPage, searchQuery],
     queryFn: getDailyTripLogsApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs',
+    enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs' && !isWorker,
   })
 
   const DailyTripLogsList = DailyTripLogsResponse?.data || []
@@ -408,7 +416,7 @@ const Dashboard = () => {
     queryKey: ['DailyTripLogsAnalytics', token, 1, 10000, ''],
     queryFn: getDailyTripLogsApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken,
+    enabled: !!token && !!decodedToken && !isWorker,
   })
 
   const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || []
@@ -766,6 +774,108 @@ const Dashboard = () => {
   ]
 
 
+
+  // ── Worker Dashboard ─────────────────────────────────────────────
+  if (isWorker) {
+    const workerInfo = (() => {
+      try {
+        const raw = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
+      }
+    })()
+
+    return (
+      <>
+        <style>{`
+          .worker-welcome-card {
+            background: linear-gradient(135deg, #0a2d63 0%, #1a4a8a 100%);
+            border-radius: 20px;
+            color: #fff;
+            padding: 40px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(10,45,99,0.18);
+          }
+          .worker-welcome-card h2 { font-weight: 700; margin-bottom: 6px; }
+          .worker-welcome-card p { opacity: 0.8; margin: 0; }
+          .worker-info-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+            padding: 28px;
+          }
+          .worker-info-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+          .worker-info-row:last-child { border-bottom: none; }
+          .worker-info-label { font-weight: 600; min-width: 140px; color: #0a2d63; }
+          .worker-info-value { color: #555; }
+        `}</style>
+
+        {/* Welcome Banner */}
+        <div className="worker-welcome-card">
+          <h2>👋 Welcome, {workerInfo?.name || 'Worker'}!</h2>
+          <p>
+            You are logged in as a Worker. Use the sidebar menu to access your permitted modules.
+          </p>
+        </div>
+
+        {/* Worker Info Card */}
+        {workerInfo && (
+          <CCard className="worker-info-card mb-4">
+            <CCardBody>
+              <h5 className="fw-bold mb-4" style={{ color: '#0a2d63' }}>
+                👤 Your Profile
+              </h5>
+              {workerInfo.name && (
+                <div className="worker-info-row">
+                  <span className="worker-info-label">Name</span>
+                  <span className="worker-info-value">{workerInfo.name}</span>
+                </div>
+              )}
+              {workerInfo.email && (
+                <div className="worker-info-row">
+                  <span className="worker-info-label">Email</span>
+                  <span className="worker-info-value">{workerInfo.email}</span>
+                </div>
+              )}
+              {workerInfo.role && (
+                <div className="worker-info-row">
+                  <span className="worker-info-label">Role</span>
+                  <span className="worker-info-value" style={{ textTransform: 'capitalize' }}>
+                    {workerInfo.role}
+                  </span>
+                </div>
+              )}
+              {workerInfo.phone && (
+                <div className="worker-info-row">
+                  <span className="worker-info-label">Phone</span>
+                  <span className="worker-info-value">{workerInfo.phone}</span>
+                </div>
+              )}
+              {workerInfo.department && (
+                <div className="worker-info-row">
+                  <span className="worker-info-label">Department</span>
+                  <span className="worker-info-value">{workerInfo.department}</span>
+                </div>
+              )}
+            </CCardBody>
+          </CCard>
+        )}
+
+        <CCard
+          className="worker-info-card"
+          style={{ background: '#fffbe6', border: '1px solid #f3c100' }}
+        >
+          <CCardBody>
+            <p className="mb-0" style={{ color: '#856404' }}>
+              ℹ️ Your access is permission-based. If you need access to more modules, please contact
+              your administrator.
+            </p>
+          </CCardBody>
+        </CCard>
+      </>
+    )
+  }
 
   return token ? (
     <div className="dashboard-wrapper">

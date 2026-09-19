@@ -60,6 +60,9 @@ const AllExpenses = React.lazy(() => import('./views/Expenses-Management/AllExpe
 const CompanyName = React.lazy(() => import('./views/TransportPass/CompanyName.jsx'))
 
 const Worker = React.lazy(() => import('./views/TransportPass/Worker.jsx'))
+const WorkerPermissionsPage = React.lazy(
+  () => import('./views/TransportPass/WorkerPermissionsPage.jsx'),
+)
 
 // Road Side Assistance
 const ExpenseSheet = React.lazy(
@@ -221,6 +224,7 @@ const routes = [
   { path: '/CompanyName', name: 'Company Name', element: CompanyName },
 
   { path: '/Worker', name: 'Employees Details', element: Worker },
+  { path: '/Worker/Permissions/:id', name: 'Employee Permissions', element: WorkerPermissionsPage },
 
   /**ROAD SIDE ASSISTANCE */
   { path: '/TotalExpenses', name: 'Total Expenses', element: ExpenseSheet },

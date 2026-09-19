@@ -43,17 +43,25 @@ import Swal from 'sweetalert2'; // Make sure to install sweetalert2 if not alrea
 import navigation from '../_nav';
 import logo from '../assets/brand/fmslogo.svg';
 import { AppSidebarNav } from './AppSidebarNav';
+import PermissionService from '../views/Services/Service';
 
-// Helper: Recursively filter items by role
+// Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
   return items
     .map((item) => {
+      // 1. Check role if specified
+      if (item.role && item.role.toString().toLowerCase() !== (role || '').toString().toLowerCase()) return null;
+
+      // 2. Check permission if specified
+      if (item.permission && !PermissionService.hasPermission(item.permission, 'read')) {
+        return null;
+      }
+
       if (item.items) {
         const filteredItems = filterNavByRole(item.items, role);
         return filteredItems.length ? { ...item, items: filteredItems } : null;
       }
-      if (!item.role || item.role === role) return item;
-      return null;
+      return item;
     })
     .filter(Boolean);
 };
@@ -80,11 +88,20 @@ const AppHeader = () => {
   };
 
   const [username, setUsername] = useState(() => {
+    const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo');
+    if (storedWorker) {
+      try {
+        const worker = JSON.parse(storedWorker);
+        if (worker?.name) return worker.name;
+      } catch (e) {
+        console.error('Failed to parse workerInfo:', e);
+      }
+    }
     const savedToken = sessionStorage.getItem('crdnsMaintToken');
     if (!savedToken) return 'User';
     try {
       const decoded = jwtDecode(savedToken);
-      return decoded?.username || decoded.name || 'User';
+      return decoded?.worker?.name || decoded?.username || decoded.name || 'User';
     } catch {
       return 'User';
     }
@@ -104,10 +121,22 @@ const AppHeader = () => {
   }, []);
 
   useEffect(() => {
+    const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo');
+    if (storedWorker) {
+      try {
+        const worker = JSON.parse(storedWorker);
+        if (worker?.name) {
+          setUsername(worker.name);
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to parse workerInfo in useEffect:', e);
+      }
+    }
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setUsername(decoded?.username || decoded.name || 'User'); // Adjust based on your token structure
+        setUsername(decoded?.worker?.name || decoded?.username || decoded.name || 'User');
       } catch (error) {
         console.error('Failed to decode token:', error);
       }

@@ -22,6 +22,7 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../IconDropdown.js'
 import usePdfExporter from '../../customhooks/usePdfExporter.js'
 import useExcelExporter from '../../customhooks/useExcelExporter.js'
+import PermissionService from '../../Services/Service'
 
 const DriverSalary = () => {
   const { exportToPDF } = usePdfExporter()
@@ -34,19 +35,28 @@ const DriverSalary = () => {
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false)
   const [selectedSalary, setSelectedSalary] = useState(null)
 
+  const canCreate = PermissionService.hasPermission('reports.salary', 'create')
+  const canUpdate = PermissionService.hasPermission('reports.salary', 'update')
+  const canDelete = PermissionService.hasPermission('reports.salary', 'delete')
+
   const lastFetchedMonth = useRef(null)
   const queryClient = useQueryClient() // React Query client for refetching
 
-  const columns = [
-    { label: 'Date', key: 'date', sortable: true },
-    { label: 'Driver Name', key: 'driverName', sortable: true },
-    { label: 'Basic Pay', key: 'basicPay', sortable: true },
-    { label: 'Overtime', key: 'overtime', sortable: true },
-    { label: 'Incentives', key: 'incentives', sortable: true },
-    { label: 'Deductions', key: 'deductions', sortable: true },
-    { label: 'Net Pay', key: 'netPay', sortable: true },
-    { label: 'Actions', key: 'actions', sortable: false },
-  ]
+  const columns = useMemo(() => {
+    const baseCols = [
+      { label: 'Date', key: 'date', sortable: true },
+      { label: 'Driver Name', key: 'driverName', sortable: true },
+      { label: 'Basic Pay', key: 'basicPay', sortable: true },
+      { label: 'Overtime', key: 'overtime', sortable: true },
+      { label: 'Incentives', key: 'incentives', sortable: true },
+      { label: 'Deductions', key: 'deductions', sortable: true },
+      { label: 'Net Pay', key: 'netPay', sortable: true },
+    ]
+    if (canUpdate || canDelete) {
+      baseCols.push({ label: 'Actions', key: 'actions', sortable: false })
+    }
+    return baseCols
+  }, [canUpdate, canDelete])
 
   // dulicate API call prevention
   // const {
@@ -111,25 +121,29 @@ const DriverSalary = () => {
         netPay: item.netPay,
         actions: (
           <div className="d-flex gap-2 justify-content-center align-items-center">
-            <button
-              className="btn btn-link p-0 me-2"
-              onClick={() => {
-                setSelectedSalary(item) // Pass the full original item
-                setIsSalaryModalOpen(true)
-              }}
-            >
-              <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-            </button>
-            <button
-              className="btn btn-link p-0 me-2"
-              onClick={() => handleDelete(item._id, item.driverId?.name || 'Salary')}
-            >
-              <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
-            </button>
+            {canUpdate && (
+              <button
+                className="btn btn-link p-0 me-2"
+                onClick={() => {
+                  setSelectedSalary(item) // Pass the full original item
+                  setIsSalaryModalOpen(true)
+                }}
+              >
+                <Pencil color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                className="btn btn-link p-0 me-2"
+                onClick={() => handleDelete(item._id, item.driverId?.name || 'Salary')}
+              >
+                <Trash2 color="#2D336B" size={20} style={{ cursor: 'pointer' }} />
+              </button>
+            )}
           </div>
         ),
       })) || [],
-    [salaryData],
+    [salaryData, canUpdate, canDelete],
   )
 
   useEffect(() => {
@@ -285,16 +299,18 @@ const DriverSalary = () => {
             <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           </div>
           <div>
-            <CButton
-              color="primary"
-              style={{ marginTop: '2.8rem' }}
-              onClick={() => {
-                setSelectedSalary(null)
-                setIsSalaryModalOpen(true)
-              }}
-            >
-              Add Salary
-            </CButton>
+            {canCreate && (
+              <CButton
+                color="primary"
+                style={{ marginTop: '2.8rem' }}
+                onClick={() => {
+                  setSelectedSalary(null)
+                  setIsSalaryModalOpen(true)
+                }}
+              >
+                Add Salary
+              </CButton>
+            )}
             <SalaryFrom
               onSubmit={handleSalarySubmit}
               month={month}

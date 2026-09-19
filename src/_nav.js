@@ -35,51 +35,61 @@ const _nav = [
         component: CNavItem,
         name: 'Drivers',
         to: '/DriverExp',
+        permission: 'masters.driver',
       },
       {
         component: CNavItem,
         name: 'Vehicle',
         to: '/Vehicle',
+        permission: 'masters.vehicle',
       },
       {
         component: CNavItem,
         name: 'Trips',
         to: '/Trip',
+        permission: 'masters.trip',
       },
       {
         component: CNavItem,
         name: 'Company Name',
         to: '/CompanyName',
+        permission: 'masters.company',
       },
       {
         component: CNavItem,
         name: 'Material Owner',
         to: '/MaterialOwner',
+        permission: 'masters.materialOwner',
       },
       {
         component: CNavItem,
         name: 'Employees Details',
         to: '/Worker',
+        permission: 'masters.employee',
       },
       {
         component: CNavItem,
         name: 'Consignor',
         to: '/Consignor',
+        permission: 'masters.consignor',
       },
       {
         component: CNavItem,
         name: 'Consignee',
         to: '/Consignee',
+        permission: 'masters.consignee',
       },
       {
         component: CNavItem,
         name: 'Driver Attendence Mark',
         to: '/Attendence',
+        permission: 'masters.attendance',
       },
       {
         component: CNavItem,
         name: 'Drivers Leave Requests',
         to: '/LeaveRequests',
+        permission: 'masters.leave',
       },
     ],
   },
@@ -99,41 +109,49 @@ const _nav = [
         component: CNavItem,
         name: 'All Drivers Attendence',
         to: '/AllDriverAttendence',
+        permission: 'masters.attendance',
       },
       {
         component: CNavItem,
         name: 'Drivers Salary',
         to: '/Salary',
+        permission: 'reports.salary',
       },
       {
         component: CNavItem,
         name: 'All Drivers Expenses',
         to: '/DriverExpenseBill',
+        permission: 'reports.driverExp',
       },
       {
         component: CNavItem,
         name: 'All Vehicles Expenses',
         to: '/VehicleExpensesBill',
+        permission: 'reports.vehicleExp',
       },
       {
         component: CNavItem,
         name: 'All Drivers Logbooks',
         to: '/AllDailyLogbook',
+        permission: 'reports.dailyLog',
       },
       {
         component: CNavItem,
         name: 'All Vehicle Service Log',
         to: '/AllVehicleServicesData',
+        permission: 'reports.serviceLog',
       },
       {
         component: CNavItem,
         name: 'All Vehicle Inpections',
         to: '/AllVehicleInpection',
+        permission: 'reports.inspection',
       },
       {
         component: CNavItem,
         name: 'Daily Trips Reading',
         to: '/DailyTrips',
+        permission: 'dailyTrips',
       },
     ],
   },
@@ -153,11 +171,13 @@ const _nav = [
         component: CNavItem,
         name: 'Good Recipt Rail',
         to: '/GrByRail',
+        permission: 'goodReceipts.rail',
       },
       {
         component: CNavItem,
         name: 'Good Recipt Road',
         to: '/GrByRoad',
+        permission: 'goodReceipts.road',
       },
     ],
   },
@@ -173,15 +193,11 @@ const _nav = [
       />
     ),
     items: [
-      // {
-      //   component: CNavItem,
-      //   name: 'TP Pass',
-      //   to: '/LR',
-      // },
       {
         component: CNavItem,
         name: 'Transport Pass Recipt',
         to: '/GodownLr',
+        permission: 'transportPass.receipt',
       },
     ],
   },
@@ -201,23 +217,20 @@ const _nav = [
         component: CNavItem,
         name: 'Product List',
         to: '/ProductList',
+        permission: 'warehouse.product',
       },
       {
         component: CNavItem,
         name: 'Rail Head',
         to: '/RailHead',
+        permission: 'warehouse.railHead',
       },
       {
         component: CNavItem,
         name: 'Warehouses Inventory',
         to: '/Godown',
+        permission: 'warehouse.inventory',
       },
-
-      // {
-      //   component: CNavItem,
-      //   name: 'Inventory',
-      //   to: '/InventoryList',
-      // }
     ],
   },
 
@@ -265,17 +278,20 @@ const _nav = [
         component: CNavItem,
         name: 'Tickets Raised',
         to: '/RaiseTicket',
+        permission: 'tickets.raise',
       },
       {
         component: CNavItem,
         name: 'Tickets Answered',
         to: '/AnsweredTicket',
         role: 'superadmin',
+        permission: 'tickets.answer',
       },
       {
         component: CNavItem,
         name: 'Chat Box',
         to: '/ChatBot',
+        permission: 'chat.read',
         icon: (
           <LuMessageSquareQuote
             className="nav-icon"

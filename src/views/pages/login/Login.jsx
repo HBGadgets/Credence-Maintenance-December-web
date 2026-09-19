@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CButton,
@@ -15,9 +15,13 @@ import BackImg from '../../../assets/brand/FMSGroup.svg'
 import logo from '../../../assets/brand/fmslogo.svg'
 import { LoginUser } from './data'
 import Cookies from 'js-cookie'
+import PermissionService from '../../Services/Service'
+import usePermissionStore from '../../../store/permission'
+import { SetTokenContext } from '../../../context/TokenContext'
 
 const Login = () => {
   const navigate = useNavigate()
+  const setToken = useContext(SetTokenContext)
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -38,11 +42,20 @@ const Login = () => {
       const token = response?.token
 
       if (token) {
+        // Update TokenContext reactively so sidebar role filter works without refresh
+        setToken(token)
+
         // Store in localStorage/sessionStorage based on "remember me"
         if (remember) {
           localStorage.setItem('crdnsMaintToken', token)
+          if (response?.worker) {
+            localStorage.setItem('workerInfo', JSON.stringify(response.worker))
+          }
         } else {
           sessionStorage.setItem('crdnsMaintToken', token)
+          if (response?.worker) {
+            sessionStorage.setItem('workerInfo', JSON.stringify(response.worker))
+          }
         }
 
         // Set cookie for 7 days if remember is checked, else session cookie
@@ -50,6 +63,18 @@ const Login = () => {
           expires: remember ? 1 : undefined,
           sameSite: 'Strict',
         })
+
+        // If worker logged in, fetch and store permissions
+        if (response?.worker) {
+          try {
+            const permissionRes = await PermissionService.getAll()
+            if (permissionRes && permissionRes.permissions) {
+              usePermissionStore.getState().setPermissions(permissionRes.permissions)
+            }
+          } catch (permErr) {
+            console.error('Failed to fetch worker permissions during login:', permErr)
+          }
+        }
 
         // Use replace instead of navigate to prevent back navigation to login
         navigate('/', { replace: true })

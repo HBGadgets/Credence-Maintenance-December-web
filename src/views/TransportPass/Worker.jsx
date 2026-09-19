@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   deleteWorkerApi,
   getWorkerApi,
@@ -25,8 +26,10 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
+import { Shield } from 'lucide-react'
 
 const Worker = () => {
+  const navigate = useNavigate()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
@@ -235,6 +238,11 @@ const Worker = () => {
     }
   }
 
+  // handle permissions
+  const handlePermissionsButton = (row) => {
+    navigate(`/Worker/Permissions/${row.id}`)
+  }
+
   // handle View
   const handleViewButton = async (id) => {
     const selectedRow = workerList.find((item) => item.id === id)
@@ -398,6 +406,26 @@ const Worker = () => {
         viewButton={true}
         handleViewButton={handleViewButton}
         viewButtonLabel="Profile"
+        renderActions={(row) => (
+          <button
+            className="action-view-button"
+            onClick={() => handlePermissionsButton(row)}
+            style={{
+              backgroundColor: '#198754',
+              color: 'white',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 12px',
+              borderRadius: '6px',
+              fontSize: '14px',
+            }}
+          >
+            <Shield size={16} />
+            <span>Permissions</span>
+          </button>
+        )}
       />
 
       <SmartPagination

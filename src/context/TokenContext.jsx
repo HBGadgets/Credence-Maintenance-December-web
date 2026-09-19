@@ -3,6 +3,7 @@ import React, { createContext, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 
 export const TokenContext = createContext(null)
+export const SetTokenContext = createContext(() => {})
 
 const TOKEN_KEY = 'crdnsMaintToken'
 
@@ -14,11 +15,36 @@ const getCookie = (name) => {
   return null
 }
 
+// Get initial token synchronously so role is available on first render (no flicker on refresh)
+const getInitialToken = () => {
+  const hash = window.location.hash
+  const hashParams = new URLSearchParams(hash.split('?')[1])
+  const extractedToken = hashParams.get('token')
+
+  if (extractedToken) {
+    sessionStorage.setItem(TOKEN_KEY, extractedToken)
+    return extractedToken
+  }
+
+  const storedToken =
+    sessionStorage.getItem(TOKEN_KEY) ||
+    localStorage.getItem(TOKEN_KEY) ||
+    getCookie(TOKEN_KEY)
+
+  if (storedToken) {
+    sessionStorage.setItem(TOKEN_KEY, storedToken)
+    return storedToken
+  }
+
+  return null
+}
+
 export const TokenProvider = ({ children }) => {
-  const [token, setToken] = useState(null)
+  const [token, setToken] = useState(getInitialToken)
 
   useEffect(() => {
-    const hash = window.location.hash // e.g. "#/login?token=abc123"
+    // Handle token from URL (login redirect) — clean URL after extracting
+    const hash = window.location.hash
     const hashParams = new URLSearchParams(hash.split('?')[1])
     const extractedToken = hashParams.get('token')
 
@@ -27,66 +53,18 @@ export const TokenProvider = ({ children }) => {
       setToken(extractedToken)
       // Remove token from URL without reload
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
-    } else {
-      // First check sessionStorage
-      const storedToken = sessionStorage.getItem(TOKEN_KEY)
-
-      if (storedToken) {
-        setToken(storedToken)
-      } else {
-        // If not in sessionStorage, check cookies
-        const cookieToken = getCookie(TOKEN_KEY)
-        if (cookieToken) {
-          // Save cookie token to sessionStorage
-          sessionStorage.setItem(TOKEN_KEY, cookieToken)
-          setToken(cookieToken)
-        } else {
-          setToken(null)
-        }
-      }
     }
   }, [])
 
-  return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>
+  return (
+    <TokenContext.Provider value={token}>
+      <SetTokenContext.Provider value={setToken}>
+        {children}
+      </SetTokenContext.Provider>
+    </TokenContext.Provider>
+  )
 }
 
 TokenProvider.propTypes = {
   children: PropTypes.node,
 }
-
-// ----------------------------------------------------------------------------------------------------
-// OLD CODE
-
-/* eslint-disable prettier/prettier */
-// import React, { createContext, useEffect, useState } from 'react'
-// import PropTypes from 'prop-types'
-
-// export const TokenContext = createContext(null)
-
-// const TOKEN_KEY = 'crdnsMaintToken'
-
-// export const TokenProvider = ({ children }) => {
-//   const [token, setToken] = useState(null)
-
-//   useEffect(() => {
-//     const hash = window.location.hash // e.g. "#/login?token=abc123"
-//     const hashParams = new URLSearchParams(hash.split('?')[1])
-//     const extractedToken = hashParams.get('token')
-
-//     if (extractedToken) {
-//       sessionStorage.setItem(TOKEN_KEY, extractedToken)
-//       setToken(extractedToken)
-//       // Remove token from URL without reload
-//       window.history.replaceState(null, '', window.location.pathname + window.location.search)
-//     } else {
-//       const storedToken = sessionStorage.getItem(TOKEN_KEY)
-//       setToken(storedToken || null)
-//     }
-//   }, [])
-
-//   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>
-// }
-
-// TokenProvider.propTypes = {
-//   children: PropTypes.node,
-// }

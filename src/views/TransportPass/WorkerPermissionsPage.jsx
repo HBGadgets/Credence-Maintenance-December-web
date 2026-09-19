@@ -1,0 +1,618 @@
+import React, { useState, useEffect } from 'react'
+import { Card, Button, Form, Tabs, Tab, Table, Row, Col } from 'react-bootstrap'
+import { Shield, ArrowLeft } from 'lucide-react'
+import PermissionService from '../Services/Service'
+import { toast } from 'react-toastify'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getWorkerApi } from './data/data'
+import LoaderBus from '../../components/Loader3/LoaderBus'
+
+const defaultPermissions = {
+  masters: {
+    driver: { create: false, read: false, update: false, delete: false },
+    vehicle: { create: false, read: false, update: false, delete: false },
+    trip: { create: false, read: false, update: false, delete: false },
+    location: { create: false, read: false, update: false, delete: false },
+    company: { create: false, read: false, update: false, delete: false },
+    materialOwner: { create: false, read: false, update: false, delete: false },
+    vendor: { create: false, read: false, update: false, delete: false },
+    employee: { create: false, read: false, update: false, delete: false },
+    consignor: { create: false, read: false, update: false, delete: false },
+    consignee: { create: false, read: false, update: false, delete: false },
+    transporter: { create: false, read: false, update: false, delete: false },
+    commAgent: { create: false, read: false, update: false, delete: false },
+    category: { create: false, read: false, update: false, delete: false },
+    attendance: { create: false, read: false, update: false, delete: false },
+    leave: { create: false, read: false, update: false, delete: false },
+    zone: { create: false, read: false, update: false, delete: false },
+    customer: { create: false, read: false, update: false, delete: false },
+  },
+  reports: {
+    salary: { create: false, read: false, update: false, delete: false },
+    driverExp: { create: false, read: false, update: false, delete: false },
+    vehicleExp: { create: false, read: false, update: false, delete: false },
+    dailyLog: { create: false, read: false, update: false, delete: false },
+    serviceLog: { create: false, read: false, update: false, delete: false },
+    inspection: { create: false, read: false, update: false, delete: false },
+    vendorsRep: { create: false, read: false, update: false, delete: false },
+    supervisorTPRep: { create: false, read: false, update: false, delete: false },
+    tpTripLogs: { create: false, read: false, update: false, delete: false },
+  },
+  dailyTrips: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+  },
+  goodReceipts: {
+    rail: { create: false, read: false, update: false, delete: false },
+    road: { create: false, read: false, update: false, delete: false },
+  },
+  dailyPass: {
+    builty: { create: false, read: false, update: false, delete: false },
+  },
+  transportPass: {
+    receipt: { create: false, read: false, update: false, delete: false },
+    builty: { create: false, read: false, update: false, delete: false },
+    dailyPassbuilty: { create: false, read: false, update: false, delete: false },
+  },
+  warehouse: {
+    product: { create: false, read: false, update: false, delete: false },
+    railHead: { create: false, read: false, update: false, delete: false },
+    inventory: { create: false, read: false, update: false, delete: false },
+    dailyproduct: { create: false, read: false, update: false, delete: false },
+  },
+  tickets: {
+    raise: { create: false, read: false, update: false, delete: false },
+    answer: { create: false, read: false, update: false, delete: false },
+  },
+  chat: {
+    read: false,
+  },
+}
+
+const defaultCustomPermissions = {}
+
+const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSaveSuccess: onSaveSuccessProp }) => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  // Fetch worker list if not passed via props
+  const { data: workerList = [], isLoading: isLoadingWorker } = useQuery({
+    queryKey: ['workerList'],
+    queryFn: getWorkerApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !workerProp,
+  })
+
+  // Fetch permissions for this specific worker
+  const { data: singleWorkerPermissions, isLoading: isLoadingPermissions } = useQuery({
+    queryKey: ['workerPermissions', id],
+    queryFn: () => PermissionService.getByWorkerId(id),
+    enabled: !!id && !workerProp,
+  })
+
+  const worker = workerProp || workerList.find((w) => w.id === id)
+
+  const [permissions, setPermissions] = useState(defaultPermissions)
+  const [customPermissions, setCustomPermissions] = useState(defaultCustomPermissions)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Initialize permissions when worker or fetched permissions change
+  useEffect(() => {
+    if (worker) {
+      const deepMerge = (target, source) => {
+        if (!source) return target
+        const merged = { ...target }
+        Object.keys(target).forEach((key) => {
+          if (source[key] !== undefined) {
+            if (typeof target[key] === 'object' && target[key] !== null) {
+              merged[key] = deepMerge(target[key], source[key])
+            } else {
+              merged[key] = source[key]
+            }
+          }
+        })
+        return merged
+      }
+
+      const sourcePermissions = singleWorkerPermissions?.permissions || worker.permissions
+      const sourceCustomPermissions = singleWorkerPermissions?.customPermissions || worker.customPermissions
+
+      setPermissions(deepMerge(defaultPermissions, sourcePermissions))
+      setCustomPermissions(deepMerge(defaultCustomPermissions, sourceCustomPermissions))
+    }
+  }, [worker, singleWorkerPermissions])
+
+  const handleCheckboxChange = (section, item, action, isCustom = false) => {
+    if (isCustom) {
+      setCustomPermissions((prev) => {
+        const currentItem = prev[section] || { create: false, read: false, update: false, delete: false }
+        return {
+          ...prev,
+          [section]: {
+            ...currentItem,
+            [action]: !currentItem[action],
+          },
+        }
+      })
+    } else {
+      setPermissions((prev) => {
+        if (item === null) {
+          const currentItem = prev[section] || { create: false, read: false, update: false, delete: false }
+          return {
+            ...prev,
+            [section]: {
+              ...currentItem,
+              [action]: !currentItem[action],
+            },
+          }
+        } else {
+          const currentSection = prev[section] || {}
+          const currentItem = currentSection[item] || { create: false, read: false, update: false, delete: false }
+          return {
+            ...prev,
+            [section]: {
+              ...currentSection,
+              [item]: {
+                ...currentItem,
+                [action]: !currentItem[action],
+              },
+            },
+          }
+        }
+      })
+    }
+  }
+
+  const handleSelectAll = (section, isCustom = false, value = true) => {
+    if (isCustom) {
+      setCustomPermissions((prev) => {
+        const updated = {}
+        Object.keys(prev).forEach((key) => {
+          updated[key] = { create: value, read: value, update: value, delete: value }
+        })
+        return updated
+      })
+    } else {
+      setPermissions((prev) => {
+        const updated = { ...prev }
+        if (section === 'masters' || section === 'reports') {
+          const updatedSection = {}
+          Object.keys(prev[section]).forEach((key) => {
+            updatedSection[key] = { create: value, read: value, update: value, delete: value }
+          })
+          updated[section] = updatedSection
+        } else {
+          if (typeof prev[section] === 'object' && prev[section] !== null) {
+            const updatedSection = {}
+            Object.keys(prev[section]).forEach((key) => {
+              if (typeof prev[section][key] === 'object' && prev[section][key] !== null) {
+                updatedSection[key] = { create: value, read: value, update: value, delete: value }
+              } else {
+                updatedSection[key] = value
+              }
+            })
+            updated[section] = updatedSection
+          }
+        }
+        return updated
+      })
+    }
+  }
+
+  const handleSelectAllOperational = (value = true) => {
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      updated.dailyTrips = { create: value, read: value, update: value, delete: value }
+      if (prev.goodReceipts) {
+        const updatedGR = {}
+        Object.keys(prev.goodReceipts).forEach((key) => {
+          updatedGR[key] = { create: value, read: value, update: value, delete: value }
+        })
+        updated.goodReceipts = updatedGR
+      }
+      if (prev.transportPass) {
+        const updatedTP = {}
+        Object.keys(prev.transportPass).forEach((key) => {
+          updatedTP[key] = { create: value, read: value, update: value, delete: value }
+        })
+        updated.transportPass = updatedTP
+      }
+      if (prev.warehouse) {
+        const updatedWH = {}
+        Object.keys(prev.warehouse).forEach((key) => {
+          updatedWH[key] = { create: value, read: value, update: value, delete: value }
+        })
+        updated.warehouse = updatedWH
+      }
+      return updated
+    })
+  }
+
+  const handleSelectAllSupport = (value = true) => {
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      updated.tickets = {
+        raise: { create: value, read: value, update: value, delete: value },
+        answer: { create: value, read: value, update: value, delete: value },
+      }
+      updated.chat = { read: value }
+      return updated
+    })
+  }
+
+  const handleGrantAdminAccess = (value = true) => {
+    setPermissions((prev) => {
+      const updated = { ...prev }
+      Object.keys(prev).forEach((sectionKey) => {
+        const section = prev[sectionKey]
+        if (sectionKey === 'chat') {
+          updated[sectionKey] = { read: value }
+        } else if (sectionKey === 'dailyTrips') {
+          updated[sectionKey] = { create: value, read: value, update: value, delete: value }
+        } else if (typeof section === 'object' && section !== null) {
+          const updatedSection = {}
+          Object.keys(section).forEach((itemKey) => {
+            if (typeof section[itemKey] === 'object' && section[itemKey] !== null) {
+              updatedSection[itemKey] = { create: value, read: value, update: value, delete: value }
+            } else {
+              updatedSection[itemKey] = value
+            }
+          })
+          updated[sectionKey] = updatedSection
+        }
+      })
+      return updated
+    })
+
+    setCustomPermissions((prev) => {
+      const updated = {}
+      Object.keys(prev || {}).forEach((key) => {
+        updated[key] = { create: value, read: value, update: value, delete: value }
+      })
+      return updated
+    })
+  }
+
+  const handleClose = () => {
+    if (onCloseProp) {
+      onCloseProp()
+    } else {
+      navigate('/Worker')
+    }
+  }
+
+  const handleSave = async () => {
+    if (!worker?.id) return
+    setIsSaving(true)
+    try {
+      const payload = {
+        workerId: worker.id,
+        permissions,
+        customPermissions,
+      }
+      await PermissionService.addOrUpdatePermissions(payload)
+      toast.success(`Permissions updated successfully for ${worker.name}!`)
+      if (onSaveSuccessProp) {
+        onSaveSuccessProp()
+      } else {
+        queryClient.invalidateQueries(['workerList'])
+      }
+      handleClose()
+    } catch (error) {
+      console.error('Error saving permissions:', error)
+      toast.error(error.message || 'Failed to update permissions')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleRowSelectAll = (section, item, isCustom, value) => {
+    const updater = (prev) => {
+      if (isCustom) {
+        const currentItem = prev[section] || {}
+        const updatedItem = {}
+        Object.keys(currentItem).forEach((action) => {
+          updatedItem[action] = value
+        })
+        return {
+          ...prev,
+          [section]: updatedItem,
+        }
+      } else {
+        if (item === null) {
+          const currentItem = prev[section] || {}
+          const updatedItem = {}
+          Object.keys(currentItem).forEach((action) => {
+            updatedItem[action] = value
+          })
+          return {
+            ...prev,
+            [section]: updatedItem,
+          }
+        } else {
+          const currentSection = prev[section] || {}
+          const currentItem = currentSection[item] || {}
+          const updatedItem = {}
+          Object.keys(currentItem).forEach((action) => {
+            updatedItem[action] = value
+          })
+          return {
+            ...prev,
+            [section]: {
+              ...currentSection,
+              [item]: updatedItem,
+            },
+          }
+        }
+      }
+    }
+
+    if (isCustom) {
+      setCustomPermissions(updater)
+    } else {
+      setPermissions(updater)
+    }
+  }
+
+  const renderPermissionRow = (section, label, item = null, isCustom = false) => {
+    const currentData = isCustom ? customPermissions : permissions
+    const targetObj = item ? currentData[section]?.[item] : currentData[section]
+
+    if (!targetObj) return null
+
+    const hasRead = targetObj.read !== undefined
+    const hasCreate = targetObj.create !== undefined
+    const hasUpdate = targetObj.update !== undefined
+    const hasDelete = targetObj.delete !== undefined
+
+    const isAllChecked =
+      (!hasRead || targetObj.read) &&
+      (!hasCreate || targetObj.create) &&
+      (!hasUpdate || targetObj.update) &&
+      (!hasDelete || targetObj.delete)
+
+    return (
+      <tr key={item || section} className="align-middle">
+        <td className="fw-semibold text-secondary" style={{ fontSize: '0.9rem', width: '30%' }}>
+          {label}
+        </td>
+        <td className="text-center" style={{ backgroundColor: '#f8fafc', width: '10%' }}>
+          <Form.Check
+            type="checkbox"
+            checked={isAllChecked}
+            onChange={(e) => handleRowSelectAll(section, item, isCustom, e.target.checked)}
+          />
+        </td>
+        <td className="text-center">
+          {hasRead && (
+            <Form.Check
+              type="checkbox"
+              checked={targetObj.read}
+              onChange={() => handleCheckboxChange(section, item, 'read', isCustom)}
+            />
+          )}
+        </td>
+        <td className="text-center">
+          {hasCreate && (
+            <Form.Check
+              type="checkbox"
+              checked={targetObj.create}
+              onChange={() => handleCheckboxChange(section, item, 'create', isCustom)}
+            />
+          )}
+        </td>
+        <td className="text-center">
+          {hasUpdate && (
+            <Form.Check
+              type="checkbox"
+              checked={targetObj.update}
+              onChange={() => handleCheckboxChange(section, item, 'update', isCustom)}
+            />
+          )}
+        </td>
+        <td className="text-center">
+          {hasDelete && (
+            <Form.Check
+              type="checkbox"
+              checked={targetObj.delete}
+              onChange={() => handleCheckboxChange(section, item, 'delete', isCustom)}
+            />
+          )}
+        </td>
+      </tr>
+    )
+  }
+
+  if (isLoadingWorker || isLoadingPermissions) {
+    return (
+      <Card className="shadow mb-4">
+        <Card.Body className="text-center py-5 d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+          <LoaderBus />
+        </Card.Body>
+      </Card>
+    )
+  }
+
+  if (!worker) {
+    return (
+      <Card className="shadow mb-4">
+        <Card.Body className="text-center py-5">
+          <h5 className="text-danger">Employee not found</h5>
+          <Button variant="outline-secondary" size="sm" onClick={() => navigate('/Worker')} className="mt-3">
+            Back to Employees
+          </Button>
+        </Card.Body>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="shadow mb-4 borderless-bottom">
+      <Card.Header className="d-flex align-items-center justify-content-between bg-white py-3">
+        <div className="d-flex align-items-center gap-2">
+          <Button variant="outline-secondary" size="sm" onClick={handleClose} className="d-flex align-items-center gap-1">
+            <ArrowLeft size={16} />
+            <span>Back to Employees</span>
+          </Button>
+          <div className="vr mx-2"></div>
+          <Shield size={22} className="text-primary" />
+          <h5 className="m-0 text-dark fw-bold">Manage Permissions for {worker?.name}</h5>
+        </div>
+        <div className="d-flex gap-2">
+          <Button variant="secondary" size="sm" onClick={handleClose} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Permissions'}
+          </Button>
+        </div>
+      </Card.Header>
+      <Card.Body>
+        <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded border">
+          <span className="text-dark fw-bold" style={{ fontSize: '0.9rem' }}>Quick Actions:</span>
+          <div className="d-flex gap-2">
+            <Button size="sm" variant="success" className="text-white" onClick={() => handleGrantAdminAccess(true)}>
+              Grant Admin Access (Select All)
+            </Button>
+            <Button size="sm" variant="outline-danger" onClick={() => handleGrantAdminAccess(false)}>
+              Clear All Access
+            </Button>
+          </div>
+        </div>
+        <Tabs defaultActiveKey="masters" className="mb-3 premium-tabs">
+          <Tab eventKey="masters" title="Masters">
+            <div className="d-flex justify-content-end gap-2 mb-2">
+              <Button size="sm" variant="outline-primary" onClick={() => handleSelectAll('masters', false, true)}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline-secondary" onClick={() => handleSelectAll('masters', false, false)}>
+                Clear All
+              </Button>
+            </div>
+            <Table responsive striped hover bordered size="sm">
+              <thead className="table-light text-center">
+                <tr>
+                  <th>Feature</th>
+                  <th>All</th>
+                  <th>Read</th>
+                  <th>Create</th>
+                  <th>Update</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderPermissionRow('masters', 'Drivers', 'driver')}
+                {renderPermissionRow('masters', 'Vehicles', 'vehicle')}
+                {renderPermissionRow('masters', 'Trips', 'trip')}
+                {renderPermissionRow('masters', 'Company Name', 'company')}
+                {renderPermissionRow('masters', 'Material Owner', 'materialOwner')}
+                {renderPermissionRow('masters', 'Employees Details', 'employee')}
+                {renderPermissionRow('masters', 'Consignor', 'consignor')}
+                {renderPermissionRow('masters', 'Consignee', 'consignee')}
+                {renderPermissionRow('masters', 'Driver Attendance Mark', 'attendance')}
+                {renderPermissionRow('masters', 'Drivers Leave Requests', 'leave')}
+              </tbody>
+            </Table>
+          </Tab>
+
+          <Tab eventKey="reports" title="Reports">
+            <div className="d-flex justify-content-end gap-2 mb-2">
+              <Button size="sm" variant="outline-primary" onClick={() => handleSelectAll('reports', false, true)}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline-secondary" onClick={() => handleSelectAll('reports', false, false)}>
+                Clear All
+              </Button>
+            </div>
+            <Table responsive striped hover bordered size="sm">
+              <thead className="table-light text-center">
+                <tr>
+                  <th>Feature</th>
+                  <th>All</th>
+                  <th>Read</th>
+                  <th>Create</th>
+                  <th>Update</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderPermissionRow('reports', 'Drivers Salary', 'salary')}
+                {renderPermissionRow('reports', 'All Drivers Expenses Bill', 'driverExp')}
+                {renderPermissionRow('reports', 'All Vehicles Expenses Bill', 'vehicleExp')}
+                {renderPermissionRow('reports', 'All Daily Logbook', 'dailyLog')}
+                {renderPermissionRow('reports', 'All Vehicle Services Data', 'serviceLog')}
+                {renderPermissionRow('reports', 'All Vehicle Inspection', 'inspection')}
+              </tbody>
+            </Table>
+          </Tab>
+
+          <Tab eventKey="operational" title="Operational Modules">
+            <div className="d-flex justify-content-end gap-2 mb-2">
+              <Button size="sm" variant="outline-primary" onClick={() => handleSelectAllOperational(true)}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline-secondary" onClick={() => handleSelectAllOperational(false)}>
+                Clear All
+              </Button>
+            </div>
+            <Table responsive striped hover bordered size="sm">
+              <thead className="table-light text-center">
+                <tr>
+                  <th>Feature</th>
+                  <th>All</th>
+                  <th>Read</th>
+                  <th>Create</th>
+                  <th>Update</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderPermissionRow('dailyTrips', 'Daily Trips Reading', null)}
+                {renderPermissionRow('goodReceipts', 'Good Receipts (Rail)', 'rail')}
+                {renderPermissionRow('goodReceipts', 'Good Receipts (Road)', 'road')}
+                {renderPermissionRow('transportPass', 'Transport Pass (Receipt)', 'receipt')}
+                {renderPermissionRow('warehouse', 'Warehouse (Product List)', 'product')}
+                {renderPermissionRow('warehouse', 'Warehouse (Rail Head)', 'railHead')}
+                {renderPermissionRow('warehouse', 'Warehouse (Inventory)', 'inventory')}
+              </tbody>
+            </Table>
+          </Tab>
+
+          <Tab eventKey="support" title="Support & Chat">
+            <div className="d-flex justify-content-end gap-2 mb-2">
+              <Button size="sm" variant="outline-primary" onClick={() => handleSelectAllSupport(true)}>
+                Select All
+              </Button>
+              <Button size="sm" variant="outline-secondary" onClick={() => handleSelectAllSupport(false)}>
+                Clear All
+              </Button>
+            </div>
+            <Table responsive striped hover bordered size="sm">
+              <thead className="table-light text-center">
+                <tr>
+                  <th>Feature</th>
+                  <th>All</th>
+                  <th>Read</th>
+                  <th>Create</th>
+                  <th>Update</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renderPermissionRow('tickets', 'Tickets (Raise)', 'raise')}
+                {renderPermissionRow('tickets', 'Tickets (Answer)', 'answer')}
+                {renderPermissionRow('chat', 'Chat Box', null)}
+              </tbody>
+            </Table>
+          </Tab>
+        </Tabs>
+      </Card.Body>
+    </Card>
+  )
+}
+
+export default WorkerPermissionsPage

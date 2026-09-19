@@ -1,5 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
+import { useLocation } from 'react-router-dom'
+import navigation from '../../_nav'
+import PermissionService from '../Services/Service'
 import {
   CCard,
   CCardBody,
@@ -121,7 +124,33 @@ function Table({
   setCurrentPage,
   setItemsPerPage,
   onViewReport,
+  renderActions,
+  permission,
 }) {
+  const location = useLocation()
+  const resolvedPermission = useMemo(() => {
+    if (permission) return permission
+    const currentPath = location?.pathname
+    if (!currentPath) return null
+    const findPermission = (navItems) => {
+      for (const item of navItems) {
+        if (item.to && item.to.toLowerCase() === currentPath.toLowerCase()) {
+          return item.permission
+        }
+        if (item.items) {
+          const found = findPermission(item.items)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    return findPermission(navigation)
+  }, [permission, location?.pathname])
+
+  const canEdit = editButton && (!resolvedPermission ? true : PermissionService.hasPermission(resolvedPermission, 'update'))
+  const canDelete = deleteButton && (!resolvedPermission ? true : PermissionService.hasPermission(resolvedPermission, 'delete'))
+  const hasActionColumn = canEdit || canDelete || viewButton || reportButton || renderActions
+
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
@@ -197,7 +226,7 @@ function Table({
                           {column.label} {column.sortable && getSortIcon(column.key)}
                         </CTableHeaderCell>
                       ))}
-                    {(editButton || deleteButton || viewButton || reportButton) && (
+                    {hasActionColumn && (
                       <CTableHeaderCell className="text-center">{action}</CTableHeaderCell>
                     )}
                   </CTableRow>
@@ -214,25 +243,31 @@ function Table({
                             <div className="skeleton-loader" style={{ height: '20px' }} />
                           </CTableDataCell>
                         ))}
-                        {(editButton || deleteButton || viewButton || reportButton) && (
+                        {hasActionColumn && (
                           <CTableDataCell className="action-cell">
                             <div className="action-buttons">
-                              {editButton && (
+                              {canEdit && (
                                 <div
-                                  className="skeleton-loader"
-                                  style={{ width: '20px', height: '20px' }}
-                                />
-                              )}
-                              {deleteButton && (
-                                <div
-                                  className="skeleton-loader"
-                                  style={{ width: '20px', height: '20px' }}
-                                />
-                              )}
+                                   className="skeleton-loader"
+                                   style={{ width: '20px', height: '20px' }}
+                                 />
+                               )}
+                               {canDelete && (
+                                 <div
+                                   className="skeleton-loader"
+                                   style={{ width: '20px', height: '20px' }}
+                                 />
+                               )}
                               {reportButton && (
                                 <div
                                   className="skeleton-loader"
                                   style={{ width: '20px', height: '20px' }}
+                                />
+                              )}
+                              {renderActions && (
+                                <div
+                                  className="skeleton-loader"
+                                  style={{ width: '80px', height: '30px' }}
                                 />
                               )}
                               {viewButton && (
@@ -296,10 +331,10 @@ function Table({
                               )}
                             </CTableDataCell>
                           ))}
-                        {(editButton || deleteButton || viewButton || reportButton) && (
+                        {hasActionColumn && (
                           <CTableDataCell className="action-cell">
                             <div className="action-buttons">
-                              {editButton && (
+                              {canEdit && (
                                 <button
                                   className="action-button"
                                   onClick={() => handleEditButton(row.id || row._id)}
@@ -308,7 +343,7 @@ function Table({
                                   <Pencil color="#2D336B" size={18} />
                                 </button>
                               )}
-                              {deleteButton && (
+                              {canDelete && (
                                 <button
                                   className="action-button"
                                   onClick={() => handleDeleteButton(row.id || row._id)}
@@ -327,6 +362,8 @@ function Table({
                                   <FileText color="#2D336B" size={18} />
                                 </button>
                               )}
+
+                              {renderActions && renderActions(row)}
 
                               {viewButton && (
                                 <button
@@ -467,6 +504,7 @@ Table.propTypes = {
   reportButton: PropTypes.bool,
   handleReportButton: PropTypes.func,
   serverPagination: PropTypes.bool,
+  renderActions: PropTypes.func,
 }
 
 Table.defaultProps = {

@@ -9,17 +9,25 @@ import navigation from '../_nav'
 import { TokenContext } from '../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import Cookies from 'js-cookie'
+import PermissionService from '../views/Services/Service'
 
-// Helper: Recursively filter items by role
+// Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
   return items
     .map((item) => {
+      // 1. Check role if specified
+      if (item.role && item.role.toString().toLowerCase() !== (role || '').toString().toLowerCase()) return null
+
+      // 2. Check permission if specified
+      if (item.permission && !PermissionService.hasPermission(item.permission, 'read')) {
+        return null
+      }
+
       if (item.items) {
         const filteredItems = filterNavByRole(item.items, role)
         return filteredItems.length ? { ...item, items: filteredItems } : null
       }
-      if (!item.role || item.role === role) return item
-      return null
+      return item
     })
     .filter(Boolean)
 }
