@@ -1,6 +1,13 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { jwtDecode } from 'jwt-decode'
 import usePermissionStore from '../../store/permission'
+import {
+  addOrUpdateSupervisorPermissions,
+  getSupervisorPermissions,
+  getMySupervisorPermissions,
+  deleteSupervisorPermissions,
+} from '../Supervisor/data/supervisorRoleService'
 
 class PermissionService {
   static getHeaders() {
@@ -60,16 +67,67 @@ class PermissionService {
     }
   }
 
+  // Supervisor Role API Endpoints
+  static async addOrUpdateSupervisorPermissions(payload) {
+    return await addOrUpdateSupervisorPermissions(payload)
+  }
+
+  static async assignOrUpdateSupervisorPermissions(payload) {
+    return await addOrUpdateSupervisorPermissions(payload)
+  }
+
+  static async getSupervisorPermissions(supervisorId) {
+    return await getSupervisorPermissions(supervisorId)
+  }
+
+  static async getPermissionsForSingleSupervisor(supervisorId) {
+    return await getSupervisorPermissions(supervisorId)
+  }
+
+  static async getMySupervisorPermissions() {
+    return await getMySupervisorPermissions()
+  }
+
+  static async getMyPermissions() {
+    return await getMySupervisorPermissions()
+  }
+
+  static async deleteSupervisorPermissions(supervisorId) {
+    return await deleteSupervisorPermissions(supervisorId)
+  }
+
+  static async deleteSupervisorRole(supervisorId) {
+    return await deleteSupervisorPermissions(supervisorId)
+  }
+
   static hasPermission(permissionPath, action = 'read') {
+    const token =
+      sessionStorage.getItem('crdnsMaintToken') ||
+      localStorage.getItem('crdnsMaintToken') ||
+      Cookies.get('crdnsMaintToken')
+
+    let role = null
+    try {
+      if (token) {
+        const decoded = jwtDecode(token)
+        role = decoded?.role
+      }
+    } catch {}
+
+    // Superadmin has full access
+    if (role === 'superadmin') return true
+
     const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
-    if (!storedWorker) return true
+    const permissions = usePermissionStore.getState().permissions
+
+    // If neither worker nor restricted permissions exist, default to true
+    if (!storedWorker && !permissions) return true
 
     // Employees should never have access to employee management module
-    if (permissionPath === 'masters.employee' || permissionPath.startsWith('masters.employee')) {
+    if (storedWorker && (permissionPath === 'masters.employee' || permissionPath.startsWith('masters.employee'))) {
       return false
     }
 
-    const permissions = usePermissionStore.getState().permissions
     if (!permissions) return false
 
     try {

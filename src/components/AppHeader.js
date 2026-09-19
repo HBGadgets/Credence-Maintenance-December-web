@@ -471,14 +471,14 @@ const AppHeader = () => {
               </div>
             </CDropdownToggle>
             <CDropdownMenu className="navy-dropdown-menu shadow" placement="bottom-end">
-              <CDropdownItem
+              {/* <CDropdownItem
                 className="navy-dropdown-item d-flex align-items-center gap-3"
                 as={NavLink}
                 to="/ProfileSection"
               >
                 <User size={16} />
                 <span>Profile ({username})</span>
-              </CDropdownItem>
+              </CDropdownItem> */}
               <CDropdownItem
                 className="navy-dropdown-item d-flex align-items-center gap-3 text-danger"
                 type="button"

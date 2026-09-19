@@ -33,6 +33,12 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Supervisor',
+        to: '/SupervisorMaster',
+        permission: 'masters.supervisor',
+      },
+      {
+        component: CNavItem,
         name: 'Drivers',
         to: '/DriverExp',
         permission: 'masters.driver',

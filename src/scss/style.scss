@@ -17,19 +17,20 @@
 
 /* Custom scrollbar for all scrollbars in the project */
 ::-webkit-scrollbar {
-    width: 2px;
+    width: 4px;
+    height: 4px;
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: white;
+    background: #f8f9fa;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #232728;
-    border-radius: 2px;
+    background: #adb5bd;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #232728;
+    background: #6c757d;
 }

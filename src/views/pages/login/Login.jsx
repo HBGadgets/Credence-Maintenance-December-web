@@ -74,6 +74,16 @@ const Login = () => {
           } catch (permErr) {
             console.error('Failed to fetch worker permissions during login:', permErr)
           }
+        } else {
+          // If supervisor / user logged in, fetch their own permissions
+          try {
+            const permissionRes = await PermissionService.getMySupervisorPermissions()
+            if (permissionRes && permissionRes.permissions) {
+              usePermissionStore.getState().setPermissions(permissionRes.permissions)
+            }
+          } catch (supErr) {
+            // Superadmins or users without assigned restrictions will skip
+          }
         }
 
         // Use replace instead of navigate to prevent back navigation to login

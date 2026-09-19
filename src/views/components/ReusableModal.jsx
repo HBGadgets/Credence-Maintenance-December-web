@@ -32,7 +32,16 @@ const ReusableModal = ({
           const value = initialData[field.name]
 
           if (field.type === 'select') {
-            acc[field.name] = field.options?.find((opt) => opt.value === value) || null
+            const foundOpt = field.options?.find((opt) => opt.value === value)
+            if (foundOpt) {
+              acc[field.name] = foundOpt
+            } else if (value) {
+              const labelKey = `${field.name.replace(/Id$/, '')}Name`
+              const label = initialData[labelKey] || value
+              acc[field.name] = { value, label }
+            } else {
+              acc[field.name] = null
+            }
           } else if (field.type === 'multiselect') {
             acc[field.name] =
               field.options?.filter((opt) => (value || []).includes(opt.value)) || []
@@ -49,6 +58,21 @@ const ReusableModal = ({
     }
   }, [show, initialData])
 
+  // Synchronize select fields when options update asynchronously
+  useEffect(() => {
+    if (show && formData) {
+      fields.forEach((field) => {
+        if (field.type === 'select' && field.options?.length && formData[field.name]) {
+          const currentVal = formData[field.name]?.value || formData[field.name]
+          const matched = field.options.find((opt) => opt.value === currentVal)
+          if (matched && formData[field.name]?.label !== matched.label) {
+            setFormData((prev) => ({ ...prev, [field.name]: matched }))
+          }
+        }
+      })
+    }
+  }, [fields, show])
+
   const handleChange = (e) => {
     const { name, value, files, type } = e.target
     const newValue = type === 'file' ? files[0] : value
@@ -59,10 +83,23 @@ const ReusableModal = ({
   }
 
   const handleSelectChange = (selectedOption, fieldName) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: selectedOption,
-    }))
+    const field = fields.find((f) => f.name === fieldName)
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [fieldName]: selectedOption,
+      }
+      if (field?.clearFields && Array.isArray(field.clearFields)) {
+        field.clearFields.forEach((cf) => {
+          next[cf] = null
+        })
+      }
+      return next
+    })
+
+    if (field && typeof field.onChange === 'function') {
+      field.onChange(selectedOption)
+    }
   }
 
   const validateForm = () => {

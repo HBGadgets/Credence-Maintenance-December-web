@@ -21,6 +21,10 @@ const DocumentAlert = React.lazy(() => import('./views/vehicle/AlertDoc/Document
 const VehicleAssign = React.lazy(() => import('./views/vehicle/AssignVehicle/AssignVehicle.jsx'))
 
 // Supervisor
+const SupervisorMaster = React.lazy(() => import('./views/Supervisor/SupervisorMaster.jsx'))
+const SupervisorPermissionsPage = React.lazy(
+  () => import('./views/Supervisor/SupervisorPermissionsPage.jsx'),
+)
 const Trip = React.lazy(() => import('./views/Supervisor/trip/Trip.jsx'))
 const SubTrips = React.lazy(() => import('./views/Supervisor/trip/componets/SubTripMain.jsx'))
 const DriverSalary = React.lazy(() => import('./views/Supervisor/driver-salary/DriverSalary.jsx'))
@@ -222,6 +226,8 @@ const routes = [
   // Transport pass
 
   { path: '/CompanyName', name: 'Company Name', element: CompanyName },
+  { path: '/SupervisorMaster', name: 'Supervisor Master', element: SupervisorMaster },
+  { path: '/Supervisor/Permissions/:id', name: 'Supervisor Permissions', element: SupervisorPermissionsPage },
 
   { path: '/Worker', name: 'Employees Details', element: Worker },
   { path: '/Worker/Permissions/:id', name: 'Employee Permissions', element: WorkerPermissionsPage },
@@ -260,7 +266,7 @@ const routes = [
   { path: '/FullDailyReading/:id', name: 'Daily Reading', element: FullDailyReading },
 
   // Profile Section
-  { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
+  // { path: '/ProfileSection', name: 'Profile', element: ProfileSection },
 
   //  Daily trips Reading
   { path: '/DailyTrips', name: 'Daily Trips', element: DailyTrips },
