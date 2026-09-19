@@ -15,18 +15,16 @@ import DailyReading from './components/tripReading/DailyReading'
 
 function DriverProfile() {
   const { id } = useParams()
-  const [filterData, setFilteredData] = useState([])
 
   // Fetch driver profile
-  const { data: driversProfile = {}, isFetching } = useQuery({
+  const { data: driversProfile, isFetching } = useQuery({
     queryKey: ['driversProfile', id],
     queryFn: () => driverProfile(id),
     staleTime: 1000 * 60 * 30, // 30 minutes
+    enabled: !!id,
   })
 
-  useEffect(() => {
-    setFilteredData(driversProfile)
-  }, [driversProfile])
+  const filterData = driversProfile || {}
 
   const tabData = [
     {

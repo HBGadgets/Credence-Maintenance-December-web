@@ -10,7 +10,6 @@ import {
   CHeader,
   CHeaderNav,
   CHeaderToggler,
-  CNavItem,
   useColorModes,
   CBadge,
   COffcanvas,
@@ -436,7 +435,7 @@ const AppHeader = () => {
         </div>
 
         {/* Right: Notification Bell & User Avatar */}
-        <CHeaderNav className="ms-auto d-flex align-items-center z-1">
+        <CHeaderNav as="div" className="ms-auto d-flex align-items-center z-1">
           {/* Notifications Bell */}
           <div className="position-relative me-2">
             <NotificationDropdown
@@ -455,26 +454,22 @@ const AppHeader = () => {
               </div>
             </CDropdownToggle>
             <CDropdownMenu className="navy-dropdown-menu shadow" placement="bottom-end">
-              <CNavItem>
-                <CDropdownItem
-                  className="navy-dropdown-item d-flex align-items-center gap-3"
-                  as={NavLink}
-                  to="/ProfileSection"
-                >
-                  <User size={16} />
-                  <span>Profile ({username})</span>
-                </CDropdownItem>
-              </CNavItem>
-              <CNavItem>
-                <CDropdownItem
-                  className="navy-dropdown-item d-flex align-items-center gap-3 text-danger"
-                  type="button"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} />
-                  <span>Logout</span>
-                </CDropdownItem>
-              </CNavItem>
+              <CDropdownItem
+                className="navy-dropdown-item d-flex align-items-center gap-3"
+                as={NavLink}
+                to="/ProfileSection"
+              >
+                <User size={16} />
+                <span>Profile ({username})</span>
+              </CDropdownItem>
+              <CDropdownItem
+                className="navy-dropdown-item d-flex align-items-center gap-3 text-danger"
+                type="button"
+                onClick={handleLogout}
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
         </CHeaderNav>
