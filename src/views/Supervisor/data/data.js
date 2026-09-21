@@ -60,15 +60,7 @@ export const markAttendanceBySupervisorApi = async (id) => {
 // GET API for Leave Request list for supervisor.
 
 export const getLeaveResquestDriverApi = async (userId = null, TOKEN) => {
-  const authToken =
-    TOKEN ||
-    sessionStorage.getItem('crdnsMaintToken') ||
-    localStorage.getItem('crdnsMaintToken') ||
-    (typeof document !== 'undefined' &&
-      document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('crdnsMaintToken='))
-        ?.split('=')[1])
+  const authToken = TOKEN || sessionStorage.getItem('crdnsMaintToken')
 
   if (!authToken) throw new Error('Authentication token not found')
 

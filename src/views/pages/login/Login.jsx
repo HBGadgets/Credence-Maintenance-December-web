@@ -14,7 +14,6 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import BackImg from '../../../assets/brand/FMSGroup.svg'
 import logo from '../../../assets/brand/fmslogo.svg'
 import { LoginUser } from './data'
-import Cookies from 'js-cookie'
 import PermissionService from '../../Services/Service'
 import usePermissionStore from '../../../store/permission'
 import { SetTokenContext } from '../../../context/TokenContext'
@@ -46,24 +45,21 @@ const Login = () => {
         // Update TokenContext reactively so sidebar role filter works without refresh
         setToken(token)
 
-        // Store in localStorage/sessionStorage based on "remember me"
-        if (remember) {
-          localStorage.setItem('crdnsMaintToken', token)
-          if (response?.worker) {
-            localStorage.setItem('workerInfo', JSON.stringify(response.worker))
-          }
-        } else {
-          sessionStorage.setItem('crdnsMaintToken', token)
-          if (response?.worker) {
-            sessionStorage.setItem('workerInfo', JSON.stringify(response.worker))
-          }
+        // Store exclusively in sessionStorage
+        sessionStorage.setItem('crdnsMaintToken', token)
+        if (response?.worker) {
+          sessionStorage.setItem('workerInfo', JSON.stringify(response.worker))
         }
 
-        // Set cookie for 7 days if remember is checked, else session cookie
-        Cookies.set('crdnsMaintToken', token, {
-          expires: remember ? 1 : undefined,
-          sameSite: 'Strict',
-        })
+        // Clean up legacy cookies and localStorage
+        document.cookie = 'crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+        document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
+        const parts = window.location.hostname.split('.')
+        if (parts.length >= 2) {
+          const baseDomain = parts.slice(-2).join('.')
+          document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${baseDomain};`
+        }
+        localStorage.removeItem('crdnsMaintToken')
 
         // Check user role from decoded token
         let userRole = ''

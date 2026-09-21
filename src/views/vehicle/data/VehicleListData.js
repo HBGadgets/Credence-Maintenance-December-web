@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 
 // Global token variable

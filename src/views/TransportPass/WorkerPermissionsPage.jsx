@@ -8,7 +8,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getWorkerApi } from './data/data'
 import LoaderBus from '../../components/Loader3/LoaderBus'
-import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 
 const defaultPermissions = {
@@ -123,7 +122,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   // Identify whether logged-in user is an employee / worker
   const loggedInWorkerInfo = useMemo(() => {
     try {
-      const stored = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
+      const stored = sessionStorage.getItem('workerInfo')
       return stored ? JSON.parse(stored) : null
     } catch {
       return null
@@ -131,10 +130,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   }, [])
 
   const tokenRole = useMemo(() => {
-    const token =
-      sessionStorage.getItem('crdnsMaintToken') ||
-      localStorage.getItem('crdnsMaintToken') ||
-      Cookies.get('crdnsMaintToken')
+    const token = sessionStorage.getItem('crdnsMaintToken')
     if (!token) return null
     try {
       const decoded = jwtDecode(token)

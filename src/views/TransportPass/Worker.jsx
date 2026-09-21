@@ -60,7 +60,6 @@ const Worker = () => {
 
   const isEmployee = Boolean(
     sessionStorage.getItem('workerInfo') ||
-    localStorage.getItem('workerInfo') ||
     userRole === 'worker' ||
     userRole === 'employee'
   )

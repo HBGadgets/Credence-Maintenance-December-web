@@ -40,7 +40,6 @@ import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
 import { socket } from '../customhooks/useSocket'
 import { NotificationContext } from '../../context/NotificationContext'
 import notificationSound from '../../../mario_up.mp3'
-import Cookies from 'js-cookie'
 import { BsPassFill } from 'react-icons/bs'
 import { PieChart, Pie, Cell, Tooltip, AreaChart, Area, ResponsiveContainer } from 'recharts'
 import vehiclesIcon from 'src/assets/images/vehicles-icon.png'
@@ -254,7 +253,7 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
 const EMPTY_ARRAY = []
 
 const Dashboard = () => {
-  const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
+  const token = sessionStorage.getItem('crdnsMaintToken')
   // if (!socket.connected) socket.connect();
   console.log('Socket connected:', socket.connected)
 
@@ -376,7 +375,6 @@ const Dashboard = () => {
 
   const isWorker = !!(
     sessionStorage.getItem('workerInfo') ||
-    localStorage.getItem('workerInfo') ||
     decodedToken?.worker ||
     decodedToken?.role === 'worker'
   )
@@ -783,7 +781,7 @@ const Dashboard = () => {
   if (isWorker) {
     const workerInfo = (() => {
       try {
-        const raw = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
+        const raw = sessionStorage.getItem('workerInfo')
         return raw ? JSON.parse(raw) : null
       } catch {
         return null

@@ -1,5 +1,4 @@
 import axios from 'axios'
-import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 import { useFormattedTime } from '../../customhooks/useFormattedTime'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
@@ -714,7 +713,7 @@ export const getDailyReadingApi = async ({
 // Bulk Upload Drivers
 export const bulkUploadDrivers = async (file) => {
   try {
-    const authToken = sessionStorage.getItem('crdnsMaintToken') || token
+    const authToken = sessionStorage.getItem('crdnsMaintToken')
     if (!authToken) throw new Error('Authentication token not found')
 
     const formData = new FormData()

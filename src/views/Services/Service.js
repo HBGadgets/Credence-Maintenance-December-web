@@ -1,5 +1,4 @@
 import axios from 'axios'
-import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import usePermissionStore from '../../store/permission'
 import {
@@ -11,10 +10,7 @@ import {
 
 class PermissionService {
   static getHeaders() {
-    const token =
-      sessionStorage.getItem('crdnsMaintToken') ||
-      localStorage.getItem('crdnsMaintToken') ||
-      Cookies.get('crdnsMaintToken')
+    const token = sessionStorage.getItem('crdnsMaintToken')
     return {
       Authorization: `Bearer ${token}`,
     }
@@ -85,10 +81,7 @@ class PermissionService {
   }
 
   static async getMySupervisorPermissions() {
-    const token =
-      sessionStorage.getItem('crdnsMaintToken') ||
-      localStorage.getItem('crdnsMaintToken') ||
-      Cookies.get('crdnsMaintToken')
+    const token = sessionStorage.getItem('crdnsMaintToken')
 
     let role = null
     try {
@@ -118,10 +111,7 @@ class PermissionService {
   }
 
   static hasPermission(permissionPath, action = 'read') {
-    const token =
-      sessionStorage.getItem('crdnsMaintToken') ||
-      localStorage.getItem('crdnsMaintToken') ||
-      Cookies.get('crdnsMaintToken')
+    const token = sessionStorage.getItem('crdnsMaintToken')
 
     let role = null
     try {
@@ -136,7 +126,7 @@ class PermissionService {
       return true
     }
 
-    const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo')
+    const storedWorker = sessionStorage.getItem('workerInfo')
     const permissions = usePermissionStore.getState().permissions
 
     // If neither worker nor restricted permissions exist, default to true

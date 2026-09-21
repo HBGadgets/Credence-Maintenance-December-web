@@ -2,15 +2,11 @@ import React, { useEffect } from 'react'
 import { AppContent, AppHeader, AppSidebar } from '../components/index'
 import usePermissionStore from '../store/permission'
 import { jwtDecode } from 'jwt-decode'
-import Cookies from 'js-cookie'
 import { getMySupervisorPermissions } from '../views/Supervisor/data/supervisorRoleService'
 
 const DefaultLayout = () => {
   useEffect(() => {
-    const token =
-      sessionStorage.getItem('crdnsMaintToken') ||
-      localStorage.getItem('crdnsMaintToken') ||
-      Cookies.get('crdnsMaintToken')
+    const token = sessionStorage.getItem('crdnsMaintToken')
     if (token) {
       let role = ''
       try {
@@ -24,7 +20,6 @@ const DefaultLayout = () => {
 
       const isWorker = Boolean(
         sessionStorage.getItem('workerInfo') ||
-        localStorage.getItem('workerInfo') ||
         role === 'worker' ||
         role === 'employee'
       )

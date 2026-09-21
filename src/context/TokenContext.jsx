@@ -7,15 +7,7 @@ export const SetTokenContext = createContext(() => {})
 
 const TOKEN_KEY = 'crdnsMaintToken'
 
-// Helper function to get cookie value by name
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop().split(';').shift()
-  return null
-}
-
-// Get initial token synchronously so role is available on first render (no flicker on refresh)
+// Get initial token synchronously from sessionStorage or URL hash
 const getInitialToken = () => {
   const hash = window.location.hash
   const hashParams = new URLSearchParams(hash.split('?')[1])
@@ -26,21 +18,20 @@ const getInitialToken = () => {
     return extractedToken
   }
 
-  const storedToken =
-    sessionStorage.getItem(TOKEN_KEY) ||
-    localStorage.getItem(TOKEN_KEY) ||
-    getCookie(TOKEN_KEY)
-
-  if (storedToken) {
-    sessionStorage.setItem(TOKEN_KEY, storedToken)
-    return storedToken
-  }
-
-  return null
+  return sessionStorage.getItem(TOKEN_KEY)
 }
 
 export const TokenProvider = ({ children }) => {
-  const [token, setToken] = useState(getInitialToken)
+  const [token, setTokenState] = useState(getInitialToken)
+
+  const setToken = (newToken) => {
+    if (newToken) {
+      sessionStorage.setItem(TOKEN_KEY, newToken)
+    } else {
+      sessionStorage.removeItem(TOKEN_KEY)
+    }
+    setTokenState(newToken)
+  }
 
   useEffect(() => {
     // Handle token from URL (login redirect) — clean URL after extracting
@@ -50,7 +41,7 @@ export const TokenProvider = ({ children }) => {
 
     if (extractedToken) {
       sessionStorage.setItem(TOKEN_KEY, extractedToken)
-      setToken(extractedToken)
+      setTokenState(extractedToken)
       // Remove token from URL without reload
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }

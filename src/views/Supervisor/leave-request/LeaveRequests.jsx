@@ -1,6 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import Cookies from 'js-cookie'
 import Table from '../../components/Table'
 import SearchInput from '../../components/SearchInput'
 import SmartPagination from '../../components/SmartPagination'
@@ -45,13 +44,8 @@ const LeaveRequests = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
-  // Token resolution with fallback
-  const contextToken = useContext(TokenContext)
-  const token =
-    contextToken ||
-    sessionStorage.getItem('crdnsMaintToken') ||
-    localStorage.getItem('crdnsMaintToken') ||
-    Cookies.get('crdnsMaintToken')
+  // Token resolution
+  const token = sessionStorage.getItem('crdnsMaintToken')
 
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role

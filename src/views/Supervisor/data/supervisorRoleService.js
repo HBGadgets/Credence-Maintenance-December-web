@@ -1,12 +1,7 @@
 import axios from 'axios'
-import Cookies from 'js-cookie'
 
 const getAuthToken = () => {
-  return (
-    sessionStorage.getItem('crdnsMaintToken') ||
-    localStorage.getItem('crdnsMaintToken') ||
-    Cookies.get('crdnsMaintToken')
-  )
+  return sessionStorage.getItem('crdnsMaintToken')
 }
 
 const getHeaders = () => {

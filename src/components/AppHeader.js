@@ -60,7 +60,6 @@ const filterNavByRole = (items, role) => {
 
   const isEmployee = Boolean(
     sessionStorage.getItem('workerInfo') ||
-    localStorage.getItem('workerInfo') ||
     roleLower === 'worker' ||
     roleLower === 'employee'
   );
@@ -107,21 +106,10 @@ const AppHeader = () => {
     setUnreadCounts({}); //clear unread counts
   };
 
-  const contextToken = useContext(TokenContext);
-  const token =
-    Cookies.get('crdnsMaintToken') ||
-    sessionStorage.getItem('crdnsMaintToken') ||
-    localStorage.getItem('crdnsMaintToken') ||
-    contextToken;
-
-  // Helper to get a cookie by name
-  const getCookie = (name) => {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-  };
+  const token = sessionStorage.getItem('crdnsMaintToken');
 
   const [username, setUsername] = useState(() => {
-    const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo');
+    const storedWorker = sessionStorage.getItem('workerInfo');
     if (storedWorker) {
       try {
         const worker = JSON.parse(storedWorker);
@@ -154,7 +142,7 @@ const AppHeader = () => {
   }, []);
 
   useEffect(() => {
-    const storedWorker = sessionStorage.getItem('workerInfo') || localStorage.getItem('workerInfo');
+    const storedWorker = sessionStorage.getItem('workerInfo');
     if (storedWorker) {
       try {
         const worker = JSON.parse(storedWorker);

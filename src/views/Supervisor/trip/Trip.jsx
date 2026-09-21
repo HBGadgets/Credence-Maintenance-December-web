@@ -29,7 +29,6 @@ import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import DutySlip from './DutySlip'
-import Cookies from 'js-cookie' // Add this import
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -52,9 +51,7 @@ const Trip = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
-  // FIX: Get token from both Cookie and Context (prioritize Cookie as in Dashboard)
-  const contextToken = useContext(TokenContext)
-  const token = Cookies.get('crdnsMaintToken') || contextToken
+  const token = sessionStorage.getItem('crdnsMaintToken')
 
   // superadmin role
   const decodedToken = token ? jwtDecode(token) : null
