@@ -1,8 +1,9 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 import { formatDateToDDMMYYYY } from "../customhooks/useFormattedDate";
 
-// Global token (from session)
-const TOKEN = sessionStorage.getItem("crdnsMaintToken");
+// Global token (from cookie)
+const TOKEN = Cookies.get("crdnsMaintToken");
 
 // Get API trip reading
 export const getAllDailyReadingApi = async ({

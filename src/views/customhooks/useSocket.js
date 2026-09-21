@@ -52,11 +52,12 @@
 // ------------------------------------------------------------ 
 
 import { io } from "socket.io-client";
+import Cookies from "js-cookie";
 
 export const socket = io(import.meta.env.VITE_API_URL, {
     autoConnect: false,
     auth: {
-        token: sessionStorage.getItem("crdnsMaintToken"),
+        token: Cookies.get("crdnsMaintToken"),
     },
     transports: ["websocket"],
 });

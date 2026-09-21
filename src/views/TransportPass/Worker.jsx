@@ -18,6 +18,7 @@ import Swal from 'sweetalert2'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../DriverExpert/data/drivers'
 import { TokenContext } from '../../context/TokenContext'
+import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import BillShow from '../components/BillModal/BillShow'
 import IconDropdown from '../Supervisor/IconDropdown'
@@ -59,7 +60,7 @@ const Worker = () => {
   const userRole = decodedToken?.role
 
   const isEmployee = Boolean(
-    sessionStorage.getItem('workerInfo') ||
+    Cookies.get('workerInfo') ||
     userRole === 'worker' ||
     userRole === 'employee'
   )

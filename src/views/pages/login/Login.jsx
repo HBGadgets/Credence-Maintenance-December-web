@@ -18,12 +18,13 @@ import PermissionService from '../../Services/Service'
 import usePermissionStore from '../../../store/permission'
 import { SetTokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import Cookies from 'js-cookie'
 
 const Login = () => {
   const navigate = useNavigate()
   const setToken = useContext(SetTokenContext)
 
-  const existingToken = sessionStorage.getItem('crdnsMaintToken')
+  const existingToken = Cookies.get('crdnsMaintToken')
   useEffect(() => {
     if (existingToken) {
       navigate('/', { replace: true })
@@ -57,21 +58,17 @@ const Login = () => {
         // Update TokenContext reactively so sidebar role filter works without refresh
         setToken(token)
 
-        // Store exclusively in sessionStorage
-        sessionStorage.setItem('crdnsMaintToken', token)
+        // Store exclusively in cookie storage
+        Cookies.set('crdnsMaintToken', token, { path: '/' })
         if (response?.worker) {
-          sessionStorage.setItem('workerInfo', JSON.stringify(response.worker))
+          Cookies.set('workerInfo', JSON.stringify(response.worker), { path: '/' })
         }
 
-        // Clean up legacy cookies and localStorage
-        document.cookie = 'crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-        document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
-        const parts = window.location.hostname.split('.')
-        if (parts.length >= 2) {
-          const baseDomain = parts.slice(-2).join('.')
-          document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${baseDomain};`
-        }
+        // Clean up legacy sessionStorage and localStorage
+        sessionStorage.removeItem('crdnsMaintToken')
+        sessionStorage.removeItem('workerInfo')
         localStorage.removeItem('crdnsMaintToken')
+        localStorage.removeItem('workerInfo')
 
         // Check user role from decoded token
         let userRole = ''

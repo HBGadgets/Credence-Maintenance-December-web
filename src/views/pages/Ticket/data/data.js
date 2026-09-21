@@ -1,9 +1,10 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 import { formatDateToDDMMYYYY } from "../../../customhooks/useFormattedDate";
 import { useDateTime } from "../../../customhooks/useDateTime";
 
 // Global token variable
-const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+const TOKEN = Cookies.get('crdnsMaintToken')
 
 
 // GET API Supervisor See ALL Drivers Expesense List.

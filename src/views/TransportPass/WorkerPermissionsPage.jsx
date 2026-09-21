@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getWorkerApi } from './data/data'
 import LoaderBus from '../../components/Loader3/LoaderBus'
 import { jwtDecode } from 'jwt-decode'
+import Cookies from 'js-cookie'
 
 const defaultPermissions = {
   masters: {
@@ -122,7 +123,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   // Identify whether logged-in user is an employee / worker
   const loggedInWorkerInfo = useMemo(() => {
     try {
-      const stored = sessionStorage.getItem('workerInfo')
+      const stored = Cookies.get('workerInfo')
       return stored ? JSON.parse(stored) : null
     } catch {
       return null
@@ -130,7 +131,7 @@ const WorkerPermissionsPage = ({ worker: workerProp, onClose: onCloseProp, onSav
   }, [])
 
   const tokenRole = useMemo(() => {
-    const token = sessionStorage.getItem('crdnsMaintToken')
+    const token = Cookies.get('crdnsMaintToken')
     if (!token) return null
     try {
       const decoded = jwtDecode(token)

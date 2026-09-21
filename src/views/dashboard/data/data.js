@@ -1,9 +1,10 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
-const token = sessionStorage.getItem('crdnsMaintToken')
+const token = Cookies.get('crdnsMaintToken')
 
 export const fetchDashboardData = async (userId = null) => {
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   if (!token) throw new Error('Authentication token not found')
   try {
@@ -26,7 +27,7 @@ export const fetchDashboardData = async (userId = null) => {
 
 // GET API for Trip List
 export const getAllTripListApi = async (userId = null) => {
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   if (!token) throw new Error('Authentication token not found')
 
@@ -80,7 +81,7 @@ export const getDailyTripLogsApi = async ({ queryKey }) => {
 
 // Get supervisor id
 export const fetchAllAdmin = async (userId = null) => {
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   if (!token) {
     throw new Error('Authentication token not found')

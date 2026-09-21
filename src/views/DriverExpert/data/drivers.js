@@ -1,11 +1,11 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 import { useSplitTimeDate } from '../../customhooks/useSplitTimeDate'
 import { useFormattedTime } from '../../customhooks/useFormattedTime'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 import { useDateTime } from '../../customhooks/useDateTime'
 
-// const token ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoYXlzaHUiLCJpZCI6IjY3MTM2NTNiNjEzY2YyZDJjNTMyZWQwZSIsInVzZXJzIjpmYWxzZSwic3VwZXJhZG1pbiI6dHJ1ZSwidXNlciI6bnVsbCwicm9sZSI6InN1cGVyYWRtaW4iLCJpYXQiOjE3NDEzMzQ2NzN9.CWrHCFTim0n6wyw8ynx1B3eXL0jNpzGrCNEUVSwhpxs'
-const token = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+const token = Cookies.get('crdnsMaintToken')
 
 export const addDriver = async (data) => {
   try {
@@ -713,7 +713,7 @@ export const getDailyReadingApi = async ({
 // Bulk Upload Drivers
 export const bulkUploadDrivers = async (file) => {
   try {
-    const authToken = sessionStorage.getItem('crdnsMaintToken')
+    const authToken = Cookies.get('crdnsMaintToken')
     if (!authToken) throw new Error('Authentication token not found')
 
     const formData = new FormData()

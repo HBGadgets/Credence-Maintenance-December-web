@@ -131,6 +131,7 @@
 // Custom code
 
 import React, { useState, useEffect, useContext } from 'react'
+import Cookies from 'js-cookie'
 import { socket } from '../../customhooks/useSocket'
 import ChatSidebar from './component/ChatSidebar'
 import ChatHeader from './component/ChatHeader'
@@ -150,7 +151,7 @@ const ChatBox = () => {
   // decode userId from token
   let myUserId = null
   try {
-    const token = sessionStorage.getItem('crdnsMaintToken')
+    const token = Cookies.get('crdnsMaintToken')
     if (token) {
       myUserId = JSON.parse(atob(token.split('.')[1]))?.id
     }

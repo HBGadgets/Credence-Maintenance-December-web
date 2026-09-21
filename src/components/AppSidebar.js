@@ -8,6 +8,7 @@ import { PanelLeftClose } from 'lucide-react'
 import navigation from '../_nav'
 import { TokenContext } from '../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import Cookies from 'js-cookie'
 import PermissionService from '../views/Services/Service'
 import usePermissionStore from '../store/permission'
 
@@ -25,7 +26,7 @@ const filterNavByRole = (items, role) => {
   }
 
   const isEmployee = Boolean(
-    sessionStorage.getItem('workerInfo') ||
+    Cookies.get('workerInfo') ||
     roleLower === 'worker' ||
     roleLower === 'employee'
   )
@@ -64,7 +65,7 @@ const AppSidebar = () => {
   const activeSection = useSelector((state) => state.activeSection || 'Dashboard')
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   const userRole = useMemo(() => {
     if (!token || typeof token !== 'string') return null

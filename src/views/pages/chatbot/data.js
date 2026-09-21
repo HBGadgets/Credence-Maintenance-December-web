@@ -1,8 +1,9 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export const fetchChatApi = async (receiverId) => {
     try {
-        const token = sessionStorage.getItem("crdnsMaintToken");
+        const token = Cookies.get("crdnsMaintToken");
         if (!token) throw new Error("Authentication token not found");
 
         const { data } = await axios.get(

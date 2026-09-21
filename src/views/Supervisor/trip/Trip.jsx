@@ -29,6 +29,7 @@ import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import DutySlip from './DutySlip'
+import Cookies from 'js-cookie'
 
 const Trip = () => {
   const { exportToPDF } = usePdfExporter()
@@ -51,7 +52,7 @@ const Trip = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   // superadmin role
   const decodedToken = token ? jwtDecode(token) : null

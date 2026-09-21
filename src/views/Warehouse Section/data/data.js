@@ -1,7 +1,8 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 
-const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+const TOKEN = Cookies.get('crdnsMaintToken')
 
 // Get Warehouse (with search + pagination)
 export const getWarehouseApi = async ({ queryKey }) => {

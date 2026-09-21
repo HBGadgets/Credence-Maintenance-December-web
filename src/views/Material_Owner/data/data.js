@@ -1,5 +1,6 @@
 import axios from "axios";
-const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+import Cookies from "js-cookie";
+const TOKEN = Cookies.get('crdnsMaintToken')
 
 
 // get martial owner

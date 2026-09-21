@@ -59,7 +59,7 @@ const filterNavByRole = (items, role) => {
   }
 
   const isEmployee = Boolean(
-    sessionStorage.getItem('workerInfo') ||
+    Cookies.get('workerInfo') ||
     roleLower === 'worker' ||
     roleLower === 'employee'
   );
@@ -106,10 +106,10 @@ const AppHeader = () => {
     setUnreadCounts({}); //clear unread counts
   };
 
-  const token = sessionStorage.getItem('crdnsMaintToken');
+  const token = Cookies.get('crdnsMaintToken');
 
   const [username, setUsername] = useState(() => {
-    const storedWorker = sessionStorage.getItem('workerInfo');
+    const storedWorker = Cookies.get('workerInfo');
     if (storedWorker) {
       try {
         const worker = JSON.parse(storedWorker);
@@ -118,7 +118,7 @@ const AppHeader = () => {
         console.error('Failed to parse workerInfo:', e);
       }
     }
-    const savedToken = sessionStorage.getItem('crdnsMaintToken');
+    const savedToken = Cookies.get('crdnsMaintToken');
     if (!savedToken) return 'User';
     try {
       const decoded = jwtDecode(savedToken);
@@ -142,7 +142,7 @@ const AppHeader = () => {
   }, []);
 
   useEffect(() => {
-    const storedWorker = sessionStorage.getItem('workerInfo');
+    const storedWorker = Cookies.get('workerInfo');
     if (storedWorker) {
       try {
         const worker = JSON.parse(storedWorker);

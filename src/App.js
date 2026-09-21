@@ -70,6 +70,7 @@ import './scss/style.scss'
 import { TokenProvider } from './context/TokenContext'
 import LoaderBus from './components/Loader3/LoaderBus'
 import { socket } from './views/customhooks/useSocket'
+import Cookies from 'js-cookie'
 
 
 // Lazy-loaded containers and pages
@@ -78,7 +79,7 @@ const Login = React.lazy(() => import('./views/pages/login/Login'))
 
 //Token check for dashboard
 const RequireAuth = ({ children }) => {
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   if (!token) {
     // Redirect to login if token is missing
@@ -90,7 +91,7 @@ const RequireAuth = ({ children }) => {
 
 // Redirect authenticated users away from login page
 const RedirectIfAuth = ({ children }) => {
-  const token = sessionStorage.getItem('crdnsMaintToken')
+  const token = Cookies.get('crdnsMaintToken')
 
   if (token) {
     return <Navigate to="/" replace />
@@ -105,15 +106,11 @@ const AppContent = React.memo(() => {
   const storedTheme = useSelector((state) => state.theme)
 
   useEffect(() => {
-    // Clear any legacy cookie for crdnsMaintToken so it is exclusively in sessionStorage
-    document.cookie = 'crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
-    const parts = window.location.hostname.split('.')
-    if (parts.length >= 2) {
-      const baseDomain = parts.slice(-2).join('.')
-      document.cookie = `crdnsMaintToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${baseDomain};`
-    }
+    // Clean up legacy storage so token is exclusively in cookie storage
+    sessionStorage.removeItem('crdnsMaintToken')
+    sessionStorage.removeItem('workerInfo')
     localStorage.removeItem('crdnsMaintToken')
+    localStorage.removeItem('workerInfo')
 
     if (!socket.connected) socket.connect()
   }, [])

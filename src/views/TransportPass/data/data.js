@@ -1,6 +1,7 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
-const TOKEN = sessionStorage.getItem('crdnsMaintToken') // Get token from cookie
+const TOKEN = Cookies.get('crdnsMaintToken')
 
 // Get api for worker
 export const getWorkerApi = async () => {
