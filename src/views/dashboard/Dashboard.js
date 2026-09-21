@@ -251,6 +251,8 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
   )
 }
 
+const EMPTY_ARRAY = []
+
 const Dashboard = () => {
   const token = Cookies.get('crdnsMaintToken') || useContext(TokenContext)
   // if (!socket.connected) socket.connect();
@@ -278,7 +280,7 @@ const Dashboard = () => {
 
   const navigate = useNavigate()
   const [tableMode, setTableMode] = useState('Trip')
-  const [filteredData, setFilteredData] = useState([])
+  const [filteredData, setFilteredData] = useState(EMPTY_ARRAY)
 
   const scrollContainerRef = useRef(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -292,8 +294,10 @@ const Dashboard = () => {
     const el = scrollContainerRef.current
     if (!el) return
     const hasScroll = el.scrollWidth > el.clientWidth + 5
-    setCanScrollLeft(hasScroll && el.scrollLeft > 10)
-    setCanScrollRight(hasScroll && el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+    const newLeft = hasScroll && el.scrollLeft > 10
+    const newRight = hasScroll && el.scrollLeft < el.scrollWidth - el.clientWidth - 10
+    setCanScrollLeft((prev) => (prev !== newLeft ? newLeft : prev))
+    setCanScrollRight((prev) => (prev !== newRight ? newRight : prev))
   }
 
   useEffect(() => {
@@ -385,7 +389,7 @@ const Dashboard = () => {
   })
 
   // supervisor fetch
-  const { data: supervisorOptions = [] } = useQuery({
+  const { data: supervisorOptions = EMPTY_ARRAY } = useQuery({
     queryKey: ['supervisors'],
     queryFn: fetchAllAdmin,
     staleTime: 1000 * 60 * 10,
@@ -393,7 +397,7 @@ const Dashboard = () => {
   })
 
   // Fetch Trip Data
-  const { data: TripsList = [], isFetching } = useQuery({
+  const { data: TripsList = EMPTY_ARRAY, isFetching } = useQuery({
     queryKey: ['TripsList', token],
     queryFn: getAllTripListApi,
     staleTime: 1000 * 60 * 30,
@@ -408,7 +412,7 @@ const Dashboard = () => {
     enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs' && !isWorker,
   })
 
-  const DailyTripLogsList = DailyTripLogsResponse?.data || []
+  const DailyTripLogsList = DailyTripLogsResponse?.data || EMPTY_ARRAY
   const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
 
   // Fetch Daily Trip Logs for Analytics (All logs)
@@ -419,7 +423,7 @@ const Dashboard = () => {
     enabled: !!token && !!decodedToken && !isWorker,
   })
 
-  const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || []
+  const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || EMPTY_ARRAY
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
@@ -494,7 +498,7 @@ const Dashboard = () => {
     const activeList = tableMode === 'Trip' ? TripsList : DailyTripLogsList
     
     if (!activeList || activeList.length === 0) {
-      setFilteredData([])
+      setFilteredData((prev) => (prev.length === 0 ? prev : EMPTY_ARRAY))
       return
     }
 

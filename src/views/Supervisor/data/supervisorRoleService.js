@@ -34,8 +34,11 @@ const apiCall = async (method, endpoint, data = null) => {
   if (!token) throw new Error('Authentication token not found. Please log in again.')
 
   const baseUrl = getBaseUrl()
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  const primaryUrl = `${baseUrl}/api${cleanEndpoint}`
+  let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  if (cleanEndpoint.startsWith('/api/')) {
+    cleanEndpoint = cleanEndpoint.slice(4)
+  }
+  const primaryUrl = `${baseUrl}/api/api${cleanEndpoint}`
 
   try {
     const res = await axios({
@@ -46,22 +49,6 @@ const apiCall = async (method, endpoint, data = null) => {
     })
     return res.data
   } catch (err) {
-    if (err.response && err.response.status === 404) {
-      try {
-        const fallbackUrl = `${baseUrl}${cleanEndpoint}`
-        const fallbackRes = await axios({
-          method,
-          url: fallbackUrl,
-          data,
-          headers: getHeaders(),
-        })
-        return fallbackRes.data
-      } catch (fallbackErr) {
-        const msg =
-          fallbackErr.response?.data?.message || fallbackErr.message || 'Request failed'
-        throw new Error(msg)
-      }
-    }
     const msg = err.response?.data?.message || err.message || 'Request failed'
     throw new Error(msg)
   }

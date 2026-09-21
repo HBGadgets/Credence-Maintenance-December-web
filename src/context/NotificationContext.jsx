@@ -26,7 +26,7 @@
 
 // Costum code
 
-import { createContext, useState, useCallback } from 'react'
+import { createContext, useState, useCallback, useMemo } from 'react'
 
 export const NotificationContext = createContext()
 
@@ -50,15 +50,19 @@ export const NotificationProvider = ({ children }) => {
     ])
   }, [])
 
+  const value = useMemo(
+    () => ({
+      notifications,
+      setNotifications,
+      addNotification, // expose clean method
+      unreadCounts,
+      setUnreadCounts,
+    }),
+    [notifications, addNotification, unreadCounts],
+  )
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        addNotification, // expose clean method
-        unreadCounts,
-        setUnreadCounts,
-      }}
-    >
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   )
