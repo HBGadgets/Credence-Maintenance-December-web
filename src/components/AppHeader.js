@@ -43,6 +43,7 @@ import navigation from '../_nav';
 import logo from '../assets/brand/fmslogo.svg';
 import { AppSidebarNav } from './AppSidebarNav';
 import PermissionService from '../views/Services/Service';
+import usePermissionStore from '../store/permission';
 
 // Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
@@ -201,7 +202,8 @@ const AppHeader = () => {
     }
   }, [token]);
 
-  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole]);
+  const permissions = usePermissionStore((state) => state.permissions);
+  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole, permissions]);
 
   useEffect(() => {
     if (mobileNavOpen) {

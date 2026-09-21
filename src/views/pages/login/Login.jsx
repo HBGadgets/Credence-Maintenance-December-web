@@ -96,6 +96,7 @@ const Login = () => {
             const permissionRes = await PermissionService.getMySupervisorPermissions()
             if (permissionRes && permissionRes.permissions) {
               usePermissionStore.getState().setPermissions(permissionRes.permissions)
+              sessionStorage.setItem('skipNextPermissionFetch', 'true')
             }
           } catch (supErr) {
             // Non-supervisor users without assigned restrictions will skip

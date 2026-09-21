@@ -10,6 +10,7 @@ import { TokenContext } from '../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import Cookies from 'js-cookie'
 import PermissionService from '../views/Services/Service'
+import usePermissionStore from '../store/permission'
 
 // Helper: Recursively filter items by role and permission
 const filterNavByRole = (items, role) => {
@@ -82,7 +83,8 @@ const AppSidebar = () => {
     }
   }, [token])
 
-  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole])
+  const permissions = usePermissionStore((state) => state.permissions)
+  const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole, permissions])
 
   const currentSection = useMemo(() => {
     return filteredNav.find(
