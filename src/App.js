@@ -88,6 +88,17 @@ const RequireAuth = ({ children }) => {
   return children
 }
 
+// Redirect authenticated users away from login page
+const RedirectIfAuth = ({ children }) => {
+  const token = sessionStorage.getItem('crdnsMaintToken')
+
+  if (token) {
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
+
 
 const AppContent = React.memo(() => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -121,7 +132,14 @@ const AppContent = React.memo(() => {
   return (
     <Routes>
       {/* Public login page */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={
+          <RedirectIfAuth>
+            <Login />
+          </RedirectIfAuth>
+        }
+      />
 
       {/* Protected dashboard */}
       <Route

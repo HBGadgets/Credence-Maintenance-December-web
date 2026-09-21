@@ -22,11 +22,23 @@ import { jwtDecode } from 'jwt-decode'
 const Login = () => {
   const navigate = useNavigate()
   const setToken = useContext(SetTokenContext)
+
+  const existingToken = sessionStorage.getItem('crdnsMaintToken')
+  useEffect(() => {
+    if (existingToken) {
+      navigate('/', { replace: true })
+    }
+  }, [existingToken, navigate])
+
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showPassword, setShowPassword] = useState(false) // new state
+
+  if (existingToken) {
+    return null
+  }
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value })
