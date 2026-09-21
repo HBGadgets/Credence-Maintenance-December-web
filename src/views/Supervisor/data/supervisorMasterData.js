@@ -103,7 +103,7 @@ export const getSupervisorsApi = async (params = {}) => {
     const cleanBaseUrl = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl
 
     const { data: resData } = await axios.get(
-      `${cleanBaseUrl}/api/supervisor-role/all-users${queryString}`,
+      `${cleanBaseUrl}/api/api/supervisor-role/all-users${queryString}`,
       {
         headers: getHeaders(),
       },
