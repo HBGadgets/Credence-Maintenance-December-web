@@ -12,15 +12,6 @@ const getHeaders = () => {
     'Content-Type': 'application/json',
   }
 }
-
-const getBaseUrl = () => {
-  let url = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-  if (url.endsWith('/api')) {
-    url = url.slice(0, -4)
-  }
-  return url
-}
-
 /**
  * Robust API helper that sends requests to `${baseUrl}/api${cleanEndpoint}`,
  * with automatic fallback to `${baseUrl}${cleanEndpoint}` if a 404 occurs.
@@ -29,12 +20,12 @@ const apiCall = async (method, endpoint, data = null) => {
   const token = getAuthToken()
   if (!token) throw new Error('Authentication token not found. Please log in again.')
 
-  const baseUrl = getBaseUrl()
+  const baseUrl = import.meta.env.VITE_API_URL
   let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   if (cleanEndpoint.startsWith('/api/')) {
     cleanEndpoint = cleanEndpoint.slice(4)
   }
-  const primaryUrl = `${baseUrl}/api/api${cleanEndpoint}`
+  const primaryUrl = `${baseUrl}/api${cleanEndpoint}`
 
   try {
     const res = await axios({

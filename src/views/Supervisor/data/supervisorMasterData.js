@@ -18,8 +18,8 @@ export const getSchoolDropdownApi = async () => {
   if (!token) throw new Error('Authentication token not found')
 
   const backendUrl =
-    import.meta.env.VITE_API_CREDENCE_BACKEND || 'https://vts.credencetracker.com/backend'
-  const cleanUrl = backendUrl.replace(/\/+$/, '')
+    import.meta.env.VITE_API_CREDENCE_BACKEND
+  const cleanUrl = backendUrl
 
   try {
     const { data: response } = await axios.get(`${cleanUrl}/api/school/dropdown`, {
@@ -49,9 +49,7 @@ export const getBranchDropdownApi = async (schoolId) => {
   const token = getAuthToken()
   if (!token) throw new Error('Authentication token not found')
 
-  const backendUrl =
-    import.meta.env.VITE_API_CREDENCE_BACKEND || 'https://vts.credencetracker.com/backend'
-  const cleanUrl = backendUrl.replace(/\/+$/, '')
+  const cleanUrl = import.meta.env.VITE_API_CREDENCE_BACKEND
 
   try {
     const { data: response } = await axios.get(
@@ -95,11 +93,11 @@ export const getSupervisorsApi = async (params = {}) => {
     }
 
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
-    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const cleanBaseUrl = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl
+    const baseUrl = import.meta.env.VITE_API_URL
+    const cleanBaseUrl = baseUrl
 
     const { data: resData } = await axios.get(
-      `${cleanBaseUrl}/api/api/supervisor-role/all-users${queryString}`,
+      `${cleanBaseUrl}/api/supervisor-role/all-users${queryString}`,
       {
         headers: getHeaders(),
       },
