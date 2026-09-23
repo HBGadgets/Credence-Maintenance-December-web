@@ -545,10 +545,13 @@ export const patchAcknowledgementsApi = async (id, formData) => {
 
 // Railhead Get Api
 
-export const getRailHeadApi = async ({ queryKey }) => {
-  const [_key, { search, page, limit }] = queryKey
+export const getRailHeadApi = async (context = {}) => {
+  const queryKey = context?.queryKey || ['RailHead', {}]
+  const [_key, params = {}] = queryKey
+  const { search = '', page = 1, limit = 10 } = params || {}
 
-  if (!TOKEN) throw new Error('Authentication token not found')
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
+  if (!token) throw new Error('Authentication token not found')
 
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/railhead/get`, {
     params: {
@@ -556,7 +559,7 @@ export const getRailHeadApi = async ({ queryKey }) => {
       page,
       limit,
     },
-    headers: { Authorization: `Bearer ${TOKEN}` },
+    headers: { Authorization: `Bearer ${token}` },
   })
 
   // Check if response.data exists and has the expected structure
@@ -590,12 +593,13 @@ export const getRailHeadApi = async ({ queryKey }) => {
 
 // PATCH Railhead inventory
 export const patchRailHeadApi = async (id, data) => {
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
   try {
     const response = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/railhead/update/${id}`,
       data,
       {
-        headers: { Authorization: `Bearer ${TOKEN}` },
+        headers: { Authorization: `Bearer ${token}` },
       },
     )
 
@@ -607,11 +611,12 @@ export const patchRailHeadApi = async (id, data) => {
 
 // DELETE Railhead inventory
 export const deleteRailHeadApi = async (id) => {
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
   try {
     const response = await axios.delete(
       `${import.meta.env.VITE_API_URL}/api/railhead/delete/${id}`,
       {
-        headers: { Authorization: `Bearer ${TOKEN}` },
+        headers: { Authorization: `Bearer ${token}` },
       },
     )
 

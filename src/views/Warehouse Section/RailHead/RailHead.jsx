@@ -33,8 +33,8 @@ const RailHead = () => {
     queryKey: ['RailHead', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
     queryFn: getRailHeadApi,
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 1, // 1 minute (data is fresh for 1 min)
-    cacheTime: 1000 * 60 * 1, // 1 minute (kept in memory after unmount)
+    refetchOnMount: 'always',
+    staleTime: 0,
   })
 
   // ========== PATCH MUTATION ==========
