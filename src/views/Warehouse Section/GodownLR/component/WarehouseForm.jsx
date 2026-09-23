@@ -39,6 +39,8 @@ const defaultProduct = {
   quantityMT: '',
   bagSize: '',
   totalBags: '',
+  availableQuantityMT: '',
+  availableTotalBags: '',
 }
 
 const getTodayDate = () => {
@@ -404,6 +406,8 @@ const WarehouseForm = ({
   const [receivedByWarehouseId, setReceivedByWarehouseId] = useState('')
   const [receivedByWarehouseName, setReceivedByWarehouseName] = useState('')
   const [calculationSource, setCalculationSource] = useState({})
+  const [productQuantityWarnings, setProductQuantityWarnings] = useState({})
+  const [productBagsWarnings, setProductBagsWarnings] = useState({})
 
   const [receivedByOptions] = useState([
     { value: 'warehouse', label: 'Warehouse', icon: <FaWarehouse className="me-2" /> },
@@ -1257,6 +1261,8 @@ const WarehouseForm = ({
           quantityMT: quantityMT.toString(),
           bagSize: bagSize.toString(),
           totalBags: totalBags.toString(),
+          availableQuantityMT: quantityMT,
+          availableTotalBags: totalBags,
         }
       } else {
         updatedProducts[index] = {
@@ -1267,12 +1273,100 @@ const WarehouseForm = ({
           quantityMT: '',
           bagSize: '',
           totalBags: '',
+          availableQuantityMT: '',
+          availableTotalBags: '',
         }
       }
+      setProductQuantityWarnings((prev) => {
+        const next = { ...prev }
+        delete next[index]
+        return next
+      })
+      setProductBagsWarnings((prev) => {
+        const next = { ...prev }
+        delete next[index]
+        return next
+      })
     } else {
+      let adjustedValue = value
+
+      if (field === 'quantityMT') {
+        const productDetail = getProductDetailForDisplay(updatedProducts[index])
+        const rawMax =
+          productDetail?.quantityMT ?? updatedProducts[index].availableQuantityMT
+        const maxQuantityMT =
+          rawMax !== '' && rawMax !== null && rawMax !== undefined ? parseFloat(rawMax) : NaN
+        const inputQuantity = parseFloat(adjustedValue)
+
+        if (!isNaN(inputQuantity) && inputQuantity < 0) {
+          toast.warning('Quantity cannot be negative', { toastId: `qty-neg-${index}` })
+          adjustedValue = '0'
+          setProductQuantityWarnings((prev) => ({
+            ...prev,
+            [index]: 'Quantity cannot be negative',
+          }))
+        } else if (
+          !isNaN(maxQuantityMT) &&
+          !isNaN(inputQuantity) &&
+          inputQuantity > maxQuantityMT
+        ) {
+          toast.warning(`Quantity cannot exceed prefilled amount of ${maxQuantityMT} MT`, {
+            toastId: `qty-exceed-${index}`,
+          })
+          adjustedValue = maxQuantityMT.toString()
+          setProductQuantityWarnings((prev) => ({
+            ...prev,
+            [index]: `Quantity cannot exceed prefilled amount of ${maxQuantityMT} MT`,
+          }))
+        } else {
+          setProductQuantityWarnings((prev) => {
+            const next = { ...prev }
+            delete next[index]
+            return next
+          })
+        }
+      } else if (field === 'totalBags') {
+        const productDetail = getProductDetailForDisplay(updatedProducts[index])
+        const rawMaxBags =
+          productDetail?.totalBags ?? updatedProducts[index].availableTotalBags
+        const maxTotalBags =
+          rawMaxBags !== '' && rawMaxBags !== null && rawMaxBags !== undefined
+            ? parseInt(rawMaxBags)
+            : NaN
+        const inputBags = parseInt(adjustedValue)
+
+        if (!isNaN(inputBags) && inputBags < 0) {
+          toast.warning('Total bags cannot be negative', { toastId: `bags-neg-${index}` })
+          adjustedValue = '0'
+          setProductBagsWarnings((prev) => ({
+            ...prev,
+            [index]: 'Total bags cannot be negative',
+          }))
+        } else if (
+          !isNaN(maxTotalBags) &&
+          !isNaN(inputBags) &&
+          inputBags > maxTotalBags
+        ) {
+          toast.warning(`Total bags cannot exceed prefilled amount of ${maxTotalBags} bags`, {
+            toastId: `bags-exceed-${index}`,
+          })
+          adjustedValue = maxTotalBags.toString()
+          setProductBagsWarnings((prev) => ({
+            ...prev,
+            [index]: `Total bags cannot exceed prefilled amount of ${maxTotalBags} bags`,
+          }))
+        } else {
+          setProductBagsWarnings((prev) => {
+            const next = { ...prev }
+            delete next[index]
+            return next
+          })
+        }
+      }
+
       updatedProducts[index] = {
         ...updatedProducts[index],
-        [field]: value,
+        [field]: adjustedValue,
       }
     }
 
@@ -1296,11 +1390,21 @@ const WarehouseForm = ({
             updatedProducts[index].totalBags = calculatedBags
           }
         }
-      } else if (field === 'totalBags' && value && !isNaN(totalBags) && totalBags > 0) {
+      } else if (field === 'totalBags' && value && !isNaN(totalBags) && totalBags >= 0) {
         if (bagSize && !isNaN(bagSize) && bagSize > 0) {
           const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
           if (calculatedQuantity) {
-            updatedProducts[index].quantityMT = calculatedQuantity
+            const numCalc = parseFloat(calculatedQuantity)
+            const productDetail = getProductDetailForDisplay(updatedProducts[index])
+            const rawMax =
+              productDetail?.quantityMT ?? updatedProducts[index].availableQuantityMT
+            const maxQuantityMT =
+              rawMax !== '' && rawMax !== null && rawMax !== undefined ? parseFloat(rawMax) : NaN
+            if (!isNaN(maxQuantityMT) && numCalc > maxQuantityMT) {
+              updatedProducts[index].quantityMT = maxQuantityMT.toString()
+            } else {
+              updatedProducts[index].quantityMT = calculatedQuantity
+            }
           }
         } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
           const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
@@ -1308,11 +1412,23 @@ const WarehouseForm = ({
             updatedProducts[index].bagSize = calculatedBagSize
           }
         }
-      } else if (field === 'quantityMT' && value && !isNaN(quantityMT) && quantityMT > 0) {
+      } else if (field === 'quantityMT' && value && !isNaN(quantityMT) && quantityMT >= 0) {
         if (bagSize && !isNaN(bagSize) && bagSize > 0) {
           const calculatedBags = calculateBagsFromQuantity(bagSize, quantityMT)
           if (calculatedBags) {
-            updatedProducts[index].totalBags = calculatedBags
+            const numBags = parseInt(calculatedBags)
+            const productDetail = getProductDetailForDisplay(updatedProducts[index])
+            const rawMaxBags =
+              productDetail?.totalBags ?? updatedProducts[index].availableTotalBags
+            const maxTotalBags =
+              rawMaxBags !== '' && rawMaxBags !== null && rawMaxBags !== undefined
+                ? parseInt(rawMaxBags)
+                : NaN
+            if (!isNaN(maxTotalBags) && numBags > maxTotalBags) {
+              updatedProducts[index].totalBags = maxTotalBags.toString()
+            } else {
+              updatedProducts[index].totalBags = calculatedBags
+            }
           }
         } else if (totalBags && !isNaN(totalBags) && totalBags > 0) {
           const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
@@ -1339,6 +1455,16 @@ const WarehouseForm = ({
       const updatedProducts = [...formData.products]
       updatedProducts.splice(index, 1)
       setFormData((prev) => ({ ...prev, products: updatedProducts }))
+      setProductQuantityWarnings((prev) => {
+        const next = { ...prev }
+        delete next[index]
+        return next
+      })
+      setProductBagsWarnings((prev) => {
+        const next = { ...prev }
+        delete next[index]
+        return next
+      })
     }
   }
 
@@ -1379,6 +1505,30 @@ const WarehouseForm = ({
         const quantityMT = parseFloat(product.quantityMT)
         if (isNaN(quantityMT) || quantityMT <= 0) {
           errorMessages.push('Invalid quantity (must be greater than 0)')
+          isValid = false
+        }
+
+        const productDetail = getProductDetailForDisplay(product)
+        const rawMax = productDetail?.quantityMT ?? product.availableQuantityMT
+        const maxQuantityMT =
+          rawMax !== '' && rawMax !== null && rawMax !== undefined ? parseFloat(rawMax) : NaN
+        if (!isNaN(maxQuantityMT) && quantityMT > maxQuantityMT) {
+          errorMessages.push(
+            `Quantity (${quantityMT} MT) cannot exceed prefilled amount (${maxQuantityMT} MT)`,
+          )
+          isValid = false
+        }
+
+        const totalBags = parseInt(product.totalBags)
+        const rawMaxBags = productDetail?.totalBags ?? product.availableTotalBags
+        const maxTotalBags =
+          rawMaxBags !== '' && rawMaxBags !== null && rawMaxBags !== undefined
+            ? parseInt(rawMaxBags)
+            : NaN
+        if (!isNaN(maxTotalBags) && totalBags > maxTotalBags) {
+          errorMessages.push(
+            `Total bags (${totalBags}) cannot exceed prefilled amount (${maxTotalBags} bags)`,
+          )
           isValid = false
         }
 
@@ -2398,6 +2548,16 @@ const WarehouseForm = ({
                     const bagSizeHint = getCalculationHint(index, 'bagSize')
                     const totalBagsHint = getCalculationHint(index, 'totalBags')
 
+                    const rawMaxQty = productDetail?.quantityMT ?? product.availableQuantityMT
+                    const hasMaxQty =
+                      rawMaxQty !== '' && rawMaxQty !== null && rawMaxQty !== undefined
+                    const maxQtyValue = hasMaxQty ? parseFloat(rawMaxQty) : undefined
+
+                    const rawMaxBags = productDetail?.totalBags ?? product.availableTotalBags
+                    const hasMaxBags =
+                      rawMaxBags !== '' && rawMaxBags !== null && rawMaxBags !== undefined
+                    const maxBagsValue = hasMaxBags ? parseInt(rawMaxBags) : undefined
+
                     return (
                       <div key={index} className="border rounded p-3 mb-3">
                         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -2456,6 +2616,15 @@ const WarehouseForm = ({
                                 </strong>
                               </div>
                             </div>
+                          </div>
+                        )}
+
+                        {hasMaxQty && maxQtyValue === 0 && (
+                          <div className="alert alert-danger py-2 px-3 mb-3 d-flex align-items-center small">
+                            <FaInfoCircle className="me-2 text-danger flex-shrink-0" />
+                            <span>
+                              <strong>Warning:</strong> Available inventory stock is 0 MT. Cannot add quantity for this product.
+                            </span>
                           </div>
                         )}
 
@@ -2522,11 +2691,45 @@ const WarehouseForm = ({
                               onWheel={handleNumberInputScroll}
                               disabled={isLoading}
                               placeholder="Enter total bags"
+                              min="0"
+                              max={hasMaxBags && !isNaN(maxBagsValue) ? maxBagsValue : undefined}
+                              isInvalid={
+                                maxBagsValue === 0 ||
+                                !!productBagsWarnings[index] ||
+                                (hasMaxBags &&
+                                  !isNaN(maxBagsValue) &&
+                                  parseInt(product.totalBags) > maxBagsValue)
+                              }
                             />
                             {totalBagsHint && (
                               <Form.Text className="text-info">
                                 <FaInfoCircle className="me-1" size={12} />
                                 {totalBagsHint}
+                              </Form.Text>
+                            )}
+                            {hasMaxBags && !isNaN(maxBagsValue) && (
+                              <Form.Text className="text-muted d-block">
+                                Max available:{' '}
+                                <span
+                                  className={`fw-semibold ${
+                                    maxBagsValue === 0 ? 'text-danger' : ''
+                                  }`}
+                                >
+                                  {maxBagsValue} bags{maxBagsValue === 0 ? ' (Out of stock)' : ''}
+                                </span>
+                              </Form.Text>
+                            )}
+                            {(maxBagsValue === 0 ||
+                              productBagsWarnings[index] ||
+                              (hasMaxBags &&
+                                !isNaN(maxBagsValue) &&
+                                parseInt(product.totalBags) > maxBagsValue)) && (
+                              <Form.Text className="text-danger fw-semibold d-block mt-1">
+                                <FaInfoCircle className="me-1" size={12} />
+                                {maxBagsValue === 0
+                                  ? 'Warning: Available total bags is 0.'
+                                  : productBagsWarnings[index] ||
+                                    `Warning: Total bags cannot exceed prefilled amount of ${maxBagsValue} bags.`}
                               </Form.Text>
                             )}
                           </div>
@@ -2571,7 +2774,15 @@ const WarehouseForm = ({
                               placeholder="Enter quantity MT"
                               required
                               min="0"
+                              max={hasMaxQty && !isNaN(maxQtyValue) ? maxQtyValue : undefined}
                               step="0.001"
+                              isInvalid={
+                                maxQtyValue === 0 ||
+                                !!productQuantityWarnings[index] ||
+                                (hasMaxQty &&
+                                  !isNaN(maxQtyValue) &&
+                                  parseFloat(product.quantityMT) > maxQtyValue)
+                              }
                             />
                             {quantityHint && (
                               <Form.Text className="text-info">
@@ -2581,7 +2792,29 @@ const WarehouseForm = ({
                             )}
                             <Form.Text className="text-muted d-block">
                               Enter quantity in Metric Ton
+                              {hasMaxQty && !isNaN(maxQtyValue) && (
+                                <span
+                                  className={`ms-1 fw-semibold ${
+                                    maxQtyValue === 0 ? 'text-danger' : 'text-primary'
+                                  }`}
+                                >
+                                  (Max: {maxQtyValue} MT{maxQtyValue === 0 ? ' - Out of Stock' : ''})
+                                </span>
+                              )}
                             </Form.Text>
+                            {(maxQtyValue === 0 ||
+                              productQuantityWarnings[index] ||
+                              (hasMaxQty &&
+                                !isNaN(maxQtyValue) &&
+                                parseFloat(product.quantityMT) > maxQtyValue)) && (
+                              <Form.Text className="text-danger fw-semibold d-block mt-1">
+                                <FaInfoCircle className="me-1" size={12} />
+                                {maxQtyValue === 0
+                                  ? 'Warning: Available quantity is 0 MT. Cannot add quantity for this product.'
+                                  : productQuantityWarnings[index] ||
+                                    `Warning: Quantity cannot exceed prefilled amount of ${maxQtyValue} MT.`}
+                              </Form.Text>
+                            )}
                           </div>
                         </div>
 
