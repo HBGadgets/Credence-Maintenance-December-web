@@ -1031,8 +1031,8 @@ const WarehouseForm = ({
       if (action.action === 'create-option') {
         setFormData((prev) => ({
           ...prev,
-          vehicleId: selected.value,
-          vehicleName: selected.label,
+          vehicleId: null,
+          vehicleName: selected.label || selected.value,
         }))
       } else {
         const selectedVehicle = vehicles.find(
@@ -1045,7 +1045,7 @@ const WarehouseForm = ({
         }))
       }
     } else {
-      setFormData((prev) => ({ ...prev, vehicleId: '', vehicleName: '' }))
+      setFormData((prev) => ({ ...prev, vehicleId: null, vehicleName: '' }))
     }
   }
 
@@ -1054,8 +1054,8 @@ const WarehouseForm = ({
       if (action.action === 'create-option') {
         setFormData((prev) => ({
           ...prev,
-          driverId: selected.value,
-          driverName: selected.label,
+          driverId: null,
+          driverName: selected.label || selected.value,
         }))
       } else {
         const selectedDriver = drivers.find((d) => (d.id || d._id) === selected.value)
@@ -1066,7 +1066,7 @@ const WarehouseForm = ({
         }))
       }
     } else {
-      setFormData((prev) => ({ ...prev, driverId: '', driverName: '' }))
+      setFormData((prev) => ({ ...prev, driverId: null, driverName: '' }))
     }
   }
 
@@ -1628,20 +1628,18 @@ const WarehouseForm = ({
         status: 'Pending',
       }
 
-      if (vehicleExistsInDb && formData.vehicleId) {
-        payload.vehicleId = formData.vehicleId
-      }
-
-      if (driverExistsInDb && formData.driverId) {
-        payload.driverId = formData.driverId
-      }
+      payload.vehicleId = vehicleExistsInDb && formData.vehicleId ? formData.vehicleId : null
+      payload.driverId = driverExistsInDb && formData.driverId ? formData.driverId : null
 
       if (userRole === 'superadmin' && formData.supervisorId) {
         payload.supervisorId = formData.supervisorId
       }
 
       Object.keys(payload).forEach((key) => {
-        if (payload[key] === undefined || payload[key] === null) {
+        if (payload[key] === undefined) {
+          delete payload[key]
+        }
+        if (payload[key] === null && key !== 'vehicleId' && key !== 'driverId') {
           delete payload[key]
         }
       })
@@ -1658,10 +1656,22 @@ const WarehouseForm = ({
       // Get only the changed fields
       const changes = getChangedFields(originalData, formData)
 
+      const vehicleExistsInDb = vehicleOptions.some(
+        (vehicle) => vehicle.value === formData.vehicleId,
+      )
+      const driverExistsInDb = driverOptions.some((driver) => driver.value === formData.driverId)
+
       // Add ID to identify which record to update
       const payload = {
         id: initialData.id || initialData._id,
         ...changes,
+      }
+
+      if ('vehicleName' in changes || 'vehicleId' in changes) {
+        payload.vehicleId = vehicleExistsInDb && formData.vehicleId ? formData.vehicleId : null
+      }
+      if ('driverName' in changes || 'driverId' in changes) {
+        payload.driverId = driverExistsInDb && formData.driverId ? formData.driverId : null
       }
 
       // Remove auto-calculated fields that shouldn't be sent in edit
@@ -1670,9 +1680,12 @@ const WarehouseForm = ({
         delete payload[field]
       })
 
-      // Clean up the payload - remove any undefined or null values
+      // Clean up the payload - remove any undefined or null values (preserving null for vehicleId and driverId)
       Object.keys(payload).forEach((key) => {
-        if (payload[key] === undefined || payload[key] === null) {
+        if (payload[key] === undefined) {
+          delete payload[key]
+        }
+        if (payload[key] === null && key !== 'vehicleId' && key !== 'driverId') {
           delete payload[key]
         }
       })
@@ -1951,6 +1964,12 @@ const WarehouseForm = ({
         label: formData.vehicleName || formData.vehicleId,
       }
     }
+    if (formData.vehicleName) {
+      return {
+        value: formData.vehicleName,
+        label: formData.vehicleName,
+      }
+    }
     return null
   }
 
@@ -1963,6 +1982,12 @@ const WarehouseForm = ({
       return {
         value: formData.driverId,
         label: formData.driverName || formData.driverId,
+      }
+    }
+    if (formData.driverName) {
+      return {
+        value: formData.driverName,
+        label: formData.driverName,
       }
     }
     return null
