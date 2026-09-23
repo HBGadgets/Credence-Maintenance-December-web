@@ -3,8 +3,9 @@ import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getRailHeadApi, patchRailHeadApi } from '../data/data'
+import { deleteRailHeadApi, getRailHeadApi, patchRailHeadApi } from '../data/data'
 import { toast, ToastContainer } from 'react-toastify'
+import Swal from 'sweetalert2'
 import ReusableModal from '../../components/ReusableModal'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
@@ -48,6 +49,18 @@ const RailHead = () => {
     },
     onError: (error) => {
       toast.error(error.message || 'Update failed')
+    },
+  })
+
+  // ========== DELETE MUTATION ==========
+  const { mutate: deleteRailHead } = useMutation({
+    mutationFn: (id) => deleteRailHeadApi(id),
+    onSuccess: () => {
+      toast.success('Railhead Inventory deleted successfully!')
+      queryClient.invalidateQueries({ queryKey: ['RailHead'] })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Delete failed')
     },
   })
 
@@ -116,6 +129,22 @@ const RailHead = () => {
     setEditMode(true)
     setEditingData(mappedRecord)
     setShowModalFrom(true)
+  }
+
+  // ========== DELETE BUTTON ==========
+  const handleDeleteButton = (id) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'You will not be able to recover this data!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteRailHead(id)
+      }
+    })
   }
 
   // Submit form (Edit only)
@@ -218,6 +247,8 @@ const RailHead = () => {
         isFetching={isFetching}
         editButton={true}
         handleEditButton={handleEditButton}
+        deleteButton={true}
+        handleDeleteButton={handleDeleteButton}
         serverPagination={true}
       />
 

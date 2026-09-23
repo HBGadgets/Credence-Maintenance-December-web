@@ -605,6 +605,22 @@ export const patchRailHeadApi = async (id, data) => {
   }
 }
 
+// DELETE Railhead inventory
+export const deleteRailHeadApi = async (id) => {
+  try {
+    const response = await axios.delete(
+      `${import.meta.env.VITE_API_URL}/api/railhead/delete/${id}`,
+      {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+      },
+    )
+
+    return response.data
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Delete failed')
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 // Tp pass Image Update button
