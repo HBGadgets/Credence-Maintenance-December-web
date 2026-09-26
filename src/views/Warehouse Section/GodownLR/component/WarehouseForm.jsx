@@ -125,7 +125,7 @@ const calculateQuantityFromBags = (bagSize, totalBags) => {
 const calculateBagsFromQuantity = (bagSize, quantityMT) => {
   if (!bagSize || !quantityMT || bagSize <= 0 || quantityMT <= 0) return ''
   const totalBags = (quantityMT * 1000) / bagSize
-  return Math.round(totalBags)
+  return totalBags
 }
 
 // Calculate bag size from total bags and quantity in MT
@@ -568,6 +568,7 @@ const WarehouseForm = ({
   const { data: railHeadData = {}, isFetching: isRailHeadFetching } = useQuery({
     queryKey: ['RailHead', { search: '', page: 1, limit: 100 }],
     queryFn: getRailHeadApi,
+    staleTime: 0,
   })
 
   const {
@@ -788,7 +789,7 @@ const WarehouseForm = ({
             id: item.id,
             productId: item.productId || item._id,
             productName: item.productName || item.name || 'Unknown Product',
-            quantityMT: item.quantityMT || item.quantity || item.totalQuantity || 0,
+            quantityMT: truncateTo3Decimals(item.quantityMT || item.quantity || item.totalQuantity || 0),
             bagSize: item.bagSize || item.bagWeight || 0,
             totalBags: item.totalBags || item.bags || item.totalBagsCount || 0,
           }
@@ -876,7 +877,7 @@ const WarehouseForm = ({
         products: initialData.products?.map((product) => ({
           productId: product.productId || '',
           productName: product.productName || '',
-          quantityMT: product.quantityMT?.toString() || '',
+          quantityMT: truncateTo3Decimals(product.quantityMT),
           bagSize: product.bagSize?.toString() || '',
           totalBags: product.totalBags?.toString() || '',
         })) || [{ ...defaultProduct }],
@@ -1269,10 +1270,10 @@ const WarehouseForm = ({
           productId: actualProductId,
           inventoryId: inventoryId,
           productName: productName,
-          quantityMT: quantityMT.toString(),
+          quantityMT: truncateTo3Decimals(quantityMT),
           bagSize: bagSize.toString(),
           totalBags: totalBags.toString(),
-          availableQuantityMT: quantityMT,
+          availableQuantityMT: truncateTo3Decimals(quantityMT),
           availableTotalBags: totalBags,
         }
       } else {
@@ -2044,7 +2045,7 @@ const WarehouseForm = ({
         productId: productFromList.productId,
         inventoryId: productFromList._id || productFromList.id,
         productName: productFromList.productName || productFromList.name || 'Unknown Product',
-        quantityMT: productFromList.quantityMT || productFromList.quantity || 0,
+        quantityMT: truncateTo3Decimals(productFromList.quantityMT || productFromList.quantity || 0),
         bagSize: productFromList.bagSize || productFromList.bagWeight || 0,
         totalBags: productFromList.totalBags || productFromList.bags || 0,
       }
@@ -2869,7 +2870,7 @@ const WarehouseForm = ({
                               <span>
                                 {' '}
                                 {product.quantityMT} MT × 1000 / {product.bagSize} kg ={' '}
-                                {Math.round((product.quantityMT * 1000) / product.bagSize)} bags
+                                {(product.quantityMT * 1000) / product.bagSize} bags
                               </span>
                             )}
                             {product.totalBags && product.quantityMT && !product.bagSize && (
