@@ -27,7 +27,7 @@ const Login = () => {
   const existingToken = Cookies.get('crdnsMaintToken')
   useEffect(() => {
     if (existingToken) {
-      navigate('/', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [existingToken, navigate])
 
@@ -109,7 +109,7 @@ const Login = () => {
         }
 
         // Use replace instead of navigate to prevent back navigation to login
-        navigate('/', { replace: true })
+        navigate('/dashboard', { replace: true })
       } else {
         setError('Invalid login response')
       }

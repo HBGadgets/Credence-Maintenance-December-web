@@ -174,7 +174,7 @@ const AllDriverAttendence = React.lazy(
 // routes
 const routes = [
   // Dashboard
-  { path: '/', exact: true, name: 'Home' },
+  { path: '/', name: 'Dashboard', element: Dashboard },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/TripPending', name: 'Live On Duty Trips', element: TripPending },
 

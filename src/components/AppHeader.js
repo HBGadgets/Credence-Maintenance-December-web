@@ -386,7 +386,8 @@ const AppHeader = () => {
       } else if (item.to) {
         if (
           currentPathname.toLowerCase() === item.to.toLowerCase() ||
-          currentPathname.toLowerCase().startsWith(item.to.toLowerCase() + '/')
+          currentPathname.toLowerCase().startsWith(item.to.toLowerCase() + '/') ||
+          (currentPathname === '/' && item.to === '/dashboard')
         ) {
           dispatch({ type: 'set', activeSection: item.name, sidebarShow: false });
           return;

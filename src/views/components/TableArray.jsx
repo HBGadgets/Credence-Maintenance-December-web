@@ -483,7 +483,7 @@ function TableArray({
                       className="text-center"
                       style={{ padding: '40px' }}
                     >
-                      No {title} found.
+                      No {typeof title === 'string' ? title : 'records'} found.
                     </CTableDataCell>
                   </CTableRow>
                 ) : (

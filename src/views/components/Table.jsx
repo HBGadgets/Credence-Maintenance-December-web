@@ -284,7 +284,7 @@ function Table({
                   ) : filteredData.length === 0 ? (
                     <CTableRow>
                       <CTableDataCell colSpan={columns.length + 2} className="text-center">
-                        No {title} found.
+                        No {typeof title === 'string' ? title : 'records'} found.
                       </CTableDataCell>
                     </CTableRow>
                   ) : (

@@ -94,7 +94,7 @@ const RedirectIfAuth = ({ children }) => {
   const token = Cookies.get('crdnsMaintToken')
 
   if (token) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return children
