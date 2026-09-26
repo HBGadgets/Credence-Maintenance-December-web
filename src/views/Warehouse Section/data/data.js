@@ -4,6 +4,17 @@ import { formatDateToDDMMYYYY } from '../../customhooks/useFormattedDate'
 
 const TOKEN = Cookies.get('crdnsMaintToken')
 
+// Truncate to 3 decimal places without rounding up (e.g. 0.949999 -> 0.949, 0.838999999992 -> 0.838)
+export const truncateTo3Decimals = (val) => {
+  if (val === undefined || val === null || val === '') return 0
+  const str = val.toString()
+  if (str.includes('.')) {
+    const [intPart, decPart] = str.split('.')
+    return parseFloat(`${intPart}.${decPart.slice(0, 3)}`)
+  }
+  return Number(val) || 0
+}
+
 // Get Warehouse (with search + pagination)
 export const getWarehouseApi = async ({ queryKey }) => {
   const [_key, { search, page, limit }] = queryKey
@@ -106,8 +117,8 @@ export const getWarehouseProfileApi = async ({ queryKey }) => {
       productName: product.productId?.name || 'Unknown',
       bagSize: product.bagSize || 0,
       totalBags: product.totalBags || 0,
-      quantityMT: Math.round((product.quantityMT || 0) * 10000) / 10000,
-      productTotalCountMT: Math.round((product.productTotalCountMT || 0) * 10000) / 10000,
+      quantityMT: truncateTo3Decimals(product.quantityMT),
+      productTotalCountMT: truncateTo3Decimals(product.productTotalCountMT),
     })),
   )
 
@@ -577,7 +588,7 @@ export const getRailHeadApi = async (context = {}) => {
         createdAt: formatDateToDDMMYYYY(item.createdAt) || '--',
         productId: item.productId || '',
         productName: item.productName || 'Unknown',
-        quantityMT: Math.round((item.quantityMT || 0) * 10000) / 10000,
+        quantityMT: truncateTo3Decimals(item.quantityMT),
         bagSize: item.bagSize || 0,
         totalBags: item.totalBags || 0,
       }))

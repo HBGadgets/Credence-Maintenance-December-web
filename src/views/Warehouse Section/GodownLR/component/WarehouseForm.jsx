@@ -103,11 +103,22 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
+// Helper to truncate to 3 decimal places without rounding up (e.g. 0.949999 -> 0.949)
+const truncateTo3Decimals = (val) => {
+  if (val === undefined || val === null || val === '') return ''
+  const str = val.toString()
+  if (str.includes('.')) {
+    const [intPart, decPart] = str.split('.')
+    return `${intPart}.${decPart.slice(0, 3)}`
+  }
+  return str
+}
+
 // Calculate quantity in MT from bag size and total bags
 const calculateQuantityFromBags = (bagSize, totalBags) => {
   if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
   const quantityInMT = (bagSize * totalBags) / 1000
-  return quantityInMT.toFixed(3)
+  return truncateTo3Decimals(quantityInMT)
 }
 
 // Calculate total bags from bag size and quantity in MT
@@ -1714,7 +1725,7 @@ const WarehouseForm = ({
     const inventoryId = p._id || p.id
     const actualProductId = p.productId
     const productName = p.productName || p.name || 'Unnamed Product'
-    const quantityMT = p.quantityMT || p.quantity || 0
+    const quantityMT = truncateTo3Decimals(p.quantityMT || p.quantity || 0)
     const bagSize = p.bagSize || p.bagWeight || 0
     const totalBags = p.totalBags || p.bags || 0
 
@@ -2851,7 +2862,7 @@ const WarehouseForm = ({
                               <span>
                                 {' '}
                                 {product.bagSize} kg × {product.totalBags} bags ={' '}
-                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                                {truncateTo3Decimals((product.bagSize * product.totalBags) / 1000)} MT
                               </span>
                             )}
                             {product.bagSize && product.quantityMT && !product.totalBags && (
@@ -2873,7 +2884,7 @@ const WarehouseForm = ({
                               <span>
                                 {' '}
                                 {product.bagSize} kg × {product.totalBags} bags ={' '}
-                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                                {truncateTo3Decimals((product.bagSize * product.totalBags) / 1000)} MT
                               </span>
                             )}
                           </div>

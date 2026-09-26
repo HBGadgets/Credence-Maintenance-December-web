@@ -142,6 +142,17 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
+// Helper to truncate to 3 decimal places without rounding up (e.g. 0.949999 -> 0.949)
+const truncateTo3Decimals = (val) => {
+  if (val === undefined || val === null || val === '') return ''
+  const str = val.toString()
+  if (str.includes('.')) {
+    const [intPart, decPart] = str.split('.')
+    return `${intPart}.${decPart.slice(0, 3)}`
+  }
+  return str
+}
+
 // Prevent wheel event on number inputs
 const handleNumberInputWheel = (e) => {
   e.target.blur()
@@ -151,14 +162,14 @@ const handleNumberInputWheel = (e) => {
 const calculateQuantityFromBags = (bagSize, totalBags) => {
   if (!bagSize || !totalBags || bagSize <= 0 || totalBags <= 0) return ''
   const quantityInMT = (bagSize * totalBags) / 1000
-  return quantityInMT.toFixed(3)
+  return truncateTo3Decimals(quantityInMT)
 }
 
 // Calculate total bags from bag size and quantity in MT
 const calculateBagsFromQuantity = (bagSize, quantityMT) => {
   if (!bagSize || !quantityMT || bagSize <= 0 || quantityMT <= 0) return ''
   const totalBags = (quantityMT * 1000) / bagSize
-  return Math.round(totalBags)
+  return totalBags
 }
 
 // Calculate bag size from total bags and quantity in MT
@@ -691,7 +702,7 @@ const WarehouseToPartyForm = ({
     ],
     queryFn: getWarehouseProfileApi,
     enabled: !!formData.issuedByWarehouseId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
     retry: 2,
   })
 
@@ -824,7 +835,7 @@ const WarehouseToPartyForm = ({
       const productId = product.productId
       const productName = product.productName || 'Unknown Product'
       const bagSize = product.bagSize || 0
-      const quantityMT = product.quantityMT || 0
+      const quantityMT = truncateTo3Decimals(product.quantityMT ?? 0)
       const totalBags = product.totalBags || 0
 
       if (!productId) {
@@ -836,7 +847,7 @@ const WarehouseToPartyForm = ({
       if (!seenCombinations.has(uniqueKey)) {
         seenCombinations.add(uniqueKey)
 
-        const label = `${productName} (Bag Size: ${bagSize || '0'} kg, Available: ${quantityMT} kg, Total Bags: ${totalBags})`
+        const label = `${productName} (Bag Size: ${bagSize || '0'} kg, Available: ${quantityMT} MT, Total Bags: ${totalBags})`
 
         options.push({
           value: uniqueKey,
@@ -920,7 +931,7 @@ const WarehouseToPartyForm = ({
           const formProduct = {
             ...defaultProduct,
             ...product,
-            quantityMT: product.quantityMT?.toString() || '',
+            quantityMT: truncateTo3Decimals(product.quantityMT),
             bagSize: product.bagSize?.toString() || '',
             totalBags: product.totalBags?.toString() || '',
             warehouseId: product.warehouseId || '',
@@ -1282,7 +1293,7 @@ const WarehouseToPartyForm = ({
           ...updatedProducts[index],
           productId: selectedOption.productId,
           productName: selectedOption.productName || 'Unknown Product',
-          quantityMT: selectedOption.quantityMT?.toString() || '',
+          quantityMT: truncateTo3Decimals(selectedOption.quantityMT),
           bagSize: selectedOption.bagSize?.toString() || '',
           totalBags: selectedOption.totalBags?.toString() || '',
         }
@@ -1806,7 +1817,7 @@ const WarehouseToPartyForm = ({
         productId: product.productId,
         productName: product.productName,
         bagSize: product.bagSize || '0',
-        quantityMT: product.quantityMT || '',
+        quantityMT: truncateTo3Decimals(product.quantityMT),
         totalBags: product.totalBags || '',
       }
     }
@@ -2421,7 +2432,7 @@ const WarehouseToPartyForm = ({
                                     ...product,
                                     productId: selected.productId,
                                     productName: selected.productName || 'Unknown Product',
-                                    quantityMT: selected.quantityMT?.toString() || '',
+                                    quantityMT: truncateTo3Decimals(selected.quantityMT),
                                     bagSize: selected.bagSize?.toString() || '0',
                                     totalBags: selected.totalBags?.toString() || '',
                                   }
@@ -2584,14 +2595,14 @@ const WarehouseToPartyForm = ({
                               <span>
                                 {' '}
                                 {product.bagSize} kg × {product.totalBags} bags ={' '}
-                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                                {truncateTo3Decimals((product.bagSize * product.totalBags) / 1000)} MT
                               </span>
                             )}
                             {product.bagSize && product.quantityMT && !product.totalBags && (
                               <span>
                                 {' '}
                                 {product.quantityMT} MT × 1000 / {product.bagSize} kg ={' '}
-                                {Math.round((product.quantityMT * 1000) / product.bagSize)} bags
+                                {(product.quantityMT * 1000) / product.bagSize} bags
                               </span>
                             )}
                             {product.totalBags && product.quantityMT && !product.bagSize && (
@@ -2606,7 +2617,7 @@ const WarehouseToPartyForm = ({
                               <span>
                                 {' '}
                                 {product.bagSize} kg × {product.totalBags} bags ={' '}
-                                {((product.bagSize * product.totalBags) / 1000).toFixed(3)} MT
+                                {truncateTo3Decimals((product.bagSize * product.totalBags) / 1000)} MT
                               </span>
                             )}
                           </div>
