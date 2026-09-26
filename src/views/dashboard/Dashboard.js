@@ -632,8 +632,9 @@ const Dashboard = () => {
     navigate('/AllExpenses')
   }
 
-  //handle navigate Expenses
+  //handle navigate Drivers in Master
   const handleDriveStatus = () => {
+    // navigate('/DriverExp')
     navigate('/DriverStatus')
   }
 

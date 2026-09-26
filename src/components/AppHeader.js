@@ -27,7 +27,7 @@ import {
   cilMoon,
   cilSun,
 } from '@coreui/icons';
-import { User, Headset, LogOut, Volume2, VolumeX, PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react';
+import { User, Headset, LogOut, Volume2, VolumeX, PanelLeftClose, PanelLeftOpen, Menu, ChevronDown } from 'lucide-react';
 import '../index.css';
 import './header.css';
 import routes from '../routes';
@@ -189,6 +189,28 @@ const AppHeader = () => {
       return null;
     }
   }, [token]);
+
+  // Cleaned username that never displays "School" or "branch"
+  const displayUsername = useMemo(() => {
+    if (!username) return 'User';
+    const cleaned = username
+      .replace(/\b(school|branch)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (cleaned) return cleaned;
+
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const altName = decoded?.worker?.name || decoded?.company || decoded?.name;
+        if (altName) {
+          const altCleaned = altName.replace(/\b(school|branch)\b/gi, '').trim();
+          if (altCleaned) return altCleaned;
+        }
+      } catch {}
+    }
+    return 'User';
+  }, [username, token]);
 
   const permissions = usePermissionStore((state) => state.permissions);
   const filteredNav = useMemo(() => filterNavByRole(navigation, userRole), [userRole, permissions]);
@@ -469,22 +491,27 @@ const AppHeader = () => {
             />
           </div>
 
-          {/* User Profile Avatar Pill (Orange circle with initials 'PA') */}
+          {/* User Profile Avatar Pill & Username */}
           <CDropdown>
-            <CDropdownToggle className="btn p-0 bg-transparent border-0 d-flex align-items-center" caret={false}>
+            <CDropdownToggle
+              className="btn p-0 bg-transparent border-0 d-flex align-items-center user-profile-btn"
+              caret={false}
+              title={displayUsername}
+            >
               <div className="user-avatar-pill">
-                {getInitials(username)}
+                {getInitials(displayUsername)}
               </div>
+              <span className="user-name-text">
+                {displayUsername}
+              </span>
+              <ChevronDown size={14} className="text-white opacity-75 ms-1" />
             </CDropdownToggle>
             <CDropdownMenu className="navy-dropdown-menu shadow" placement="bottom-end">
-              {/* <CDropdownItem
-                className="navy-dropdown-item d-flex align-items-center gap-3"
-                as={NavLink}
-                to="/ProfileSection"
-              >
-                <User size={16} />
-                <span>Profile ({username})</span>
-              </CDropdownItem> */}
+              <div className="px-3 py-2 border-bottom border-white border-opacity-10 mb-1">
+                <div className="fw-semibold text-white small text-truncate" style={{ maxWidth: '180px' }}>
+                  {displayUsername}
+                </div>
+              </div>
               <CDropdownItem
                 className="navy-dropdown-item d-flex align-items-center gap-3 text-danger"
                 type="button"

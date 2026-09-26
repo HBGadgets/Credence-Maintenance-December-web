@@ -104,10 +104,48 @@
     cursor: pointer;
     box-shadow: 0 1px 4px rgba(236, 116, 38, 0.4);
     transition: transform 0.18s ease;
+    flex-shrink: 0;
 }
 
 .user-avatar-pill:hover {
     transform: scale(1.06);
+}
+
+/* User Profile Header Button & Text */
+.user-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 8px 3px 3px;
+    border-radius: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: background-color 0.18s ease;
+}
+
+.user-profile-btn:hover,
+.user-profile-btn:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.user-name-text {
+    color: #ffffff;
+    font-size: 0.86rem;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.2px;
+    user-select: none;
+}
+
+@media (max-width: 575.98px) {
+    .user-name-text {
+        max-width: 90px;
+    }
 }
 
 /* Chatbot Flower Button */
