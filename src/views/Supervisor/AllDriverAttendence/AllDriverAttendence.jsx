@@ -12,6 +12,13 @@ import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
+import SingleSelectDropdown from '../../components/SingleSelectDropdown'
+
+const attendanceFilterOptions = [
+  { value: 'all', label: 'All Drivers' },
+  { value: 'zero_present', label: '0 Present' },
+  { value: 'zero_absent', label: '0 Absent' },
+]
 
 const AllDriverAttendance = () => {
   const navigate = useNavigate()
@@ -21,6 +28,7 @@ const AllDriverAttendance = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [attendanceFilter, setAttendanceFilter] = useState(null)
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return sessionStorage.getItem('allDriverAttendanceMonth') || new Date().toISOString().slice(0, 7)
@@ -32,6 +40,9 @@ const AllDriverAttendance = () => {
 
   const [year, month] = selectedMonth.split('-')
 
+  const selectedFilterValue =
+    attendanceFilter?.value && attendanceFilter.value !== 'all' ? attendanceFilter.value : undefined
+
   const { data, isFetching } = useQuery({
     queryKey: [
       'DriverAttendacne',
@@ -41,6 +52,7 @@ const AllDriverAttendance = () => {
         limit: itemsPerPage,
         month: parseInt(month, 10),
         year: parseInt(year, 10),
+        filter: selectedFilterValue,
       },
     ],
     queryFn: getAllDriverAttendenceApi,
@@ -108,17 +120,40 @@ const AllDriverAttendance = () => {
     <div>
       <ToastContainer />
 
-      <div className="mb-3 d-flex justify-content-between align-items-center ">
+      <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         {/* Top Left */}
-        <DateRangePicker
-          value={selectedMonth}
-          onMonthChange={setSelectedMonth}
-          style={{ width: '230px' }}
-          className="p-0 m-0"
-        />
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <DateRangePicker
+            value={selectedMonth}
+            onMonthChange={(newMonth) => {
+              setSelectedMonth(newMonth)
+              setCurrentPage(1)
+            }}
+            style={{ width: '230px' }}
+            className="p-0 m-0"
+          />
+          <div style={{ width: '220px' }}>
+            <SingleSelectDropdown
+              options={attendanceFilterOptions}
+              value={attendanceFilter}
+              onChange={(selected) => {
+                setAttendanceFilter(selected)
+                setCurrentPage(1)
+              }}
+              isClearable
+              placeholder="Filter Attendance..."
+            />
+          </div>
+        </div>
 
         {/* Top Right */}
-        <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <SearchInput
+          searchQuery={searchQuery}
+          setSearchQuery={(query) => {
+            setSearchQuery(query)
+            setCurrentPage(1)
+          }}
+        />
       </div>
 
       <Table

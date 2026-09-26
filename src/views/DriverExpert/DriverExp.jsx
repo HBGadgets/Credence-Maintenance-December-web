@@ -171,6 +171,12 @@ function DriversPage() {
       required: true,
     },
     {
+      name: 'licenseNumber',
+      label: 'License Number',
+      type: 'text',
+      Placeholder: 'Enter Driver License Number',
+    },
+    {
       name: 'licenseExpiryDate',
       label: 'License Expiry Date',
       type: 'date',
@@ -179,12 +185,6 @@ function DriversPage() {
     // not show in edit from
     ...(!editMode
       ? [
-          {
-            name: 'licenseNumber',
-            label: 'License Number',
-            type: 'text',
-            Placeholder: 'Enter Driver License Number',
-          },
           {
             name: 'aadharNumber',
             label: 'Aadhar Number',
@@ -221,6 +221,16 @@ function DriversPage() {
     setEditMode(true)
     setEditingUser({
       ...record,
+      licenseNumber: record?.licenseNumber === 'N/A' ? '' : (record?.licenseNumber || ''),
+      licenseExpiryDate:
+        record?.licenseExpiryDate && record?.licenseExpiryDate !== 'N/A'
+          ? (() => {
+              const parts = record.licenseExpiryDate.split('/')
+              return parts.length === 3
+                ? `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+                : record.licenseExpiryDate
+            })()
+          : '',
     })
     setShowModalFrom(true)
   }
@@ -246,6 +256,10 @@ function DriversPage() {
     // Fix invalid date
     if (data.licenseExpiryDate === 'N/A' || data.licenseExpiryDate === '') {
       data.licenseExpiryDate = null
+    }
+
+    if (data.licenseNumber === 'N/A') {
+      data.licenseNumber = ''
     }
 
     if (editMode && editingUser?.id) {

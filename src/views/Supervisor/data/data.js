@@ -841,7 +841,7 @@ export const getAllServiceHistoryApi = async () => {
 // Get all driver attendace api by month
 
 export const getAllDriverAttendenceApi = async ({ queryKey }) => {
-  const [_key, { search, page, limit, month, year }] = queryKey
+  const [_key, { search, page, limit, month, year, filter }] = queryKey
 
   if (!TOKEN) throw new Error('Authentication token not found')
 
@@ -854,6 +854,7 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
         limit,
         month,
         year,
+        ...(filter ? { filter } : {}),
       },
       headers: { Authorization: `Bearer ${TOKEN}` },
     },
