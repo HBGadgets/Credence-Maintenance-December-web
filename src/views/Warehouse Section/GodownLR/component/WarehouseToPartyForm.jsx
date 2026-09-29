@@ -1331,16 +1331,13 @@ const WarehouseToPartyForm = ({
           updatedProducts[index].totalBags = calculatedBags
         }
       }
-    } else if (field === 'totalBags' && value && !isNaN(totalBags) && totalBags > 0) {
-      if (bagSize && !isNaN(bagSize) && bagSize > 0) {
+    } else if (field === 'totalBags') {
+      if (!value || isNaN(totalBags) || totalBags <= 0) {
+        updatedProducts[index].quantityMT = ''
+      } else if (bagSize && !isNaN(bagSize) && bagSize > 0) {
         const calculatedQuantity = calculateQuantityFromBags(bagSize, totalBags)
         if (calculatedQuantity) {
           updatedProducts[index].quantityMT = calculatedQuantity
-        }
-      } else if (quantityMT && !isNaN(quantityMT) && quantityMT > 0) {
-        const calculatedBagSize = calculateBagSizeFromQuantityAndBags(quantityMT, totalBags)
-        if (calculatedBagSize) {
-          updatedProducts[index].bagSize = calculatedBagSize
         }
       }
     } else if (field === 'quantityMT' && value && !isNaN(quantityMT) && quantityMT > 0) {
@@ -2566,14 +2563,13 @@ const WarehouseToPartyForm = ({
                             <Form.Control
                               type="number"
                               value={product.quantityMT}
-                              onChange={(e) =>
-                                handleProductChange(index, 'quantityMT', e.target.value)
-                              }
                               disabled={isLoading}
-                              placeholder="Enter quantity in MT"
+                              placeholder="Auto-calculated quantity in MT"
                               min="0.001"
                               step="0.001"
                               required
+                              readOnly
+                              className="bg-light"
                               onWheel={handleNumberInputWheel}
                             />
                             {quantityHint && (
@@ -2583,7 +2579,7 @@ const WarehouseToPartyForm = ({
                               </Form.Text>
                             )}
                             <Form.Text className="text-muted d-block">
-                              Quantity in metric tons (1 MT = 1000 kg)
+                              Quantity in metric tons (auto-calculated from Total Bags &amp; Bag Size)
                             </Form.Text>
                           </div>
                         </div>

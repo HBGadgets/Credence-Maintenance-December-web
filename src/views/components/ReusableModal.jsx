@@ -13,6 +13,7 @@ const ReusableModal = ({
   backdrop = 'static',
   keyboard = false,
   isSubmitting = false,
+  children,
 }) => {
   const initialFormState = fields.reduce((acc, field) => {
     if (field.type === 'multiselect') acc[field.name] = []
@@ -29,7 +30,28 @@ const ReusableModal = ({
     if (show) {
       if (initialData) {
         const prefilledData = fields.reduce((acc, field) => {
-          const value = initialData[field.name]
+          let value = initialData[field.name]
+
+          // Fallback if field name differs by alias or casing
+          if (value === undefined || value === null) {
+            if (field.name === 'quantityMT') {
+              value = initialData.quantity ?? initialData.totalQuantity ?? initialData.quantityKg
+            } else if (field.name === 'quantity') {
+              value = initialData.quantityMT ?? initialData.totalQuantity ?? initialData.quantityKg
+            } else if (field.name === 'totalBags') {
+              value = initialData.totalbags ?? initialData.bags ?? initialData.totalBagsCount
+            } else if (field.name === 'totalbags' || field.name === 'bags') {
+              value = initialData.totalBags ?? initialData.totalBagsCount
+            } else if (field.name === 'bagSize') {
+              value = initialData.bagWeight ?? initialData.bagSizeKg
+            } else {
+              const lowerName = field.name.toLowerCase()
+              const matchedKey = Object.keys(initialData).find((k) => k.toLowerCase() === lowerName)
+              if (matchedKey) {
+                value = initialData[matchedKey]
+              }
+            }
+          }
 
           if (field.type === 'select') {
             const foundOpt = field.options?.find((opt) => opt.value === value)
@@ -46,7 +68,7 @@ const ReusableModal = ({
             acc[field.name] =
               field.options?.filter((opt) => (value || []).includes(opt.value)) || []
           } else {
-            acc[field.name] = value || ''
+            acc[field.name] = value !== undefined && value !== null ? value : ''
           }
 
           return acc
@@ -76,10 +98,21 @@ const ReusableModal = ({
   const handleChange = (e) => {
     const { name, value, files, type } = e.target
     const newValue = type === 'file' ? files[0] : value
-    setFormData((prev) => ({
-      ...prev,
-      [name]: newValue,
-    }))
+    const field = fields.find((f) => f.name === name)
+
+    setFormData((prev) => {
+      let updated = {
+        ...prev,
+        [name]: newValue,
+      }
+      if (field && typeof field.onChange === 'function') {
+        const extraUpdates = field.onChange(newValue, updated, (updater) => setFormData(updater), e)
+        if (extraUpdates && typeof extraUpdates === 'object') {
+          updated = { ...updated, ...extraUpdates }
+        }
+      }
+      return updated
+    })
   }
 
   const handleSelectChange = (selectedOption, fieldName) => {
@@ -112,7 +145,7 @@ const ReusableModal = ({
             field.type === 'number' ||
             field.type === 'date' ||
             field.type === 'password') &&
-            !value) ||
+            (value === '' || value === undefined || value === null)) ||
           (field.type === 'select' && !value) ||
           (field.type === 'multiselect' && (!value || value.length === 0)) ||
           (field.type === 'file' && !value)
@@ -210,12 +243,35 @@ const ReusableModal = ({
                   onChange={handleChange}
                   readOnly={field.readOnly}
                   disabled={field.disabled}
+                  step={field.step || (field.type === 'number' ? 'any' : undefined)}
+                  min={field.min}
+                  max={field.max}
+                  className={field.readOnly ? 'bg-light' : ''}
                 />
               )}
 
-              {errors[field.name] && <div className="text-danger">{errors[field.name]}</div>}
+              {field.helperText && (
+                <Form.Text className="text-muted d-block mt-1">
+                  {typeof field.helperText === 'function' ? field.helperText(formData) : field.helperText}
+                </Form.Text>
+              )}
+
+              {errors[field.name] && <div className="text-danger mt-1">{errors[field.name]}</div>}
             </Form.Group>
           ))}
+
+          {/* Optional formula display if bagSize and totalBags exist */}
+          {formData.bagSize && formData.totalBags && !isNaN(parseFloat(formData.bagSize)) && !isNaN(parseFloat(formData.totalBags)) && parseFloat(formData.totalBags) > 0 && (
+            <div className="p-2 bg-light rounded small mt-2">
+              <strong>Formula: </strong>
+              <span>
+                {formData.bagSize} kg × {formData.totalBags} bags ={' '}
+                {((parseFloat(formData.bagSize) * parseFloat(formData.totalBags)) / 1000).toFixed(3)} MT
+              </span>
+            </div>
+          )}
+
+          {children}
         </Form>
       </Modal.Body>
 

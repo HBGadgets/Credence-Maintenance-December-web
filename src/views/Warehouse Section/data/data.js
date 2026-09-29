@@ -582,16 +582,55 @@ export const getRailHeadApi = async (context = {}) => {
 
   // Transform the data items
   const transformedData = Array.isArray(apiData.data)
-    ? apiData.data.map((item) => ({
-        id: item._id, // Keep this for internal selection
-        _id: item._id, // Keep both for reference
-        createdAt: formatDateToDDMMYYYY(item.createdAt) || '--',
-        productId: item.productId || '',
-        productName: item.productName || 'Unknown',
-        quantityMT: truncateTo3Decimals(item.quantityMT),
-        bagSize: item.bagSize || 0,
-        totalBags: item.totalBags || 0,
-      }))
+    ? apiData.data.map((item) => {
+        const rawQuantity =
+          item.quantityMT !== undefined && item.quantityMT !== null
+            ? item.quantityMT
+            : item.quantity !== undefined && item.quantity !== null
+              ? item.quantity
+              : item.totalQuantity !== undefined && item.totalQuantity !== null
+                ? item.totalQuantity
+                : item.quantityKg !== undefined && item.quantityKg !== null
+                  ? item.quantityKg
+                  : 0
+
+        const rawBags =
+          item.totalBags !== undefined && item.totalBags !== null
+            ? item.totalBags
+            : item.totalbags !== undefined && item.totalbags !== null
+              ? item.totalbags
+              : item.bags !== undefined && item.bags !== null
+                ? item.bags
+                : item.totalBagsCount !== undefined && item.totalBagsCount !== null
+                  ? item.totalBagsCount
+                  : 0
+
+        const rawBagSize =
+          item.bagSize !== undefined && item.bagSize !== null
+            ? item.bagSize
+            : item.bagWeight !== undefined && item.bagWeight !== null
+              ? item.bagWeight
+              : item.bagSizeKg !== undefined && item.bagSizeKg !== null
+                ? item.bagSizeKg
+                : 0
+
+        const qtyMT = truncateTo3Decimals(rawQuantity)
+
+        return {
+          ...item,
+          id: item._id, // Keep this for internal selection
+          _id: item._id, // Keep both for reference
+          createdAt: formatDateToDDMMYYYY(item.createdAt) || '--',
+          productId: item.productId || '',
+          productName: item.productName || item.name || 'Unknown',
+          quantityMT: qtyMT,
+          quantity: qtyMT,
+          bagSize: rawBagSize,
+          totalBags: rawBags,
+          totalbags: rawBags,
+          bags: rawBags,
+        }
+      })
     : []
 
   return {

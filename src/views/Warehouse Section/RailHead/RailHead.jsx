@@ -79,34 +79,111 @@ const RailHead = () => {
     { label: 'Quantity(MT)', key: 'quantityMT', sortable: true },
   ]
 
-  // Modal form fields - Fixed field names
-  const fields = [
-    {
-      name: 'productName',
-      label: 'Product Name',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'bagSize',
-      label: 'Bag Size',
-      type: 'text',
-      required: true,
-      readOnly: true,
-    },
-    {
-      name: 'totalBags',
-      label: 'Total Bags',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'quantityMT',
-      label: 'Quantity(MT)',
-      type: 'text',
-      required: true,
-    },
-  ]
+// Truncate to 3 decimal places without rounding up (e.g. 0.949999 -> 0.949)
+const truncateTo3Decimals = (val) => {
+  if (val === undefined || val === null || val === '') return ''
+  const str = val.toString()
+  if (str.includes('.')) {
+    const [intPart, decPart] = str.split('.')
+    return `${intPart}.${decPart.slice(0, 3)}`
+  }
+  return str
+}
+
+// Calculate quantity in MT from bag size and total bags
+const calculateQuantityFromBags = (bagSize, totalBags) => {
+  const bSize = parseFloat(bagSize)
+  const tBags = parseFloat(totalBags)
+  if (isNaN(bSize) || isNaN(tBags) || bSize <= 0 || tBags <= 0) return ''
+  const quantityInMT = (bSize * tBags) / 1000
+  return truncateTo3Decimals(quantityInMT)
+}
+
+// Calculate total bags from bag size and quantity in MT
+const calculateBagsFromQuantity = (bagSize, quantityMT) => {
+  const bSize = parseFloat(bagSize)
+  const qMT = parseFloat(quantityMT)
+  if (isNaN(bSize) || isNaN(qMT) || bSize <= 0 || qMT <= 0) return ''
+  const totalBags = (qMT * 1000) / bSize
+  return Math.round(totalBags).toString()
+}
+
+// Calculate bag size from total bags and quantity in MT
+const calculateBagSizeFromQuantityAndBags = (quantityMT, totalBags) => {
+  const qMT = parseFloat(quantityMT)
+  const tBags = parseFloat(totalBags)
+  if (isNaN(qMT) || isNaN(tBags) || qMT <= 0 || tBags <= 0) return ''
+  const bagSize = (qMT * 1000) / tBags
+  return bagSize.toFixed(2)
+}
+
+  // Modal form fields with auto-calculation between totalBags, quantityMT, and bagSize
+  const fields = useMemo(
+    () => [
+      {
+        name: 'productName',
+        label: 'Product Name',
+        type: 'text',
+        required: true,
+      },
+      {
+        name: 'bagSize',
+        label: 'Bag Size (Kg per bag)',
+        type: 'number',
+        required: true,
+        readOnly: true,
+        helperText: 'Weight per bag in kilograms',
+        onChange: (value, currentData) => {
+          const totalBags = currentData.totalBags
+          const quantityMT = currentData.quantityMT
+          if (value && totalBags && parseFloat(totalBags) > 0) {
+            return { quantityMT: calculateQuantityFromBags(value, totalBags) }
+          } else if (value && quantityMT && parseFloat(quantityMT) > 0) {
+            return { totalBags: calculateBagsFromQuantity(value, quantityMT) }
+          }
+          return null
+        },
+      },
+      {
+        name: 'totalBags',
+        label: 'Total Bags',
+        type: 'number',
+        min: '0',
+        required: true,
+        helperText: 'Total number of bags',
+        onChange: (value, currentData) => {
+          const bagSize = currentData.bagSize
+          if (!value || isNaN(parseFloat(value)) || parseFloat(value) <= 0) {
+            return { quantityMT: '' }
+          }
+          if (bagSize && parseFloat(bagSize) > 0) {
+            return { quantityMT: calculateQuantityFromBags(bagSize, value) }
+          }
+          return null
+        },
+      },
+      {
+        name: 'quantityMT',
+        label: 'Quantity(MT)',
+        type: 'number',
+        step: '0.001',
+        min: '0',
+        required: true,
+        helperText: 'Quantity in Metric Ton',
+        onChange: (value, currentData) => {
+          const bagSize = currentData.bagSize
+          if (!value || isNaN(parseFloat(value)) || parseFloat(value) <= 0) {
+            return { totalBags: '' }
+          }
+          if (bagSize && parseFloat(bagSize) > 0) {
+            return { totalBags: calculateBagsFromQuantity(bagSize, value) }
+          }
+          return null
+        },
+      },
+    ],
+    [],
+  )
 
   // ========== EDIT BUTTON ==========
   const handleEditButton = (id) => {
@@ -117,12 +194,47 @@ const RailHead = () => {
       return
     }
 
+    const totalBagsValue =
+      record.totalBags !== undefined && record.totalBags !== null
+        ? record.totalBags
+        : record.totalbags !== undefined && record.totalbags !== null
+          ? record.totalbags
+          : record.bags !== undefined && record.bags !== null
+            ? record.bags
+            : record.totalBagsCount !== undefined && record.totalBagsCount !== null
+              ? record.totalBagsCount
+              : ''
+
+    const quantityValue =
+      record.quantityMT !== undefined && record.quantityMT !== null
+        ? record.quantityMT
+        : record.quantity !== undefined && record.quantity !== null
+          ? record.quantity
+          : record.totalQuantity !== undefined && record.totalQuantity !== null
+            ? record.totalQuantity
+            : record.quantityKg !== undefined && record.quantityKg !== null
+              ? record.quantityKg
+              : ''
+
+    const bagSizeValue =
+      record.bagSize !== undefined && record.bagSize !== null
+        ? record.bagSize
+        : record.bagWeight !== undefined && record.bagWeight !== null
+          ? record.bagWeight
+          : record.bagSizeKg !== undefined && record.bagSizeKg !== null
+            ? record.bagSizeKg
+            : ''
+
     // Map the record data to match the form field names
     const mappedRecord = {
-      productName: record.productName,
-      quantityMT: record.quantityMT,
-      bagSize: record.bagSize,
-      totalBags: record.totalBags,
+      ...record,
+      productName: record.productName || record.name || '',
+      quantityMT: quantityValue,
+      quantity: quantityValue,
+      bagSize: bagSizeValue,
+      totalBags: totalBagsValue,
+      totalbags: totalBagsValue,
+      bags: totalBagsValue,
       id: record._id || record.id, // Use _id if it exists, otherwise use id
     }
 
@@ -150,12 +262,19 @@ const RailHead = () => {
   // Submit form (Edit only)
   const handleFormSubmit = (formValues) => {
     if (editMode && editingData?.id) {
-      // Create proper form data object matching your API expectations
+      const qty = Number(formValues.quantityMT ?? formValues.quantity ?? 0)
+      const bags = Number(formValues.totalBags ?? formValues.totalbags ?? formValues.bags ?? 0)
+      const bagSz = Number(formValues.bagSize ?? 0)
+
+      // Create proper form data object matching API expectations
       const formData = {
         productName: formValues.productName,
-        quantityMT: Number(formValues.quantityMT),
-        bagSize: Number(formValues.bagSize),
-        totalBags: Number(formValues.totalBags),
+        quantityMT: qty,
+        quantity: qty,
+        bagSize: bagSz,
+        totalBags: bags,
+        totalbags: bags,
+        bags: bags,
       }
 
       patchRailHead({

@@ -1748,20 +1748,20 @@ const WarehouseForm = ({
 
   const vehicleOptions = Array.isArray(vehicles)
     ? vehicles.map((v) => ({
-        value: v.id || v._id,
-        label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
-      }))
+      value: v.id || v._id,
+      label: v.name || v.vehicleNumber || 'Unnamed Vehicle',
+    }))
     : []
 
   const driverOptions = Array.isArray(drivers)
     ? drivers.map((d) => ({
-        value: d.id || d._id,
-        label:
-          d.contactNumber && d.contactNumber !== 'N/A'
-            ? `${d.name || 'Unnamed Driver'} (${d.contactNumber})`
-            : d.name || 'Unnamed Driver',
-        name: d.name || 'Unnamed Driver',
-      }))
+      value: d.id || d._id,
+      label:
+        d.contactNumber && d.contactNumber !== 'N/A'
+          ? `${d.name || 'Unnamed Driver'} (${d.contactNumber})`
+          : d.name || 'Unnamed Driver',
+      name: d.name || 'Unnamed Driver',
+    }))
     : []
 
   // Options with selected item persistence for Consignor (using accumulated data)
@@ -2748,9 +2748,8 @@ const WarehouseForm = ({
                               <Form.Text className="text-muted d-block">
                                 Max available:{' '}
                                 <span
-                                  className={`fw-semibold ${
-                                    maxBagsValue === 0 ? 'text-danger' : ''
-                                  }`}
+                                  className={`fw-semibold ${maxBagsValue === 0 ? 'text-danger' : ''
+                                    }`}
                                 >
                                   {maxBagsValue} bags{maxBagsValue === 0 ? ' (Out of stock)' : ''}
                                 </span>
@@ -2761,14 +2760,14 @@ const WarehouseForm = ({
                               (hasMaxBags &&
                                 !isNaN(maxBagsValue) &&
                                 parseInt(product.totalBags) > maxBagsValue)) && (
-                              <Form.Text className="text-danger fw-semibold d-block mt-1">
-                                <FaInfoCircle className="me-1" size={12} />
-                                {maxBagsValue === 0
-                                  ? 'Warning: Available total bags is 0.'
-                                  : productBagsWarnings[index] ||
+                                <Form.Text className="text-danger fw-semibold d-block mt-1">
+                                  <FaInfoCircle className="me-1" size={12} />
+                                  {maxBagsValue === 0
+                                    ? 'Warning: Available total bags is 0.'
+                                    : productBagsWarnings[index] ||
                                     `Warning: Total bags cannot exceed prefilled amount of ${maxBagsValue} bags.`}
-                              </Form.Text>
-                            )}
+                                </Form.Text>
+                              )}
                           </div>
 
                           <div className="col-md-4">
@@ -2803,12 +2802,11 @@ const WarehouseForm = ({
                             <Form.Control
                               type="number"
                               value={product.quantityMT}
-                              onChange={(e) =>
-                                handleProductChange(index, 'quantityMT', e.target.value)
-                              }
+                              readOnly
+                              className="bg-light"
                               onWheel={handleNumberInputScroll}
                               disabled={isLoading}
-                              placeholder="Enter quantity MT"
+                              placeholder="Auto-calculated quantity MT"
                               required
                               min="0"
                               max={hasMaxQty && !isNaN(maxQtyValue) ? maxQtyValue : undefined}
@@ -2831,9 +2829,8 @@ const WarehouseForm = ({
                               Enter quantity in Metric Ton
                               {hasMaxQty && !isNaN(maxQtyValue) && (
                                 <span
-                                  className={`ms-1 fw-semibold ${
-                                    maxQtyValue === 0 ? 'text-danger' : 'text-primary'
-                                  }`}
+                                  className={`ms-1 fw-semibold ${maxQtyValue === 0 ? 'text-danger' : 'text-primary'
+                                    }`}
                                 >
                                   (Max: {maxQtyValue} MT{maxQtyValue === 0 ? ' - Out of Stock' : ''})
                                 </span>
@@ -2844,14 +2841,14 @@ const WarehouseForm = ({
                               (hasMaxQty &&
                                 !isNaN(maxQtyValue) &&
                                 parseFloat(product.quantityMT) > maxQtyValue)) && (
-                              <Form.Text className="text-danger fw-semibold d-block mt-1">
-                                <FaInfoCircle className="me-1" size={12} />
-                                {maxQtyValue === 0
-                                  ? 'Warning: Available quantity is 0 MT. Cannot add quantity for this product.'
-                                  : productQuantityWarnings[index] ||
+                                <Form.Text className="text-danger fw-semibold d-block mt-1">
+                                  <FaInfoCircle className="me-1" size={12} />
+                                  {maxQtyValue === 0
+                                    ? 'Warning: Available quantity is 0 MT. Cannot add quantity for this product.'
+                                    : productQuantityWarnings[index] ||
                                     `Warning: Quantity cannot exceed prefilled amount of ${maxQtyValue} MT.`}
-                              </Form.Text>
-                            )}
+                                </Form.Text>
+                              )}
                           </div>
                         </div>
 
