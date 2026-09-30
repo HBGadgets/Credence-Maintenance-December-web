@@ -10,7 +10,10 @@ function SmartPagination({
   itemsPerPage,
   onItemsPerPageChange,
 }) {
-  const handlePageChange = (page) => {
+  const handlePageChange = (e, page) => {
+    if (e && e.preventDefault) {
+      e.preventDefault()
+    }
     if (page === '...' || page < 1 || page > totalPages || page === currentPage) {
       return
     }
@@ -56,7 +59,7 @@ function SmartPagination({
           <CPagination align="center">
             <CPaginationItem
               disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
+              onClick={(e) => handlePageChange(e, currentPage - 1)}
               style={{ cursor: 'pointer' }}
             >
               Previous
@@ -66,7 +69,7 @@ function SmartPagination({
                 key={index}
                 active={item === currentPage}
                 disabled={item === '...'}
-                onClick={() => handlePageChange(item)}
+                onClick={(e) => handlePageChange(e, item)}
                 style={{ cursor: 'pointer' }}
               >
                 {item}
@@ -74,7 +77,7 @@ function SmartPagination({
             ))}
             <CPaginationItem
               disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
+              onClick={(e) => handlePageChange(e, currentPage + 1)}
               style={{ cursor: 'pointer' }}
             >
               Next

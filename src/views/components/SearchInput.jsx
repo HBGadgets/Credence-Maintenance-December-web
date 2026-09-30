@@ -4,25 +4,41 @@ import CIcon from '@coreui/icons-react'
 import { cilSearch, cilX } from '@coreui/icons'
 
 const SearchInput = ({
-  searchQuery,
+  searchQuery = '',
   setSearchQuery,
   placeholder = 'Search Here...',
   debounceDelay = 700,
   width = '300px', // default width
 }) => {
-  const [inputValue, setInputValue] = useState(searchQuery)
+  const [inputValue, setInputValue] = useState(searchQuery || '')
+  const setSearchQueryRef = React.useRef(setSearchQuery)
 
-  useEffect(() => {
+  React.useEffect(() => {
+    setSearchQueryRef.current = setSearchQuery
+  }, [setSearchQuery])
+
+  // Sync internal inputValue if external searchQuery changes
+  React.useEffect(() => {
+    setInputValue(searchQuery || '')
+  }, [searchQuery])
+
+  // Only trigger debounce if inputValue actually differs from searchQuery
+  React.useEffect(() => {
+    if (inputValue === (searchQuery || '')) return
+
     const handler = setTimeout(() => {
-      setSearchQuery(inputValue)
+      setSearchQueryRef.current?.(inputValue)
     }, debounceDelay)
 
     return () => clearTimeout(handler)
-  }, [inputValue, debounceDelay, setSearchQuery])
+  }, [inputValue, debounceDelay, searchQuery])
 
-  useEffect(() => {
-    setInputValue(searchQuery)
-  }, [searchQuery])
+  const handleClear = () => {
+    setInputValue('')
+    if (searchQuery !== '') {
+      setSearchQueryRef.current?.('')
+    }
+  }
 
   return (
     <CInputGroup style={{ width }}>
@@ -45,7 +61,7 @@ const SearchInput = ({
 
       {/* Clear Button (only when input has text) */}
       {inputValue && (
-        <CButton color="light" onClick={() => setInputValue('')} style={{ border: 'none' }}>
+        <CButton color="light" onClick={handleClear} style={{ border: 'none' }}>
           <CIcon icon={cilX} />
         </CButton>
       )}

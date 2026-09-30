@@ -387,7 +387,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { fetchVehicles } from './data/VehicleListData'
 import SearchInput from '../components/SearchInput'
 import { ToastContainer } from 'react-toastify'
@@ -419,17 +419,18 @@ const VehicleList = () => {
   const navigate = useNavigate()
 
   const { data: vehicles = [], isFetching } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: fetchVehicles,
-    staleTime: 1000 * 60 * 30, // Cache data for 30 minutes
+    queryKey: ['vehicles', searchQuery],
+    queryFn: () => fetchVehicles({ search: searchQuery }),
+    staleTime: 1000 * 60 * 5,
   })
 
   // Set name filter options
   useEffect(() => {
+    if (!vehicles || vehicles.length === 0) return
     const usernames = [...new Set(vehicles.map((v) => v.username).filter(Boolean))]
     const options = usernames.map((name) => ({ label: name, value: name }))
-    setNameOptions(options)
-  }, [vehicles])
+    setNameOptions((prev) => (prev.length > 0 && searchQuery ? prev : options))
+  }, [vehicles, searchQuery])
 
   // Filtering logic
   useEffect(() => {
@@ -451,7 +452,11 @@ const VehicleList = () => {
     setFilteredData(updatedData)
   }, [vehicles, searchQuery, selectedName])
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const totalPages = useMemo(() => {
+    if (itemsPerPage === -1 || itemsPerPage >= 1000000) return 1
+    return Math.max(1, Math.ceil(filteredData.length / (itemsPerPage > 0 ? itemsPerPage : 10)))
+  }, [filteredData.length, itemsPerPage])
+
 
   const columns = [
     { label: 'Vehicle', key: 'name', sortable: true },
@@ -460,9 +465,27 @@ const VehicleList = () => {
     { label: 'Username', key: 'username', sortable: true },
   ]
 
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-  }
+  const handleSearch = useCallback((query) => {
+    setSearchQuery((prev) => {
+      if (prev !== query) {
+        setCurrentPage(1)
+        return query
+      }
+      return prev
+    })
+  }, [])
+
+  const handleSupervisorChange = useCallback((selected) => {
+    setSelectedName((prev) => {
+      const prevVal = prev?.value || null
+      const nextVal = selected?.value || null
+      if (prevVal !== nextVal) {
+        setCurrentPage(1)
+        return selected
+      }
+      return prev
+    })
+  }, [])
 
   const handleViewButton = (id) => {
     navigate(`/VehicleProfile/${id}`)
@@ -533,7 +556,7 @@ const VehicleList = () => {
             <SingleSelectDropdown
               options={nameOptions}
               value={selectedName}
-              onChange={setSelectedName}
+              onChange={handleSupervisorChange}
               isClearable
               placeholder="Filter by Supervisor Name..."
             />
@@ -555,7 +578,9 @@ const VehicleList = () => {
           filteredData={filteredData}
           setFilteredData={setFilteredData}
           currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
           itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
           viewButton={true}
           handleViewButton={handleViewButton}
           isFetching={isFetching}
@@ -567,12 +592,10 @@ const VehicleList = () => {
           totalPages={totalPages}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
           onItemsPerPageChange={(value) => {
             setItemsPerPage(value)
             setCurrentPage(1)
-            if (value === -1) {
-              setItemsPerPage(filteredData.length)
-            }
           }}
         />
       </div>

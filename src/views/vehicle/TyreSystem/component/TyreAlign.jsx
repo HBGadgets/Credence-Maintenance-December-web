@@ -6,12 +6,16 @@ import TyreAssignModal from './TyreAssignModal'
 import { deleteTyreSystemApi } from '../../data/VehicleListData'
 import wheelImg from '../../../../assets/tyre/wheel1.png'
 
-const ManageTyre = ({ tyreImagePath = wheelImg, attachedTyres = [], id, refetchData }) => {
-  const category = attachedTyres[0]?.category || 'unknown'
-
-  const { id: vehicleId } = useParams()
-
-  console.log('idzzz tyre', id)
+const TyreAlign = ({
+  tyreImagePath = wheelImg,
+  attachedTyres = [],
+  id,
+  category: propCategory,
+  refetchData,
+}) => {
+  const { id: routeVehicleId } = useParams()
+  const vehicleId = id || routeVehicleId
+  const category = propCategory || attachedTyres[0]?.category || 'unknown'
 
   const formatDateToInput = (dateStr) => {
     if (!dateStr) return ''
@@ -401,17 +405,17 @@ const ManageTyre = ({ tyreImagePath = wheelImg, attachedTyres = [], id, refetchD
         onClose={() => setShowModal(false)}
         tyreLabel={selectedTyreLabel}
         vehicleId={vehicleId}
+        category={category}
         refetchData={refetchData}
         initialData={assignedTyres[selectedTyreLabel] || null}
         onAssign={(label) => {
           setAssignedTyres((prev) => ({ ...prev, [label]: true }))
           setShowModal(false)
           Swal.fire('Assigned!', `Tyre assigned to ${label}`, 'success')
-          size = 'xl' // or 'lg', 'sm'
         }}
       />
     </div>
   )
 }
 
-export default ManageTyre
+export default TyreAlign

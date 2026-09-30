@@ -69,6 +69,7 @@ const ManageTyre = () => {
 
   // tyre conditions
   const getTyreStyle = (status) => {
+    const s = String(status || '').toLowerCase()
     return {
       display: 'inline-block',
       minWidth: '100px',
@@ -78,13 +79,13 @@ const ManageTyre = () => {
       textTransform: 'capitalize',
       fontWeight: '400',
       backgroundColor:
-        status === 'new'
+        s === 'new'
           ? '#4CAF50' // Fresh Green
-          : status === 'in-use'
+          : s === 'in-use' || s === 'repairedtyre' || s.includes('repair')
             ? '#2196F3' // Bright Blue
-            : status === 'need-replacement'
+            : s === 'need-replacement'
               ? '#F44336' // Vivid Red
-              : status === 'second-hand'
+              : s.includes('second-hand')
                 ? '#FF9800' // Orange
                 : '#9E9E9E', // Default Grey
       color: 'white',
@@ -99,17 +100,14 @@ const ManageTyre = () => {
     queryKey: ['tyresystem', vehicleId],
     queryFn: () => getTyreSystemApi(vehicleId),
     enabled: !!vehicleId,
-    staleTime: Infinity, // never mark as stale
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: false,
+    refetchOnMount: true,
   })
 
   useEffect(() => {
     if (tyresystem?.length > 0) {
       setFilteredData(tyresystem)
-    } else {
-      setFilteredData([])
     }
   }, [tyresystem])
 
@@ -314,13 +312,18 @@ const ManageTyre = () => {
       <ToastContainer />
       <div className="row mb-3">
         <div className="col-12 d-flex justify-content-between align-items-center">
-          {tyresystem[0]?.vehicleName && (
+          {tyresystem?.[0]?.vehicleName && (
             <span className="fw-bold fs-4">Vehicle Name: {tyresystem[0].vehicleName}</span>
           )}
         </div>
       </div>
 
-      <TyreAlign attachedTyres={filteredData} refetchData={refetch} />
+      <TyreAlign
+        attachedTyres={filteredData}
+        id={vehicleId}
+        category={filteredData[0]?.category}
+        refetchData={refetch}
+      />
 
       <Table
         title="Tyre Management"
@@ -365,6 +368,7 @@ const ManageTyre = () => {
         onClose={() => setShowModal(false)}
         tyreLabel={selectedTyreLabel}
         vehicleId={vehicleId}
+        category={editTyreData?.category || filteredData[0]?.category}
         refetchData={refetch}
         initialData={editTyreData}
       />

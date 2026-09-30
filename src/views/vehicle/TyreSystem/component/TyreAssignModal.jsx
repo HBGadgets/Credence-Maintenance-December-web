@@ -11,6 +11,7 @@ const TyreAssignModal = ({
   onAssign,
   vehicleId,
   position,
+  category = 'truck',
   tyreLabel,
   refetchData = () => {},
   initialData = null,
@@ -19,7 +20,7 @@ const TyreAssignModal = ({
   const [formData, setFormData] = useState({
     serialNo: '',
     brandName: '',
-    // category: '',
+    category: category || 'truck',
     tyreStatus: '',
     installationDate: '',
     vendorName: '',
@@ -142,7 +143,7 @@ const TyreAssignModal = ({
       setFormData({
         serialNo: initialData?.tyreSerialNumber || '',
         brandName: initialData?.brandName || '',
-        // category: initialData?.category || '',
+        category: initialData?.category || category || 'truck',
         tyreStatus: initialData?.tyreStatus || '',
         installationDate: initialData?.installationDate || '',
         vendorName: initialData?.vendorName || '',
@@ -157,7 +158,7 @@ const TyreAssignModal = ({
       setFormData({
         serialNo: '',
         brandName: '',
-        // category: '',
+        category: category || 'truck',
         tyreStatus: '',
         installationDate: '',
         vendorName: '',
@@ -169,14 +170,14 @@ const TyreAssignModal = ({
         position: tyreLabel || '',
       })
     }
-  }, [initialData, tyreLabel, show])
+  }, [initialData, tyreLabel, category, show])
 
   const handleSubmit = async () => {
     const requiredFields = [
       'position',
       'serialNo',
       'brandName',
-      // 'category',
+      'category',
       'tyreStatus',
       'installationDate',
       'vendorName',
@@ -227,15 +228,20 @@ const TyreAssignModal = ({
     const dataToSend = new FormData()
     dataToSend.append('tyreSerialNumber', formData.serialNo)
     dataToSend.append('brandName', formData.brandName)
-    // dataToSend.append('category', formData.category)
-    dataToSend.append('tyreStatus', formData.tyreStatus)
+    dataToSend.append('category', formData.category || category || 'truck')
+    const normalizedStatus =
+      formData.tyreStatus === 'RepairedTyre'
+        ? 'in-use'
+        : formData.tyreStatus === 'second-hand-Tyre'
+          ? 'second-hand'
+          : formData.tyreStatus
+    dataToSend.append('tyreStatus', normalizedStatus)
     dataToSend.append('installationDate', formData.installationDate)
     dataToSend.append('vendorName', formData.vendorName)
     dataToSend.append('location', formData.location)
     dataToSend.append('tyreSize', formData.tyreSize)
     dataToSend.append('amount', formData.amount)
     dataToSend.append('paymentMode', formData.paymentMode)
-    // dataToSend.append('position', tyreLabel)
     dataToSend.append('vehicleId', vehicleId)
     dataToSend.append('position', formData.position)
 
@@ -315,7 +321,7 @@ const TyreAssignModal = ({
             )}
           </Form.Group>
 
-          {/* <Form.Group className="mb-2">
+          <Form.Group className="mb-2">
             <Form.Label>
               Vehicle Category <span className="text-danger">*</span>
             </Form.Label>
@@ -337,7 +343,7 @@ const TyreAssignModal = ({
             <Form.Control.Feedback type="invalid">
               Vehicle category is required.
             </Form.Control.Feedback>
-          </Form.Group> */}
+          </Form.Group>
 
           <Form.Group className="mb-2">
             <Form.Label>
@@ -354,9 +360,9 @@ const TyreAssignModal = ({
                 -- Select Status --
               </option>
               <option value="new">New Tyre</option>
-              <option value="RepairedTyre">Reparired Tyre</option>
-              {/* <option value="need-replacement">Need Replacement</option> */}
-              <option value="second-hand-Tyre">Second Hand Tyre</option>
+              <option value="in-use">In Use / Repaired Tyre</option>
+              <option value="second-hand">Second Hand Tyre</option>
+              <option value="need-replacement">Need Replacement</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">Status is required.</Form.Control.Feedback>
           </Form.Group>

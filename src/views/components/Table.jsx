@@ -155,14 +155,20 @@ function Table({
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
 
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const isShowAll = itemsPerPage === -1 || itemsPerPage >= 1000000
+  const effectiveItemsPerPage = isShowAll ? (filteredData.length || 1) : (itemsPerPage || 10)
+  const startIndex = isShowAll ? 0 : (currentPage - 1) * effectiveItemsPerPage
   const currentData = serverPagination
     ? filteredData
-    : filteredData.slice(startIndex, startIndex + itemsPerPage)
+    : isShowAll
+      ? filteredData
+      : filteredData.slice(startIndex, startIndex + effectiveItemsPerPage)
 
   const totalPages = serverPagination
-    ? Math.ceil((totalServerItems || 0) / itemsPerPage) || 1
-    : Math.ceil(filteredData.length / itemsPerPage) || 1
+    ? Math.ceil((totalServerItems || 0) / (itemsPerPage > 0 ? itemsPerPage : 1)) || 1
+    : isShowAll
+      ? 1
+      : Math.ceil(filteredData.length / effectiveItemsPerPage) || 1
 
   const goToFirstPage = () => setCurrentPage?.(1)
   const goToLastPage = () => setCurrentPage?.(totalPages)
@@ -233,7 +239,7 @@ function Table({
                 </CTableHead>
                 <CTableBody>
                   {isFetching ? (
-                    Array.from({ length: itemsPerPage }).map((_, index) => (
+                    Array.from({ length: isShowAll ? 10 : Math.min(itemsPerPage > 0 ? itemsPerPage : 10, 50) }).map((_, index) => (
                       <CTableRow key={`skeleton-${index}`}>
                         <CTableDataCell className="text-center">
                           <div className="skeleton-loader" style={{ height: '20px' }} />
@@ -291,7 +297,7 @@ function Table({
                     currentData.map((row, rowIndex) => (
                       <CTableRow key={rowIndex}>
                         <CTableDataCell className="text-center">
-                          {(currentPage - 1) * itemsPerPage + rowIndex + 1}
+                          {startIndex + rowIndex + 1}
                         </CTableDataCell>
                         {columns
                           .filter((col) => !col.hidden)
@@ -404,7 +410,7 @@ function Table({
           <div className="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-white w-100">
             <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
               <div className="text-muted text-nowrap" style={{ fontSize: '13px' }}>
-                Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} results
+                Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + (isShowAll ? filteredData.length : effectiveItemsPerPage), filteredData.length)} of {filteredData.length} results
               </div>
               {onViewReport && (
                 <button
@@ -423,9 +429,10 @@ function Table({
                 <select
                   className="form-select form-select-sm"
                   style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
-                  value={itemsPerPage >= 1000000 ? 1000000 : itemsPerPage}
+                  value={isShowAll ? 1000000 : itemsPerPage}
                   onChange={(e) => {
-                    if (setItemsPerPage) setItemsPerPage(Number(e.target.value))
+                    const val = Number(e.target.value)
+                    if (setItemsPerPage) setItemsPerPage(val === 1000000 ? -1 : val)
                     if (setCurrentPage) setCurrentPage(1)
                   }}
                 >
@@ -447,7 +454,7 @@ function Table({
                   className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
                   style={{ width: '28px', height: '28px', borderRadius: '6px' }}
                   onClick={goToFirstPage}
-                  disabled={currentPage === 1}
+                  disabled={currentPage <= 1 || isShowAll}
                 >
                   {'<<'}
                 </button>
@@ -455,7 +462,7 @@ function Table({
                   className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
                   style={{ width: '28px', height: '28px', borderRadius: '6px' }}
                   onClick={goToPrevPage}
-                  disabled={currentPage === 1}
+                  disabled={currentPage <= 1 || isShowAll}
                 >
                   {'<'}
                 </button>
@@ -463,7 +470,7 @@ function Table({
                   className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
                   style={{ width: '28px', height: '28px', borderRadius: '6px' }}
                   onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage >= totalPages || isShowAll}
                 >
                   {'>'}
                 </button>
@@ -471,7 +478,7 @@ function Table({
                   className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
                   style={{ width: '28px', height: '28px', borderRadius: '6px' }}
                   onClick={goToLastPage}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage >= totalPages || isShowAll}
                 >
                   {'>>'}
                 </button>

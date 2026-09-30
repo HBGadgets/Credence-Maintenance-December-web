@@ -10,15 +10,35 @@ const TOKEN = Cookies.get('crdnsMaintToken')
 
 // Vehicle List Table.
 
-export const fetchVehicles = async () => {
+export const fetchVehicles = async (params) => {
   try {
-    if (!TOKEN) throw new Error('Authentication token not found')
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
 
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vehicle/get-all`, {
-      headers: { Authorization: `Bearer ${TOKEN}` },
-    })
+    let search = ''
+    if (typeof params === 'string') {
+      search = params
+    } else if (params?.search) {
+      search = params.search
+    } else if (params?.queryKey) {
+      const [_key, queryParams] = params.queryKey
+      if (typeof queryParams === 'string') {
+        search = queryParams
+      } else if (queryParams && typeof queryParams === 'object') {
+        search = queryParams.search || ''
+      }
+    }
 
-    const vehicles = data.devices // adjust if needed
+    const config = {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+    if (search && search.trim()) {
+      config.params = { search: search.trim() }
+    }
+
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/vehicle/get-all`, config)
+
+    const vehicles = Array.isArray(data) ? data : data?.devices || data?.data || []
 
     console.log('vehicles', vehicles)
     return vehicles.map((vehicle) => ({
@@ -439,10 +459,11 @@ export const getFuelSystemData = async (id, month) => {
 
 // GET API Maintance Log
 export const getTyreSystemApi = async (id) => {
-  if (!TOKEN) throw new Error('Authentication token not found')
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
+  if (!token) throw new Error('Authentication token not found')
 
   const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/tyre/vehicle/${id}`, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
+    headers: { Authorization: `Bearer ${token}` },
   })
 
   console.log('Vehicle Expenses Data: ', data)
@@ -472,13 +493,15 @@ export const getTyreSystemApi = async (id) => {
 
 export const postTyreSystemApi = async (tyresystemData) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
+
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/tyre/add`,
       tyresystemData,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          // "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       },
@@ -498,14 +521,15 @@ export const postTyreSystemApi = async (tyresystemData) => {
 // Patch Tyre APi
 export const updateDriver = async (id, data) => {
   try {
-    if (!TOKEN) throw new Error('Authentication token not found')
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
 
     const { data: response } = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/tyre/update/${id}`,
       data,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       },
@@ -522,11 +546,12 @@ export const updateDriver = async (id, data) => {
 // Delete Tyre APi
 export const deleteTyreSystemApi = async (id) => {
   try {
-    if (!TOKEN) throw new Error('Authentication token not found')
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
 
     const { data } = await axios.delete(`${import.meta.env.VITE_API_URL}/api/tyre/delete/${id}`, {
       headers: {
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${token}`,
       },
     })
 
