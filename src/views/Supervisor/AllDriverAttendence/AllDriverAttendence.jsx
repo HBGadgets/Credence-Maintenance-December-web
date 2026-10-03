@@ -70,11 +70,14 @@ const AllDriverAttendance = () => {
   const totalPages = data?.totalPages || 1
 
   const columns = [
-    { label: 'Drivers Name', key: 'driverName', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Total Days In Month', key: 'totalDaysInMonth', sortable: true },
     { label: 'Total Days', key: 'totalDays', sortable: true },
-    { label: 'Present Days', key: 'presentCount', sortable: true },
-    { label: 'Absent Days', key: 'absentCount', sortable: true },
-    { label: 'leave Days', key: 'leaveCount', sortable: true },
+    { label: 'Total Marked Days', key: 'totalMarkedDays', sortable: true },
+    { label: 'Not Marked Days', key: 'notMarkedDays', sortable: true },
+    { label: 'Present Days', key: 'presentDays', sortable: true },
+    { label: 'Absent Days', key: 'absentDays', sortable: true },
+    { label: 'Leave Days', key: 'leaveDays', sortable: true },
   ]
 
   const handleViewButton = (id) => {

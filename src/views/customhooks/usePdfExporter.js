@@ -120,7 +120,9 @@ const usePdfExporter = () => {
                 const tableColumns = ['SN', ...columns.map((col) => col.label)];
                 const tableRows = data.map((row, index) => [
                     index + 1,
-                    ...columns.map((col) => row[col.key] || 'N/A'),
+                    ...columns.map((col) =>
+                        row[col.key] !== undefined && row[col.key] !== null ? row[col.key] : 'N/A'
+                    ),
                 ]);
 
                 doc.autoTable({

@@ -843,7 +843,8 @@ export const getAllServiceHistoryApi = async () => {
 export const getAllDriverAttendenceApi = async ({ queryKey }) => {
   const [_key, { search, page, limit, month, year, filter }] = queryKey
 
-  if (!TOKEN) throw new Error('Authentication token not found')
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
+  if (!token) throw new Error('Authentication token not found')
 
   const { data } = await axios.get(
     `${import.meta.env.VITE_API_URL}/api/report/driver-attendance-summary`,
@@ -856,19 +857,29 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
         year,
         ...(filter ? { filter } : {}),
       },
-      headers: { Authorization: `Bearer ${TOKEN}` },
+      headers: { Authorization: `Bearer ${token}` },
     },
   )
 
-  // The API response has { count, consignees } structure
   return {
-    data: data.report.map((item) => ({
-      id: item.driverId,
-      presentCount: item.presentCount || '0',
-      absentCount: item.absentCount || '0',
-      leaveCount: item.leaveCount || '0',
-      totalDays: item.totalDays || '0',
-      driverName: item.driverName || '0',
+    data: (data.report || []).map((item) => ({
+      ...item,
+      id: item.driverId || item._id || item.id,
+      driverId: item.driverId || item._id || item.id,
+      driverName: item.driverName || '-',
+      totalDaysInMonth: item.totalDaysInMonth ?? 0,
+      daysPassed: item.daysPassed ?? 0,
+      totalDays: item.totalDays ?? 0,
+      totalMarkedDays: item.totalMarkedDays ?? item.totalMarked ?? 0,
+      totalMarked: item.totalMarked ?? item.totalMarkedDays ?? 0,
+      notMarkedDays: item.notMarkedDays ?? item.notMarkedCount ?? 0,
+      notMarkedCount: item.notMarkedCount ?? item.notMarkedDays ?? 0,
+      presentDays: item.presentDays ?? item.presentCount ?? 0,
+      presentCount: item.presentCount ?? item.presentDays ?? 0,
+      absentDays: item.absentDays ?? item.absentCount ?? 0,
+      absentCount: item.absentCount ?? item.absentDays ?? 0,
+      leaveDays: item.leaveDays ?? item.leaveCount ?? 0,
+      leaveCount: item.leaveCount ?? item.leaveDays ?? 0,
     })),
     total: data.pagination?.totalRecords || 0,
     totalPages: data.pagination?.totalPages || 1,

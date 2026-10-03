@@ -109,7 +109,11 @@ const useExcelExporter = () => {
                                 value = '[Circular]';
                             }
                             cleanedItem[col.label] =
-                                typeof value === 'object' ? JSON.stringify(value) : value || 'N/A';
+                                typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : value !== undefined && value !== null
+                                    ? value
+                                    : 'N/A';
                         });
                         return cleanedItem;
                     });
