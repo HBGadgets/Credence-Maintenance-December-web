@@ -45,15 +45,8 @@ export const fetchUserActiveStatus = async () => {
   try {
     const response = await fetch(endpoint, {
       method: 'GET',
-      mode: 'cors',
-      credentials: 'include',
       headers: {
-        accept: 'application/json, text/plain, */*',
-        'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8,mr;q=0.7',
         authorization: formattedToken,
-        'cache-control': 'no-cache',
-        pragma: 'no-cache',
-        priority: 'u=1, i',
       },
     })
 
