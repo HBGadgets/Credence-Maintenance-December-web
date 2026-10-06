@@ -13,7 +13,7 @@ import {
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import BackImg from '../../../assets/brand/FMSGroup.svg'
 import logo from '../../../assets/brand/fmslogo.svg'
-import { LoginUser } from './data'
+import { LoginUser, fetchUserActiveStatus } from './data'
 import PermissionService from '../../Services/Service'
 import usePermissionStore from '../../../store/permission'
 import { SetTokenContext } from '../../../context/TokenContext'
@@ -63,6 +63,9 @@ const Login = () => {
         if (response?.worker) {
           Cookies.set('workerInfo', JSON.stringify(response.worker), { path: '/' })
         }
+
+        // Trigger user active-status API
+        fetchUserActiveStatus(token)
 
         // Clean up legacy sessionStorage and localStorage
         sessionStorage.removeItem('crdnsMaintToken')

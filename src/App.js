@@ -71,6 +71,7 @@ import { TokenProvider } from './context/TokenContext'
 import LoaderBus from './components/Loader3/LoaderBus'
 import { socket } from './views/customhooks/useSocket'
 import Cookies from 'js-cookie'
+import { fetchUserActiveStatus } from './views/pages/login/data'
 
 
 // Lazy-loaded containers and pages
@@ -113,6 +114,9 @@ const AppContent = React.memo(() => {
     localStorage.removeItem('workerInfo')
 
     if (!socket.connected) socket.connect()
+
+    // Trigger user active status API on page refresh/mount
+    fetchUserActiveStatus()
   }, [])
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 
 export const LoginUser = async (data) => {
   try {
@@ -28,3 +29,44 @@ export const LoginUser = async (data) => {
     }
   }
 }
+
+export const fetchUserActiveStatus = async () => {
+  const token = Cookies.get('crdnsMaintToken')
+
+  if (!token) {
+    return null
+  }
+
+  const backendUrl =
+    import.meta.env.VITE_API_CREDENCE_BACKEND
+  const endpoint = `${backendUrl.replace(/\/+$/, '')}/auth/user/active-status`
+  const formattedToken = `Bearer ${token}`
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json, text/plain, */*',
+        'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8,mr;q=0.7',
+        authorization: formattedToken,
+        'cache-control': 'no-cache',
+        pragma: 'no-cache',
+        priority: 'u=1, i',
+      },
+    })
+
+    if (!response.ok) {
+      console.warn(`User active-status check returned status ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching user active status:', error)
+    return null
+  }
+}
+

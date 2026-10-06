@@ -8,7 +8,7 @@ export const SetTokenContext = createContext(() => {})
 
 const TOKEN_KEY = 'crdnsMaintToken'
 
-// Get initial token synchronously from Cookies or URL hash
+// Get initial token synchronously from Cookies or URL hash / query
 const getInitialToken = () => {
   const hash = window.location.hash
   const hashParams = new URLSearchParams(hash.split('?')[1])
@@ -17,6 +17,13 @@ const getInitialToken = () => {
   if (extractedToken) {
     Cookies.set(TOKEN_KEY, extractedToken, { path: '/' })
     return extractedToken
+  }
+
+  const searchParams = new URLSearchParams(window.location.search)
+  const searchToken = searchParams.get('token')
+  if (searchToken) {
+    Cookies.set(TOKEN_KEY, searchToken, { path: '/' })
+    return searchToken
   }
 
   return Cookies.get(TOKEN_KEY)
@@ -40,11 +47,15 @@ export const TokenProvider = ({ children }) => {
     const hashParams = new URLSearchParams(hash.split('?')[1])
     const extractedToken = hashParams.get('token')
 
-    if (extractedToken) {
-      Cookies.set(TOKEN_KEY, extractedToken, { path: '/' })
-      setTokenState(extractedToken)
+    const searchParams = new URLSearchParams(window.location.search)
+    const searchToken = searchParams.get('token')
+    const finalToken = extractedToken || searchToken
+
+    if (finalToken) {
+      Cookies.set(TOKEN_KEY, finalToken, { path: '/' })
+      setTokenState(finalToken)
       // Remove token from URL without reload
-      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      window.history.replaceState(null, '', window.location.pathname)
     }
   }, [])
 
