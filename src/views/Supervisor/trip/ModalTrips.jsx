@@ -3,7 +3,7 @@ import { Modal, Form, Button } from 'react-bootstrap'
 import { fetchDrivers } from '../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../vehicle/data/VehicleListData'
 import { CSpinner } from '@coreui/react'
-import { fetchTripDataHelper, handleAddHelper, handleEditHelper } from './componets/tripHelpers'
+import { handleAddHelper, handleEditHelper } from './componets/tripHelpers'
 import Select from 'react-select'
 import debounce from 'lodash.debounce'
 import { useQuery } from '@tanstack/react-query'
@@ -33,8 +33,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     coastPerKm: '',
     clientAdvance: '',
   })
-
-  const fetchData = fetchTripDataHelper()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch companies
   const { data: companyList, isFetch } = useQuery({
@@ -149,20 +148,31 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     }
   }
 
+  // Prevent wheel scroll from modifying numeric inputs
+  const handleWheel = (e) => {
+    e.target.blur()
+  }
+
   //   Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
-      if (mode === 'add') {
-        await handleAddHelper(tripData, fetchData)
+      if (onSubmit) {
+        await onSubmit(tripData)
       } else {
-        await handleEditHelper(tripData, fetchData)
-        console.log('updated trip', tripData)
+        if (mode === 'add') {
+          await handleAddHelper(tripData, fetchTripData)
+        } else {
+          await handleEditHelper(tripData, fetchTripData)
+        }
+        if (onClose) onClose()
       }
-      onClose()
-      onSubmit(fetchData) // Pass data to parent
     } catch (error) {
-      console.error('Submit Error:', error.message)
+      console.error('Submit Error:', error?.message || error)
+      // Form does not close on any error
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -300,6 +310,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="clientNumber"
                   value={tripData.clientNumber}
                   onChange={handleChange}
+                  onWheel={handleWheel}
                   placeholder="Enter client number"
                   maxLength={10}
                   pattern="\d{10}"
@@ -476,6 +487,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="coastPerKm"
                   value={tripData.coastPerKm}
                   onChange={handleChange}
+                  onWheel={handleWheel}
                   placeholder="Enter Coast Kms/Hrs"
                 />
               </Form.Group>
@@ -489,6 +501,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="clientAdvance"
                   value={tripData.clientAdvance}
                   onChange={handleChange}
+                  onWheel={handleWheel}
                   placeholder="Enter Client advance"
                 />
               </Form.Group>
@@ -502,6 +515,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="budgetAllocated"
                   value={tripData.budgetAllocated}
                   onChange={handleChange}
+                  onWheel={handleWheel}
                   placeholder="Enter budget allocated"
                 />
               </Form.Group>
@@ -546,11 +560,11 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit" disabled={isLoading}>
-            {isLoading ? (
+          <Button variant="primary" type="submit" disabled={isLoading || isSubmitting}>
+            {isSubmitting ? (
               <>
                 <CSpinner size="sm" className="me-2" />{' '}
                 {mode === 'add' ? 'Adding...' : 'Updating...'}

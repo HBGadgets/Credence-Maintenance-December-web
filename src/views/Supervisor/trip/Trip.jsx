@@ -209,16 +209,34 @@ const Trip = () => {
     console.log('Edit button clicked for Trip ID:', selectedTrip)
   }
 
+  // Helper to convert empty string fields to null
+  const sanitizeTripData = (data) => {
+    if (!data || typeof data !== 'object') return data
+    return Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value === '' || (typeof value === 'string' && value.trim() === '') ? null : value,
+      ]),
+    )
+  }
+
   // Handle Submit button
   const handleSubmit = async (data) => {
-    if (modalMode === 'add') {
-      await handleAddHelper(data, refetch)
-      await refetch()
-    } else if (modalMode === 'edit') {
-      await handleEditHelper(data, refetch)
-      await refetch()
+    const sanitizedData = sanitizeTripData(data)
+    try {
+      if (modalMode === 'add') {
+        await handleAddHelper(sanitizedData, refetch)
+        await refetch()
+      } else if (modalMode === 'edit') {
+        await handleEditHelper(sanitizedData, refetch)
+        await refetch()
+      }
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Submit failed in Trip component:', error)
+      // Form does not close on any error
+      throw error
     }
-    setIsModalOpen(false)
   }
 
   // Handle Delete button

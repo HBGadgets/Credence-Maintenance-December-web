@@ -257,12 +257,13 @@ export const getTripListApi = async (userId = null, token) => {
 
 export const postTripApi = async (tripData) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/trips/create`,
       tripData,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
@@ -283,12 +284,13 @@ export const postTripApi = async (tripData) => {
 
 export const patchTripApi = async (id, update) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
     const response = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/trips/update/${id}`,
       update,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
       },
     )
@@ -304,9 +306,10 @@ export const patchTripApi = async (id, update) => {
 
 export const deleteTripApi = async (id) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
     const response = await axios.delete(`${import.meta.env.VITE_API_URL}/api/trips/delete/${id}`, {
       headers: {
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${token}`,
       },
     })
     console.log('This is Trip Delete List by ID : ', response.data)
