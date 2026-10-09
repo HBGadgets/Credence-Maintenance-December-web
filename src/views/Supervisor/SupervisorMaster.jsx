@@ -13,7 +13,6 @@ import { FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
-import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import SupervisorPermissionsModal from './SupervisorPermissionsModal'
 import {
   getSupervisorsApi,
@@ -43,22 +42,10 @@ const SupervisorMaster = () => {
   const [showPermissionsModal, setShowPermissionsModal] = useState(false)
   const [selectedSupervisorForPermissions, setSelectedSupervisorForPermissions] = useState(null)
 
-  // Admin & Branch filter states
-  const [selectedSchool, setSelectedSchool] = useState(null)
-  const [selectedBranch, setSelectedBranch] = useState(null)
-
   // Fetch school (Admin) options from VTS Backend
   const { data: schoolOptions = [] } = useQuery({
     queryKey: ['schoolDropdownOptions'],
     queryFn: getSchoolDropdownApi,
-    staleTime: 1000 * 60 * 15,
-  })
-
-  // Fetch branch options for filter
-  const { data: filterBranchOptions = [] } = useQuery({
-    queryKey: ['filterBranchOptions', selectedSchool?.value],
-    queryFn: () => getBranchDropdownApi(selectedSchool?.value),
-    enabled: Boolean(selectedSchool?.value),
     staleTime: 1000 * 60 * 15,
   })
 
@@ -149,27 +136,9 @@ const SupervisorMaster = () => {
         }
       })
 
-      // Filter by Admin (School) dropdown
-      if (selectedSchool?.value) {
-        filtered = filtered.filter(
-          (item) =>
-            item.schoolId === selectedSchool.value ||
-            item.schoolName?.toLowerCase() === selectedSchool.label?.toLowerCase(),
-        )
-      }
-
-      // Filter by Branch dropdown
-      if (selectedBranch?.value) {
-        filtered = filtered.filter(
-          (item) =>
-            item.branchId === selectedBranch.value ||
-            item.branchName?.toLowerCase() === selectedBranch.label?.toLowerCase(),
-        )
-      }
-
       setFilteredData(filtered)
     }
-  }, [supervisorList, selectedSchool, selectedBranch, schoolOptions])
+  }, [supervisorList, schoolOptions])
 
   const totalPages =
     serverPagination?.totalPages ||
@@ -349,30 +318,6 @@ const SupervisorMaster = () => {
               setShowModalForm(true)
             }}
           />
-
-          <div style={{ width: '210px' }}>
-            <SingleSelectDropdown
-              options={schoolOptions}
-              value={selectedSchool}
-              onChange={(val) => {
-                setSelectedSchool(val)
-                setSelectedBranch(null)
-              }}
-              isClearable
-              placeholder="Filter by Admin..."
-            />
-          </div>
-
-          <div style={{ width: '210px' }}>
-            <SingleSelectDropdown
-              options={filterBranchOptions}
-              value={selectedBranch}
-              onChange={setSelectedBranch}
-              isClearable
-              placeholder={selectedSchool ? 'Filter by Branch...' : 'Select Admin first...'}
-              disabled={!selectedSchool}
-            />
-          </div>
         </div>
 
         <div className="d-flex align-items-center gap-2">
