@@ -77,27 +77,37 @@ function DriversPage() {
   const { mutate: addDriverMutation, isLoading: isSubmitting } = useMutation({
     mutationFn: addDriver,
     onSuccess: (data) => {
-      // toast.success('Driver added successfully!')
+      if (data?.status === false || data?.success === false) {
+        toast.error(data?.message || 'Failed to add driver')
+        return
+      }
+      toast.success(data?.message || 'Driver added successfully!')
       setShowModalFrom(false)
+      setEditMode(false)
+      setEditingUser(null)
       queryClient.invalidateQueries(['drivers'])
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || error.message)
+      toast.error(error?.response?.data?.message || error.message || 'Failed to add driver')
     },
   })
 
   // Edit Driver
   const { mutate: updateDriverMutation, isLoading: isUpdating } = useMutation({
     mutationFn: ({ id, data }) => updateDriver(id, data),
-    onSuccess: () => {
-      // toast.success('Driver updated successfully!')
-      queryClient.invalidateQueries(['drivers'])
+    onSuccess: (data) => {
+      if (data?.status === false || data?.success === false) {
+        toast.error(data?.message || 'Failed to update driver')
+        return
+      }
+      toast.success(data?.message || 'Driver updated successfully!')
       setShowModalFrom(false)
       setEditMode(false)
       setEditingUser(null)
+      queryClient.invalidateQueries(['drivers'])
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || error.message)
+      toast.error(error?.response?.data?.message || error.message || 'Failed to update driver')
     },
   })
 
@@ -281,7 +291,7 @@ function DriversPage() {
     } else {
       Swal.fire({
         title: 'Are you sure?',
-        text: 'Do you want to add this driver expense?',
+        text: 'Do you want to add this driver?',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Yes, Add it',
@@ -424,10 +434,11 @@ function DriversPage() {
           setEditingUser(null)
         }}
         onSubmit={handleFormSubmit}
-        title={editMode ? 'Edit Driver Expense' : 'Add New Driver Expense'}
+        title={editMode ? 'Edit Driver' : 'Add New Driver'}
         size="xl"
         fields={field}
         isSubmitting={isSubmitting || isUpdating}
+        closeOnSubmit={false}
       />
 
       <Table
@@ -445,12 +456,14 @@ function DriversPage() {
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
         viewButtonLabel="Profile"
+        showPagination={false}
       />
 
       <SmartPagination
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
           setItemsPerPage(value)
           setCurrentPage(1)

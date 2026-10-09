@@ -4,11 +4,12 @@ import React, { useState, useEffect, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import { getDutySlipApi, getTripListApi } from '../data/data'
+import { getDutySlipApi, getTripListApi, patchTripApi } from '../data/data'
 import {
   fetchTripDataHelper,
   getStatusBadge,
   handleAddHelper,
+  handleCancelHelper,
   handleDeleteHelper,
   handleEditHelper,
 } from './componets/tripHelpers'
@@ -143,6 +144,7 @@ const Trip = () => {
 
       return {
         ...data,
+        rawStatus: data.status,
         remainingAmount: (
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
@@ -199,7 +201,16 @@ const Trip = () => {
 
   // Handle Edit Button Click
   const handleEditButton = (id) => {
-    const selectedTrip = filteredData.find((trip) => trip.id === id)
+    const selectedTrip = filteredData.find((trip) => trip.id === id || trip._id === id)
+
+    const isCancelled =
+      selectedTrip?.rawStatus?.toLowerCase() === 'cancelled' ||
+      selectedTrip?.rawStatus?.toLowerCase() === 'cancel'
+
+    if (isCancelled) {
+      toast.warn('Cancelled trips cannot be edited.')
+      return
+    }
 
     if (selectedTrip) {
       setModalMode('edit')
@@ -225,10 +236,16 @@ const Trip = () => {
     const sanitizedData = sanitizeTripData(data)
     try {
       if (modalMode === 'add') {
-        await handleAddHelper(sanitizedData, refetch)
+        const res = await handleAddHelper(sanitizedData, refetch)
+        if (res?.status === false || res?.success === false || res?.error) {
+          return
+        }
         await refetch()
       } else if (modalMode === 'edit') {
-        await handleEditHelper(sanitizedData, refetch)
+        const res = await handleEditHelper(sanitizedData, refetch)
+        if (res?.status === false || res?.success === false || res?.error) {
+          return
+        }
         await refetch()
       }
       setIsModalOpen(false)
@@ -242,6 +259,16 @@ const Trip = () => {
   // Handle Delete button
   const handleDeleteButton = (id, fieldName) => {
     handleDeleteHelper(id, refetch, fieldName)
+  }
+
+  // Handle Cancel Trip button
+  const handleCancelTrip = (id, row) => {
+    const selected = row || filteredData.find((trip) => trip.id === id || trip._id === id)
+    if (selected?.rawStatus?.toLowerCase() === 'cancelled') {
+      toast.info('Trip is already cancelled!')
+      return
+    }
+    handleCancelHelper(id, refetch)
   }
 
   // Handle View button
@@ -404,8 +431,13 @@ const Trip = () => {
           handleViewButton={handleViewButton}
           editButton={true}
           handleEditButton={handleEditButton}
-          deleteButton={true}
-          handleDeleteButton={handleDeleteButton}
+          isRowEditable={(row) =>
+            row.rawStatus?.toLowerCase() !== 'cancelled' &&
+            row.rawStatus?.toLowerCase() !== 'cancel'
+          }
+          deleteButton={false}
+          cancelButton={true}
+          handleCancelButton={handleCancelTrip}
           isFetching={isFetching}
           viewButtonLabel="Subtrips"
           reportButton={true}

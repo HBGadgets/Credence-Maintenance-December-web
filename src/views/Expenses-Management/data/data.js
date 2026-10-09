@@ -62,16 +62,23 @@ export const getDriverBillImageApi = async (billImgId) => {
 // Post for all Driver expense
 export const postDriverExpenseApi = async (driverexpenseData) => {
     try {
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
+
         const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/api/driverExpense/create`,
             driverexpenseData,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
             }
         )
+
+        if (response.data && (response.data.status === false || response.data.success === false)) {
+            throw new Error(response.data.message || 'Failed to create expense')
+        }
 
         if (response.status === 201 || response.status === 200) {
             console.log('Driver Expense Created Successfully:', response.data)
@@ -84,7 +91,7 @@ export const postDriverExpenseApi = async (driverexpenseData) => {
 
         // Properly throw the error to be caught in parent function
         const err = new Error(
-            error.response?.data?.message || 'Failed to create expense'
+            error.response?.data?.message || error.message || 'Failed to create expense'
         )
         err.response = error.response // Attach the original response if needed
         throw err
@@ -96,18 +103,23 @@ export const postDriverExpenseApi = async (driverexpenseData) => {
 
 export const patchDriverExpenseApi = async (id, data) => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
 
         const { data: response } = await axios.patch(
             `${import.meta.env.VITE_API_URL}/api/driverExpense/update/${id}`,
             data,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
             },
         )
+
+        if (response && (response.status === false || response.success === false)) {
+            throw new Error(response.message || 'Update driver failed')
+        }
 
         return response
     } catch (error) {

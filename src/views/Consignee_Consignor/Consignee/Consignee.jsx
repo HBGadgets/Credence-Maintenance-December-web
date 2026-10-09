@@ -20,6 +20,7 @@ const Consignee = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [totalRecords, setTotalRecords] = useState(0)
 
   // Modal states
   const [showModalFrom, setShowModalFrom] = useState(false)
@@ -27,7 +28,14 @@ const Consignee = () => {
   const [editingData, setEditingData] = useState(null)
 
   const { data, isFetching } = useQuery({
-    queryKey: ['Consignee', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
+    queryKey: [
+      'Consignee',
+      {
+        search: searchQuery,
+        page: currentPage,
+        limit: itemsPerPage === -1 ? (totalRecords || 10) : itemsPerPage,
+      },
+    ],
     queryFn: getConsigneeApi,
     keepPreviousData: true,
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
@@ -37,7 +45,11 @@ const Consignee = () => {
   // ========== POST ==========
   const { mutate: postConsignee, isLoading: isSubmitting } = useMutation({
     mutationFn: postConsigneeApi,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res && (res.status === false || res.success === false)) {
+        toast.error(res.message || 'Failed to add consignee')
+        return
+      }
       toast.success('Consignee added successfully!')
       queryClient.invalidateQueries({ queryKey: ['Consignee'], exact: false })
       setShowModalFrom(false)
@@ -48,7 +60,11 @@ const Consignee = () => {
   // ========== PATCH ==========
   const { mutate: patchConsignee, isLoading: isUpdating } = useMutation({
     mutationFn: ({ id, formData }) => patchConsigneeApi(id, formData),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res && (res.status === false || res.success === false)) {
+        toast.error(res.message || 'Failed to update consignee')
+        return
+      }
       toast.success('Consignee updated successfully!')
       queryClient.invalidateQueries({ queryKey: ['Consignee'], exact: false })
       setShowModalFrom(false)
@@ -69,12 +85,18 @@ const Consignee = () => {
   })
 
   useEffect(() => {
+    if (data?.total !== undefined) {
+      setTotalRecords(data.total)
+    }
     if (data?.data) {
       setFilteredData(data.data)
     }
   }, [data])
 
-  const totalPages = data?.totalPages || 1
+  const totalPages =
+    itemsPerPage === -1
+      ? 1
+      : data?.totalPages || (data?.total && itemsPerPage > 0 ? Math.ceil(data.total / itemsPerPage) : 1)
 
   const columns = [
     { label: 'Consignee Name', key: 'name', sortable: true },
@@ -87,12 +109,21 @@ const Consignee = () => {
       name: 'name',
       label: 'Consignee Name',
       type: 'text',
+      placeholder: 'Enter Consignee Name',
       required: true,
+      stringOnly: true,
+      alphaOnly: true,
+      pattern: '[a-zA-Z\\s]*',
+      onChange: (value) => {
+        const stringValue = String(value || '').replace(/[^a-zA-Z\s]/g, '')
+        return { name: stringValue }
+      },
     },
     {
       name: 'address',
       label: 'Address',
       type: 'text',
+      placeholder: 'Enter Address',
       required: true,
     },
   ]
@@ -108,7 +139,7 @@ const Consignee = () => {
 
     // Map the record data to match the form field names
     const mappedRecord = {
-      name: record.name,
+      name: String(record.name || '').replace(/[^a-zA-Z\s]/g, ''),
       address: record.address,
       id: record.id, // Include ID for update operation
     }
@@ -136,10 +167,16 @@ const Consignee = () => {
 
   // Submit form (Add + Edit)
   const handleFormSubmit = (formValues) => {
+    const sanitizedData = {
+      ...formValues,
+      name: String(formValues.name || '').replace(/[^a-zA-Z\s]/g, '').trim(),
+      address: String(formValues.address || '').trim(),
+    }
+
     if (editMode) {
-      patchConsignee({ id: editingData.id, formData: formValues })
+      patchConsignee({ id: editingData.id, formData: sanitizedData })
     } else {
-      postConsignee(formValues)
+      postConsignee(sanitizedData)
     }
   }
 
@@ -173,6 +210,7 @@ const Consignee = () => {
         size="xl"
         fields={fields}
         isSubmitting={isSubmitting || isUpdating}
+        closeOnSubmit={false}
       />
 
       <Table
@@ -180,21 +218,25 @@ const Consignee = () => {
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
-        currentPage={1}
+        currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
+        serverPagination={true}
+        totalServerItems={data?.total || filteredData.length}
         editButton={true}
         deleteButton={true}
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
+        showPagination={false}
       />
 
       <SmartPagination
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setItemsPerPage(value)
           setCurrentPage(1)
         }}
       />

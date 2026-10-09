@@ -578,13 +578,12 @@ const VehicleList = () => {
           filteredData={filteredData}
           setFilteredData={setFilteredData}
           currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
           itemsPerPage={itemsPerPage}
-          setItemsPerPage={setItemsPerPage}
           viewButton={true}
           handleViewButton={handleViewButton}
           isFetching={isFetching}
           action="Details"
+          showPagination={false}
         />
 
         {/* Pagination */}

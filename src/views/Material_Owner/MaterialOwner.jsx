@@ -20,6 +20,7 @@ const MaterialOwner = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [totalRecords, setTotalRecords] = useState(0)
 
   // Modal states
   const [showModalFrom, setShowModalFrom] = useState(false)
@@ -28,7 +29,14 @@ const MaterialOwner = () => {
 
   //   get fetch
   const { data, isFetching } = useQuery({
-    queryKey: ['Material', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
+    queryKey: [
+      'Material',
+      {
+        search: searchQuery,
+        page: currentPage,
+        limit: itemsPerPage === -1 ? (totalRecords || 10) : itemsPerPage,
+      },
+    ],
     queryFn: getMartialOwnerApi,
     keepPreviousData: true,
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
@@ -70,6 +78,9 @@ const MaterialOwner = () => {
   })
 
   useEffect(() => {
+    if (data?.total !== undefined) {
+      setTotalRecords(data.total)
+    }
     if (data?.data) {
       setFilteredData(data.data)
     }
@@ -198,18 +209,28 @@ const MaterialOwner = () => {
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
+        serverPagination={true}
+        totalServerItems={data?.total || filteredData.length}
         editButton={true}
         deleteButton={true}
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
+        showPagination={false}
       />
 
       <SmartPagination
-        totalPages={data?.totalPages || 1}
+        totalPages={
+          itemsPerPage === -1
+            ? 1
+            : data?.total && itemsPerPage > 0
+              ? Math.ceil(data.total / itemsPerPage)
+              : data?.totalPages || 1
+        }
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setItemsPerPage(value)
           setCurrentPage(1)
         }}
       />

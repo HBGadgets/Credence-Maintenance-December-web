@@ -82,7 +82,16 @@ import React, { useState } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react'
 import './billshow.css'
 
-const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
+const BillShow = ({
+  showModal,
+  setShowModal,
+  pdfBase64,
+  modalTitle,
+  onEdit,
+  editButtonLabel,
+  isUpdating = false,
+  extraFooterButtons,
+}) => {
   const [rotation, setRotation] = useState(0)
 
   const isImage = (base64) => {
@@ -133,28 +142,47 @@ const BillShow = ({ showModal, setShowModal, pdfBase64, modalTitle }) => {
             )}
           </>
         ) : (
-          <p className="unsupported-text">No bill available.</p>
+          <p className="unsupported-text">
+            {modalTitle?.toLowerCase().includes('signature')
+              ? 'No digital signature available.'
+              : 'No bill available.'}
+          </p>
         )}
       </CModalBody>
 
       <CModalFooter className="custom-footer-modern">
-        {pdfBase64 && isImage(pdfBase64) && (
-          <CButton className="btn btn-modern-download" onClick={rotateImage}>
-            Rotate Image
-          </CButton>
-        )}
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          {onEdit && (
+            <CButton
+              color="primary"
+              className="btn btn-modern-download d-flex align-items-center gap-1"
+              onClick={onEdit}
+              disabled={isUpdating}
+            >
+              {isUpdating ? 'Updating...' : editButtonLabel || 'Edit Digital Signature'}
+            </CButton>
+          )}
 
-        {pdfBase64 && (
-          <a
-            href={pdfBase64}
-            download="driver_bill"
-            className="btn btn-modern-download"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Download
-          </a>
-        )}
+          {pdfBase64 && isImage(pdfBase64) && (
+            <CButton className="btn btn-modern-download" onClick={rotateImage}>
+              Rotate Image
+            </CButton>
+          )}
+
+          {pdfBase64 && (
+            <a
+              href={pdfBase64}
+              download="download"
+              className="btn btn-modern-download"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Download
+            </a>
+          )}
+
+          {extraFooterButtons}
+        </div>
 
         <CButton color="light" className="btn-modern-close" onClick={handleClose}>
           Close

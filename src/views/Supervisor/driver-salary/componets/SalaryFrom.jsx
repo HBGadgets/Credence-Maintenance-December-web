@@ -85,18 +85,18 @@ const SalaryFrom = ({ onSubmit, month, visible, onClose, initialData }) => {
 
     setLoading(true)
     try {
-      await onSubmit({
+      const res = await onSubmit({
         ...changedFields,
         _id: formData._id, // Include ID for edit mode
       })
+      if (res && (res.status === false || res.success === false)) {
+        // Do not close form if there is an error in response
+        return
+      }
       onClose()
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        'Failed to save changes.'
-      toast.error(errorMessage)
+      // Error is handled and toasted by parent, keep form open
+      console.error('Submit error:', error)
     } finally {
       setLoading(false)
     }

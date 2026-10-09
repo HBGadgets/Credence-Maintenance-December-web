@@ -5,18 +5,27 @@ const TOKEN = Cookies.get('crdnsMaintToken')
 
 // Get api for worker
 export const getWorkerApi = async () => {
-    if (!TOKEN) throw new Error('Authentication token not found');
+    const token = Cookies.get('crdnsMaintToken') || TOKEN;
+    if (!token) throw new Error('Authentication token not found');
 
     const { data } = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/worker/get-all`,
         {
-            headers: { Authorization: `Bearer ${TOKEN}` },
+            headers: { Authorization: `Bearer ${token}` },
         }
     );
 
     console.log("All Workers Data: ", data);
 
-    return data.workers.map((workerList) => ({
+    const workers = Array.isArray(data?.workers)
+        ? data.workers
+        : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data)
+                ? data
+                : [];
+
+    return workers.map((workerList) => ({
         id: workerList._id,
         name: workerList.name || "Unknown",
         email: workerList.email || "Unknown",
@@ -32,14 +41,16 @@ export const getWorkerApi = async () => {
 // Post API for worker
 export const postWorkerApi = async (workerData) => {
     try {
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
+
         const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/api/worker/create`,
             workerData,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
-
                 },
             }
         );
@@ -66,16 +77,16 @@ export const postWorkerApi = async (workerData) => {
 
 export const patchWorkerApi = async (id, data) => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
 
         const { data: response } = await axios.patch(
             `${import.meta.env.VITE_API_URL}/api/worker/update/${id}`,
             data,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
-
                 },
             },
         )
@@ -92,18 +103,19 @@ export const patchWorkerApi = async (id, data) => {
 
 export const deleteWorkerApi = async (id) => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
 
         const { data } = await axios.delete(
             `${import.meta.env.VITE_API_URL}/api/worker/delete/${id}`,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                 },
             },
         )
 
-        return console.log("error", data.message)
+        return data
     } catch (error) {
         throw error
     }
@@ -196,23 +208,25 @@ export const postCompanyNameApi = async (companyData) => {
 
 export const patchCompanyNameApi = async (id, data) => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        const token = Cookies.get('crdnsMaintToken') || TOKEN;
+        if (!token) throw new Error('Authentication token not found');
+
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        }
+        if (!(data instanceof FormData)) {
+            headers['Content-Type'] = 'multipart/form-data'
+        }
 
         const { data: response } = await axios.patch(
             `${import.meta.env.VITE_API_URL}/api/company/update/${id}`,
             data,
-            {
-                headers: {
-                    Authorization: `Bearer ${TOKEN}`,
-                    'Content-Type': 'multipart/form-data',
-
-                },
-            },
+            { headers },
         )
 
         return response
     } catch (error) {
-        console.error('Update vehicle expense failed:', error, error.response?.data?.message || error.message)
+        console.error('Update company failed:', error, error.response?.data?.message || error.message)
         throw error
     }
 }

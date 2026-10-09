@@ -20,6 +20,7 @@ const Consignor = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [totalRecords, setTotalRecords] = useState(0)
 
   // Modal states
   const [showModalFrom, setShowModalFrom] = useState(false)
@@ -27,7 +28,14 @@ const Consignor = () => {
   const [editingData, setEditingData] = useState(null)
 
   const { data, isFetching } = useQuery({
-    queryKey: ['Consignor', { search: searchQuery, page: currentPage, limit: itemsPerPage }],
+    queryKey: [
+      'Consignor',
+      {
+        search: searchQuery,
+        page: currentPage,
+        limit: itemsPerPage === -1 ? (totalRecords || 10) : itemsPerPage,
+      },
+    ],
     queryFn: getConsignorApi,
     keepPreviousData: true,
     staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
@@ -37,7 +45,11 @@ const Consignor = () => {
   // ========== POST ==========
   const { mutate: postConsignor, isLoading: isSubmitting } = useMutation({
     mutationFn: postConsignorApi,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res && (res.status === false || res.success === false)) {
+        toast.error(res.message || 'Failed to add consignor')
+        return
+      }
       toast.success('Consignor added successfully!')
       queryClient.invalidateQueries({ queryKey: ['Consignor'], exact: false })
       setShowModalFrom(false)
@@ -48,7 +60,11 @@ const Consignor = () => {
   // ========== PATCH ==========
   const { mutate: patchConsignor, isLoading: isUpdating } = useMutation({
     mutationFn: ({ id, formData }) => patchConsignorApi(id, formData),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res && (res.status === false || res.success === false)) {
+        toast.error(res.message || 'Failed to update consignor')
+        return
+      }
       toast.success('Consignor updated successfully!')
       queryClient.invalidateQueries({ queryKey: ['Consignor'], exact: false })
       setShowModalFrom(false)
@@ -69,12 +85,18 @@ const Consignor = () => {
   })
 
   useEffect(() => {
+    if (data?.total !== undefined) {
+      setTotalRecords(data.total)
+    }
     if (data?.data) {
       setFilteredData(data.data)
     }
   }, [data])
 
-  const totalPages = data?.totalPages || 1
+  const totalPages =
+    itemsPerPage === -1
+      ? 1
+      : data?.totalPages || (data?.total && itemsPerPage > 0 ? Math.ceil(data.total / itemsPerPage) : 1)
 
   const columns = [
     { label: 'Consignor Name', key: 'name', sortable: true },
@@ -87,12 +109,21 @@ const Consignor = () => {
       name: 'name',
       label: 'Consignor Name',
       type: 'text',
+      placeholder: 'Enter Consignor Name',
       required: true,
+      stringOnly: true,
+      alphaOnly: true,
+      pattern: '[a-zA-Z\\s]*',
+      onChange: (value) => {
+        const stringValue = String(value || '').replace(/[^a-zA-Z\s]/g, '')
+        return { name: stringValue }
+      },
     },
     {
       name: 'address',
       label: 'Address',
       type: 'text',
+      placeholder: 'Enter Address',
       required: true,
     },
   ]
@@ -108,7 +139,7 @@ const Consignor = () => {
 
     // Map the record data to match the form field names
     const mappedRecord = {
-      name: record.name,
+      name: String(record.name || '').replace(/[^a-zA-Z\s]/g, ''),
       address: record.address,
       id: record.id, // Include ID for update operation
     }
@@ -136,10 +167,16 @@ const Consignor = () => {
 
   // Submit form (Add + Edit)
   const handleFormSubmit = (formValues) => {
+    const sanitizedData = {
+      ...formValues,
+      name: String(formValues.name || '').replace(/[^a-zA-Z\s]/g, '').trim(),
+      address: String(formValues.address || '').trim(),
+    }
+
     if (editMode) {
-      patchConsignor({ id: editingData.id, formData: formValues })
+      patchConsignor({ id: editingData.id, formData: sanitizedData })
     } else {
-      postConsignor(formValues)
+      postConsignor(sanitizedData)
     }
   }
 
@@ -173,6 +210,7 @@ const Consignor = () => {
         size="xl"
         fields={fields}
         isSubmitting={isSubmitting || isUpdating}
+        closeOnSubmit={false}
       />
 
       <Table
@@ -180,21 +218,25 @@ const Consignor = () => {
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
-        currentPage={1}
+        currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
+        serverPagination={true}
+        totalServerItems={data?.total || filteredData.length}
         editButton={true}
         deleteButton={true}
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
+        showPagination={false}
       />
 
       <SmartPagination
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setItemsPerPage(value)
           setCurrentPage(1)
         }}
       />

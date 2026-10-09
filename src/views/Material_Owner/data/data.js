@@ -31,9 +31,9 @@ export const getMartialOwnerApi = async ({ queryKey }) => {
             address: item.address || "Unknown",
             supervisorId: item.supervisorId || "Unknown",
         })),
-        total: data.count || 0,
-        totalPages: Math.ceil((data.count || 0) / limit) || 1,
-        page: page
+        total: data.total ?? data.count ?? 0,
+        totalPages: data.totalPages ?? (limit > 0 ? Math.ceil((data.total ?? data.count ?? 0) / limit) : 1),
+        page: data.page ?? page
     };
 }
 
@@ -62,9 +62,9 @@ export const getMartialOwnerDropDownApi = async ({ queryKey }) => {
             name: item.name || "Unknown",
 
         })),
-        total: data.count || 0,
-        totalPages: Math.ceil((data.count || 0) / limit) || 1,
-        page: page
+        total: data.total ?? data.count ?? 0,
+        totalPages: data.totalPages ?? (limit > 0 ? Math.ceil((data.total ?? data.count ?? 0) / limit) : 1),
+        page: data.page ?? page
     };
 }
 

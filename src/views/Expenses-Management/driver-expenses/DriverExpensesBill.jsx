@@ -86,6 +86,10 @@ const DriverExpensesBill = () => {
   const { mutate: addDriverExpense, isLoading: isSubmitting } = useMutation({
     mutationFn: postDriverExpenseApi,
     onSuccess: (data) => {
+      if (data && (data.status === false || data.success === false)) {
+        toast.error(data.message || 'Failed to add driver expense')
+        return
+      }
       toast.success('Driver expense added successfully!')
       setShowModalFrom(false)
       queryClient.invalidateQueries(['driverExpenseList']) // Refresh the list
@@ -98,7 +102,11 @@ const DriverExpensesBill = () => {
   // Patch driver expense
   const { mutate: updateDriverExpense, isLoading: isUpdating } = useMutation({
     mutationFn: ({ id, formData }) => patchDriverExpenseApi(id, formData),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data && (data.status === false || data.success === false)) {
+        toast.error(data.message || 'Failed to update driver expense')
+        return
+      }
       toast.success('Driver expense updated successfully!')
       setShowModalFrom(false)
       setEditMode(false)
@@ -507,6 +515,7 @@ const DriverExpensesBill = () => {
         size="xl"
         fields={field}
         isSubmitting={isSubmitting || isUpdating}
+        closeOnSubmit={false}
       />
 
       <Table

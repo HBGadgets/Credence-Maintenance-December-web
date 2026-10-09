@@ -9,18 +9,22 @@ const token = Cookies.get('crdnsMaintToken')
 
 export const addDriver = async (data) => {
   try {
-    if (!token) throw new Error('Authentication token not found')
+    const authToken = Cookies.get('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
 
     const { data: response } = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/drivers/create`,
       data,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
           'Content-Type': 'multipart/form-data',
         },
       },
     )
+    if (response?.status === false || response?.success === false) {
+      throw new Error(response?.message || 'Failed to add driver')
+    }
     return response
   } catch (error) {
     throw error
@@ -93,23 +97,25 @@ export const deleteDriver = async (id) => {
 
 export const updateDriver = async (id, data) => {
   try {
-    if (!token) throw new Error('Authentication token not found')
+    const authToken = Cookies.get('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
 
     const { data: response } = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/drivers/update/${id}`,
       data,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
           'Content-Type': 'multipart/form-data',
         },
       },
     )
-
+    if (response?.status === false || response?.success === false) {
+      throw new Error(response?.message || 'Failed to update driver')
+    }
     return response
   } catch (error) {
     console.error('Update driver failed:', error)
-    alert(error.response?.data?.message || error.message)
     throw error
   }
 }

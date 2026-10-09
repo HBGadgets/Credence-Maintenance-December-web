@@ -552,6 +552,29 @@ export const patchAcknowledgementsApi = async (id, formData) => {
   }
 }
 
+// Cancel Completed Godown LR / Trip API
+export const cancelCompletedGodownTPApi = async (id, payload) => {
+  try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    const response = await axios.patch(
+      `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/cancel-completed/${id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const cancelCompletedTripApi = cancelCompletedGodownTPApi
+
 // ------------------------------------------------------------------------------------------------------
 
 // Railhead Get Api

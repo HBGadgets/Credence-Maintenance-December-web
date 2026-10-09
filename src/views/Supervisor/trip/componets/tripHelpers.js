@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { deleteTripApi, getTripListApi, patchTripApi, postTripApi } from '../../data/data'
+import { cancelCompletedTripApi, deleteTripApi, getTripListApi, patchTripApi, postTripApi } from '../../data/data'
 import { toast } from 'react-toastify'
 
 // Fetch Trips
@@ -54,7 +54,10 @@ export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
             coastPerKm: sanitizeNumber(tripData.coastPerKm),
         }
 
-        await postTripApi(payload)
+        const res = await postTripApi(payload)
+        if (res?.status === false || res?.success === false || res?.error) {
+            throw new Error(res?.message || res?.error || 'Failed to add trip.')
+        }
 
         if (typeof fetchTripData === 'function') await fetchTripData()
         if (typeof refetch === 'function') await refetch()
@@ -65,6 +68,7 @@ export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
             text: 'Trip added successfully!',
             confirmButtonText: 'OK',
         })
+        return res
     } catch (err) {
         console.error('Add Trip Failed:', err.message)
         const errorMessage =
@@ -101,7 +105,10 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             clientAdvance: sanitizeNumber(formData.clientAdvance),
         }
 
-        await patchTripApi(formData._id, updatePayload)
+        const res = await patchTripApi(formData._id, updatePayload)
+        if (res?.status === false || res?.success === false || res?.error) {
+            throw new Error(res?.message || res?.error || 'Failed to update trip.')
+        }
 
         if (typeof fetchTripData === 'function') {
             await fetchTripData()
@@ -117,6 +124,7 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             text: 'Trip updated successfully!',
             confirmButtonText: 'OK',
         })
+        return res
     } catch (err) {
         const errorMessage =
             err.response?.data?.message ||
@@ -152,6 +160,83 @@ export const handleDeleteHelper = async (tripId, fetchTripData, fieldName = 'Tri
         } catch (err) {
             console.error('Delete failed:', err.message)
         }
+    }
+}
+
+let isCancelling = false
+
+// Cancel Trip (updates status to cancelled using cancel-completed API with reason)
+export const handleCancelHelper = async (tripId, refetch) => {
+    if (isCancelling) return
+    isCancelling = true
+
+    try {
+        const result = await Swal.fire({
+            title: 'Cancel Trip?',
+            text: 'Please provide a reason for cancelling this trip:',
+            input: 'textarea',
+            inputPlaceholder: 'Enter cancellation reason (e.g. Accidentally marked completed by mistake)...',
+            inputAttributes: {
+                'aria-label': 'Enter cancellation reason',
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, cancel it!',
+            cancelButtonText: 'No, keep it',
+            showLoaderOnConfirm: true,
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Cancellation reason is required!'
+                }
+            },
+            preConfirm: async (value) => {
+                const reason = value ? value.trim() : ''
+                try {
+                    const res = await cancelCompletedTripApi(tripId, { reason })
+                    if (res?.status === false || res?.success === false || res?.error) {
+                        throw new Error(res?.message || res?.error || 'Failed to cancel trip.')
+                    }
+                    return res
+                } catch (err) {
+                    const errorMessage =
+                        (Array.isArray(err.response?.data?.message)
+                            ? err.response.data.message.join(', ')
+                            : err.response?.data?.message) ||
+                        err.response?.data?.error ||
+                        (typeof err.response?.data === 'string' ? err.response.data : null) ||
+                        err.message ||
+                        'Failed to cancel trip.'
+
+                    try {
+                        toast.error(errorMessage)
+                    } catch (e) {
+                        console.error('Toast error:', e)
+                    }
+
+                    try {
+                        Swal.showValidationMessage(errorMessage)
+                    } catch (e) {
+                        console.error('Swal validation error:', e)
+                    }
+                    return false
+                }
+            },
+            allowOutsideClick: () => !Swal.isLoading(),
+        })
+
+        if (result.isConfirmed && result.value) {
+            if (typeof refetch === 'function') await refetch()
+            Swal.fire({
+                icon: 'success',
+                title: 'Trip Cancelled!',
+                text: 'Trip has been cancelled successfully.',
+                confirmButtonText: 'OK',
+            })
+            return result.value
+        }
+    } finally {
+        isCancelling = false
     }
 }
 

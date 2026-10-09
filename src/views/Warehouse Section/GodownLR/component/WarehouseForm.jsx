@@ -1483,6 +1483,11 @@ const WarehouseForm = ({
   const onSubmit = (e) => {
     e.preventDefault()
 
+    if (receivedByType === 'warehouse' && !receivedByWarehouseId) {
+      toast.error('Please select a warehouse')
+      return
+    }
+
     if (mode === 'add') {
       // For add mode, validate and send all data
       if (!formData.companyId) {
@@ -2177,7 +2182,9 @@ const WarehouseForm = ({
 
                   {receivedByType === 'warehouse' && (
                     <div className="mt-3">
-                      <Form.Label>Select Warehouse</Form.Label>
+                      <Form.Label>
+                        Select Warehouse <span style={{ color: 'red' }}>*</span>
+                      </Form.Label>
                       <Select
                         value={getReceivedByWarehouseValue()}
                         onChange={handleWarehouseSelect}

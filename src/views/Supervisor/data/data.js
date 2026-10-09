@@ -132,16 +132,21 @@ export const getDriverSalaryListApiByMonth = async (month) => {
 // POST API for Driver Salary.
 export const postDriverSalaryApi = async (id, salaryData) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TT || TOKEN
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/salary/create/${id}`,
       salaryData,
       {
         headers: {
-          Authorization: `Bearer ${TT}`, // Make sure TT is your valid token
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
     )
+
+    if (response.data && (response.data.status === false || response.data.success === false)) {
+      throw new Error(response.data.message || 'Failed to create salary')
+    }
 
     if (response.status === 201 || response.status === 200) {
       console.log('Driver Salary Created Successfully:', response.data)
@@ -153,7 +158,7 @@ export const postDriverSalaryApi = async (id, salaryData) => {
     console.error('API Error:', error.response?.data?.message || error.message)
 
     // Properly throw the error to be caught in parent function
-    const err = new Error(error.response?.data?.message || 'Failed to create salary')
+    const err = new Error(error.response?.data?.message || error.message || 'Failed to create salary')
     err.response = error.response // Attach the original response if needed
     throw err
   }
@@ -177,16 +182,21 @@ export const deleteDriverSalaryApi = async (id) => {
 
 export const patchDriverSalaryApi = async (id, updatedData) => {
   try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
     const response = await axios.patch(
       `${import.meta.env.VITE_API_URL}/api/salary/update/${id}`,
       updatedData, // Only changed fields
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       },
     )
+
+    if (response.data && (response.data.status === false || response.data.success === false)) {
+      throw new Error(response.data.message || 'Update failed')
+    }
 
     if (response.status === 201 || response.status === 200) {
       return response.data
@@ -270,6 +280,17 @@ export const postTripApi = async (tripData) => {
     )
 
     if (response.status === 201 || response.status === 200) {
+      if (
+        response.data?.status === false ||
+        response.data?.success === false ||
+        response.data?.error
+      ) {
+        const error = new Error(
+          response.data?.message || response.data?.error || 'Failed to create trip',
+        )
+        error.response = response
+        throw error
+      }
       return response.data
     } else {
       throw new Error(`Unexpected response status: ${response.status}`)
@@ -294,10 +315,56 @@ export const patchTripApi = async (id, update) => {
         },
       },
     )
+    if (
+      response.data?.status === false ||
+      response.data?.success === false ||
+      response.data?.error
+    ) {
+      const error = new Error(
+        response.data?.message || response.data?.error || 'Failed to update trip',
+      )
+      error.response = response
+      throw error
+    }
     console.log('This is Trip Update List by ID : ', response.data)
     return response.data
   } catch (error) {
-    console.error('Error:', error.message?.data || error.message)
+    console.error('Error:', error.response?.data?.message || error.message)
+    throw error
+  }
+}
+
+// PATCH API for Cancel Completed Trip
+export const cancelCompletedTripApi = async (id, payload) => {
+  try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    const response = await axios.patch(
+      `${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/cancel-completed/${id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
+    if (
+      response.data?.status === false ||
+      response.data?.success === false ||
+      response.data?.error
+    ) {
+      const error = new Error(
+        response.data?.message || response.data?.error || 'Failed to cancel trip',
+      )
+      error.response = response
+      throw error
+    }
+
+    console.log('Cancel Completed Trip Response:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('Error in cancel completed trip:', error.response?.data?.message || error.message)
     throw error
   }
 }
@@ -884,8 +951,8 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
       leaveDays: item.leaveDays ?? item.leaveCount ?? 0,
       leaveCount: item.leaveCount ?? item.leaveDays ?? 0,
     })),
-    total: data.pagination?.totalRecords || 0,
-    totalPages: data.pagination?.totalPages || 1,
-    page: data.pagination?.currentPage || page,
+    total: data.pagination?.totalRecords ?? data.pagination?.total ?? data.total ?? data.count ?? 0,
+    totalPages: data.pagination?.totalPages ?? data.totalPages ?? 1,
+    page: data.pagination?.currentPage ?? data.page ?? page,
   }
 }

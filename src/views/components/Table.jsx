@@ -16,7 +16,7 @@ import {
   CTableDataCell,
   CTableRow,
 } from '@coreui/react'
-import { Eye, EyeOff, Pencil, Trash2, FileText } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Trash2, FileText, Ban } from 'lucide-react'
 
 const skeletonStyles = `
   @keyframes pulse {
@@ -113,6 +113,8 @@ function Table({
   handleEditButton,
   deleteButton,
   handleDeleteButton,
+  cancelButton,
+  handleCancelButton,
   currentPage,
   itemsPerPage,
   isFetching,
@@ -126,8 +128,12 @@ function Table({
   onViewReport,
   renderActions,
   permission,
+  showPagination,
+  isRowEditable,
 }) {
   const location = useLocation()
+  const shouldShowPagination =
+    showPagination !== undefined ? showPagination : Boolean(setCurrentPage)
   const resolvedPermission = useMemo(() => {
     if (permission) return permission
     const currentPath = location?.pathname
@@ -149,7 +155,8 @@ function Table({
 
   const canEdit = editButton && (!resolvedPermission ? true : PermissionService.hasPermission(resolvedPermission, 'update'))
   const canDelete = deleteButton && (!resolvedPermission ? true : PermissionService.hasPermission(resolvedPermission, 'delete'))
-  const hasActionColumn = canEdit || canDelete || viewButton || reportButton || renderActions
+  const canCancel = cancelButton && (!resolvedPermission ? true : PermissionService.hasPermission(resolvedPermission, 'update'))
+  const hasActionColumn = canEdit || canDelete || canCancel || viewButton || reportButton || renderActions
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
@@ -264,6 +271,12 @@ function Table({
                                    style={{ width: '20px', height: '20px' }}
                                  />
                                )}
+                               {canCancel && (
+                                 <div
+                                   className="skeleton-loader"
+                                   style={{ width: '20px', height: '20px' }}
+                                 />
+                               )}
                               {reportButton && (
                                 <div
                                   className="skeleton-loader"
@@ -343,8 +356,24 @@ function Table({
                               {canEdit && (
                                 <button
                                   className="action-button"
-                                  onClick={() => handleEditButton(row.id || row._id)}
+                                  onClick={() =>
+                                    (!isRowEditable || isRowEditable(row)) &&
+                                    handleEditButton(row.id || row._id)
+                                  }
                                   aria-label="Edit"
+                                  title={
+                                    isRowEditable && !isRowEditable(row)
+                                      ? 'Cancelled trips cannot be edited'
+                                      : 'Edit'
+                                  }
+                                  disabled={Boolean(isRowEditable && !isRowEditable(row))}
+                                  style={{
+                                    opacity: isRowEditable && !isRowEditable(row) ? 0.4 : 1,
+                                    cursor:
+                                      isRowEditable && !isRowEditable(row)
+                                        ? 'not-allowed'
+                                        : 'pointer',
+                                  }}
                                 >
                                   <Pencil color="#2D336B" size={18} />
                                 </button>
@@ -356,6 +385,32 @@ function Table({
                                   aria-label="Delete"
                                 >
                                   <Trash2 color="#2D336B" size={18} />
+                                </button>
+                              )}
+                              {canCancel && (
+                                <button
+                                  className="action-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCancelButton?.(row.id || row._id, row)
+                                  }}
+                                  aria-label="Cancel Trip"
+                                  title={
+                                    row.rawStatus?.toLowerCase() === 'cancelled'
+                                      ? 'Trip already cancelled'
+                                      : 'Cancel Trip'
+                                  }
+                                  disabled={row.rawStatus?.toLowerCase() === 'cancelled'}
+                                  style={{
+                                    opacity:
+                                      row.rawStatus?.toLowerCase() === 'cancelled' ? 0.4 : 1,
+                                    cursor:
+                                      row.rawStatus?.toLowerCase() === 'cancelled'
+                                        ? 'not-allowed'
+                                        : 'pointer',
+                                  }}
+                                >
+                                  <Ban color="#dc3545" size={18} />
                                 </button>
                               )}
 
@@ -407,84 +462,86 @@ function Table({
           </CCardBody>
 
           {/* Pagination Footer */}
-          <div className="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-white w-100">
-            <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
-              <div className="text-muted text-nowrap" style={{ fontSize: '13px' }}>
-                Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + (isShowAll ? filteredData.length : effectiveItemsPerPage), filteredData.length)} of {filteredData.length} results
+          {shouldShowPagination && (
+            <div className="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-white w-100">
+              <div className="d-flex align-items-center gap-3 mb-2 mb-sm-0">
+                <div className="text-muted text-nowrap" style={{ fontSize: '13px' }}>
+                  Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + (isShowAll ? filteredData.length : effectiveItemsPerPage), filteredData.length)} of {filteredData.length} results
+                </div>
+                {onViewReport && (
+                  <button
+                    onClick={onViewReport}
+                    className="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 text-nowrap"
+                    style={{ borderRadius: '6px', fontSize: '12px' }}
+                  >
+                    View Detailed Report
+                  </button>
+                )}
               </div>
-              {onViewReport && (
-                <button
-                  onClick={onViewReport}
-                  className="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 text-nowrap"
-                  style={{ borderRadius: '6px', fontSize: '12px' }}
-                >
-                  View Detailed Report
-                </button>
-              )}
+
+              <div className="d-flex align-items-center flex-wrap gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
+                  <select
+                    className="form-select form-select-sm"
+                    style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
+                    value={isShowAll ? 1000000 : itemsPerPage}
+                    onChange={(e) => {
+                      const val = Number(e.target.value)
+                      if (setItemsPerPage) setItemsPerPage(val === 1000000 ? -1 : val)
+                      if (setCurrentPage) setCurrentPage(1)
+                    }}
+                  >
+                    <option value="5">5</option>
+                    <option value="7">7</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="1000000">All</option>
+                  </select>
+                </div>
+
+                <div className="fw-bold text-dark text-nowrap" style={{ fontSize: '13px' }}>
+                  Page {currentPage} of {totalPages}
+                </div>
+
+                <div className="d-flex gap-1">
+                  <button
+                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                    style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                    onClick={goToFirstPage}
+                    disabled={currentPage <= 1 || isShowAll}
+                  >
+                    {'<<'}
+                  </button>
+                  <button
+                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                    style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                    onClick={goToPrevPage}
+                    disabled={currentPage <= 1 || isShowAll}
+                  >
+                    {'<'}
+                  </button>
+                  <button
+                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                    style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                    onClick={goToNextPage}
+                    disabled={currentPage >= totalPages || isShowAll}
+                  >
+                    {'>'}
+                  </button>
+                  <button
+                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
+                    style={{ width: '28px', height: '28px', borderRadius: '6px' }}
+                    onClick={goToLastPage}
+                    disabled={currentPage >= totalPages || isShowAll}
+                  >
+                    {'>>'}
+                  </button>
+                </div>
+              </div>
             </div>
-
-            <div className="d-flex align-items-center flex-wrap gap-3">
-              <div className="d-flex align-items-center gap-2">
-                <span className="fw-semibold text-dark text-nowrap" style={{ fontSize: '13px' }}>Rows per page</span>
-                <select
-                  className="form-select form-select-sm"
-                  style={{ width: '75px', cursor: 'pointer', borderRadius: '6px', fontSize: '12px', padding: '0.25rem 1.5rem 0.25rem 0.5rem' }}
-                  value={isShowAll ? 1000000 : itemsPerPage}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (setItemsPerPage) setItemsPerPage(val === 1000000 ? -1 : val)
-                    if (setCurrentPage) setCurrentPage(1)
-                  }}
-                >
-                  <option value="5">5</option>
-                  <option value="7">7</option>
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="1000000">All</option>
-                </select>
-              </div>
-
-              <div className="fw-bold text-dark text-nowrap" style={{ fontSize: '13px' }}>
-                Page {currentPage} of {totalPages}
-              </div>
-
-              <div className="d-flex gap-1">
-                <button
-                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
-                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                  onClick={goToFirstPage}
-                  disabled={currentPage <= 1 || isShowAll}
-                >
-                  {'<<'}
-                </button>
-                <button
-                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
-                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                  onClick={goToPrevPage}
-                  disabled={currentPage <= 1 || isShowAll}
-                >
-                  {'<'}
-                </button>
-                <button
-                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
-                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                  onClick={goToNextPage}
-                  disabled={currentPage >= totalPages || isShowAll}
-                >
-                  {'>'}
-                </button>
-                <button
-                  className="btn btn-sm btn-light border d-flex align-items-center justify-content-center bg-white shadow-sm"
-                  style={{ width: '28px', height: '28px', borderRadius: '6px' }}
-                  onClick={goToLastPage}
-                  disabled={currentPage >= totalPages || isShowAll}
-                >
-                  {'>>'}
-                </button>
-              </div>
-            </div>
-          </div>
+          )}
         </CCard>
       </CCol>
     </CRow>
@@ -492,7 +549,7 @@ function Table({
 }
 
 Table.propTypes = {
-  title: PropTypes.string,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   filteredData: PropTypes.array,
   columns: PropTypes.array,
   setFilteredData: PropTypes.func,
@@ -505,6 +562,8 @@ Table.propTypes = {
   handleEditButton: PropTypes.func,
   deleteButton: PropTypes.bool,
   handleDeleteButton: PropTypes.func,
+  cancelButton: PropTypes.bool,
+  handleCancelButton: PropTypes.func,
   currentPage: PropTypes.number,
   itemsPerPage: PropTypes.number,
   isFetching: PropTypes.bool,
@@ -512,6 +571,8 @@ Table.propTypes = {
   handleReportButton: PropTypes.func,
   serverPagination: PropTypes.bool,
   renderActions: PropTypes.func,
+  showPagination: PropTypes.bool,
+  isRowEditable: PropTypes.func,
 }
 
 Table.defaultProps = {

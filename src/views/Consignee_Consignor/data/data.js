@@ -25,8 +25,8 @@ export const getConsigneeApi = async ({ queryKey }) => {
       name: item.name || 'Unknown',
       address: item.address || 'Unknown',
     })),
-    total: data.count || 0,
-    totalPages: data.totalPages || 1,
+    total: data.total ?? data.count ?? 0,
+    totalPages: data.totalPages ?? (limit > 0 ? Math.ceil((data.total ?? data.count ?? 0) / limit) : 1),
     page: page,
   }
 }
@@ -108,8 +108,8 @@ export const getConsignorApi = async ({ queryKey }) => {
       name: item.name || 'Unknown',
       address: item.address || 'Unknown',
     })),
-    total: data.count || 0,
-    totalPages: data.totalPages || 1,
+    total: data.total ?? data.count ?? 0,
+    totalPages: data.totalPages ?? (limit > 0 ? Math.ceil((data.total ?? data.count ?? 0) / limit) : 1),
     page: page,
   }
 }

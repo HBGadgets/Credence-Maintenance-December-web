@@ -157,7 +157,10 @@ const DriverSalary = () => {
       if (submittedData._id) {
         // Remove metadata fields and send only changed data
         const { driverId, _id, ...updateData } = submittedData
-        await patchDriverSalaryApi(_id, updateData)
+        const res = await patchDriverSalaryApi(_id, updateData)
+        if (res && (res.status === false || res.success === false)) {
+          throw new Error(res.message || 'Failed to update salary')
+        }
         Swal.fire({
           icon: 'success',
           title: 'Salary Updated!',
@@ -168,7 +171,10 @@ const DriverSalary = () => {
         if (!submittedData.driverId) {
           throw new Error('Driver ID is required to create salary.')
         }
-        await postDriverSalaryApi(submittedData.driverId, submittedData)
+        const res = await postDriverSalaryApi(submittedData.driverId, submittedData)
+        if (res && (res.status === false || res.success === false)) {
+          throw new Error(res.message || 'Failed to create salary')
+        }
         Swal.fire({
           icon: 'success',
           title: 'Salary Added!',
@@ -186,6 +192,7 @@ const DriverSalary = () => {
         error.message ||
         'Something went wrong while saving the salary.'
       toast.error(errorMessage)
+      throw error // Rethrow so modal stays open on error
     }
   }
 

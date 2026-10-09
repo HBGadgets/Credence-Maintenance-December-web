@@ -73,10 +73,10 @@ const Worker = () => {
   }, [isEmployee, navigate])
 
   // Fetch workers
-  const { data: workerList = [], isFetching } = useQuery({
+  const { data: workerList = [], isFetching, refetch } = useQuery({
     queryKey: ['workerList'],
     queryFn: getWorkerApi,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
     enabled: !isEmployee,
   })
 
@@ -90,10 +90,11 @@ const Worker = () => {
   // Create worker
   const { mutate: addWorker, isLoading: isSubmitting } = useMutation({
     mutationFn: postWorkerApi,
-    onSuccess: () => {
-      toast.success('Worker added successfully!')
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Worker added successfully!')
       setShowModalForm(false)
-      queryClient.invalidateQueries(['workerList'])
+      queryClient.invalidateQueries({ queryKey: ['workerList'], exact: false })
+      refetch()
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to add worker')
@@ -103,12 +104,13 @@ const Worker = () => {
   // Update worker
   const { mutate: updateWorker, isLoading: isUpdating } = useMutation({
     mutationFn: ({ id, formData }) => patchWorkerApi(id, formData),
-    onSuccess: () => {
-      toast.success('Worker updated successfully!')
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Worker updated successfully!')
       setShowModalForm(false)
       setEditMode(false)
       setEditingUser(null)
-      queryClient.invalidateQueries(['workerList'])
+      queryClient.invalidateQueries({ queryKey: ['workerList'], exact: false })
+      refetch()
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update worker')
@@ -120,7 +122,8 @@ const Worker = () => {
     mutationFn: deleteWorkerApi,
     onSuccess: () => {
       toast.success('Worker deleted successfully!')
-      queryClient.invalidateQueries(['workerList'])
+      queryClient.invalidateQueries({ queryKey: ['workerList'], exact: false })
+      refetch()
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete worker')
@@ -186,6 +189,12 @@ const Worker = () => {
       type: 'tel',
       placeholder: 'Enter Phone Number',
       required: true,
+      numericOnly: true,
+      maxLength: 10,
+      onChange: (value) => {
+        const numeric = String(value || '').replace(/\D/g, '').slice(0, 10)
+        return { phone: numeric }
+      },
     },
     {
       name: 'password',
@@ -201,7 +210,10 @@ const Worker = () => {
     const record = filteredData.find((item) => item.id === id)
     if (record) {
       setEditMode(true)
-      setEditingUser(record)
+      setEditingUser({
+        ...record,
+        phone: record.phone ? String(record.phone).replace(/\D/g, '').slice(0, 10) : '',
+      })
       setShowModalForm(true)
     }
   }
@@ -224,6 +236,11 @@ const Worker = () => {
 
   // handle submit
   const handleFormSubmit = (formData) => {
+    const sanitizedData = {
+      ...formData,
+      phone: String(formData.phone || '').replace(/\D/g, '').slice(0, 10),
+    }
+
     if (editMode && editingUser?.id) {
       Swal.fire({
         title: 'Are you sure?',
@@ -234,7 +251,7 @@ const Worker = () => {
         cancelButtonText: 'Cancel',
       }).then((result) => {
         if (result.isConfirmed) {
-          updateWorker({ id: editingUser.id, formData })
+          updateWorker({ id: editingUser.id, formData: sanitizedData })
         }
       })
     } else {
@@ -247,7 +264,7 @@ const Worker = () => {
         cancelButtonText: 'Cancel',
       }).then((result) => {
         if (result.isConfirmed) {
-          addWorker(formData)
+          addWorker(sanitizedData)
         }
       })
     }
@@ -408,6 +425,7 @@ const Worker = () => {
         size="xl"
         fields={fields}
         isSubmitting={isSubmitting || isUpdating}
+        closeOnSubmit={false}
       />
 
       <Table

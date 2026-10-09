@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useRef } from 'react'
 import {
   deleteCompanyNameApi,
   getCompanyNameApi,
@@ -52,6 +52,8 @@ const CompanyName = () => {
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
+  const [viewingCompany, setViewingCompany] = useState(null)
+  const signatureInputRef = useRef(null)
 
   // Fetch companies
   const { data: companyList, isFetching } = useQuery({
@@ -215,18 +217,21 @@ const CompanyName = () => {
   }
 
   // handler view
-
   const handleViewButton = async (id) => {
     try {
-      const selectedRow = filteredData.find((item) => item.id === id)
+      const selectedRow = filteredData.find((item) => item.id === id || item._id === id)
 
       if (!selectedRow) {
         toast.error('Data not found for this ID.')
         return
       }
 
+      setViewingCompany(selectedRow)
+
       if (!selectedRow.digitalSignatureId) {
-        toast.warn('No digital signature available for this entry.')
+        setPdfBase64(null)
+        setModalTitle(`Digital Signature - ${selectedRow.companyName || ''}`)
+        setShowModal(true)
         return
       }
 
@@ -240,7 +245,9 @@ const CompanyName = () => {
       const mimeType = contentType || 'image/jpeg' // default fallback
 
       if (!rawBase64) {
-        toast.error('No signature image data found.')
+        setPdfBase64(null)
+        setModalTitle(`Digital Signature - ${selectedRow.companyName || ''}`)
+        setShowModal(true)
         return
       }
 
@@ -252,11 +259,11 @@ const CompanyName = () => {
 
       //  Set modal title dynamically
       if (mimeType.startsWith('application/pdf')) {
-        setModalTitle('Digital Signature (PDF)')
+        setModalTitle(`Digital Signature (PDF) - ${selectedRow.companyName || ''}`)
       } else if (mimeType.startsWith('image')) {
-        setModalTitle('Digital Signature (Image)')
+        setModalTitle(`Digital Signature (Image) - ${selectedRow.companyName || ''}`)
       } else {
-        setModalTitle('Digital Signature (File)')
+        setModalTitle(`Digital Signature - ${selectedRow.companyName || ''}`)
       }
 
       setShowModal(true)
@@ -264,6 +271,72 @@ const CompanyName = () => {
       console.error('Failed to fetch digital signature:', error)
       toast.error('Error fetching digital signature. Please try again.')
     }
+  }
+
+  // Handle edit signature inside view modal
+  const handleEditSignatureClick = () => {
+    signatureInputRef.current?.click()
+  }
+
+  const handleSignatureFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (PNG, JPG, JPEG, etc.).')
+      e.target.value = ''
+      return
+    }
+
+    if (!viewingCompany?.id && !viewingCompany?._id) {
+      toast.error('Company details not found.')
+      e.target.value = ''
+      return
+    }
+
+    const companyId = viewingCompany.id || viewingCompany._id
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const previewUrl = event.target.result
+
+      Swal.fire({
+        title: 'Update Digital Signature?',
+        text: `Do you want to update the digital signature for "${viewingCompany.companyName || 'this company'}"?`,
+        imageUrl: previewUrl,
+        imageWidth: 260,
+        imageHeight: 120,
+        imageAlt: 'Signature Preview',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Update it',
+        cancelButtonText: 'Cancel',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const formData = new FormData()
+          formData.append('signatureImage', file)
+          if (viewingCompany.companyName) formData.append('companyName', viewingCompany.companyName)
+          if (viewingCompany.email) formData.append('email', viewingCompany.email)
+          if (viewingCompany.mobileNumber) formData.append('mobileNumber', viewingCompany.mobileNumber)
+          if (viewingCompany.officeNumber) formData.append('officeNumber', viewingCompany.officeNumber)
+          if (viewingCompany.address) formData.append('address', viewingCompany.address)
+          if (viewingCompany.gstNumber) formData.append('gstNumber', viewingCompany.gstNumber)
+
+          updateCompany(
+            { id: companyId, formData },
+            {
+              onSuccess: () => {
+                setPdfBase64(previewUrl)
+                setModalTitle(`Digital Signature (Image) - ${viewingCompany.companyName || ''}`)
+              },
+            },
+          )
+        }
+        if (signatureInputRef.current) {
+          signatureInputRef.current.value = ''
+        }
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   // Dropdown items for export
@@ -382,9 +455,23 @@ const CompanyName = () => {
       {/* Modal Component */}
       <BillShow
         showModal={showModal}
-        setShowModal={setShowModal}
+        setShowModal={(visible) => {
+          setShowModal(visible)
+          if (!visible) setViewingCompany(null)
+        }}
         pdfBase64={pdfBase64}
         modalTitle={modalTitle}
+        onEdit={handleEditSignatureClick}
+        editButtonLabel="Edit Digital Signature"
+        isUpdating={isUpdating}
+      />
+
+      <input
+        type="file"
+        ref={signatureInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleSignatureFileChange}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">

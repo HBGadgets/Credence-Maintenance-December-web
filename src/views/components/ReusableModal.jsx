@@ -13,6 +13,7 @@ const ReusableModal = ({
   backdrop = 'static',
   keyboard = false,
   isSubmitting = false,
+  closeOnSubmit = false,
   children,
 }) => {
   const initialFormState = fields.reduce((acc, field) => {
@@ -95,10 +96,61 @@ const ReusableModal = ({
     }
   }, [fields, show])
 
+  const handleKeyDown = (e, field) => {
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+      'Shift',
+      'CapsLock',
+    ]
+    if (
+      allowedKeys.includes(e.key) ||
+      e.key.length > 1 ||
+      ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z'].includes(e.key.toLowerCase()))
+    ) {
+      return
+    }
+
+    if (field?.numericOnly) {
+      if (!/^\d$/.test(e.key)) {
+        e.preventDefault()
+      }
+    }
+
+    if (field?.stringOnly || field?.alphaOnly) {
+      if (!/^[a-zA-Z\s]$/.test(e.key)) {
+        e.preventDefault()
+      }
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value, files, type } = e.target
-    const newValue = type === 'file' ? files[0] : value
     const field = fields.find((f) => f.name === name)
+    let newValue = type === 'file' ? files[0] : value
+
+    if (field?.numericOnly && typeof newValue === 'string') {
+      newValue = newValue.replace(/\D/g, '')
+      if (field.maxLength) {
+        newValue = newValue.slice(0, field.maxLength)
+      }
+    }
+
+    if ((field?.stringOnly || field?.alphaOnly) && typeof newValue === 'string') {
+      newValue = newValue.replace(/[^a-zA-Z\s]/g, '')
+      if (field.maxLength) {
+        newValue = newValue.slice(0, field.maxLength)
+      }
+    }
 
     setFormData((prev) => {
       let updated = {
@@ -141,17 +193,30 @@ const ReusableModal = ({
       if (field.required) {
         const value = formData[field.name]
         const isEmpty =
-          ((field.type === 'text' ||
-            field.type === 'number' ||
-            field.type === 'date' ||
-            field.type === 'password') &&
-            (value === '' || value === undefined || value === null)) ||
           (field.type === 'select' && !value) ||
           (field.type === 'multiselect' && (!value || value.length === 0)) ||
-          (field.type === 'file' && !value)
+          (field.type === 'file' && !value) ||
+          (field.type !== 'select' &&
+            field.type !== 'multiselect' &&
+            field.type !== 'file' &&
+            (value === '' || value === undefined || value === null || (typeof value === 'string' && value.trim() === '')))
 
         if (isEmpty) {
           newErrors[field.name] = `${field.label} is required`
+        }
+      }
+
+      if (field.numericOnly && formData[field.name]) {
+        const strVal = String(formData[field.name]).trim()
+        if (strVal && !/^\d+$/.test(strVal)) {
+          newErrors[field.name] = `${field.label} must contain only numbers`
+        }
+      }
+
+      if ((field.stringOnly || field.alphaOnly) && formData[field.name]) {
+        const strVal = String(formData[field.name]).trim()
+        if (strVal && !/^[a-zA-Z\s]+$/.test(strVal)) {
+          newErrors[field.name] = `${field.label} must contain only letters`
         }
       }
     })
@@ -172,7 +237,9 @@ const ReusableModal = ({
     })
 
     onSubmit(cleanedData)
-    onClose()
+    if (closeOnSubmit) {
+      onClose()
+    }
   }
 
   return (
@@ -241,8 +308,26 @@ const ReusableModal = ({
                   placeholder={field.placeholder}
                   value={formData[field.name]}
                   onChange={handleChange}
+                  onKeyDown={(e) => handleKeyDown(e, field)}
                   readOnly={field.readOnly}
                   disabled={field.disabled}
+                  maxLength={field.maxLength}
+                  pattern={
+                    field.pattern ||
+                    (field.numericOnly
+                      ? '[0-9]*'
+                      : field.stringOnly || field.alphaOnly
+                      ? '[a-zA-Z\\s]*'
+                      : undefined)
+                  }
+                  inputMode={
+                    field.inputMode ||
+                    (field.numericOnly
+                      ? 'numeric'
+                      : field.stringOnly || field.alphaOnly
+                      ? 'text'
+                      : undefined)
+                  }
                   step={field.step || (field.type === 'number' ? 'any' : undefined)}
                   min={field.min}
                   max={field.max}
@@ -276,11 +361,11 @@ const ReusableModal = ({
       </Modal.Body>
 
       <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Save
+        <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save'}
         </Button>
       </Modal.Footer>
     </Modal>

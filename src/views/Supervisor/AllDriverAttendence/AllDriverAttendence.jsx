@@ -28,6 +28,7 @@ const AllDriverAttendance = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
+  const [totalRecords, setTotalRecords] = useState(0)
   const [attendanceFilter, setAttendanceFilter] = useState(null)
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -49,7 +50,7 @@ const AllDriverAttendance = () => {
       {
         search: searchQuery,
         page: currentPage,
-        limit: itemsPerPage,
+        limit: itemsPerPage === -1 ? (totalRecords || 10) : itemsPerPage,
         month: parseInt(month, 10),
         year: parseInt(year, 10),
         filter: selectedFilterValue,
@@ -62,12 +63,20 @@ const AllDriverAttendance = () => {
   })
 
   useEffect(() => {
+    if (data?.total !== undefined) {
+      setTotalRecords(data.total)
+    }
     if (data?.data) {
       setFilteredData(data.data)
     }
   }, [data])
 
-  const totalPages = data?.totalPages || 1
+  const totalPages =
+    itemsPerPage === -1
+      ? 1
+      : data?.total && itemsPerPage > 0
+        ? Math.ceil(data.total / itemsPerPage)
+        : data?.totalPages || 1
 
   const columns = [
     { label: 'Driver Name', key: 'driverName', sortable: true },
@@ -164,9 +173,12 @@ const AllDriverAttendance = () => {
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}
-        currentPage={1}
+        currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         isFetching={isFetching}
+        serverPagination={true}
+        totalServerItems={data?.total || filteredData.length}
+        showPagination={false}
         viewButton={true}
         handleViewButton={handleViewButton}
       />
@@ -175,8 +187,9 @@ const AllDriverAttendance = () => {
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value === -1 ? filteredData.length : value)
+          setItemsPerPage(value)
           setCurrentPage(1)
         }}
       />
