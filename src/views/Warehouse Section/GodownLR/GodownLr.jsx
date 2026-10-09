@@ -46,6 +46,7 @@ const GodownLr = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [totalRecords, setTotalRecords] = useState(0)
 
   // aknowledgement selected Row id
   const [selectedRecordId, setSelectedRecordId] = useState(null)
@@ -147,7 +148,7 @@ const GodownLr = () => {
       {
         search: searchQuery,
         page: currentPage,
-        limit: itemsPerPage,
+        limit: itemsPerPage === -1 ? (totalRecords || 10) : itemsPerPage,
         consignorId: selectedConsignor?.value || null,
         consigneeId: selectedConsignee?.value || null,
         companyId: selectedCompany?.value || null,
@@ -184,6 +185,10 @@ const GodownLr = () => {
 
   // Extract consignor and consignee options from fetched data
   useEffect(() => {
+    if (getGodownTP?.total !== undefined) {
+      setTotalRecords(getGodownTP.total)
+    }
+
     if (getGodownTP?.receipts) {
       // Extract unique consignors
       const consignorsMap = {}
@@ -391,7 +396,12 @@ const GodownLr = () => {
   ])
 
   // Compute total pages
-  const totalPages = getGodownTP ? Math.ceil(getGodownTP.total / getGodownTP.limit) : 1
+  const totalPages =
+    itemsPerPage === -1
+      ? 1
+      : getGodownTP?.total && getGodownTP?.limit
+        ? Math.ceil(getGodownTP.total / getGodownTP.limit)
+        : 1
 
   // Handle form submission
   const handleFormSubmit = (formData) => {
@@ -1051,7 +1061,7 @@ const GodownLr = () => {
         filteredData={filteredData}
         setFilteredData={setFilteredData}
         currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={itemsPerPage === -1 ? (filteredData?.length || 10) : itemsPerPage}
         isFetching={isFetching}
         editButton={true}
         deleteButton={false}
@@ -1068,9 +1078,9 @@ const GodownLr = () => {
         totalPages={totalPages}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onItemsPerPageChange={(value) => {
-          const newItems = value === -1 ? filteredData.length : value
-          setItemsPerPage(newItems)
+          setItemsPerPage(value)
           setCurrentPage(1)
         }}
       />
