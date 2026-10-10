@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
-import AddButton from '../components/AddButton'
 import SearchInput from '../components/SearchInput'
 import ReusableModal from '../components/ReusableModal'
 import IconDropdown from './IconDropdown'
@@ -307,19 +306,7 @@ const SupervisorMaster = () => {
     <>
       <ToastContainer />
 
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <AddButton
-            label="Add Supervisor"
-            onClick={() => {
-              setEditMode(false)
-              setEditingSupervisor(null)
-              setModalSchoolId(null)
-              setShowModalForm(true)
-            }}
-          />
-        </div>
-
+      <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
         <div className="d-flex align-items-center gap-2">
           <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearchChange} />
         </div>
