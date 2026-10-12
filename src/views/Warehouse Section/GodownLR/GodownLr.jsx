@@ -5,6 +5,7 @@ import {
   postGodownTPApi,
   patchGodownTPStatusApi,
   patchAcknowledgementsApi,
+  cancelCompletedGodownTPApi,
 } from '../data/data'
 import SearchInput from '../../components/SearchInput'
 import SmartPagination from '../../components/SmartPagination'
@@ -442,6 +443,88 @@ const GodownLr = () => {
         deleteGodownTP(id)
       }
     })
+  }
+
+  // Handle Cancel Godown Lorry Receipt button
+  const handleCancelGodownTP = async (id, row) => {
+    const selected = row || filteredData.find((item) => item.id === id || item._id === id)
+    const currentStatus = (selected?.status || selected?.rawStatus)?.toLowerCase()
+
+    if (currentStatus === 'cancelled') {
+      toast.info('Lorry receipt is already cancelled!')
+      return
+    }
+
+    try {
+      const result = await Swal.fire({
+        title: 'Cancel Lorry Receipt?',
+        text: 'Please provide a reason for cancelling this lorry receipt:',
+        input: 'textarea',
+        inputPlaceholder: 'Enter cancellation reason (e.g. Accidentally marked completed by mistake)...',
+        inputAttributes: {
+          'aria-label': 'Enter cancellation reason',
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, cancel it!',
+        cancelButtonText: 'No, keep it',
+        showLoaderOnConfirm: true,
+        inputValidator: (value) => {
+          if (!value || !value.trim()) {
+            return 'Cancellation reason is required!'
+          }
+        },
+        preConfirm: async (value) => {
+          const reason = value ? value.trim() : ''
+          try {
+            const res = await cancelCompletedGodownTPApi(id, { reason })
+            if (res?.status === false || res?.success === false || res?.error) {
+              throw new Error(res?.message || res?.error || 'Failed to cancel lorry receipt.')
+            }
+            return res
+          } catch (err) {
+            const errorMessage =
+              (Array.isArray(err.response?.data?.message)
+                ? err.response.data.message.join(', ')
+                : err.response?.data?.message) ||
+              err.response?.data?.error ||
+              (typeof err.response?.data === 'string' ? err.response.data : null) ||
+              err.message ||
+              'Failed to cancel lorry receipt.'
+
+            try {
+              toast.error(errorMessage)
+            } catch (e) {
+              console.error('Toast error:', e)
+            }
+
+            try {
+              Swal.showValidationMessage(errorMessage)
+            } catch (e) {
+              console.error('Swal validation error:', e)
+            }
+            return false
+          }
+        },
+        allowOutsideClick: () => !Swal.isLoading(),
+      })
+
+      if (result.isConfirmed && result.value) {
+        queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
+        toast.success('Lorry receipt cancelled successfully!')
+        Swal.fire({
+          icon: 'success',
+          title: 'Cancelled!',
+          text: 'Lorry receipt has been cancelled successfully.',
+          timer: 2000,
+          showConfirmButton: false,
+        })
+      }
+    } catch (error) {
+      console.error('Cancel error:', error)
+      toast.error(error?.message || 'An error occurred while cancelling.')
+    }
   }
 
   // Function to check if status button should be disabled
@@ -1066,11 +1149,13 @@ const GodownLr = () => {
         editButton={true}
         deleteButton={false}
         statusButton={true}
+        cancelButton={true}
         viewButton={true}
         viewButtonLabel="Invoice"
         handleEditButton={handleEditButton}
         handleDeleteButton={handleDeleteButton}
         handleStatusButton={handleStatusButtonClick}
+        handleCancelButton={handleCancelGodownTP}
         handleViewButton={handleViewButton}
       />
 

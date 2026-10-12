@@ -339,15 +339,23 @@ export const deleteInventoryProductListApi = async (id) => {
 // Godown LR tp pass
 
 export const getGodownTPApi = async ({ queryKey }) => {
-  const [_key, { search, page, limit, consignorId, consigneeId, companyId, workerId, status }] =
-    queryKey
+  const [
+    _key,
+    { search, page, limit, consignorId, consigneeId, companyId, workerId, status, supervisorId } = {},
+  ] = queryKey
 
-  if (!TOKEN) throw new Error('Authentication token not found')
+  const authToken = Cookies.get('crdnsMaintToken') || TOKEN
+  if (!authToken) throw new Error('Authentication token not found')
 
   const params = {
     search: search || '',
     page,
     limit,
+  }
+
+  // Add supervisorId filter if provided
+  if (supervisorId) {
+    params.supervisorId = supervisorId
   }
 
   // Add consignorId filter if provided
@@ -377,7 +385,7 @@ export const getGodownTPApi = async ({ queryKey }) => {
 
   const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/godown-lorry-receipt/get`, {
     params,
-    headers: { Authorization: `Bearer ${TOKEN}` },
+    headers: { Authorization: `Bearer ${authToken}` },
   })
 
   console.log('All Lorry Receipts Data: ', data)

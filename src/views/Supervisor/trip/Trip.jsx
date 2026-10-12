@@ -436,8 +436,8 @@ const Trip = () => {
             row.rawStatus?.toLowerCase() !== 'cancel'
           }
           deleteButton={false}
-          cancelButton={true}
-          handleCancelButton={handleCancelTrip}
+          /* cancelButton={true} */
+          /* handleCancelButton={handleCancelTrip} */
           isFetching={isFetching}
           viewButtonLabel="Subtrips"
           reportButton={true}

@@ -27,6 +27,7 @@ import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TokenContext } from '../../context/TokenContext'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllAdmin, fetchDashboardData, getAllTripListApi, getDailyTripLogsApi } from './data/data'
+import { getGodownTPApi } from '../Warehouse Section/data/data'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { jwtDecode } from 'jwt-decode'
 import { getStatusBadge } from '../Supervisor/trip/componets/tripHelpers'
@@ -52,7 +53,7 @@ import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
 import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
 
-const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
+const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceiptsData }) => {
   const [overviewMode, setOverviewMode] = useState('Resource Overview')
   const [filterCategory, setFilterCategory] = useState('All')
   const [tripCategory, setTripCategory] = useState('Trip')
@@ -82,7 +83,34 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
     return { started, completed }
   }, [dailyTripsData])
 
+  const transportReceiptStats = useMemo(() => {
+    let pending = 0, completed = 0, cancelled = 0;
+    (transportReceiptsData || []).forEach(item => {
+      const st = item.status?.toLowerCase() || '';
+      if (st.includes('complete')) completed++;
+      else if (st.includes('cancel')) cancelled++;
+      else pending++;
+    })
+    const totalCount = (transportReceiptsData || []).length || Number(data?.totalGodownLorryReceiptCount) || 0
+    const todayCount = Number(data?.todayGodownLorryReceiptCount) || 0
+    return { pending, completed, cancelled, total: totalCount, today: todayCount }
+  }, [transportReceiptsData, data])
+
   const pieData = useMemo(() => {
+    if (overviewMode === 'Transport Receipt') {
+      if ((transportReceiptsData || []).length > 0) {
+        return [
+          { name: 'Completed', value: transportReceiptStats.completed, color: '#28a745' },
+          { name: 'Pending', value: transportReceiptStats.pending, color: '#ffc107' },
+          { name: 'Cancelled', value: transportReceiptStats.cancelled, color: '#dc3545' },
+        ]
+      }
+      return [
+        { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
+        { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
+      ]
+    }
+
     if (overviewMode === 'Trips Overview') {
       if (tripCategory === 'Trip') {
         return [
@@ -90,10 +118,22 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
           { name: 'Started', value: tripStats.started, color: '#17a2b8' },
           { name: 'Completed', value: tripStats.completed, color: '#28a745' },
         ]
-      } else {
+      } else if (tripCategory === 'Daily Trip') {
         return [
           { name: 'Started Logs', value: dailyTripStats.started, color: '#17a2b8' },
           { name: 'Completed Logs', value: dailyTripStats.completed, color: '#28a745' },
+        ]
+      } else {
+        if ((transportReceiptsData || []).length > 0) {
+          return [
+            { name: 'Completed', value: transportReceiptStats.completed, color: '#28a745' },
+            { name: 'Pending', value: transportReceiptStats.pending, color: '#ffc107' },
+            { name: 'Cancelled', value: transportReceiptStats.cancelled, color: '#dc3545' },
+          ]
+        }
+        return [
+          { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
+          { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
         ]
       }
     } else {
@@ -115,16 +155,29 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
             { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
             { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
           ]
+        case 'Transport Receipt':
+          if ((transportReceiptsData || []).length > 0) {
+            return [
+              { name: 'Completed', value: transportReceiptStats.completed, color: '#28a745' },
+              { name: 'Pending', value: transportReceiptStats.pending, color: '#ffc107' },
+              { name: 'Cancelled', value: transportReceiptStats.cancelled, color: '#dc3545' },
+            ]
+          }
+          return [
+            { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
+            { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
+          ]
         case 'All':
         default:
           return [
             { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
             { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
             { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
+            { name: 'Transport Receipts', value: Number(data?.totalGodownLorryReceiptCount) || (transportReceiptStats.total || 0), color: '#0d6efd' },
           ]
       }
     }
-  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats])
+  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats, transportReceiptStats, transportReceiptsData])
 
   const areaData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
@@ -157,18 +210,19 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
       <div className="d-flex justify-content-end gap-2 mb-2 px-2">
         <select
           className="form-select form-select-sm shadow-sm"
-          style={{ width: '160px', fontWeight: '500' }}
+          style={{ width: '175px', fontWeight: '500' }}
           value={overviewMode}
           onChange={(e) => setOverviewMode(e.target.value)}
         >
           <option value="Resource Overview">Resource Overview</option>
           <option value="Trips Overview">Trips Overview</option>
+          <option value="Transport Receipt">Transport Receipt</option>
         </select>
 
         {overviewMode === 'Resource Overview' ? (
           <select
             className="form-select form-select-sm shadow-sm"
-            style={{ width: '150px' }}
+            style={{ width: '160px' }}
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
           >
@@ -176,18 +230,20 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData }) => {
             <option value="Vehicles">Vehicles</option>
             <option value="Drivers">Drivers</option>
             <option value="Documents">Documents</option>
+            <option value="Transport Receipt">Transport Receipt</option>
           </select>
-        ) : (
+        ) : overviewMode === 'Trips Overview' ? (
           <select
             className="form-select form-select-sm shadow-sm"
-            style={{ width: '150px' }}
+            style={{ width: '160px' }}
             value={tripCategory}
             onChange={(e) => setTripCategory(e.target.value)}
           >
             <option value="Trip">Trips</option>
             <option value="Daily Trip">Daily Trips Logs</option>
+            <option value="Transport Receipt">Transport Receipt</option>
           </select>
-        )}
+        ) : null}
       </div>
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
@@ -414,6 +470,25 @@ const Dashboard = () => {
   const DailyTripLogsList = DailyTripLogsResponse?.data || EMPTY_ARRAY
   const totalDailyTripLogs = DailyTripLogsResponse?.total || 0
 
+  // Fetch Transport Receipts
+  const { data: TransportReceiptsResponse, isFetching: isFetchingTransportReceipts } = useQuery({
+    queryKey: [
+      'TransportReceipts',
+      {
+        search: searchQuery,
+        page: currentPage,
+        limit: itemsPerPage === -1 ? 1000 : itemsPerPage,
+        supervisorId: selectedName?.value || null,
+      },
+    ],
+    queryFn: getGodownTPApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken && tableMode === 'Transport Receipt' && !isWorker,
+  })
+
+  const TransportReceiptsList = TransportReceiptsResponse?.receipts || EMPTY_ARRAY
+  const totalTransportReceipts = TransportReceiptsResponse?.total || 0
+
   // Fetch Daily Trip Logs for Analytics (All logs)
   const { data: DailyTripLogsAnalyticsData } = useQuery({
     queryKey: ['DailyTripLogsAnalytics', token, 1, 10000, ''],
@@ -423,6 +498,24 @@ const Dashboard = () => {
   })
 
   const dailyTripsAnalyticsList = DailyTripLogsAnalyticsData?.data || EMPTY_ARRAY
+
+  // Fetch Transport Receipts for Analytics (All logs)
+  const { data: TransportReceiptsAnalyticsData } = useQuery({
+    queryKey: [
+      'TransportReceiptsAnalytics',
+      {
+        search: '',
+        page: 1,
+        limit: 10000,
+        supervisorId: selectedName?.value || null,
+      },
+    ],
+    queryFn: getGodownTPApi,
+    staleTime: 1000 * 60 * 30,
+    enabled: !!token && !!decodedToken && !isWorker,
+  })
+
+  const transportReceiptsAnalyticsList = TransportReceiptsAnalyticsData?.receipts || EMPTY_ARRAY
 
   // Use fetched data if available, otherwise fallback to static values
   const dashboardData = data?.data || {}
@@ -494,7 +587,12 @@ const Dashboard = () => {
   }, [socket, userInteracted, selectedContact?.id, addNotification, setUnreadCounts])
 
   useEffect(() => {
-    const activeList = tableMode === 'Trip' ? TripsList : DailyTripLogsList
+    const activeList =
+      tableMode === 'Trip'
+        ? TripsList
+        : tableMode === 'Daily Trip Logs'
+          ? DailyTripLogsList
+          : TransportReceiptsList
     
     if (!activeList || activeList.length === 0) {
       setFilteredData((prev) => (prev.length === 0 ? prev : EMPTY_ARRAY))
@@ -505,7 +603,13 @@ const Dashboard = () => {
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
-      filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+      filtered = filtered.filter((item) => {
+        return (
+          item.supervisorId === selectedName.value ||
+          item.supervisor_id === selectedName.value ||
+          item.supervisor === selectedName.value
+        )
+      })
     }
 
     // Filter by date range if available
@@ -516,16 +620,17 @@ const Dashboard = () => {
       end.setHours(23, 59, 59, 999)
 
       filtered = filtered.filter((item) => {
-        const dateStr = item.date || item.orginalDate || item.createdAt || item.startDate
+        const dateStr = item.originalDate || item.date || item.orginalDate || item.createdAt || item.startDate
         if (!dateStr) return false
         
         const itemDate = new Date(dateStr)
+        if (isNaN(itemDate.getTime())) return true
         return itemDate >= start && itemDate <= end
       })
     }
 
-    // Apply search query filter
-    if (searchQuery) {
+    // Apply search query filter (primarily for client-side search like Trips)
+    if (searchQuery && tableMode === 'Trip') {
       const lowercasedQuery = searchQuery.toLowerCase()
       filtered = filtered.filter((item) =>
         Object.values(item).some(
@@ -547,6 +652,30 @@ const Dashboard = () => {
         }
       }
 
+      if (tableMode === 'Transport Receipt') {
+        const getLRBadgeClass = (status) => {
+          const s = (status || '').toLowerCase()
+          if (s === 'completed') return 'badge bg-success'
+          if (s === 'pending') return 'badge bg-warning text-dark'
+          if (s === 'cancelled') return 'badge bg-danger'
+          if (s.includes('partially')) return 'badge bg-primary'
+          return 'badge bg-secondary'
+        }
+        return {
+          ...data,
+          status: data.status ? (
+            <span
+              className={getLRBadgeClass(data.status)}
+              style={{ minWidth: '70px', display: 'inline-block', textTransform: 'capitalize' }}
+            >
+              {data.status}
+            </span>
+          ) : (
+            'N/A'
+          ),
+        }
+      }
+
       const budgetAllocated = Number(data.budgetAllocated) || 0
       const subTripBudgetAllocated = Number(data.subTripBudgetAllocated) || 0
       const spentAmount = Number(data.spentAmount) || 0
@@ -562,7 +691,7 @@ const Dashboard = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, DailyTripLogsList, selectedName, searchQuery, dateRange, tableMode])
+  }, [TripsList, DailyTripLogsList, TransportReceiptsList, selectedName, searchQuery, dateRange, tableMode])
 
   // Table view
   const baseTripColumns = [
@@ -591,7 +720,24 @@ const Dashboard = () => {
     { label: 'Status', key: 'status', sortable: true },
   ]
 
-  const columns = tableMode === 'Trip' ? baseTripColumns : dailyTripColumns
+  const transportReceiptColumns = [
+    { label: 'Date', key: 'date', sortable: true },
+    { label: 'Receipt No', key: 'receiptNo', sortable: true },
+    { label: 'Company Name', key: 'companyName', sortable: true },
+    { label: 'Consignor Name', key: 'consignorName', sortable: true },
+    { label: 'Consignee Name', key: 'consigneeName', sortable: true },
+    { label: 'Material Owner', key: 'martialOwnerName', sortable: true },
+    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    { label: 'Driver Name', key: 'driverName', sortable: true },
+    { label: 'Status', key: 'status', sortable: true },
+  ]
+
+  const columns =
+    tableMode === 'Trip'
+      ? baseTripColumns
+      : tableMode === 'Daily Trip Logs'
+        ? dailyTripColumns
+        : transportReceiptColumns
 
   // Handle Search
   const handleSearch = (query) => {
@@ -607,6 +753,8 @@ const Dashboard = () => {
   const handleViewDetailedReport = () => {
     if (tableMode === 'Daily Trip Logs') {
       navigate('/DailyTrips')
+    } else if (tableMode === 'Transport Receipt') {
+      navigate('/GodownLr')
     } else {
       navigate('/Trip')
     }
@@ -1186,7 +1334,7 @@ const Dashboard = () => {
                     <div className="d-flex align-items-center gap-2">
                       <select 
                         className="form-select form-select-sm shadow-sm bg-light"
-                        style={{ width: '160px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
+                        style={{ width: '185px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
                         value={tableMode}
                         onChange={(e) => {
                           setTableMode(e.target.value)
@@ -1195,6 +1343,7 @@ const Dashboard = () => {
                       >
                         <option value="Trip">Trips Details</option>
                         <option value="Daily Trip Logs">Daily Trip Logs</option>
+                        <option value="Transport Receipt">Transport Receipt</option>
                       </select>
                     </div>
                     <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -1213,10 +1362,22 @@ const Dashboard = () => {
                 setCurrentPage={setCurrentPage}
                 itemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
-                isFetching={tableMode === 'Trip' ? isFetching : isFetchingDailyLogs}
+                isFetching={
+                  tableMode === 'Trip'
+                    ? isFetching
+                    : tableMode === 'Daily Trip Logs'
+                      ? isFetchingDailyLogs
+                      : isFetchingTransportReceipts
+                }
                 onViewReport={() => handleViewDetailedReport()}
-                serverPagination={tableMode === 'Daily Trip Logs'}
-                totalServerItems={tableMode === 'Daily Trip Logs' ? totalDailyTripLogs : filteredData.length}
+                serverPagination={tableMode === 'Daily Trip Logs' || tableMode === 'Transport Receipt'}
+                totalServerItems={
+                  tableMode === 'Daily Trip Logs'
+                    ? totalDailyTripLogs
+                    : tableMode === 'Transport Receipt'
+                      ? totalTransportReceipts
+                      : filteredData.length
+                }
               />
             </div>
           )}
@@ -1256,7 +1417,12 @@ const Dashboard = () => {
                   <strong>Fleet Analytics</strong>
                 </CCardHeader>
                 <CCardBody className="px-4 pb-4 d-flex flex-column justify-content-center">
-                  <FleetAnalyticsChart data={dashboardData} tripsData={TripsList} dailyTripsData={dailyTripsAnalyticsList} />
+                  <FleetAnalyticsChart
+                    data={dashboardData}
+                    tripsData={TripsList}
+                    dailyTripsData={dailyTripsAnalyticsList}
+                    transportReceiptsData={transportReceiptsAnalyticsList}
+                  />
                 </CCardBody>
               </CCard>
             </div>

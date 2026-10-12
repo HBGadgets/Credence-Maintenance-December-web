@@ -25,6 +25,7 @@ import {
   Square,
   X,
   CheckCircle,
+  Ban,
 } from 'lucide-react'
 
 const skeletonStyles = `
@@ -257,6 +258,8 @@ function TableArray({
   handleStatusButton,
   statusButtonLabel = 'Status',
   statusButtonIcon = <CheckCircle size={18} />,
+  cancelButton = false,
+  handleCancelButton,
   action = 'Action',
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
@@ -409,7 +412,7 @@ function TableArray({
                         {column.label} {column.sortable && getSortIcon(column.key)}
                       </CTableHeaderCell>
                     ))}
-                  {(editButton || deleteButton || viewButton || reportButton || statusButton) && (
+                  {(editButton || deleteButton || viewButton || reportButton || statusButton || cancelButton) && (
                     <CTableHeaderCell className="text-center" style={{ width: '200px' }}>
                       {action}
                     </CTableHeaderCell>
@@ -438,10 +441,17 @@ function TableArray({
                         deleteButton ||
                         viewButton ||
                         reportButton ||
-                        statusButton) && (
+                        statusButton ||
+                        cancelButton) && (
                         <CTableDataCell className="action-cell">
                           <div className="action-buttons">
                             {statusButton && (
+                              <div
+                                className="skeleton-loader"
+                                style={{ width: '20px', height: '20px' }}
+                              />
+                            )}
+                            {cancelButton && (
                               <div
                                 className="skeleton-loader"
                                 style={{ width: '20px', height: '20px' }}
@@ -564,7 +574,8 @@ function TableArray({
                             deleteButton ||
                             viewButton ||
                             reportButton ||
-                            statusButton) && (
+                            statusButton ||
+                            cancelButton) && (
                             <CTableDataCell className="action-cell" style={{ padding: '8px' }}>
                               <div className="action-buttons">
                                 {/* Status Icon Button */}
@@ -576,6 +587,37 @@ function TableArray({
                                     title={`Status: ${row?.status || 'Pending'}`}
                                   >
                                     {statusIcon}
+                                  </button>
+                                )}
+
+                                {cancelButton && (
+                                  <button
+                                    className="action-button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleCancelButton?.(rowId, row)
+                                    }}
+                                    aria-label="Cancel Receipt"
+                                    title={
+                                      (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
+                                        ? 'Receipt already cancelled'
+                                        : 'Cancel Receipt'
+                                    }
+                                    disabled={
+                                      (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
+                                    }
+                                    style={{
+                                      opacity:
+                                        (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
+                                          ? 0.4
+                                          : 1,
+                                      cursor:
+                                        (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
+                                          ? 'not-allowed'
+                                          : 'pointer',
+                                    }}
+                                  >
+                                    <Ban color="#dc3545" size={18} />
                                   </button>
                                 )}
 
@@ -695,12 +737,15 @@ TableArray.propTypes = {
   handleStatusButton: PropTypes.func,
   statusButtonLabel: PropTypes.string,
   statusButtonIcon: PropTypes.node,
+  cancelButton: PropTypes.bool,
+  handleCancelButton: PropTypes.func,
   action: PropTypes.string,
 }
 
 TableArray.defaultProps = {
   isFetching: false,
   statusButton: false,
+  cancelButton: false,
 }
 
 export default TableArray
