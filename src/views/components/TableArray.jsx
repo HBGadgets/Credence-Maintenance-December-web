@@ -502,11 +502,15 @@ function TableArray({
                     const isExpanded = isRowExpanded(rowId)
                     const hasProducts = row.products && row.products.length > 0
                     const statusIcon = getStatusIcon(row)
-                    const status = row?.status?.toLowerCase()
+                    const status = (row?.status || row?.rawStatus)?.toLowerCase()
                     const isCompletedOrCancelled =
                       status === 'completed' ||
                       status === 'cancelled' ||
                       status === 'partially correction'
+                    const showCancelButton =
+                      typeof cancelButton === 'function'
+                        ? cancelButton(row)
+                        : Boolean(cancelButton && (status === 'completed' || status === 'complete'))
 
                     return (
                       <React.Fragment key={rowIndex}>
@@ -590,7 +594,7 @@ function TableArray({
                                   </button>
                                 )}
 
-                                {cancelButton && (
+                                {showCancelButton && (
                                   <button
                                     className="action-button"
                                     onClick={(e) => {
@@ -599,22 +603,14 @@ function TableArray({
                                     }}
                                     aria-label="Cancel Receipt"
                                     title={
-                                      (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
+                                      status === 'cancelled'
                                         ? 'Receipt already cancelled'
                                         : 'Cancel Receipt'
                                     }
-                                    disabled={
-                                      (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
-                                    }
+                                    disabled={status === 'cancelled'}
                                     style={{
-                                      opacity:
-                                        (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
-                                          ? 0.4
-                                          : 1,
-                                      cursor:
-                                        (row?.status || row?.rawStatus)?.toLowerCase() === 'cancelled'
-                                          ? 'not-allowed'
-                                          : 'pointer',
+                                      opacity: status === 'cancelled' ? 0.4 : 1,
+                                      cursor: status === 'cancelled' ? 'not-allowed' : 'pointer',
                                     }}
                                   >
                                     <Ban color="#dc3545" size={18} />
@@ -737,7 +733,7 @@ TableArray.propTypes = {
   handleStatusButton: PropTypes.func,
   statusButtonLabel: PropTypes.string,
   statusButtonIcon: PropTypes.node,
-  cancelButton: PropTypes.bool,
+  cancelButton: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   handleCancelButton: PropTypes.func,
   action: PropTypes.string,
 }

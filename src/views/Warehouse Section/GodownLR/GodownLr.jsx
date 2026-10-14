@@ -473,29 +473,73 @@ const GodownLr = () => {
       return
     }
 
+    if (currentStatus !== 'completed' && currentStatus !== 'complete') {
+      toast.info('Only completed lorry receipts can be cancelled!')
+      return
+    }
+
     try {
-      // Step 1: Verify Password first
-      const passwordResult = await Swal.fire({
-        title: 'Verify Password',
+      // Step 1: Terrifying Warning Modal
+      const initialWarningResult = await Swal.fire({
+        title: '<span style="color: #dc3545; font-weight: 800; font-size: 24px; letter-spacing: -0.5px;">⚠️ CRITICAL DANGER: IRREVERSIBLE ACTION!</span>',
         html: `
-          <p class="mb-2">Please enter your password to authorize cancelling this transport pass.</p>
-          <div class="alert alert-warning py-2 px-3 text-start small mb-0" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
-            <strong>Warning:</strong> Once deleted, this action cannot be reverted.
+          <div style="text-align: left; background-color: #fff5f5; border: 2px solid #e53e3e; border-radius: 8px; padding: 14px 16px; margin: 12px 0 6px 0; box-shadow: 0 4px 6px -1px rgba(229, 62, 62, 0.15);">
+            <div style="color: #9b2c2c; font-weight: 700; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">🚨</span>
+              <span>YOU ARE ABOUT TO CANCEL A COMPLETED LORRY RECEIPT!</span>
+            </div>
+            <div style="background-color: #ffffff; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; color: #2d3748;">
+              <div><strong>Receipt No:</strong> <span style="color: #c53030; font-weight: 700;">${selected?.receiptNo || id}</span></div>
+              ${selected?.consignorName ? `<div><strong>Consignor:</strong> ${selected.consignorName}</div>` : ''}
+              ${selected?.consigneeName ? `<div><strong>Consignee:</strong> ${selected.consigneeName}</div>` : ''}
+              ${selected?.vehicleName ? `<div><strong>Vehicle:</strong> ${selected.vehicleName}</div>` : ''}
+            </div>
+            <div style="color: #742a2a; font-size: 12.5px; line-height: 1.6; margin-bottom: 10px;">
+              <div style="margin-bottom: 4px;">⛔ <strong>PERMANENT & IRREVOCABLE:</strong> This completed receipt will be instantly VOIDED. It CANNOT be recovered, restored, or edited again.</div>
+              <div style="margin-bottom: 4px;">💥 <strong>STOCK & FINANCIAL IMPACT:</strong> Cancelling this will invalidate warehouse stock registers, billing statements, and freight ledgers.</div>
+              <div>🔒 <strong>MANDATORY AUDIT TRAIL:</strong> This critical action will be logged with your user credentials, timestamp, and network IP, and reported directly for administrative audit.</div>
+            </div>
+            <p style="color: #c53030; font-weight: 800; font-size: 13.5px; margin: 10px 0 0 0; text-align: center; border-top: 1px dashed #feb2b2; padding-top: 8px;">
+              ⚠️ ARE YOU ABSOLUTELY SURE YOU WANT TO DESTROY THIS RECORD?
+            </p>
+          </div>
+        `,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#28a745',
+        confirmButtonText: 'I Accept the Risk, Proceed to Authorization',
+        cancelButtonText: 'Abort! Keep Receipt Safe',
+        reverseButtons: true,
+        focusCancel: true,
+      })
+
+      if (!initialWarningResult.isConfirmed) {
+        return
+      }
+
+      // Step 2: Verify Password
+      const passwordResult = await Swal.fire({
+        title: '<span style="color: #dc3545; font-weight: 700;">Security Authorization Required</span>',
+        html: `
+          <p class="mb-2">Enter your password to authorize cancelling <strong>Receipt #${selected?.receiptNo || id}</strong>:</p>
+          <div class="alert alert-danger py-2 px-3 text-start small mb-0" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+            <strong>High-Risk Action:</strong> Once confirmed, this completed receipt will be immediately cancelled.
           </div>
         `,
         icon: 'warning',
         input: 'password',
-        inputPlaceholder: 'Enter password...',
+        inputPlaceholder: 'Enter your password...',
         inputAttributes: {
           autocapitalize: 'off',
           autocorrect: 'off',
           'aria-label': 'Enter password',
         },
         showCancelButton: true,
-        confirmButtonColor: '#d33',
+        confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Verify Password',
-        cancelButtonText: 'Cancel',
+        cancelButtonText: 'Abort',
         showLoaderOnConfirm: true,
         inputValidator: (value) => {
           if (!value || !value.trim()) {
@@ -533,13 +577,13 @@ const GodownLr = () => {
 
       const verifiedPassword = passwordResult.value.password
 
-      // Step 2: Provide cancellation reason and cancel transport pass
+      // Step 3: Provide cancellation reason and cancel transport pass
       const result = await Swal.fire({
-        title: 'Cancel Transport Pass?',
+        title: '<span style="color: #dc3545; font-weight: 700;">Mandatory Cancellation Reason</span>',
         html: `
-          <p class="mb-2">Password verified. Please provide a reason for cancelling this transport pass:</p>
-          <div class="alert alert-warning py-2 px-3 text-start small mb-0" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
-            <strong>Warning:</strong> Once deleted, this action cannot be reverted.
+          <p class="mb-2">Password verified. Please provide a detailed justification for voiding this completed transport pass:</p>
+          <div class="alert alert-danger py-2 px-3 text-start small mb-0" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+            <strong>Warning:</strong> This explanation will be permanently recorded in the audit logs.
           </div>
         `,
         icon: 'warning',
@@ -1233,7 +1277,11 @@ const GodownLr = () => {
         editButton={true}
         deleteButton={false}
         statusButton={true}
-        cancelButton={isSchool}
+        cancelButton={
+          isSchool
+            ? (row) => ['completed', 'complete'].includes((row?.status || row?.rawStatus)?.toLowerCase())
+            : false
+        }
         viewButton={true}
         viewButtonLabel="Invoice"
         handleEditButton={handleEditButton}

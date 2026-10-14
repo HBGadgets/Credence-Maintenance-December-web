@@ -4,7 +4,7 @@ import DateRangePicker from '../../components/DateRangePicker'
 import SmartPagination from '../../components/SmartPagination'
 import Table from '../../components/Table'
 import SearchInput from '../../components/SearchInput'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getAllDriverAttendenceApi, getDriverAttendanceDetailedApi } from '../data/data'
@@ -15,6 +15,12 @@ import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { CTooltip } from '@coreui/react'
+import Cookies from 'js-cookie'
+import { jwtDecode } from 'jwt-decode'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
 
 const attendanceFilterOptions = [
   { value: 'all', label: 'All Drivers' },
@@ -570,28 +576,581 @@ const AllDriverAttendance = () => {
     )
   }
 
+  // Format Date and Time for Excel Export (DD-MM-YYYY HH:mm:ss)
+  const formatCheckinDateTimeForExport = (dateStr, timeStr) => {
+    if (timeStr) {
+      try {
+        if (typeof timeStr === 'string' && timeStr.includes('T')) {
+          const [dPart, tPart] = timeStr.split('T')
+          const [y, m, d] = dPart.split('-')
+          const cleanTime = tPart.split('.')[0].replace('Z', '')
+          const [hh, mm, ss] = cleanTime.split(':')
+          return `${d}-${m}-${y} ${hh || '00'}:${mm || '00'}:${ss || '00'}`
+        }
+        const dt = new Date(timeStr)
+        if (!isNaN(dt.getTime())) {
+          const day = String(dt.getUTCDate()).padStart(2, '0')
+          const mon = String(dt.getUTCMonth() + 1).padStart(2, '0')
+          const yr = dt.getUTCFullYear()
+          const hh = String(dt.getUTCHours()).padStart(2, '0')
+          const mm = String(dt.getUTCMinutes()).padStart(2, '0')
+          const ss = String(dt.getUTCSeconds()).padStart(2, '0')
+          return `${day}-${mon}-${yr} ${hh}:${mm}:${ss}`
+        }
+      } catch (err) {
+        console.warn('Error formatting checkin date time:', err)
+      }
+    }
+
+    if (dateStr) {
+      try {
+        const cleanDate = dateStr.split('T')[0]
+        const parts = cleanDate.split('-')
+        if (parts.length === 3) {
+          return `${parts[2]}-${parts[1]}-${parts[0]} 23:59:00`
+        }
+      } catch (err) {
+        console.warn('Error formatting date:', err)
+      }
+    }
+
+    return '--'
+  }
+
+  const formatCheckoutDateTimeForExport = (timeStr) => {
+    if (!timeStr) return '--'
+    try {
+      if (typeof timeStr === 'string' && timeStr.includes('T')) {
+        const [dPart, tPart] = timeStr.split('T')
+        const [y, m, d] = dPart.split('-')
+        const cleanTime = tPart.split('.')[0].replace('Z', '')
+        const [hh, mm, ss] = cleanTime.split(':')
+        return `${d}-${m}-${y} ${hh || '00'}:${mm || '00'}:${ss || '00'}`
+      }
+      const dt = new Date(timeStr)
+      if (!isNaN(dt.getTime())) {
+        const day = String(dt.getUTCDate()).padStart(2, '0')
+        const mon = String(dt.getUTCMonth() + 1).padStart(2, '0')
+        const yr = dt.getUTCFullYear()
+        const hh = String(dt.getUTCHours()).padStart(2, '0')
+        const mm = String(dt.getUTCMinutes()).padStart(2, '0')
+        const ss = String(dt.getUTCSeconds()).padStart(2, '0')
+        return `${day}-${mon}-${yr} ${hh}:${mm}:${ss}`
+      }
+    } catch (err) {
+      console.warn('Error formatting checkout date time:', err)
+    }
+    return '--'
+  }
+
+  const resolveAddressForExport = async (loc) => {
+    if (!loc) return '--'
+    if (typeof loc === 'string') {
+      const s = loc.trim()
+      return s ? s : '--'
+    }
+    if (loc.address && typeof loc.address === 'string' && loc.address.trim()) {
+      return loc.address.trim()
+    }
+    const lat = loc.lat !== undefined ? loc.lat : loc.latitude
+    const long = loc.long !== undefined ? loc.long : loc.longitude
+    if (lat === null || lat === undefined || long === null || long === undefined) return '--'
+    const numLat = Number(lat)
+    const numLong = Number(long)
+    if (isNaN(numLat) || isNaN(numLong)) return '--'
+
+    try {
+      const addr = await reverseGeocodeMaptiler(numLat, numLong)
+      return addr || `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+    } catch {
+      return `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+    }
+  }
+
+  // Shared data preparation for Excel and PDF exports
+  const prepareAttendanceExportData = async () => {
+    let detailedData = detailedAttendanceData
+    if (!detailedData?.report || detailedData.report.length === 0) {
+      detailedData = await getDriverAttendanceDetailedApi({
+        month: month ? String(month).padStart(2, '0') : '10',
+        year: year || '2026',
+        all: true,
+      })
+    }
+
+    const allReports = detailedData?.report || []
+    if (allReports.length === 0 && (!filteredData || filteredData.length === 0)) {
+      throw new Error('No driver attendance records found to export.')
+    }
+
+    const driversToExport =
+      filteredData && filteredData.length > 0
+        ? filteredData.map((row) => {
+            const rowId = String(row.driverId || row.id || row._id || '')
+            const matched = allReports.find((item) => {
+              const itemId = String(item.driverId || item.id || item._id || '')
+              if (rowId && itemId && rowId === itemId) return true
+              if (
+                item.driverName &&
+                row.driverName &&
+                item.driverName.trim().toLowerCase() === row.driverName.trim().toLowerCase()
+              ) {
+                return true
+              }
+              return false
+            })
+            return matched || row
+          })
+        : allReports
+
+    let tokenUsername = ''
+    let tokenCompany = ''
+    let tokenBranch = ''
+    try {
+      const rawToken = Cookies.get('crdnsMaintToken')
+      if (rawToken) {
+        const decoded = jwtDecode(rawToken)
+        tokenUsername = decoded?.username || ''
+        tokenCompany = decoded?.companyName || decoded?.company || ''
+        tokenBranch = decoded?.branch || ''
+      }
+    } catch (e) {
+      console.warn('Token decode error:', e)
+    }
+
+    const targetY = parseInt(detailedData?.year || year || new Date().getFullYear(), 10)
+    const targetM = parseInt(detailedData?.month || month || (new Date().getMonth() + 1), 10)
+    const apiTotalDays = detailedData?.totalDaysInMonth
+    const today = new Date()
+    const isCurrentMonth = today.getFullYear() === targetY && (today.getMonth() + 1) === targetM
+    const isPastMonth =
+      targetY < today.getFullYear() ||
+      (targetY === today.getFullYear() && today.getMonth() + 1 > targetM)
+
+    const preparedDrivers = []
+
+    for (let i = 0; i < driversToExport.length; i++) {
+      const driver = driversToExport[i]
+      const rawAttendance = driver.attendanceDetails || []
+      const totalDaysInMonth =
+        driver.totalDaysInMonth || apiTotalDays || new Date(targetY, targetM, 0).getDate()
+
+      let effectiveDaysPassed = 0
+      if (detailedData?.daysPassed && Number(detailedData.daysPassed) > 0) {
+        effectiveDaysPassed = Number(detailedData.daysPassed)
+      } else if (isCurrentMonth) {
+        effectiveDaysPassed = today.getDate()
+      } else if (isPastMonth) {
+        effectiveDaysPassed = totalDaysInMonth
+      } else {
+        effectiveDaysPassed = 0
+      }
+
+      const existingRecordsMap = new Map()
+      let maxDayFound = 0
+      rawAttendance.forEach((entry) => {
+        if (entry?.date) {
+          const dateKey = entry.date.split('T')[0]
+          existingRecordsMap.set(dateKey, entry)
+          const parts = dateKey.split('-')
+          if (parts.length === 3) {
+            const d = parseInt(parts[2], 10)
+            if (!isNaN(d) && d > maxDayFound) {
+              maxDayFound = d
+            }
+          }
+        }
+      })
+
+      const daysLimit = Math.max(effectiveDaysPassed, maxDayFound)
+      const dailyRecords = []
+
+      for (let d = 1; d <= daysLimit; d++) {
+        const dayStr = String(d).padStart(2, '0')
+        const monthStr = String(targetM).padStart(2, '0')
+        const dateKey = `${targetY}-${monthStr}-${dayStr}`
+
+        if (existingRecordsMap.has(dateKey)) {
+          dailyRecords.push(existingRecordsMap.get(dateKey))
+        } else {
+          dailyRecords.push({
+            date: dateKey,
+            status: 'Not Marked',
+            checkInTime: null,
+            checkoutTime: null,
+            checkInLocation: null,
+            checkOutLocation: null,
+            isNotMarked: true,
+          })
+        }
+      }
+
+      rawAttendance.forEach((entry) => {
+        if (entry?.date) {
+          const key = entry.date.split('T')[0]
+          if (!dailyRecords.some((item) => item.date && item.date.split('T')[0] === key)) {
+            dailyRecords.push(entry)
+          }
+        }
+      })
+
+      const employeeName = driver.driverName || driver.name || 'Driver'
+      const role = driver.role || 'Driver'
+
+      const workingDays = totalDaysInMonth
+      const presentDays = driver.presentCount ?? driver.presentDays ?? 0
+      const absentDays = driver.absentCount ?? driver.absentDays ?? 0
+      const halfDays = driver.halfDays ?? driver.leaveCount ?? driver.leaveDays ?? 0
+      const lateIns = driver.lateIns ?? driver.notMarkedCount ?? driver.notMarkedDays ?? 0
+
+      const processedDaily = []
+      for (const record of dailyRecords) {
+        const checkinCol = formatCheckinDateTimeForExport(record.date, record.checkInTime)
+        const checkoutCol = formatCheckoutDateTimeForExport(record.checkoutTime)
+        const startLocCol = await resolveAddressForExport(record.checkInLocation)
+        const endLocCol = await resolveAddressForExport(record.checkOutLocation)
+        const statusCol = record.status || (record.isNotMarked ? 'Not Marked' : 'Absent')
+
+        processedDaily.push({
+          checkin: checkinCol,
+          startLoc: startLocCol,
+          checkout: checkoutCol,
+          endLoc: endLocCol,
+          status: statusCol,
+        })
+      }
+
+      preparedDrivers.push({
+        index: i + 1,
+        employeeName,
+        role,
+        workingDays,
+        presentDays,
+        absentDays,
+        halfDays,
+        lateIns,
+        dailyRecords: processedDaily,
+      })
+    }
+
+    return {
+      targetM,
+      targetY,
+      drivers: preparedDrivers,
+    }
+  }
+
+  // Handle detailed Excel export matching requested multi-driver layout
+  const handleDownloadExcel = async () => {
+    try {
+      toast.info('Preparing detailed attendance sheet for export...')
+      const { targetM, targetY, drivers } = await prepareAttendanceExportData()
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Attendance Report')
+
+      worksheet.views = [{ showGridLines: true }]
+
+      // Define column widths
+      worksheet.columns = [
+        { key: 'checkin', width: 24 },
+        { key: 'startLoc', width: 65 },
+        { key: 'checkout', width: 24 },
+        { key: 'endLoc', width: 65 },
+        { key: 'status', width: 20 },
+      ]
+
+      const thinBorder = {
+        top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        right: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+      }
+
+      // Top Sheet Header
+      const topHeaderRow = worksheet.addRow([
+        'Checkin Time / Metric',
+        'Start Location / Detail',
+        'CheckOut Time',
+        'End Location',
+        'Attendance Status',
+      ])
+      topHeaderRow.font = { bold: true, size: 10, name: 'Calibri' }
+      topHeaderRow.alignment = { vertical: 'middle', horizontal: 'left' }
+      topHeaderRow.eachCell((cell) => {
+        cell.border = thinBorder
+      })
+
+      // Iterate through each driver
+      for (const d of drivers) {
+        // Row 1: Employee Header (Only Employee Name without company/branch/supervisor)
+        const employeeRow = worksheet.addRow([
+          `${d.index}. Employee: ${d.employeeName}${d.role ? ` (${d.role})` : ''}`,
+          '',
+          '',
+          '',
+          '',
+        ])
+        employeeRow.font = { bold: true, size: 10, name: 'Calibri' }
+        employeeRow.alignment = { vertical: 'middle', horizontal: 'left' }
+        employeeRow.eachCell((cell) => {
+          cell.border = thinBorder
+        })
+
+        // Row 2: Summary Metrics
+        const metricsRow = worksheet.addRow([
+          'SUMMARY METRICS',
+          `Working Days: ${d.workingDays} | Present: ${d.presentDays}`,
+          `Absent: ${d.absentDays}`,
+          `Half Days: ${d.halfDays}`,
+          `Late Ins: ${d.lateIns}`,
+        ])
+        metricsRow.font = { bold: true, size: 10, name: 'Calibri' }
+        metricsRow.alignment = { vertical: 'middle', horizontal: 'left' }
+        metricsRow.eachCell((cell) => {
+          cell.border = thinBorder
+        })
+
+        // Row 3: Subheader Row
+        const subheaderRow = worksheet.addRow([
+          'CheckIn Time',
+          'Start Location',
+          'CheckOut Time',
+          'End Location',
+          'Attendance Status',
+        ])
+        subheaderRow.font = { bold: true, size: 10, name: 'Calibri' }
+        subheaderRow.alignment = { vertical: 'middle', horizontal: 'left' }
+        subheaderRow.eachCell((cell) => {
+          cell.border = thinBorder
+        })
+
+        // Daily Rows
+        for (const record of d.dailyRecords) {
+          const dRow = worksheet.addRow([
+            record.checkin,
+            record.startLoc,
+            record.checkout,
+            record.endLoc,
+            record.status,
+          ])
+          dRow.font = { size: 10, name: 'Calibri' }
+          dRow.alignment = { vertical: 'middle', horizontal: 'left' }
+          dRow.eachCell((cell) => {
+            cell.border = thinBorder
+          })
+        }
+
+        // Empty row spacer between employees
+        worksheet.addRow([])
+      }
+
+      // Write and trigger download
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      saveAs(blob, `Driver_Attendance_Report_${targetM}_${targetY}.xlsx`)
+      toast.success('Excel sheet exported successfully!')
+    } catch (error) {
+      console.error('Error exporting Excel sheet:', error)
+      toast.error('Failed to export Excel sheet: ' + (error?.message || 'Unknown error'))
+    }
+  }
+
+  // Handle detailed PDF export matching the multi-driver sheet layout
+  const handleDownloadPDF = async () => {
+    try {
+      toast.info('Preparing detailed attendance PDF for export...')
+      const { targetM, targetY, drivers } = await prepareAttendanceExportData()
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      // Title & Header info
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.setTextColor(10, 45, 99)
+      doc.text('FMS - Driver Attendance Detailed Report', 14, 14)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(100)
+      doc.text(
+        `Month & Year: ${String(targetM).padStart(2, '0')}/${targetY}  |  Generated on: ${new Date().toLocaleDateString('en-GB')}`,
+        14,
+        20
+      )
+
+      const tableHead = [
+        [
+          'Checkin Time / Metric',
+          'Start Location / Detail',
+          'CheckOut Time',
+          'End Location',
+          'Attendance Status',
+        ],
+      ]
+
+      const bodyRows = []
+
+      for (const d of drivers) {
+        // Row 1: Employee Header (Only Employee Name across 5 columns)
+        bodyRows.push([
+          {
+            content: `${d.index}. Employee: ${d.employeeName}${d.role ? ` (${d.role})` : ''}`,
+            colSpan: 5,
+            styles: { fontStyle: 'bold', fillColor: [240, 243, 246], textColor: [20, 20, 20] },
+          },
+        ])
+
+        // Row 2: Summary Metrics
+        bodyRows.push([
+          {
+            content: 'SUMMARY METRICS',
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+          {
+            content: `Working Days: ${d.workingDays} | Present: ${d.presentDays}`,
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+          {
+            content: `Absent: ${d.absentDays}`,
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+          {
+            content: `Half Days: ${d.halfDays}`,
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+          {
+            content: `Late Ins: ${d.lateIns}`,
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+        ])
+
+        // Row 3: Subheader Row
+        bodyRows.push([
+          {
+            content: 'CheckIn Time',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99] },
+          },
+          {
+            content: 'Start Location',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99] },
+          },
+          {
+            content: 'CheckOut Time',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99] },
+          },
+          {
+            content: 'End Location',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99] },
+          },
+          {
+            content: 'Attendance Status',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99], halign: 'center' },
+          },
+        ])
+
+        // Daily records
+        for (const record of d.dailyRecords) {
+          const statusLower = (record.status || '').toLowerCase()
+          const statusColor =
+            statusLower === 'present'
+              ? [40, 167, 69]
+              : statusLower === 'absent'
+              ? [220, 53, 69]
+              : statusLower.includes('leave')
+              ? [255, 153, 0]
+              : [108, 117, 125]
+
+          bodyRows.push([
+            record.checkin,
+            record.startLoc,
+            record.checkout,
+            record.endLoc,
+            {
+              content: record.status,
+              styles: { textColor: statusColor, fontStyle: 'bold', halign: 'center' },
+            },
+          ])
+        }
+
+        // Spacer row between drivers
+        bodyRows.push([
+          {
+            content: '',
+            colSpan: 5,
+            styles: { minCellHeight: 4, fillColor: [255, 255, 255], lineColor: [255, 255, 255] },
+          },
+        ])
+      }
+
+      doc.autoTable({
+        startY: 24,
+        head: tableHead,
+        body: bodyRows,
+        theme: 'grid',
+        styles: {
+          fontSize: 7.5,
+          cellPadding: 1.8,
+          lineColor: [215, 215, 215],
+          lineWidth: 0.1,
+          overflow: 'linebreak',
+          valign: 'middle',
+        },
+        headStyles: {
+          fillColor: [10, 45, 99],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'left',
+          fontSize: 8,
+        },
+        columnStyles: {
+          0: { cellWidth: 35, halign: 'left' },
+          1: { cellWidth: 92, halign: 'left' },
+          2: { cellWidth: 35, halign: 'left' },
+          3: { cellWidth: 82, halign: 'left' },
+          4: { cellWidth: 25, halign: 'center' },
+        },
+        margin: { left: 14, right: 14, top: 14, bottom: 14 },
+      })
+
+      // Number pages
+      const totalPagesCount = doc.internal.getNumberOfPages()
+      for (let p = 1; p <= totalPagesCount; p++) {
+        doc.setPage(p)
+        doc.setFontSize(8)
+        doc.setTextColor(130)
+        const pageText = `Page ${p} of ${totalPagesCount}`
+        doc.text(
+          pageText,
+          doc.internal.pageSize.width - 14 - doc.getTextWidth(pageText),
+          doc.internal.pageSize.height - 6
+        )
+      }
+
+      doc.save(`Driver_Attendance_Report_${targetM}_${targetY}.pdf`)
+      toast.success('PDF downloaded successfully!')
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      toast.error('Failed to export PDF: ' + (error?.message || 'Unknown error'))
+    }
+  }
+
   const dropdownItems = [
     {
       icon: FaRegFilePdf,
       label: 'Download PDF',
-      onClick: () =>
-        exportToPDF({
-          title: 'Driver Attendance Details',
-          columns: columns,
-          data: filteredData,
-          fileName: 'Driver_Attendance_Report',
-        }),
+      onClick: handleDownloadPDF,
     },
     {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
-      onClick: () =>
-        exportToExcel({
-          title: 'Driver Attendance Details',
-          columns: columns,
-          data: filteredData,
-          fileName: 'Driver_Attendance_Report',
-        }),
+      onClick: handleDownloadExcel,
     },
     {
       icon: FaPrint,
