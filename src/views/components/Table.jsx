@@ -381,35 +381,36 @@ function Table({
                               .filter((col) => !col.hidden)
                               .map((column) => (
                                 <CTableDataCell key={column.key} className="text-center">
-                                  {column.key === 'password' ? (
+                                  {column.render ? (
+                                    column.render(row)
+                                  ) : column.key === 'password' ? (
                                     <div className="d-flex align-items-center justify-content-center gap-2">
                                       <span>
-                                        {visiblePasswordRowId === row.id || row._id
+                                        {visiblePasswordRowId === (row.id || row._id)
                                           ? row.password
                                           : '••••••••'}
                                       </span>
                                       <button
-                                        onClick={() =>
+                                        onClick={() => {
+                                          const rowId = row.id || row._id
                                           setVisiblePasswordRowId(
-                                            visiblePasswordRowId === row.id ? null : row.id,
+                                            visiblePasswordRowId === rowId ? null : rowId,
                                           )
-                                        }
+                                        }}
                                         className="btn btn-sm btn-link p-0"
                                         title={
-                                          visiblePasswordRowId === row.id || row._id
-                                            ? 'Show password'
-                                            : 'Hide password'
+                                          visiblePasswordRowId === (row.id || row._id)
+                                            ? 'Hide password'
+                                            : 'Show password'
                                         }
                                       >
-                                        {visiblePasswordRowId === row.id || row._id ? (
-                                          <Eye size={18} />
-                                        ) : (
+                                        {visiblePasswordRowId === (row.id || row._id) ? (
                                           <EyeOff size={18} />
+                                        ) : (
+                                          <Eye size={18} />
                                         )}
                                       </button>
                                     </div>
-                                  ) : column.render ? (
-                                    column.render(row)
                                   ) : (
                                     row[column.key]
                                   )}

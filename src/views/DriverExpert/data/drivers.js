@@ -820,9 +820,7 @@ export const unassignVehicleFromDriverApi = async ({ driverId }) => {
 
     const payload = { driverId }
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const primaryUrl = baseUrl.endsWith('/api')
-      ? `${baseUrl}/drivers/unassign-vehicle`
-      : `${baseUrl}/api/drivers/unassign-vehicle`
+    const primaryUrl =`${baseUrl}/api/drivers/unassign-vehicle`
 
     try {
       const { data: response } = await axios.post(primaryUrl, payload, {
@@ -834,9 +832,7 @@ export const unassignVehicleFromDriverApi = async ({ driverId }) => {
       return response
     } catch (err) {
       if (err?.response?.status === 404) {
-        const fallbackUrl = baseUrl.endsWith('/api')
-          ? `${baseUrl.replace(/\/api$/, '')}/drivers/unassign-vehicle`
-          : `${baseUrl}/drivers/unassign-vehicle`
+        const fallbackUrl = `${baseUrl}/api/drivers/unassign-vehicle`
         const { data: fallbackResponse } = await axios.post(fallbackUrl, payload, {
           headers: {
             Authorization: `Bearer ${authToken}`,

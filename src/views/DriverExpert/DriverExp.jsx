@@ -358,7 +358,12 @@ function DriversPage() {
       },
     },
     { label: 'Email', key: 'email', sortable: true },
-    { label: 'Password', key: 'password', sortable: false },
+    {
+      label: 'Password',
+      key: 'password',
+      sortable: false,
+      render: (row) => row.password || '',
+    },
     { label: 'License Number', key: 'licenseNumber', sortable: false },
     { label: 'License Expiry', key: 'licenseExpiryDate', sortable: false },
     { label: 'Aadhar Number', key: 'aadharNumber', sortable: false },
