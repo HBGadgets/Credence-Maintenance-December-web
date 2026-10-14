@@ -67,25 +67,7 @@ const AllDriverAttendance = () => {
     ],
     queryFn: getAllDriverAttendenceApi,
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
-  })
-
-  // Trigger detailed attendance API on load (/report/driver-attendance-detailed?month=...&year=...&all=true)
-  const { data: detailedAttendanceData, isFetching: isDetailedFetching } = useQuery({
-    queryKey: [
-      'driverAttendanceDetailed',
-      month ? String(month).padStart(2, '0') : '10',
-      year || '2026',
-    ],
-    queryFn: () =>
-      getDriverAttendanceDetailedApi({
-        month: month ? String(month).padStart(2, '0') : '10',
-        year: year || '2026',
-        all: true,
-      }),
     staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
   })
 
   useEffect(() => {
@@ -317,7 +299,8 @@ const AllDriverAttendance = () => {
   const renderNestedDriverDetails = (row) => {
     const rowDriverId = String(row.driverId || row.id || row._id || '')
     const driverDetails =
-      (detailedAttendanceData?.report || []).find((item) => {
+      (row.attendanceDetails && row.attendanceDetails.length > 0 ? row : null) ||
+      (data?.report || []).find((item) => {
         const itemId = String(item.driverId || item.id || item._id || '')
         if (rowDriverId && itemId && rowDriverId === itemId) return true
         if (
@@ -328,14 +311,16 @@ const AllDriverAttendance = () => {
           return true
         }
         return false
-      }) || null
+      }) ||
+      row ||
+      null
 
-    const rawAttendanceDetails = driverDetails?.attendanceDetails || []
+    const rawAttendanceDetails = driverDetails?.attendanceDetails || row.attendanceDetails || []
 
     // Build complete daily attendance list including missing previous days as 'Not Marked'
-    const targetY = parseInt(detailedAttendanceData?.year || year || new Date().getFullYear(), 10)
-    const targetM = parseInt(detailedAttendanceData?.month || month || (new Date().getMonth() + 1), 10)
-    const apiTotalDays = detailedAttendanceData?.totalDaysInMonth || row.totalDaysInMonth
+    const targetY = parseInt(data?.year || year || new Date().getFullYear(), 10)
+    const targetM = parseInt(data?.month || month || (new Date().getMonth() + 1), 10)
+    const apiTotalDays = data?.totalDaysInMonth || row.totalDaysInMonth
     const totalDaysInMonth = apiTotalDays || new Date(targetY, targetM, 0).getDate()
 
     // Determine how many days have passed
@@ -346,8 +331,8 @@ const AllDriverAttendance = () => {
       (targetY === today.getFullYear() && today.getMonth() + 1 > targetM)
 
     let effectiveDaysPassed = 0
-    if (detailedAttendanceData?.daysPassed && Number(detailedAttendanceData.daysPassed) > 0) {
-      effectiveDaysPassed = Number(detailedAttendanceData.daysPassed)
+    if (data?.daysPassed && Number(data.daysPassed) > 0) {
+      effectiveDaysPassed = Number(data.daysPassed)
     } else if (isCurrentMonth) {
       effectiveDaysPassed = today.getDate()
     } else if (isPastMonth) {
@@ -450,7 +435,7 @@ const AllDriverAttendance = () => {
                 Month & Year
               </div>
               <div className="fw-semibold text-secondary">
-                {detailedAttendanceData?.month || month}/{detailedAttendanceData?.year || year}
+                {data?.month || month}/{data?.year || year}
               </div>
             </div>
           </div>
@@ -501,7 +486,7 @@ const AllDriverAttendance = () => {
         </div>
 
         {/* Nested Attendance Records Table */}
-        {isDetailedFetching && !driverDetails ? (
+        {isFetching && !driverDetails ? (
           <div className="text-center py-4 bg-white rounded border shadow-sm text-muted">
             <div className="spinner-border spinner-border-sm text-primary me-2" role="status" />
             <span>Loading driver attendance details...</span>
@@ -669,13 +654,15 @@ const AllDriverAttendance = () => {
 
   // Shared data preparation for Excel and PDF exports
   const prepareAttendanceExportData = async () => {
-    let detailedData = detailedAttendanceData
-    if (!detailedData?.report || detailedData.report.length === 0) {
+    let detailedData = null
+    try {
       detailedData = await getDriverAttendanceDetailedApi({
         month: month ? String(month).padStart(2, '0') : '10',
         year: year || '2026',
         all: true,
       })
+    } catch {
+      detailedData = data
     }
 
     const allReports = detailedData?.report || []
@@ -805,6 +792,7 @@ const AllDriverAttendance = () => {
 
       const processedDaily = []
       for (const record of dailyRecords) {
+        const dateCol = formatDate(record.date) || '--'
         const checkinCol = formatCheckinDateTimeForExport(record.date, record.checkInTime)
         const checkoutCol = formatCheckoutDateTimeForExport(record.checkoutTime)
         const startLocCol = await resolveAddressForExport(record.checkInLocation)
@@ -812,6 +800,7 @@ const AllDriverAttendance = () => {
         const statusCol = record.status || (record.isNotMarked ? 'Not Marked' : 'Absent')
 
         processedDaily.push({
+          date: dateCol,
           checkin: checkinCol,
           startLoc: startLocCol,
           checkout: checkoutCol,
@@ -853,10 +842,11 @@ const AllDriverAttendance = () => {
 
       // Define column widths
       worksheet.columns = [
+        { key: 'date', width: 16 },
         { key: 'checkin', width: 24 },
-        { key: 'startLoc', width: 65 },
+        { key: 'startLoc', width: 60 },
         { key: 'checkout', width: 24 },
-        { key: 'endLoc', width: 65 },
+        { key: 'endLoc', width: 60 },
         { key: 'status', width: 20 },
       ]
 
@@ -869,6 +859,7 @@ const AllDriverAttendance = () => {
 
       // Top Sheet Header
       const topHeaderRow = worksheet.addRow([
+        'Date',
         'Checkin Time / Metric',
         'Start Location / Detail',
         'CheckOut Time',
@@ -890,6 +881,7 @@ const AllDriverAttendance = () => {
           '',
           '',
           '',
+          '',
         ])
         employeeRow.font = { bold: true, size: 10, name: 'Calibri' }
         employeeRow.alignment = { vertical: 'middle', horizontal: 'left' }
@@ -900,7 +892,8 @@ const AllDriverAttendance = () => {
         // Row 2: Summary Metrics
         const metricsRow = worksheet.addRow([
           'SUMMARY METRICS',
-          `Working Days: ${d.workingDays} | Present: ${d.presentDays}`,
+          `Working Days: ${d.workingDays}`,
+          `Present: ${d.presentDays}`,
           `Absent: ${d.absentDays}`,
           `Half Days: ${d.halfDays}`,
           `Late Ins: ${d.lateIns}`,
@@ -913,6 +906,7 @@ const AllDriverAttendance = () => {
 
         // Row 3: Subheader Row
         const subheaderRow = worksheet.addRow([
+          'Date',
           'CheckIn Time',
           'Start Location',
           'CheckOut Time',
@@ -928,6 +922,7 @@ const AllDriverAttendance = () => {
         // Daily Rows
         for (const record of d.dailyRecords) {
           const dRow = worksheet.addRow([
+            record.date,
             record.checkin,
             record.startLoc,
             record.checkout,
@@ -987,6 +982,7 @@ const AllDriverAttendance = () => {
 
       const tableHead = [
         [
+          'Date',
           'Checkin Time / Metric',
           'Start Location / Detail',
           'CheckOut Time',
@@ -998,11 +994,11 @@ const AllDriverAttendance = () => {
       const bodyRows = []
 
       for (const d of drivers) {
-        // Row 1: Employee Header (Only Employee Name across 5 columns)
+        // Row 1: Employee Header (Only Employee Name across 6 columns)
         bodyRows.push([
           {
             content: `${d.index}. Employee: ${d.employeeName}${d.role ? ` (${d.role})` : ''}`,
-            colSpan: 5,
+            colSpan: 6,
             styles: { fontStyle: 'bold', fillColor: [240, 243, 246], textColor: [20, 20, 20] },
           },
         ])
@@ -1014,7 +1010,11 @@ const AllDriverAttendance = () => {
             styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
           },
           {
-            content: `Working Days: ${d.workingDays} | Present: ${d.presentDays}`,
+            content: `Working Days: ${d.workingDays}`,
+            styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
+          },
+          {
+            content: `Present: ${d.presentDays}`,
             styles: { fontStyle: 'bold', fillColor: [248, 249, 250], textColor: [40, 40, 40] },
           },
           {
@@ -1033,6 +1033,10 @@ const AllDriverAttendance = () => {
 
         // Row 3: Subheader Row
         bodyRows.push([
+          {
+            content: 'Date',
+            styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99], halign: 'center' },
+          },
           {
             content: 'CheckIn Time',
             styles: { fontStyle: 'bold', fillColor: [232, 238, 248], textColor: [10, 45, 99] },
@@ -1068,6 +1072,10 @@ const AllDriverAttendance = () => {
               : [108, 117, 125]
 
           bodyRows.push([
+            {
+              content: record.date,
+              styles: { halign: 'center', fontStyle: 'bold' },
+            },
             record.checkin,
             record.startLoc,
             record.checkout,
@@ -1083,7 +1091,7 @@ const AllDriverAttendance = () => {
         bodyRows.push([
           {
             content: '',
-            colSpan: 5,
+            colSpan: 6,
             styles: { minCellHeight: 4, fillColor: [255, 255, 255], lineColor: [255, 255, 255] },
           },
         ])
@@ -1110,11 +1118,12 @@ const AllDriverAttendance = () => {
           fontSize: 8,
         },
         columnStyles: {
-          0: { cellWidth: 35, halign: 'left' },
-          1: { cellWidth: 92, halign: 'left' },
-          2: { cellWidth: 35, halign: 'left' },
-          3: { cellWidth: 82, halign: 'left' },
-          4: { cellWidth: 25, halign: 'center' },
+          0: { cellWidth: 22, halign: 'center' },
+          1: { cellWidth: 32, halign: 'left' },
+          2: { cellWidth: 84, halign: 'left' },
+          3: { cellWidth: 32, halign: 'left' },
+          4: { cellWidth: 75, halign: 'left' },
+          5: { cellWidth: 24, halign: 'center' },
         },
         margin: { left: 14, right: 14, top: 14, bottom: 14 },
       })

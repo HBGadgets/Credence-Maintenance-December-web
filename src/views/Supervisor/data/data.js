@@ -916,15 +916,19 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
   const token = Cookies.get('crdnsMaintToken') || TOKEN
   if (!token) throw new Error('Authentication token not found')
 
+  const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+  const formattedMonth = month ? String(month).padStart(2, '0') : undefined
+  const formattedYear = year ? String(year) : undefined
+
   const { data } = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/report/driver-attendance-summary`,
+    `${baseUrl}/api/report/driver-attendance-detailed`,
     {
       params: {
         search: search || '',
         page,
         limit,
-        month,
-        year,
+        month: formattedMonth || month,
+        year: formattedYear || year,
         ...(filter ? { filter } : {}),
       },
       headers: { Authorization: `Bearer ${token}` },
@@ -932,6 +936,7 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
   )
 
   return {
+    ...data,
     data: (data.report || []).map((item) => ({
       ...item,
       id: item.driverId || item._id || item.id,
@@ -951,7 +956,7 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
       leaveDays: item.leaveDays ?? item.leaveCount ?? 0,
       leaveCount: item.leaveCount ?? item.leaveDays ?? 0,
     })),
-    total: data.pagination?.totalRecords ?? data.pagination?.total ?? data.total ?? data.count ?? 0,
+    total: data.pagination?.totalRecords ?? data.pagination?.total ?? data.total ?? data.count ?? (data.report?.length || 0),
     totalPages: data.pagination?.totalPages ?? data.totalPages ?? 1,
     page: data.pagination?.currentPage ?? data.page ?? page,
   }
