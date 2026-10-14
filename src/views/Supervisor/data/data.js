@@ -973,9 +973,7 @@ export const getDriverAttendanceDetailedApi = async ({
   const formattedYear = String(year)
 
   const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-  const primaryUrl = baseUrl.endsWith('/api')
-    ? `${baseUrl}/report/driver-attendance-detailed`
-    : `${baseUrl}/api/report/driver-attendance-detailed`
+  const primaryUrl = `${baseUrl}/api/report/driver-attendance-detailed`
 
   const params = {
     month: formattedMonth,
