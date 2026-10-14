@@ -7,6 +7,7 @@ import {
   fetchDrivers,
   fetchSupervisor,
   updateDriver,
+  unassignVehicleFromDriverApi,
 } from './data/drivers'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -18,13 +19,15 @@ import Swal from 'sweetalert2'
 import AddButton from '../components/AddButton'
 import ReusableModal from '../components/ReusableModal'
 import { toast, ToastContainer } from 'react-toastify'
-import { FaArrowUp, FaPrint, FaRegFilePdf, FaFileUpload } from 'react-icons/fa'
+import { FaArrowUp, FaPrint, FaRegFilePdf, FaFileUpload, FaTruck, FaUnlink } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
+import { CTooltip } from '@coreui/react'
 import IconDropdown from '../Supervisor/IconDropdown'
 import usePdfExporter from '../customhooks/usePdfExporter'
 import useExcelExporter from '../customhooks/useExcelExporter'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
+import AssignVehicleModal from './components/AssignVehicleModal'
 import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 
@@ -41,6 +44,8 @@ function DriversPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [editVisible, setEditVisible] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState(null)
+  const [assignVehicleModalVisible, setAssignVehicleModalVisible] = useState(false)
+  const [assignVehicleDriver, setAssignVehicleDriver] = useState(null)
 
   const navigate = useNavigate()
 
@@ -123,6 +128,67 @@ function DriversPage() {
     },
   })
 
+  // Unassign Vehicle
+  const { mutate: unassignVehicleMutation } = useMutation({
+    mutationFn: unassignVehicleFromDriverApi,
+    onSuccess: (data) => {
+      const msg = data?.message || 'Vehicle unassigned from driver successfully!'
+      toast.success(msg)
+      Swal.fire({
+        icon: 'success',
+        title: 'Vehicle Unassigned!',
+        text: msg,
+        timer: 2500,
+        showConfirmButton: false,
+      })
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['vehicleList'])
+      queryClient.invalidateQueries(['vehicleStatus'])
+    },
+    onError: (err) => {
+      const rawMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to unassign vehicle'
+
+      const msg =
+        typeof rawMsg === 'string'
+          ? rawMsg
+              .replace(/\s*\((?:daily\s*)?trip\s*id\s*:[^)]*\)/gi, '')
+              .replace(/\s*(?:daily\s*)?trip\s*id\s*:\s*[a-f0-9]+\b/gi, '')
+              .replace(/\s+\./g, '.')
+              .trim()
+          : rawMsg
+
+      toast.error(msg)
+      Swal.fire({
+        icon: 'error',
+        title: 'Unassignment Failed',
+        text: msg,
+      })
+    },
+  })
+
+  // Handle unassign vehicle click
+  const handleUnassignVehicle = (driver) => {
+    const vName = driver.currentVehicleName || driver.assignedVehicleName || 'the assigned vehicle'
+    Swal.fire({
+      title: 'Unassign Vehicle?',
+      html: `Are you sure you want to unassign <b>${vName}</b> from driver <b>${driver.name}</b>?<br/><small class="text-muted">This will successfully complete the current shift.</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Unassign',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        unassignVehicleMutation({ driverId: driver.id || driver._id })
+      }
+    })
+  }
+
   useEffect(() => {
     let filtered = drivers.reverse()
 
@@ -137,7 +203,10 @@ function DriversPage() {
         (driver) =>
           driver.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           driver.contactNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
-          driver.aadharNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+          driver.aadharNumber?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+          driver.currentVehicleName?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+          driver.assignedVehicleName?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+          driver.tripStatus?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     }
 
@@ -209,6 +278,85 @@ function DriversPage() {
   const columns = [
     { label: 'Driver Name', key: 'name', sortable: true },
     { label: 'Contact Number', key: 'contactNumber', sortable: true },
+    {
+      label: 'Assigned Vehicle',
+      key: 'currentVehicleName',
+      sortable: true,
+      render: (row) => {
+        const vName =
+          row.currentVehicleName ||
+          row.assignedVehicleName ||
+          row.assignedVehicle?.name ||
+          row.vehicleName
+        return vName ? (
+          <CTooltip content={`Assigned Vehicle: ${vName}`} placement="top">
+            <span
+              className="badge bg-light text-primary border border-primary px-2 py-1"
+              style={{ cursor: 'pointer' }}
+            >
+              {vName}
+            </span>
+          </CTooltip>
+        ) : (
+          <CTooltip content="No vehicle currently assigned" placement="top">
+            <span
+              className="badge bg-light text-muted border px-2 py-1"
+              style={{ cursor: 'pointer' }}
+            >
+              Not Assigned
+            </span>
+          </CTooltip>
+        )
+      },
+    },
+    {
+      label: 'Trip Status',
+      key: 'tripStatus',
+      sortable: true,
+      render: (row) => {
+        const trip = row.currentTripId
+        let isAssigned = false
+        let tooltipText = 'Driver is available'
+
+        if (trip && typeof trip === 'object') {
+          const s = (trip.status || '').toLowerCase().trim()
+          if (s && s !== 'cancelled' && s !== 'completed') {
+            isAssigned = true
+            const route =
+              trip.startLocation && trip.endLocation
+                ? ` (${trip.startLocation} → ${trip.endLocation})`
+                : ''
+            tooltipText = `Active Trip: ${s}${route}`
+          } else if (s === 'cancelled' || s === 'completed') {
+            isAssigned = false
+            tooltipText = `Last trip was ${s}. Driver is currently available.`
+          }
+        } else if (typeof trip === 'string' && trip.trim()) {
+          isAssigned = true
+          tooltipText = 'Driver is currently assigned to an active trip'
+        }
+
+        return isAssigned ? (
+          <CTooltip content={tooltipText} placement="top">
+            <span
+              className="badge bg-warning text-dark px-2 py-1"
+              style={{ cursor: 'pointer', fontWeight: '500' }}
+            >
+              Assigned to Trip
+            </span>
+          </CTooltip>
+        ) : (
+          <CTooltip content={tooltipText} placement="top">
+            <span
+              className="badge bg-success px-2 py-1"
+              style={{ cursor: 'pointer', fontWeight: '500' }}
+            >
+              Available
+            </span>
+          </CTooltip>
+        )
+      },
+    },
     { label: 'Email', key: 'email', sortable: true },
     { label: 'Password', key: 'password', sortable: false },
     { label: 'License Number', key: 'licenseNumber', sortable: false },
@@ -402,6 +550,15 @@ function DriversPage() {
           <div className="col-lg-7 col-md-12 d-flex justify-content-end align-items-center flex-wrap gap-2">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
             <AddButton
+              label="Assign Vehicle"
+              icon={<FaTruck />}
+              variant="outline-primary"
+              onClick={() => {
+                setAssignVehicleDriver(null)
+                setAssignVehicleModalVisible(true)
+              }}
+            />
+            <AddButton
               label="Bulk Upload"
               icon={<FaFileUpload />}
               variant="outline-primary"
@@ -455,6 +612,47 @@ function DriversPage() {
         handleEditButton={handleEditButton}
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
+        renderActions={(row) => {
+          const hasAssignedVehicle = Boolean(
+            row.currentVehicleName ||
+            row.assignedVehicleName ||
+            row.assignedVehicle ||
+            row.currentVehicle,
+          )
+          const vehicleName = row.currentVehicleName || row.assignedVehicleName || 'vehicle'
+
+          return (
+            <>
+              <CTooltip
+                content={hasAssignedVehicle ? `Change Vehicle (${vehicleName})` : 'Assign Vehicle to Driver'}
+                placement="top"
+              >
+                <button
+                  className="action-button"
+                  onClick={() => {
+                    setAssignVehicleDriver(row)
+                    setAssignVehicleModalVisible(true)
+                  }}
+                  aria-label="Assign Vehicle"
+                >
+                  <FaTruck color="#0d6efd" size={17} />
+                </button>
+              </CTooltip>
+
+              {hasAssignedVehicle && (
+                <CTooltip content={`Unassign Vehicle (${vehicleName})`} placement="top">
+                  <button
+                    className="action-button"
+                    onClick={() => handleUnassignVehicle(row)}
+                    aria-label="Unassign Vehicle"
+                  >
+                    <FaUnlink color="#dc3545" size={15} />
+                  </button>
+                </CTooltip>
+              )}
+            </>
+          )
+        }}
         viewButtonLabel="Profile"
         showPagination={false}
       />
@@ -485,6 +683,12 @@ function DriversPage() {
         visible={bulkUploadVisible}
         setVisible={setBulkUploadVisible}
         onUploadSuccess={() => queryClient.invalidateQueries(['drivers'])}
+      />
+      <AssignVehicleModal
+        visible={assignVehicleModalVisible}
+        setVisible={setAssignVehicleModalVisible}
+        initialDriver={assignVehicleDriver}
+        drivers={drivers}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">

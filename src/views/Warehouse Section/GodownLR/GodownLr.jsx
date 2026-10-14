@@ -6,6 +6,7 @@ import {
   patchGodownTPStatusApi,
   patchAcknowledgementsApi,
   cancelCompletedGodownTPApi,
+  verifyPasswordApi,
 } from '../data/data'
 import SearchInput from '../../components/SearchInput'
 import SmartPagination from '../../components/SmartPagination'
@@ -17,6 +18,7 @@ import Swal from 'sweetalert2'
 import DateRangeFilterCredence from '../../../components/DateRangeFilterCredence'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { TokenContext } from '../../../context/TokenContext'
+import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import {
@@ -73,10 +75,21 @@ const GodownLr = () => {
   // Add status filter state
   const [selectedStatus, setSelectedStatus] = useState('All')
 
-  // superadmin role
-  const token = useContext(TokenContext)
-  const decodedToken = token ? jwtDecode(token) : null
-  const userRole = decodedToken?.role
+  // User role check
+  const contextToken = useContext(TokenContext)
+  const token = contextToken || Cookies.get('crdnsMaintToken')
+  const decodedToken = useMemo(() => {
+    if (!token) return null
+    try {
+      return jwtDecode(token)
+    } catch {
+      return null
+    }
+  }, [token])
+  const userRole = (decodedToken?.role || '').toString().toLowerCase().trim()
+  const isSchool =
+    userRole === 'school' ||
+    userRole.split(',').map((r) => r.trim()).includes('school')
 
   // Modal states
   const [showForm, setShowForm] = useState(false)
@@ -432,7 +445,7 @@ const GodownLr = () => {
   const handleDeleteButton = (id) => {
     Swal.fire({
       title: 'Are you sure?',
-      text: 'You will not be able to recover this data!',
+      text: 'You will not be able to recover this data! Once deleted, this action cannot be reverted.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, delete it!',
@@ -447,6 +460,11 @@ const GodownLr = () => {
 
   // Handle Cancel Godown Lorry Receipt button
   const handleCancelGodownTP = async (id, row) => {
+    if (!isSchool) {
+      toast.error('Only school role is authorized to cancel lorry receipts.')
+      return
+    }
+
     const selected = row || filteredData.find((item) => item.id === id || item._id === id)
     const currentStatus = (selected?.status || selected?.rawStatus)?.toLowerCase()
 
@@ -456,9 +474,75 @@ const GodownLr = () => {
     }
 
     try {
+      // Step 1: Verify Password first
+      const passwordResult = await Swal.fire({
+        title: 'Verify Password',
+        html: `
+          <p class="mb-2">Please enter your password to authorize cancelling this transport pass.</p>
+          <div class="alert alert-warning py-2 px-3 text-start small mb-0" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
+            <strong>Warning:</strong> Once deleted, this action cannot be reverted.
+          </div>
+        `,
+        icon: 'warning',
+        input: 'password',
+        inputPlaceholder: 'Enter password...',
+        inputAttributes: {
+          autocapitalize: 'off',
+          autocorrect: 'off',
+          'aria-label': 'Enter password',
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Verify Password',
+        cancelButtonText: 'Cancel',
+        showLoaderOnConfirm: true,
+        inputValidator: (value) => {
+          if (!value || !value.trim()) {
+            return 'Password is required!'
+          }
+        },
+        preConfirm: async (password) => {
+          const pass = password ? password.trim() : ''
+          try {
+            const res = await verifyPasswordApi(pass)
+            if (res?.status === false || res?.success === false || res?.valid === false) {
+              throw new Error(res?.message || res?.error || 'Password verification failed.')
+            }
+            return { password: pass, ...res }
+          } catch (err) {
+            const errorMessage =
+              (Array.isArray(err.response?.data?.message)
+                ? err.response.data.message.join(', ')
+                : err.response?.data?.message) ||
+              err.response?.data?.error ||
+              (typeof err.response?.data === 'string' ? err.response.data : null) ||
+              err.message ||
+              'Invalid password. Please try again.'
+
+            Swal.showValidationMessage(errorMessage)
+            return false
+          }
+        },
+        allowOutsideClick: () => !Swal.isLoading(),
+      })
+
+      if (!passwordResult.isConfirmed || !passwordResult.value) {
+        return
+      }
+
+      const verifiedPassword = passwordResult.value.password
+
+      // Step 2: Provide cancellation reason and cancel transport pass
       const result = await Swal.fire({
-        title: 'Cancel Lorry Receipt?',
-        text: 'Please provide a reason for cancelling this lorry receipt:',
+        title: 'Cancel Transport Pass?',
+        html: `
+          <p class="mb-2">Password verified. Please provide a reason for cancelling this transport pass:</p>
+          <div class="alert alert-warning py-2 px-3 text-start small mb-0" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
+            <strong>Warning:</strong> Once deleted, this action cannot be reverted.
+          </div>
+        `,
+        icon: 'warning',
         input: 'textarea',
         inputPlaceholder: 'Enter cancellation reason (e.g. Accidentally marked completed by mistake)...',
         inputAttributes: {
@@ -478,7 +562,7 @@ const GodownLr = () => {
         preConfirm: async (value) => {
           const reason = value ? value.trim() : ''
           try {
-            const res = await cancelCompletedGodownTPApi(id, { reason })
+            const res = await cancelCompletedGodownTPApi(id, { reason, password: verifiedPassword })
             if (res?.status === false || res?.success === false || res?.error) {
               throw new Error(res?.message || res?.error || 'Failed to cancel lorry receipt.')
             }
@@ -512,11 +596,11 @@ const GodownLr = () => {
 
       if (result.isConfirmed && result.value) {
         queryClient.invalidateQueries({ queryKey: ['getGodownTP'] })
-        toast.success('Lorry receipt cancelled successfully!')
+        toast.success('Transport pass cancelled successfully!')
         Swal.fire({
           icon: 'success',
           title: 'Cancelled!',
-          text: 'Lorry receipt has been cancelled successfully.',
+          text: 'Transport pass has been cancelled successfully.',
           timer: 2000,
           showConfirmButton: false,
         })
@@ -1149,7 +1233,7 @@ const GodownLr = () => {
         editButton={true}
         deleteButton={false}
         statusButton={true}
-        cancelButton={true}
+        cancelButton={isSchool}
         viewButton={true}
         viewButtonLabel="Invoice"
         handleEditButton={handleEditButton}

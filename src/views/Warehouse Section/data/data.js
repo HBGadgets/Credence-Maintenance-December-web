@@ -583,6 +583,47 @@ export const cancelCompletedGodownTPApi = async (id, payload) => {
 
 export const cancelCompletedTripApi = cancelCompletedGodownTPApi
 
+// Verify Password API
+export const verifyPasswordApi = async (password) => {
+  try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    const backendUrl = (import.meta.env.VITE_API_CREDENCE_BACKEND || '').replace(/\/+$/, '')
+    const primaryUrl = `${backendUrl}/superadmin/verifypassword`
+
+    try {
+      const response = await axios.post(
+        primaryUrl,
+        { password },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      return response.data
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        const fallbackUrl = `${backendUrl}/api/superadmin/verifypassword`
+        const fallbackResponse = await axios.post(
+          fallbackUrl,
+          { password },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+        return fallbackResponse.data
+      }
+      throw error
+    }
+  } catch (error) {
+    throw error
+  }
+}
+
 // ------------------------------------------------------------------------------------------------------
 
 // Railhead Get Api

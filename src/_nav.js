@@ -113,7 +113,7 @@ const _nav = [
     items: [
       {
         component: CNavItem,
-        name: 'All Drivers Attendence',
+        name: 'Attendance Report',
         to: '/AllDriverAttendence',
         permission: 'masters.attendance',
       },
@@ -140,6 +140,11 @@ const _nav = [
         name: 'All Drivers Logbooks',
         to: '/AllDailyLogbook',
         permission: 'reports.dailyLog',
+      },
+      {
+        component: CNavItem,
+        name: 'Shift Logs',
+        to: '/ShiftLogs',
       },
       {
         component: CNavItem,

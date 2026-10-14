@@ -956,3 +956,53 @@ export const getAllDriverAttendenceApi = async ({ queryKey }) => {
     page: data.pagination?.currentPage ?? data.page ?? page,
   }
 }
+
+// Get driver attendance detailed report API (/report/driver-attendance-detailed)
+export const getDriverAttendanceDetailedApi = async ({
+  month = '09',
+  year = '2026',
+  all = true,
+  search,
+  page,
+  limit,
+} = {}) => {
+  const token = Cookies.get('crdnsMaintToken') || TOKEN
+  if (!token) throw new Error('Authentication token not found')
+
+  const formattedMonth = String(month).padStart(2, '0')
+  const formattedYear = String(year)
+
+  const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+  const primaryUrl = baseUrl.endsWith('/api')
+    ? `${baseUrl}/report/driver-attendance-detailed`
+    : `${baseUrl}/api/report/driver-attendance-detailed`
+
+  const params = {
+    month: formattedMonth,
+    year: formattedYear,
+    all,
+    ...(search ? { search } : {}),
+    ...(page ? { page } : {}),
+    ...(limit ? { limit } : {}),
+  }
+
+  try {
+    const { data } = await axios.get(primaryUrl, {
+      params,
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    console.log('Driver attendance detailed API response:', data)
+    return data
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      const fallbackUrl = `${baseUrl}/report/driver-attendance-detailed`
+      const { data } = await axios.get(fallbackUrl, {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      console.log('Driver attendance detailed API response (fallback):', data)
+      return data
+    }
+    throw err
+  }
+}

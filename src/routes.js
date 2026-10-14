@@ -46,6 +46,9 @@ const AnalayisInpection = React.lazy(
 const AllVehicleServicesData = React.lazy(
   () => import('./views/Supervisor/allvehicleserviceslist/AllVehicleServicesData.jsx'),
 )
+const ShiftLogs = React.lazy(() => import('./views/Supervisor/shift-logs/ShiftLogs.jsx'))
+const VehicleShiftLogs = React.lazy(() => import('./views/Supervisor/shift-logs/VehicleShiftLogs.jsx'))
+const DriverShiftLogs = React.lazy(() => import('./views/Supervisor/shift-logs/DriverShiftLogs.jsx'))
 
 // Expenses Management
 
@@ -214,7 +217,10 @@ const routes = [
     name: 'All Vehicle Service Data',
     element: AllVehicleServicesData,
   },
-  { path: '/AllDriverAttendence', name: 'All Drivers Attendence', element: AllDriverAttendence },
+  { path: '/AllDriverAttendence', name: 'Attendance Report', element: AllDriverAttendence },
+  { path: '/ShiftLogs', name: 'Shift Logs', element: ShiftLogs },
+  { path: '/VehicleShiftLogs', name: 'Vehicle Shift Logs', element: VehicleShiftLogs },
+  { path: '/DriverShiftLogs', name: 'Driver Shift Logs', element: DriverShiftLogs },
 
   /**EXPENSES MANAGEMENT */
 

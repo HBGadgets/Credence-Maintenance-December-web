@@ -40,15 +40,40 @@ export const fetchDrivers = async () => {
     })
 
     return data.map((driver) => ({
+      ...driver,
       name: driver.name,
       contactNumber: driver.contactNumber,
       email: driver.email,
       password: driver.password,
       id: driver._id,
+      _id: driver._id,
       supervisor: driver.supervisor,
       licenseNumber: driver.licenseNumber || 'N/A',
       licenseExpiryDate: formatDateToDDMMYYYY(driver.licenseExpiryDate) || 'N/A',
       aadharNumber: driver.aadharNumber || 'N/A',
+      currentVehicle: driver.currentVehicle || null,
+      currentVehicleName: driver.currentVehicleName || null,
+      assignedVehicle: driver.currentVehicle || driver.assignedVehicle || driver.vehicle || null,
+      assignedVehicleName:
+        driver.currentVehicleName ||
+        driver.assignedVehicle?.name ||
+        driver.assignedVehicleName ||
+        driver.vehicleName ||
+        driver.vehicle?.name ||
+        (typeof driver.assignedVehicle === 'string' ? driver.assignedVehicle : null) ||
+        null,
+      currentTripId: driver.currentTripId || null,
+      tripStatus: (() => {
+        const trip = driver.currentTripId
+        if (!trip) return 'Available'
+        if (typeof trip === 'object') {
+          const s = (trip.status || '').toLowerCase().trim()
+          if (s && s !== 'cancelled' && s !== 'completed') return 'Assigned to Trip'
+          return 'Available'
+        }
+        if (typeof trip === 'string' && trip.trim()) return 'Assigned to Trip'
+        return 'Available'
+      })(),
     }))
   } catch (error) {
     console.log(error, 'error')
@@ -609,7 +634,7 @@ export const fetchDriverAttendanceLocation = async (startDate, endDate) => {
 
 export const getAddressApi = async (latitude, longitude) => {
   try {
-    const apiKey = 'zstIsERMom7VAfZNEAhP' // Your MapTiler API Key
+    const apiKey = import.meta.env.VITE_MAP || 'dq5pOnSdxzgtz374VVUb' // MapTiler API Key
     const response = await axios.get(
       `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${apiKey}`,
     )
@@ -739,6 +764,90 @@ export const bulkUploadDrivers = async (file) => {
     return response
   } catch (error) {
     console.error('Bulk upload drivers failed:', error)
+    throw error
+  }
+}
+
+// Assign Vehicle to Driver API
+export const assignVehicleToDriverApi = async ({ driverId, vehicleId, remarks }) => {
+  try {
+    const authToken = Cookies.get('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
+
+    const payload = { driverId, vehicleId }
+    if (remarks && remarks.trim()) {
+      payload.remarks = remarks.trim()
+    }
+
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+    const primaryUrl = baseUrl.endsWith('/api')
+      ? `${baseUrl}/drivers/assign-vehicle`
+      : `${baseUrl}/api/drivers/assign-vehicle`
+
+    try {
+      const { data: response } = await axios.post(primaryUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      return response
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        const fallbackUrl = baseUrl.endsWith('/api')
+          ? `${baseUrl.replace(/\/api$/, '')}/drivers/assign-vehicle`
+          : `${baseUrl}/drivers/assign-vehicle`
+        const { data: fallbackResponse } = await axios.post(fallbackUrl, payload, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        return fallbackResponse
+      }
+      throw err
+    }
+  } catch (error) {
+    throw error
+  }
+}
+
+// Unassign Vehicle From Driver API
+export const unassignVehicleFromDriverApi = async ({ driverId }) => {
+  try {
+    const authToken = Cookies.get('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
+
+    const payload = { driverId }
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+    const primaryUrl = baseUrl.endsWith('/api')
+      ? `${baseUrl}/drivers/unassign-vehicle`
+      : `${baseUrl}/api/drivers/unassign-vehicle`
+
+    try {
+      const { data: response } = await axios.post(primaryUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      return response
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        const fallbackUrl = baseUrl.endsWith('/api')
+          ? `${baseUrl.replace(/\/api$/, '')}/drivers/unassign-vehicle`
+          : `${baseUrl}/drivers/unassign-vehicle`
+        const { data: fallbackResponse } = await axios.post(fallbackUrl, payload, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        return fallbackResponse
+      }
+      throw err
+    }
+  } catch (error) {
     throw error
   }
 }

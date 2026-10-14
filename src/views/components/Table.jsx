@@ -15,8 +15,9 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
+  CTooltip,
 } from '@coreui/react'
-import { Eye, EyeOff, Pencil, Trash2, FileText, Ban } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Trash2, FileText, Ban, ChevronDown, ChevronRight } from 'lucide-react'
 
 const skeletonStyles = `
   @keyframes pulse {
@@ -130,6 +131,7 @@ function Table({
   permission,
   showPagination,
   isRowEditable,
+  renderRowDetails = null,
 }) {
   const location = useLocation()
   const shouldShowPagination =
@@ -161,6 +163,19 @@ function Table({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
   const [viewLoadingId, setViewLoadingId] = useState(null)
   const [visiblePasswordRowId, setVisiblePasswordRowId] = useState(null)
+  const [expandedRowIds, setExpandedRowIds] = useState(new Set())
+
+  const toggleRowExpansion = (rowId) => {
+    setExpandedRowIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(rowId)) {
+        next.delete(rowId)
+      } else {
+        next.add(rowId)
+      }
+      return next
+    })
+  }
 
   const isShowAll = itemsPerPage === -1 || itemsPerPage >= 1000000
   const effectiveItemsPerPage = isShowAll ? (filteredData.length || 1) : (itemsPerPage || 10)
@@ -218,14 +233,19 @@ function Table({
       <style>{skeletonStyles}</style>
       <CCol xs={12} className="h-100 p-0">
         <CCard className="mb-4 h-100 d-flex flex-column shadow-sm border-0">
-          <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
-            {typeof title === 'string' ? <strong>{title}</strong> : title}
-          </CCardHeader>
+          {title && (
+            <CCardHeader className="d-flex w-100 justify-content-between align-items-center bg-white border-0 py-3 px-4">
+              {typeof title === 'string' ? <strong>{title}</strong> : title}
+            </CCardHeader>
+          )}
           <CCardBody className="flex-grow-1 p-0 d-flex flex-column overflow-hidden">
             <div className="table-responsive flex-grow-1" style={{ overflowY: 'auto', minHeight: 0 }}>
               <CTable striped hover bordered className="mb-0">
                 <CTableHead>
                   <CTableRow>
+                    {renderRowDetails && (
+                      <CTableHeaderCell className="text-center" style={{ width: '45px' }} />
+                    )}
                     <CTableHeaderCell className="text-center">SN</CTableHeaderCell>
                     {columns
                       .filter((col) => !col.hidden)
@@ -248,6 +268,11 @@ function Table({
                   {isFetching ? (
                     Array.from({ length: isShowAll ? 10 : Math.min(itemsPerPage > 0 ? itemsPerPage : 10, 50) }).map((_, index) => (
                       <CTableRow key={`skeleton-${index}`}>
+                        {renderRowDetails && (
+                          <CTableDataCell className="text-center" style={{ width: '45px' }}>
+                            <div className="skeleton-loader" style={{ height: '20px' }} />
+                          </CTableDataCell>
+                        )}
                         <CTableDataCell className="text-center">
                           <div className="skeleton-loader" style={{ height: '20px' }} />
                         </CTableDataCell>
@@ -302,159 +327,227 @@ function Table({
                     ))
                   ) : filteredData.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={columns.length + 2} className="text-center">
+                      <CTableDataCell
+                        colSpan={
+                          columns.filter((c) => !c.hidden).length +
+                          1 +
+                          (hasActionColumn ? 1 : 0) +
+                          (renderRowDetails ? 1 : 0)
+                        }
+                        className="text-center"
+                      >
                         No {typeof title === 'string' ? title : 'records'} found.
                       </CTableDataCell>
                     </CTableRow>
                   ) : (
-                    currentData.map((row, rowIndex) => (
-                      <CTableRow key={rowIndex}>
-                        <CTableDataCell className="text-center">
-                          {startIndex + rowIndex + 1}
-                        </CTableDataCell>
-                        {columns
-                          .filter((col) => !col.hidden)
-                          .map((column) => (
-                            <CTableDataCell key={column.key} className="text-center">
-                              {column.key === 'password' ? (
-                                <div className="d-flex align-items-center justify-content-center gap-2">
-                                  <span>
-                                    {visiblePasswordRowId === row.id || row._id
-                                      ? row.password
-                                      : '••••••••'}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      setVisiblePasswordRowId(
-                                        visiblePasswordRowId === row.id ? null : row.id,
-                                      )
-                                    }
-                                    className="btn btn-sm btn-link p-0"
-                                    title={
-                                      visiblePasswordRowId === row.id || row._id
-                                        ? 'Show password'
-                                        : 'Hide password'
-                                    }
-                                  >
-                                    {visiblePasswordRowId === row.id || row._id ? (
-                                      <Eye size={18} />
-                                    ) : (
-                                      <EyeOff size={18} />
-                                    )}
-                                  </button>
-                                </div>
-                              ) : column.render ? (
-                                column.render(row)
-                              ) : (
-                                row[column.key]
-                              )}
-                            </CTableDataCell>
-                          ))}
-                        {hasActionColumn && (
-                          <CTableDataCell className="action-cell">
-                            <div className="action-buttons">
-                              {canEdit && (
+                    currentData.map((row, rowIndex) => {
+                      const rowId = row.id || row._id || row.driverId || rowIndex
+                      const isExpanded = expandedRowIds.has(rowId)
+                      const colSpanTotal =
+                        columns.filter((col) => !col.hidden).length +
+                        1 +
+                        (hasActionColumn ? 1 : 0) +
+                        (renderRowDetails ? 1 : 0)
+
+                      return (
+                        <React.Fragment key={rowId || rowIndex}>
+                          <CTableRow>
+                            {renderRowDetails && (
+                              <CTableDataCell className="text-center" style={{ width: '45px', verticalAlign: 'middle', padding: '6px' }}>
                                 <button
-                                  className="action-button"
-                                  onClick={() =>
-                                    (!isRowEditable || isRowEditable(row)) &&
-                                    handleEditButton(row.id || row._id)
-                                  }
-                                  aria-label="Edit"
-                                  title={
-                                    isRowEditable && !isRowEditable(row)
-                                      ? 'Cancelled trips cannot be edited'
-                                      : 'Edit'
-                                  }
-                                  disabled={Boolean(isRowEditable && !isRowEditable(row))}
-                                  style={{
-                                    opacity: isRowEditable && !isRowEditable(row) ? 0.4 : 1,
-                                    cursor:
-                                      isRowEditable && !isRowEditable(row)
-                                        ? 'not-allowed'
-                                        : 'pointer',
-                                  }}
-                                >
-                                  <Pencil color="#2D336B" size={18} />
-                                </button>
-                              )}
-                              {canDelete && (
-                                <button
-                                  className="action-button"
-                                  onClick={() => handleDeleteButton(row.id || row._id)}
-                                  aria-label="Delete"
-                                >
-                                  <Trash2 color="#2D336B" size={18} />
-                                </button>
-                              )}
-                              {canCancel && (
-                                <button
-                                  className="action-button"
+                                  type="button"
+                                  className="action-button d-inline-flex align-items-center justify-content-center"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleCancelButton?.(row.id || row._id, row)
+                                    toggleRowExpansion(rowId)
                                   }}
-                                  aria-label="Cancel Trip"
-                                  title={
-                                    row.rawStatus?.toLowerCase() === 'cancelled'
-                                      ? 'Trip already cancelled'
-                                      : 'Cancel Trip'
-                                  }
-                                  disabled={row.rawStatus?.toLowerCase() === 'cancelled'}
+                                  aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                                  title={isExpanded ? 'Collapse Details' : 'Expand Details'}
                                   style={{
-                                    opacity:
-                                      row.rawStatus?.toLowerCase() === 'cancelled' ? 0.4 : 1,
-                                    cursor:
-                                      row.rawStatus?.toLowerCase() === 'cancelled'
-                                        ? 'not-allowed'
-                                        : 'pointer',
+                                    width: '28px',
+                                    height: '28px',
+                                    borderRadius: '4px',
+                                    backgroundColor: isExpanded ? '#e2e8f0' : 'transparent',
                                   }}
                                 >
-                                  <Ban color="#dc3545" size={18} />
+                                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                 </button>
-                              )}
+                              </CTableDataCell>
+                            )}
+                            <CTableDataCell className="text-center">
+                              {startIndex + rowIndex + 1}
+                            </CTableDataCell>
+                            {columns
+                              .filter((col) => !col.hidden)
+                              .map((column) => (
+                                <CTableDataCell key={column.key} className="text-center">
+                                  {column.key === 'password' ? (
+                                    <div className="d-flex align-items-center justify-content-center gap-2">
+                                      <span>
+                                        {visiblePasswordRowId === row.id || row._id
+                                          ? row.password
+                                          : '••••••••'}
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          setVisiblePasswordRowId(
+                                            visiblePasswordRowId === row.id ? null : row.id,
+                                          )
+                                        }
+                                        className="btn btn-sm btn-link p-0"
+                                        title={
+                                          visiblePasswordRowId === row.id || row._id
+                                            ? 'Show password'
+                                            : 'Hide password'
+                                        }
+                                      >
+                                        {visiblePasswordRowId === row.id || row._id ? (
+                                          <Eye size={18} />
+                                        ) : (
+                                          <EyeOff size={18} />
+                                        )}
+                                      </button>
+                                    </div>
+                                  ) : column.render ? (
+                                    column.render(row)
+                                  ) : (
+                                    row[column.key]
+                                  )}
+                                </CTableDataCell>
+                              ))}
+                            {hasActionColumn && (
+                              <CTableDataCell className="action-cell">
+                                <div className="action-buttons">
+                                  {canEdit && (
+                                    <CTooltip
+                                      content={
+                                        isRowEditable && !isRowEditable(row)
+                                          ? 'Cancelled trips cannot be edited'
+                                          : 'Edit'
+                                      }
+                                      placement="top"
+                                    >
+                                      <button
+                                        className="action-button"
+                                        onClick={() =>
+                                          (!isRowEditable || isRowEditable(row)) &&
+                                          handleEditButton(row.id || row._id)
+                                        }
+                                        aria-label="Edit"
+                                        disabled={Boolean(isRowEditable && !isRowEditable(row))}
+                                        style={{
+                                          opacity: isRowEditable && !isRowEditable(row) ? 0.4 : 1,
+                                          cursor:
+                                            isRowEditable && !isRowEditable(row)
+                                              ? 'not-allowed'
+                                              : 'pointer',
+                                        }}
+                                      >
+                                        <Pencil color="#2D336B" size={18} />
+                                      </button>
+                                    </CTooltip>
+                                  )}
+                                  {canDelete && (
+                                    <CTooltip content="Delete" placement="top">
+                                      <button
+                                        className="action-button"
+                                        onClick={() => handleDeleteButton(row.id || row._id)}
+                                        aria-label="Delete"
+                                      >
+                                        <Trash2 color="#2D336B" size={18} />
+                                      </button>
+                                    </CTooltip>
+                                  )}
+                                  {canCancel && (
+                                    <CTooltip
+                                      content={
+                                        row.rawStatus?.toLowerCase() === 'cancelled'
+                                          ? 'Trip already cancelled'
+                                          : 'Cancel Trip'
+                                      }
+                                      placement="top"
+                                    >
+                                      <button
+                                        className="action-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleCancelButton?.(row.id || row._id, row)
+                                        }}
+                                        aria-label="Cancel Trip"
+                                        disabled={row.rawStatus?.toLowerCase() === 'cancelled'}
+                                        style={{
+                                          opacity:
+                                            row.rawStatus?.toLowerCase() === 'cancelled' ? 0.4 : 1,
+                                          cursor:
+                                            row.rawStatus?.toLowerCase() === 'cancelled'
+                                              ? 'not-allowed'
+                                              : 'pointer',
+                                        }}
+                                      >
+                                        <Ban color="#dc3545" size={18} />
+                                      </button>
+                                    </CTooltip>
+                                  )}
 
-                              {reportButton && (
-                                <button
-                                  className="action-button"
-                                  onClick={() => handleReportButton(row.id || row._id)}
-                                  aria-label="Report"
-                                >
-                                  <FileText color="#2D336B" size={18} />
-                                </button>
-                              )}
+                                  {reportButton && (
+                                    <CTooltip content="Report" placement="top">
+                                      <button
+                                        className="action-button"
+                                        onClick={() => handleReportButton(row.id || row._id)}
+                                        aria-label="Report"
+                                      >
+                                        <FileText color="#2D336B" size={18} />
+                                      </button>
+                                    </CTooltip>
+                                  )}
 
-                              {renderActions && renderActions(row)}
+                                  {renderActions && renderActions(row)}
 
-                              {viewButton && (
-                                <button
-                                  className="action-view-button"
-                                  onClick={async () => {
-                                    setViewLoadingId(row.id || row._id)
-                                    await handleViewButton(row.id || row._id)
-                                    setViewLoadingId(null)
-                                  }}
-                                  disabled={viewLoadingId === row.id || row._id}
-                                  style={{
-                                    backgroundColor: viewButtonColor,
-                                    color: 'white',
-                                    opacity: viewLoadingId === row.id || row._id ? 0.6 : 1,
-                                    border: 'none',
-                                  }}
-                                >
-                                  {viewButtonIcon}
-                                  <span>
-                                    {viewLoadingId === row.id || row._id
-                                      ? 'Loading...'
-                                      : viewButtonLabel}
-                                  </span>
-                                </button>
-                              )}
-                            </div>
-                          </CTableDataCell>
-                        )}
-                      </CTableRow>
-                    ))
+                                  {viewButton && (
+                                    <button
+                                      className="action-view-button"
+                                      onClick={async () => {
+                                        const targetId = row.id || row._id
+                                        setViewLoadingId(targetId)
+                                        try {
+                                          await handleViewButton(targetId)
+                                        } finally {
+                                          setViewLoadingId(null)
+                                        }
+                                      }}
+                                      disabled={viewLoadingId === (row.id || row._id)}
+                                      style={{
+                                        backgroundColor: viewButtonColor,
+                                        color: 'white',
+                                        opacity: viewLoadingId === (row.id || row._id) ? 0.6 : 1,
+                                        border: 'none',
+                                      }}
+                                    >
+                                      {viewButtonIcon}
+                                      <span>
+                                        {viewLoadingId === (row.id || row._id)
+                                          ? 'Loading...'
+                                          : viewButtonLabel}
+                                      </span>
+                                    </button>
+                                  )}
+                                </div>
+                              </CTableDataCell>
+                            )}
+                          </CTableRow>
+                          {isExpanded && renderRowDetails && (
+                            <CTableRow className="expanded-row-details">
+                              <CTableDataCell
+                                colSpan={colSpanTotal}
+                                style={{ padding: '0', backgroundColor: '#f8fafc' }}
+                              >
+                                {renderRowDetails(row, isExpanded, () => toggleRowExpansion(rowId))}
+                              </CTableDataCell>
+                            </CTableRow>
+                          )}
+                        </React.Fragment>
+                      )
+                    })
                   )}
                 </CTableBody>
               </CTable>
@@ -573,6 +666,7 @@ Table.propTypes = {
   renderActions: PropTypes.func,
   showPagination: PropTypes.bool,
   isRowEditable: PropTypes.func,
+  renderRowDetails: PropTypes.func,
 }
 
 Table.defaultProps = {
