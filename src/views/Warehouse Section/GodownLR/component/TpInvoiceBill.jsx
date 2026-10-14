@@ -114,14 +114,42 @@ const TpInvoiceBill = ({ invoiceData }) => {
     issuedBy,
     receivedBy,
     status,
+    completedTpCancelReason,
+    cancelReason: propCancelReason,
+    cancellationReason: propCancellationReason,
     products = [],
   } = invoiceData || {}
 
+  const rawCancelReason =
+    completedTpCancelReason ||
+    propCancelReason ||
+    propCancellationReason ||
+    invoiceData?.completedTpCancelReason ||
+    invoiceData?.cancelReason ||
+    invoiceData?.cancellationReason ||
+    invoiceData?.completedCancelReason ||
+    invoiceData?.reason ||
+    invoiceData?.rawItem?.completedTpCancelReason ||
+    invoiceData?.rawItem?.cancelReason ||
+    invoiceData?.rawItem?.cancellationReason ||
+    invoiceData?.rawItem?.reason ||
+    null
+
+  const cancelReason =
+    rawCancelReason &&
+    typeof rawCancelReason === 'string' &&
+    rawCancelReason.trim() !== '' &&
+    rawCancelReason.trim().toLowerCase() !== 'null' &&
+    rawCancelReason.trim().toLowerCase() !== 'undefined'
+      ? rawCancelReason.trim()
+      : null
+
   const isCancelled = Boolean(
-    status && (
+    (status && (
       (typeof status === 'string' && status.trim().toLowerCase().includes('cancel')) ||
       (typeof status === 'object' && String(status?.value || status?.label || '').toLowerCase().includes('cancel'))
-    )
+    )) ||
+    Boolean(cancelReason)
   )
 
   const stampImage = useMemo(() => (isCancelled ? getCancelledStamp() : null), [isCancelled])
@@ -256,16 +284,35 @@ const TpInvoiceBill = ({ invoiceData }) => {
           </div>
         </div>
 
+        {/* Cancellation Notice Banner - only shown when a cancellation reason exists */}
+        {isCancelled && cancelReason && (
+          <div className="cancelled-invoice-banner">
+            <div className="cancelled-invoice-banner-header">
+              <span className="cancelled-invoice-badge">CANCELLED</span>
+              <span className="cancelled-invoice-title">Transport Pass Cancelled</span>
+            </div>
+            <div className="cancelled-invoice-reason">
+              <strong>Reason for Cancellation:</strong>
+              <span>{cancelReason}</span>
+            </div>
+          </div>
+        )}
+
         <div className="section two-column compact">
           <h3 style={{ margin: '0 auto' }}>
             <strong>Invoice No:</strong> {receiptNo || 'N/A'}
+            {isCancelled && (
+              <span style={{ color: '#dc2626', marginLeft: '8px', fontSize: '13px' }}>
+                (CANCELLED)
+              </span>
+            )}
           </h3>
         </div>
 
         {/* Transport Details - Now includes driver name */}
         <div className="section two-column compact">
           <div className="cardtitle">
-            <h3>Transport Detailszz</h3>
+            <h3>Transport Details</h3>
             <div className="details-row compact">
               <p>
                 <strong>Issued By:</strong> {issuedBy || 'N/A'}
@@ -290,6 +337,14 @@ const TpInvoiceBill = ({ invoiceData }) => {
                 <strong>Route:</strong> {startLocation || 'N/A'} → {endLocation || 'N/A'}
               </p>
             </div>
+            {isCancelled && cancelReason ? (
+              <div className="details-row compact" style={{ marginTop: '4px' }}>
+                <p style={{ width: '100%', color: '#dc2626' }}>
+                  <strong>Cancellation Reason:</strong>{' '}
+                  <span style={{ color: '#991b1b', fontWeight: '600' }}>{cancelReason}</span>
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 

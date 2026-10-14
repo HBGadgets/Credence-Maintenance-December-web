@@ -900,6 +900,11 @@ const GodownLr = () => {
       key: 'status',
       render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
     },
+    {
+      label: 'Cancellation Reason',
+      key: 'completedTpCancelReason',
+      render: (item) => item.completedTpCancelReason || item.cancelReason || '',
+    },
     // REMOVED the Products column from here since we now expand products into separate rows
   ]
 
@@ -1061,6 +1066,7 @@ const GodownLr = () => {
       apiData.products?.reduce((sum, product) => sum + (product.quantityMT || 0), 0) || 0
 
     return {
+      ...apiData,
       // Company Details
       companyName: apiData.companyName,
       companyAddress: apiData.companyAddress,
@@ -1119,6 +1125,16 @@ const GodownLr = () => {
 
       // Status
       status: apiData.status,
+      completedTpCancelReason:
+        apiData.completedTpCancelReason ||
+        apiData.cancelReason ||
+        apiData.cancellationReason ||
+        apiData.completedCancelReason ||
+        apiData.reason ||
+        apiData.rawItem?.completedTpCancelReason ||
+        apiData.rawItem?.cancelReason ||
+        apiData.rawItem?.cancellationReason ||
+        '',
 
       // Other
       issuedBy: apiData.issuedBy,

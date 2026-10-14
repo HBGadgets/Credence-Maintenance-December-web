@@ -49,9 +49,7 @@ export const getActiveShiftLogsApi = async () => {
     if (!authToken) throw new Error('Authentication token not found')
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const url = baseUrl.endsWith('/api')
-      ? `${baseUrl}/shift-logs/active`
-      : `${baseUrl}/api/shift-logs/active`
+    const url = `${baseUrl}/api/shift-logs/active`
 
     let responseData = null
 

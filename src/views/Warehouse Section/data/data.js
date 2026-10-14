@@ -397,6 +397,7 @@ export const getGodownTPApi = async ({ queryKey }) => {
     limit: data.limit,
 
     receipts: data.receipts.map((item) => ({
+      ...item,
       id: item._id,
       date: formatDateToDDMMYYYY(item.date),
       originalDate: item.date,
@@ -461,6 +462,16 @@ export const getGodownTPApi = async ({ queryKey }) => {
       customerFreight: item.customerFreight || '0',
       transporterFreight: item.transporterFreight || '0',
       status: item.status,
+      completedTpCancelReason:
+        item.completedTpCancelReason ||
+        item.cancelReason ||
+        item.cancellationReason ||
+        item.completedCancelReason ||
+        item.reason ||
+        '',
+      completedTpCancelledAt: item.completedTpCancelledAt || item.cancelledAt || null,
+      completedTpCancelledBy: item.completedTpCancelledBy || item.cancelledBy || null,
+      rawItem: item,
     })),
   }
 }
