@@ -410,6 +410,8 @@ const RailheadForm = ({
       size="xl"
       centered
       scrollable
+      backdrop="static"
+      keyboard={false}
       dialogClassName="modal-dialog-scrollable"
     >
       <Modal.Header closeButton className="border-0 pb-0">

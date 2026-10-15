@@ -82,7 +82,7 @@ const AddConsignorConsigneeModal = ({
   }
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
+    <Modal show={show} onHide={handleClose} centered backdrop="static" keyboard={false}>
       <Modal.Header closeButton>
         <Modal.Title className="d-flex align-items-center">
           <FaUserPlus className="me-2" />

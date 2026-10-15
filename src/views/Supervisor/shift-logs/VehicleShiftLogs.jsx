@@ -208,11 +208,11 @@ function VehicleShiftLogs() {
   const totalPages =
     shiftLogsResponse?.totalPages ?? Math.max(1, Math.ceil(totalCount / itemsPerPage))
 
-  // Reset Filters
+  // Reset Filters - preserves the vehicle / driver identity being inspected
   const handleResetFilters = () => {
-    setVehicleId('')
-    setVehicleName('')
-    setDriverId('')
+    setVehicleId(initialVehicleId)
+    setVehicleName(initialVehicleName)
+    setDriverId(initialDriverId)
     setStatus('all')
     setStartDate('')
     setEndDate('')
@@ -220,6 +220,13 @@ function VehicleShiftLogs() {
     setYear('')
     setSearchQuery('')
     setCurrentPage(1)
+
+    // Keep vehicle and driver IDs in URL while clearing secondary filter params
+    const newParams = new URLSearchParams()
+    if (initialVehicleId) newParams.set('vehicleId', initialVehicleId)
+    if (initialVehicleName) newParams.set('vehicleName', initialVehicleName)
+    if (initialDriverId) newParams.set('driverId', initialDriverId)
+    navigate({ search: newParams.toString() }, { replace: true })
   }
 
   // Columns
@@ -573,7 +580,7 @@ function VehicleShiftLogs() {
           </CRow>
 
           {/* Active Filter Badges & Reset Button */}
-          {(vehicleName || status !== 'all' || startDate || endDate || month || year || searchQuery) && (
+          {((!initialVehicleId && vehicleName) || status !== 'all' || startDate || endDate || month || year || searchQuery) && (
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top">
               <div className="d-flex align-items-center flex-wrap gap-1">
                 <span className="small text-muted me-1">Active Filters:</span>
@@ -590,16 +597,18 @@ function VehicleShiftLogs() {
                 {vehicleName && (
                   <CBadge color="primary" className="d-flex align-items-center gap-1">
                     Vehicle: {vehicleName}
-                    <span
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setVehicleId('')
-                        setVehicleName('')
-                        setCurrentPage(1)
-                      }}
-                    >
-                      ×
-                    </span>
+                    {!initialVehicleId && (
+                      <span
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setVehicleId('')
+                          setVehicleName('')
+                          setCurrentPage(1)
+                        }}
+                      >
+                        ×
+                      </span>
+                    )}
                   </CBadge>
                 )}
                 {status !== 'all' && (

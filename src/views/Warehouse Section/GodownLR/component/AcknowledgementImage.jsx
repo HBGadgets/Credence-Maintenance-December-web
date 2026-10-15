@@ -687,6 +687,7 @@ const AcknowledgementImage = ({ show, onHide, imageUrl, recordId }) => {
       onHide={onHide}
       size="xl"
       centered
+      backdrop="static"
       keyboard={false}
       fullscreen={isZoomed && fileType === 'image'}
     >

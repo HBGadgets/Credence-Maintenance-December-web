@@ -150,6 +150,11 @@ function DriverShiftLogs() {
     setSelectedYear(currentYear)
     setStartDate('')
     setEndDate('')
+
+    const newParams = new URLSearchParams()
+    if (driverId) newParams.set('driverId', driverId)
+    if (initialDriverName) newParams.set('driverName', initialDriverName)
+    navigate({ search: newParams.toString() }, { replace: true })
   }
 
   // Fetch Driver Full Report (Endpoint 7)

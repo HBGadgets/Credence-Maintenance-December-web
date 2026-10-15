@@ -677,7 +677,7 @@ const StatusUpdateModal = ({ show, onHide, onSubmit, isLoading, currentStatus, r
   const isProcessing = isLoading || isSubmitting || isCompressing
 
   return (
-    <Modal show={show} onHide={handleClose} centered size="xl">
+    <Modal show={show} onHide={handleClose} centered size="xl" backdrop="static" keyboard={false}>
       <Modal.Header closeButton={!isProcessing} className="border-bottom-0 pb-0">
         <Modal.Title>Update Status</Modal.Title>
       </Modal.Header>

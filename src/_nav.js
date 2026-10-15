@@ -143,7 +143,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Shift Logs',
+        name: 'Driver/Vehicle Shift Logs',
         to: '/ShiftLogs',
       },
       {

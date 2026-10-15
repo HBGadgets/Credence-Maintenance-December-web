@@ -451,6 +451,8 @@ const GodownLr = () => {
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#d33',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
     }).then((result) => {
       if (result.isConfirmed) {
         deleteGodownTP(id)
@@ -512,6 +514,8 @@ const GodownLr = () => {
         cancelButtonText: 'Abort! Keep Receipt Safe',
         reverseButtons: true,
         focusCancel: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       })
 
       if (!initialWarningResult.isConfirmed) {
@@ -541,6 +545,8 @@ const GodownLr = () => {
         confirmButtonText: 'Verify Password',
         cancelButtonText: 'Abort',
         showLoaderOnConfirm: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
         inputValidator: (value) => {
           if (!value || !value.trim()) {
             return 'Password is required!'
@@ -568,7 +574,6 @@ const GodownLr = () => {
             return false
           }
         },
-        allowOutsideClick: () => !Swal.isLoading(),
       })
 
       if (!passwordResult.isConfirmed || !passwordResult.value) {
@@ -598,6 +603,8 @@ const GodownLr = () => {
         confirmButtonText: 'Yes, cancel it!',
         cancelButtonText: 'No, keep it',
         showLoaderOnConfirm: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
         inputValidator: (value) => {
           if (!value || !value.trim()) {
             return 'Cancellation reason is required!'
@@ -635,7 +642,6 @@ const GodownLr = () => {
             return false
           }
         },
-        allowOutsideClick: () => !Swal.isLoading(),
       })
 
       if (result.isConfirmed && result.value) {
@@ -1350,7 +1356,14 @@ const GodownLr = () => {
       />
 
       {/* Invoice Bill Modal */}
-      <Modal show={showInvoiceModal} onHide={() => setShowInvoiceModal(false)} size="xl" centered>
+      <Modal
+        show={showInvoiceModal}
+        onHide={() => setShowInvoiceModal(false)}
+        size="xl"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             Transport Pass Invoice - {selectedInvoiceData?.receiptNo || 'N/A'}
@@ -1386,7 +1399,7 @@ const FormTypeSelection = ({ show, handleClose, onSelectType }) => {
   if (!show) return null
 
   return (
-    <Modal show={show} onHide={handleClose} size="xl" centered>
+    <Modal show={show} onHide={handleClose} size="xl" centered backdrop="static" keyboard={false}>
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="w-100">
           <div className="d-flex justify-content-between align-items-center mb-4">
