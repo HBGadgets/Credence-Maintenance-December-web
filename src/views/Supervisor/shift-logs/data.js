@@ -171,6 +171,7 @@ export const getVehicleShiftLogsApi = async (params = {}) => {
     if (params.limit !== undefined && params.limit !== null) queryParams.limit = params.limit
     if (params.vehicleId) queryParams.vehicleId = params.vehicleId
     if (params.driverId) queryParams.driverId = params.driverId
+    if (params.supervisorId) queryParams.supervisorId = params.supervisorId
     if (params.status && params.status !== 'all') queryParams.status = params.status
     if (params.search && params.search.trim()) queryParams.search = params.search.trim()
     if (params.month) queryParams.month = params.month
@@ -275,6 +276,7 @@ export const getDriverShiftLogsApi = async (params = {}) => {
     if (params.limit !== undefined && params.limit !== null) queryParams.limit = params.limit
     if (params.driverId) queryParams.driverId = params.driverId
     if (params.vehicleId) queryParams.vehicleId = params.vehicleId
+    if (params.supervisorId) queryParams.supervisorId = params.supervisorId
     if (params.status && params.status !== 'all') queryParams.status = params.status
     if (params.search && params.search.trim()) queryParams.search = params.search.trim()
     if (params.month) queryParams.month = params.month

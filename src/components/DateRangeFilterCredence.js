@@ -1,15 +1,48 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import './DateRangeCredence.css'
 
-const DateRangeFilter = ({ onDateRangeChange, title }) => {
+const DateRangeFilter = ({
+  onDateRangeChange,
+  title = 'Date Range',
+  startDate: propStartDate,
+  endDate: propEndDate,
+  maxDate,
+  minDate,
+  className,
+  style,
+  buttonClassName,
+  buttonStyle,
+  dropdownAlign = 'left',
+  dropdownStyle,
+}) => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedStartDate, setSelectedStartDate] = useState(null)
   const [selectedEndDate, setSelectedEndDate] = useState(null)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
   const calendarRef = useRef(null)
+
+  // Sync with parent props (e.g. on external reset or initial values)
+  useEffect(() => {
+    if (!propStartDate && !propEndDate) {
+      setSelectedStartDate(null)
+      setSelectedEndDate(null)
+    } else {
+      if (propStartDate) {
+        const s = new Date(propStartDate)
+        if (!isNaN(s.getTime())) {
+          setSelectedStartDate(s)
+          setCurrentMonth(s)
+        }
+      }
+      if (propEndDate) {
+        const e = new Date(propEndDate)
+        if (!isNaN(e.getTime())) setSelectedEndDate(e)
+      }
+    }
+  }, [propStartDate, propEndDate])
 
   // Close calendar if clicked outside
   useEffect(() => {
@@ -70,21 +103,57 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
   ]
 
   const formatDate = (date) => {
+    if (!date) return ''
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`
   }
 
+  const isDateDisabled = (date) => {
+    if (maxDate) {
+      const max = new Date(maxDate)
+      max.setHours(23, 59, 59, 999)
+      if (date > max) return true
+    }
+    if (minDate) {
+      const min = new Date(minDate)
+      min.setHours(0, 0, 0, 0)
+      if (date < min) return true
+    }
+    return false
+  }
+
   const handleDateClick = (date) => {
+    if (isDateDisabled(date)) return
+
+    // If no start date yet, or if both start and end were selected: start new selection
     if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
       setSelectedStartDate(date)
       setSelectedEndDate(null)
     } else {
-      if (date < selectedStartDate) {
+      // One date was already selected
+      if (date.toDateString() === selectedStartDate.toDateString()) {
+        // Clicking same date again marks it as a single date selection
+        setSelectedEndDate(date)
+      } else if (date < selectedStartDate) {
         setSelectedStartDate(date)
         setSelectedEndDate(selectedStartDate)
       } else {
         setSelectedEndDate(date)
       }
     }
+  }
+
+  const handleDateDoubleClick = (date) => {
+    if (isDateDisabled(date)) return
+    setSelectedStartDate(date)
+    setSelectedEndDate(date)
+    const start = new Date(date)
+    start.setHours(0, 1, 1, 0)
+    const end = new Date(date)
+    end.setHours(23, 59, 59, 999)
+    if (onDateRangeChange) {
+      onDateRangeChange(start, end)
+    }
+    setIsCalendarOpen(false)
   }
 
   const isDateInRange = (date) => {
@@ -103,10 +172,13 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
     let start = selectedStartDate
     let end = selectedEndDate
 
+    // If only one date is picked, treat it as single date selection
     if (selectedStartDate && !selectedEndDate) {
       end = new Date(start)
+      setSelectedEndDate(end)
     } else if (selectedEndDate && !selectedStartDate) {
       start = new Date(end)
+      setSelectedStartDate(start)
     }
 
     if (start) {
@@ -116,18 +188,22 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
 
     if (end) {
       end = new Date(end)
-      end.setHours(23, 59, 59, 999) // Optionally, set to end of day
+      end.setHours(23, 59, 59, 999) // End of day
     }
 
-    console.log('Applying Date Range:', start, end)
-    onDateRangeChange(start, end)
+    if (onDateRangeChange) {
+      onDateRangeChange(start, end)
+    }
     setIsCalendarOpen(false)
   }
-
 
   const handleClear = () => {
     setSelectedStartDate(null)
     setSelectedEndDate(null)
+    if (onDateRangeChange) {
+      onDateRangeChange(null, null)
+    }
+    setIsCalendarOpen(false)
   }
 
   const presets = [
@@ -137,6 +213,7 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
         const today = new Date()
         setSelectedStartDate(today)
         setSelectedEndDate(today)
+        setCurrentMonth(today)
       },
     },
     {
@@ -146,6 +223,7 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
         yesterday.setDate(yesterday.getDate() - 1)
         setSelectedStartDate(yesterday)
         setSelectedEndDate(yesterday)
+        setCurrentMonth(yesterday)
       },
     },
     {
@@ -156,6 +234,7 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
         const end = new Date()
         setSelectedStartDate(start)
         setSelectedEndDate(end)
+        setCurrentMonth(start)
       },
     },
     {
@@ -164,10 +243,10 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
         const start = new Date()
         start.setMonth(start.getMonth() - 1)
         start.setDate(1)
-        const end = new Date()
-        end.setDate(0)
+        const end = new Date(start.getFullYear(), start.getMonth() + 1, 0)
         setSelectedStartDate(start)
         setSelectedEndDate(end)
+        setCurrentMonth(start)
       },
     },
     {
@@ -179,28 +258,62 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
     },
   ]
 
+  const getButtonText = () => {
+    if (selectedStartDate && selectedEndDate) {
+      if (formatDate(selectedStartDate) === formatDate(selectedEndDate)) {
+        return formatDate(selectedStartDate)
+      }
+      return `${formatDate(selectedStartDate)} - ${formatDate(selectedEndDate)}`
+    }
+    if (selectedStartDate) {
+      return formatDate(selectedStartDate)
+    }
+    return title
+  }
+
+  const canGoNextMonth = () => {
+    if (!maxDate) return true
+    const max = new Date(maxDate)
+    const nextMonthFirstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+    return nextMonthFirstDay <= max
+  }
+
   return (
-    <div className="position-relative">
+    <div className={`position-relative ${className || ''}`} style={style}>
       <button
+        type="button"
         onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-        className="btn btn-outline-secondary"
+        className={buttonClassName || 'btn btn-outline-secondary'}
+        style={buttonStyle}
       >
-        {selectedStartDate && selectedEndDate
-          ? `${formatDate(selectedStartDate)} - ${formatDate(selectedEndDate)}`
-          : title}
+        <div className="d-flex align-items-center gap-2 text-truncate">
+          <Calendar size={14} className="text-secondary flex-shrink-0" />
+          <span className="text-truncate">{getButtonText()}</span>
+        </div>
       </button>
 
       {isCalendarOpen && (
         <div
-          ref={calendarRef} // Attach ref to the calendar div
+          ref={calendarRef}
           className="position-absolute mt-2 bg-white rounded shadow border p-4"
-          style={{ width: '450px', zIndex: 1000 }}
+          style={{
+            width: '450px',
+            maxWidth: '92vw',
+            zIndex: 1050,
+            ...(dropdownAlign === 'right' ? { right: 0 } : { left: 0 }),
+            ...dropdownStyle,
+          }}
         >
           <div className="d-flex">
             {/* Presets */}
-            <div className="border-end pe-4" style={{ width: '200px' }}>
+            <div className="border-end pe-4" style={{ width: '180px' }}>
               {presets.map((preset) => (
-                <button key={preset.label} onClick={preset.action} className="preset-button">
+                <button
+                  type="button"
+                  key={preset.label}
+                  onClick={preset.action}
+                  className="preset-button"
+                >
                   {preset.label}
                 </button>
               ))}
@@ -208,14 +321,15 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
 
             {/* Calendar */}
             <div className="flex-grow-1 ps-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
                 <button
+                  type="button"
                   onClick={() =>
                     setCurrentMonth(
                       new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1),
                     )
                   }
-                  className="btn btn-link p-1"
+                  className="btn btn-link p-1 text-dark"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -223,12 +337,15 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
                   {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </span>
                 <button
+                  type="button"
+                  disabled={!canGoNextMonth()}
                   onClick={() =>
                     setCurrentMonth(
                       new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1),
                     )
                   }
-                  className="btn btn-link p-1"
+                  className="btn btn-link p-1 text-dark"
+                  style={!canGoNextMonth() ? { opacity: 0.3, cursor: 'not-allowed' } : undefined}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -236,23 +353,34 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
 
               <div className="calendar-grid">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center small fw-medium text-secondary py-2">
+                  <div key={day} className="text-center small fw-medium text-secondary py-1">
                     {day}
                   </div>
                 ))}
                 {getDaysInMonth(currentMonth).map((date, index) => {
                   const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
+                  const disabled = isDateDisabled(date)
                   const classes = [
                     'date-button',
                     !isCurrentMonth && 'other-month',
                     isDateSelected(date) && 'selected',
                     isDateInRange(date) && !isDateSelected(date) && 'in-range',
+                    disabled && 'disabled text-muted',
                   ]
                     .filter(Boolean)
                     .join(' ')
 
                   return (
-                    <button key={index} onClick={() => handleDateClick(date)} className={classes}>
+                    <button
+                      key={index}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleDateClick(date)}
+                      onDoubleClick={() => handleDateDoubleClick(date)}
+                      className={classes}
+                      style={disabled ? { cursor: 'not-allowed', opacity: 0.3 } : undefined}
+                      title={disabled ? 'Disabled' : 'Click to select, double-click for single date'}
+                    >
                       {date.getDate()}
                     </button>
                   )
@@ -261,22 +389,41 @@ const DateRangeFilter = ({ onDateRangeChange, title }) => {
             </div>
           </div>
 
-          <div className="d-flex justify-content-end mt-4 pt-4 border-top">
-            <button onClick={() => setIsCalendarOpen(false)} className="btn btn-light me-2">
-              Cancel
-            </button>
-            <button onClick={handleClear} className="btn btn-danger text-white me-2">
-              Clear
-            </button>
-            <button
-              onClick={handleApply}
-              // disabled={!selectedStartDate || !selectedEndDate}
-              // disabled={!selectedStartDate && !selectedEndDate}
-              className="btn btn-primary"
-              style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
-            >
-              Apply
-            </button>
+          <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span className="small text-secondary">
+              {selectedStartDate && selectedEndDate
+                ? formatDate(selectedStartDate) === formatDate(selectedEndDate)
+                  ? `Selected: ${formatDate(selectedStartDate)} (Single Date)`
+                  : `Selected: ${formatDate(selectedStartDate)} - ${formatDate(selectedEndDate)}`
+                : selectedStartDate
+                  ? `Selected: ${formatDate(selectedStartDate)} (Single Date)`
+                  : 'Select a date or range'}
+            </span>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCalendarOpen(false)}
+                className="btn btn-light btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="btn btn-outline-danger btn-sm"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={!selectedStartDate && !selectedEndDate}
+                className="btn btn-primary btn-sm text-white"
+                style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}
