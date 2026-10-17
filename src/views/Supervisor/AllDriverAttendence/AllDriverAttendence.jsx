@@ -1,20 +1,42 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import { DatePicker } from 'antd'
+import dayjs from 'dayjs'
 import DateRangePicker from '../../components/DateRangePicker'
 import SmartPagination from '../../components/SmartPagination'
 import Table from '../../components/Table'
 import SearchInput from '../../components/SearchInput'
 import { toast, ToastContainer } from 'react-toastify'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { getAllDriverAttendenceApi, getDriverAttendanceDetailedApi } from '../data/data'
+import {
+  getAllDriverAttendenceApi,
+  getDriverAttendanceDetailedApi,
+  editAttendanceBySupervisorApi,
+} from '../data/data'
 import IconDropdown from '../IconDropdown'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { FaArrowUp, FaPrint, FaRegFilePdf, FaEdit } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
-import { CTooltip } from '@coreui/react'
+import {
+  CTooltip,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CButton,
+  CForm,
+  CFormInput,
+  CFormSelect,
+  CFormTextarea,
+  CFormLabel,
+  CRow,
+  CCol,
+  CSpinner,
+} from '@coreui/react'
 import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import ExcelJS from 'exceljs'
@@ -27,6 +49,166 @@ const attendanceFilterOptions = [
   { value: 'zero_present', label: '0 Present' },
   { value: 'zero_absent', label: '0 Absent' },
 ]
+
+// Global MapTiler reverse geocoding cache & in-flight requests (module level)
+const maptilerAddressCache = new Map()
+const maptilerPendingRequests = new Map()
+
+const reverseGeocodeMaptiler = async (lat, long) => {
+  if (lat === null || lat === undefined || long === null || long === undefined) return null
+  const numLat = Number(lat)
+  const numLong = Number(long)
+  if (isNaN(numLat) || isNaN(numLong)) return null
+
+  const cacheKey = `${numLat.toFixed(5)},${numLong.toFixed(5)}`
+  if (maptilerAddressCache.has(cacheKey)) {
+    return maptilerAddressCache.get(cacheKey)
+  }
+
+  if (maptilerPendingRequests.has(cacheKey)) {
+    return maptilerPendingRequests.get(cacheKey)
+  }
+
+  const apiKey = import.meta.env.VITE_MAP || 'dq5pOnSdxzgtz374VVUb'
+  const promise = (async () => {
+    try {
+      const response = await axios.get(
+        `https://api.maptiler.com/geocoding/${numLong},${numLat}.json?key=${apiKey}`,
+      )
+      if (response.data?.features?.length > 0) {
+        const address =
+          response.data.features[0].place_name ||
+          response.data.features[0].text ||
+          `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+        maptilerAddressCache.set(cacheKey, address)
+        return address
+      }
+      const fallback = `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+      maptilerAddressCache.set(cacheKey, fallback)
+      return fallback
+    } catch (err) {
+      console.warn('MapTiler Geocoding Error:', err?.message)
+      const fallback = `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+      maptilerAddressCache.set(cacheKey, fallback)
+      return fallback
+    } finally {
+      maptilerPendingRequests.delete(cacheKey)
+    }
+  })()
+
+  maptilerPendingRequests.set(cacheKey, promise)
+  return promise
+}
+
+// Component to render address converted via MapTiler (memoized & module level)
+const LocationAddress = React.memo(({ location }) => {
+  const [address, setAddress] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const lat = location?.lat !== undefined ? location.lat : location?.latitude
+  const long = location?.long !== undefined ? location.long : location?.longitude
+
+  useEffect(() => {
+    if (lat === null || lat === undefined || long === null || long === undefined) {
+      setAddress('')
+      return
+    }
+
+    const numLat = Number(lat)
+    const numLong = Number(long)
+    if (isNaN(numLat) || isNaN(numLong)) {
+      setAddress(typeof location === 'string' ? location : '')
+      return
+    }
+
+    const cacheKey = `${numLat.toFixed(5)},${numLong.toFixed(5)}`
+    if (maptilerAddressCache.has(cacheKey)) {
+      setAddress(maptilerAddressCache.get(cacheKey))
+      return
+    }
+
+    let isMounted = true
+    setLoading(true)
+
+    reverseGeocodeMaptiler(numLat, numLong)
+      .then((addr) => {
+        if (isMounted) {
+          setAddress(addr || `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`)
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [lat, long, location])
+
+  if (!location) return <span className="text-muted">-</span>
+
+  if (typeof location === 'string' && location.trim()) {
+    return (
+      <CTooltip content={location} placement="top">
+        <span
+          className="small text-truncate d-inline-block"
+          style={{ maxWidth: '240px', cursor: 'pointer' }}
+        >
+          {location}
+        </span>
+      </CTooltip>
+    )
+  }
+
+  const numLat = Number(lat)
+  const numLong = Number(long)
+  if (isNaN(numLat) || isNaN(numLong)) {
+    return <span className="text-muted">-</span>
+  }
+
+  if (loading && !address) {
+    return (
+      <span className="small text-muted d-inline-flex align-items-center gap-1">
+        <span
+          className="spinner-border spinner-border-sm text-secondary"
+          role="status"
+          style={{ width: '10px', height: '10px' }}
+        />
+        <span style={{ fontSize: '11px' }}>Resolving address...</span>
+      </span>
+    )
+  }
+
+  const displayAddress = address || `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
+
+  return (
+    <CTooltip content={`${displayAddress} (Click to open map)`} placement="top">
+      <a
+        href={`https://www.google.com/maps?q=${numLat},${numLong}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary text-decoration-none small d-inline-flex align-items-center gap-1"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span role="img" aria-label="pin">
+          📍
+        </span>
+        <span
+          className="text-truncate d-inline-block text-start"
+          style={{ maxWidth: '240px', verticalAlign: 'middle' }}
+        >
+          {displayAddress}
+        </span>
+      </a>
+    </CTooltip>
+  )
+})
+
+import EditAttendanceModal, {
+  formatTimeTo12Hour,
+  formatTimeTo24Hour,
+  getTodayLocalDate,
+} from './EditAttendanceModal'
 
 const AllDriverAttendance = () => {
   const navigate = useNavigate()
@@ -101,6 +283,59 @@ const AllDriverAttendance = () => {
     navigate(`/DriverAttendance/${id}`, { state: { selectedMonth } })
   }
 
+  const queryClient = useQueryClient()
+
+  // State for Edit Attendance Modal
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [editInitialData, setEditInitialData] = useState(null)
+
+  // Open modal handler
+  const handleOpenEditModal = (driver, attendanceRecord = null) => {
+    const driverId = String(driver?.driverId || driver?.id || driver?._id || '')
+    const driverName = driver?.driverName || driver?.name || 'Driver'
+
+    const maxDate = getTodayLocalDate()
+    let dateStr = ''
+    if (attendanceRecord?.date) {
+      const recDate = attendanceRecord.date.split('T')[0]
+      dateStr = recDate > maxDate ? maxDate : recDate
+    } else {
+      if (maxDate.startsWith(selectedMonth)) {
+        dateStr = maxDate
+      } else {
+        const firstOfMonth = `${selectedMonth}-01`
+        dateStr = firstOfMonth > maxDate ? maxDate : firstOfMonth
+      }
+    }
+
+    const rawStatus = attendanceRecord?.status || 'Present'
+    const status = rawStatus === 'Not Marked' ? 'Present' : rawStatus
+
+    const inTime24 = attendanceRecord?.checkInTime
+      ? formatTimeTo24Hour(attendanceRecord.checkInTime)
+      : '09:30'
+    const outTime24 = attendanceRecord?.checkoutTime
+      ? formatTimeTo24Hour(attendanceRecord.checkoutTime)
+      : '18:30'
+
+    const recordId =
+      attendanceRecord?._id && !String(attendanceRecord._id).startsWith('not-marked-')
+        ? attendanceRecord._id
+        : null
+
+    setEditInitialData({
+      driverId,
+      driverName,
+      attendanceId: recordId,
+      date: dateStr,
+      status: ['Present', 'Absent', 'Leave'].includes(status) ? status : 'Present',
+      punchInTime: inTime24,
+      punchOutTime: outTime24,
+      supervisorComment: attendanceRecord?.supervisorComment || '',
+    })
+    setEditModalVisible(true)
+  }
+
   // Format date DD/MM/YYYY
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -150,149 +385,6 @@ const AllDriverAttendance = () => {
     } catch {
       return String(timeString || '-')
     }
-  }
-
-  // Global MapTiler reverse geocoding cache
-  const maptilerAddressCache = new Map()
-
-  const reverseGeocodeMaptiler = async (lat, long) => {
-    if (lat === null || lat === undefined || long === null || long === undefined) return null
-    const numLat = Number(lat)
-    const numLong = Number(long)
-    if (isNaN(numLat) || isNaN(numLong)) return null
-
-    const cacheKey = `${numLat.toFixed(5)},${numLong.toFixed(5)}`
-    if (maptilerAddressCache.has(cacheKey)) {
-      return maptilerAddressCache.get(cacheKey)
-    }
-
-    const apiKey = import.meta.env.VITE_MAP || 'dq5pOnSdxzgtz374VVUb'
-    try {
-      // MapTiler reverse geocode: https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${apiKey}
-      const response = await axios.get(
-        `https://api.maptiler.com/geocoding/${numLong},${numLat}.json?key=${apiKey}`,
-      )
-      if (response.data?.features?.length > 0) {
-        const address =
-          response.data.features[0].place_name ||
-          response.data.features[0].text ||
-          `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
-        maptilerAddressCache.set(cacheKey, address)
-        return address
-      }
-      const fallback = `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
-      maptilerAddressCache.set(cacheKey, fallback)
-      return fallback
-    } catch (err) {
-      console.warn('MapTiler Geocoding Error:', err?.message)
-      const fallback = `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
-      maptilerAddressCache.set(cacheKey, fallback)
-      return fallback
-    }
-  }
-
-  // Component to render address converted via MapTiler
-  const LocationAddress = ({ location }) => {
-    const [address, setAddress] = useState('')
-    const [loading, setLoading] = useState(false)
-
-    const lat = location?.lat !== undefined ? location.lat : location?.latitude
-    const long = location?.long !== undefined ? location.long : location?.longitude
-
-    useEffect(() => {
-      if (lat === null || lat === undefined || long === null || long === undefined) {
-        setAddress('')
-        return
-      }
-
-      const numLat = Number(lat)
-      const numLong = Number(long)
-      if (isNaN(numLat) || isNaN(numLong)) {
-        setAddress(typeof location === 'string' ? location : '')
-        return
-      }
-
-      const cacheKey = `${numLat.toFixed(5)},${numLong.toFixed(5)}`
-      if (maptilerAddressCache.has(cacheKey)) {
-        setAddress(maptilerAddressCache.get(cacheKey))
-        return
-      }
-
-      let isMounted = true
-      setLoading(true)
-
-      reverseGeocodeMaptiler(numLat, numLong)
-        .then((addr) => {
-          if (isMounted) {
-            setAddress(addr || `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`)
-          }
-        })
-        .finally(() => {
-          if (isMounted) setLoading(false)
-        })
-
-      return () => {
-        isMounted = false
-      }
-    }, [lat, long, location])
-
-    if (!location) return <span className="text-muted">-</span>
-
-    if (typeof location === 'string' && location.trim()) {
-      return (
-        <CTooltip content={location} placement="top">
-          <span
-            className="small text-truncate d-inline-block"
-            style={{ maxWidth: '240px', cursor: 'pointer' }}
-          >
-            {location}
-          </span>
-        </CTooltip>
-      )
-    }
-
-    const numLat = Number(lat)
-    const numLong = Number(long)
-    if (isNaN(numLat) || isNaN(numLong)) {
-      return <span className="text-muted">-</span>
-    }
-
-    if (loading && !address) {
-      return (
-        <span className="small text-muted d-inline-flex align-items-center gap-1">
-          <span
-            className="spinner-border spinner-border-sm text-secondary"
-            role="status"
-            style={{ width: '10px', height: '10px' }}
-          />
-          <span style={{ fontSize: '11px' }}>Resolving address...</span>
-        </span>
-      )
-    }
-
-    const displayAddress = address || `${numLat.toFixed(4)}, ${numLong.toFixed(4)}`
-
-    return (
-      <CTooltip content={`${displayAddress} (Click to open map)`} placement="top">
-        <a
-          href={`https://www.google.com/maps?q=${numLat},${numLong}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary text-decoration-none small d-inline-flex align-items-center gap-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <span role="img" aria-label="pin">
-            📍
-          </span>
-          <span
-            className="text-truncate d-inline-block text-start"
-            style={{ maxWidth: '240px', verticalAlign: 'middle' }}
-          >
-            {displayAddress}
-          </span>
-        </a>
-      </CTooltip>
-    )
   }
 
   // Render nested driver details & daily attendance table
@@ -482,6 +574,19 @@ const AllDriverAttendance = () => {
                 Not Marked: <strong>{notMarkedCount}</strong>
               </span>
             </CTooltip>
+
+            <button
+              type="button"
+              className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-2 py-1 ms-1"
+              style={{ fontSize: '12px' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleOpenEditModal(driverDetails || row, null)
+              }}
+            >
+              <FaEdit size={12} />
+              <span>Mark / Edit Attendance</span>
+            </button>
           </div>
         </div>
 
@@ -511,6 +616,7 @@ const AllDriverAttendance = () => {
                     <th className="text-center">Check-Out Time</th>
                     <th className="text-center">Check-Out Address</th>
                     <th className="text-center">Duration</th>
+                    <th className="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -549,6 +655,22 @@ const AllDriverAttendance = () => {
                           <LocationAddress location={item.checkOutLocation} />
                         </td>
                         <td className="text-center text-nowrap">{item.duration || '-'}</td>
+                        <td className="text-center text-nowrap">
+                          <CTooltip content="Edit Attendance Record" placement="top">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1"
+                              style={{ fontSize: '11px', height: '26px' }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleOpenEditModal(driverDetails || row, item)
+                              }}
+                            >
+                              <FaEdit size={11} />
+                              <span>Edit</span>
+                            </button>
+                          </CTooltip>
+                        </td>
                       </tr>
                     )
                   })}
@@ -1226,6 +1348,15 @@ const AllDriverAttendance = () => {
         showPagination={false}
         viewButton={true}
         handleViewButton={handleViewButton}
+        editButton={true}
+        handleEditButton={(id) => {
+          const matchedDriver = filteredData.find(
+            (d) => String(d.driverId || d.id || d._id) === String(id),
+          )
+          if (matchedDriver) {
+            handleOpenEditModal(matchedDriver, null)
+          }
+        }}
         renderRowDetails={renderNestedDriverDetails}
       />
 
@@ -1238,6 +1369,14 @@ const AllDriverAttendance = () => {
           setItemsPerPage(value)
           setCurrentPage(1)
         }}
+      />
+
+      {/* Edit Attendance Modal */}
+      <EditAttendanceModal
+        visible={editModalVisible}
+        onClose={() => setEditModalVisible(false)}
+        initialData={editInitialData}
+        onSuccess={() => queryClient.invalidateQueries(['DriverAttendacne'])}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">

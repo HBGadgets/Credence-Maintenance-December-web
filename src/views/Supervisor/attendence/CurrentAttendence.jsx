@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { getDriverListApi, markAttendanceBySupervisorApi } from '../data/data'
+import { getDriverListApi, editAttendanceBySupervisorApi } from '../data/data'
 import SearchInput from '../../components/SearchInput'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { VscBlank } from 'react-icons/vsc'
 import Swal from 'sweetalert2'
 import IconDropdown from '../IconDropdown'
@@ -12,13 +12,20 @@ import useExcelExporter from '../../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
-import { ToastContainer } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import SingleSelectDropdown from '../../components/SingleSelectDropdown'
+import EditAttendanceModal, {
+  getTodayLocalDate,
+} from '../AllDriverAttendence/EditAttendanceModal'
 
 const CurrentAttendence = () => {
+  const queryClient = useQueryClient()
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [editInitialData, setEditInitialData] = useState(null)
+
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
@@ -79,22 +86,24 @@ const CurrentAttendence = () => {
     setSearchQuery(query)
   }
 
-  // Handle View Button
-  const handleViewButton = async (id) => {
+  // Handle View Button (Mark Attendance via Edit Modal)
+  const handleViewButton = (id) => {
     if (isFetching) return // Prevent action while fetching
-    try {
-      await markAttendanceBySupervisorApi(id)
+    const matchedDriver = filteredData.find(
+      (driver) => driver.id === id || driver._id === id,
+    )
 
-      setFilteredData((prevData) =>
-        prevData.filter((driverlist) => driverlist.id !== id && driverlist._id !== id),
-      )
-
-      Swal.fire('Success!', 'Attendance marked successfully.', 'success')
-      console.log('Attendance marked and row removed for id:', id)
-    } catch (error) {
-      Swal.fire('Error', 'Failed to mark attendance.', 'error')
-      console.error('Failed to mark attendance:', error)
-    }
+    setEditInitialData({
+      driverId: id,
+      driverName: matchedDriver?.name || 'Driver',
+      attendanceId: null,
+      date: getTodayLocalDate(),
+      status: 'Present',
+      punchInTime: '09:30',
+      punchOutTime: '18:30',
+      supervisorComment: '',
+    })
+    setEditModalVisible(true)
   }
 
   // Table columns
@@ -177,7 +186,7 @@ const CurrentAttendence = () => {
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         viewButton={true}
-        viewButtonLabel="Mark Present" //Custom label here
+        viewButtonLabel="Mark Attendance" //Custom label here
         viewButtonIcon={<VscBlank size={1} />} //Custom icon here
         viewButtonColor={'green'} // Custom green
         handleViewButton={handleViewButton}
@@ -194,6 +203,27 @@ const CurrentAttendence = () => {
           if (value === -1) {
             setItemsPerPage(filteredData.length)
           }
+        }}
+      />
+
+      {/* Mark Attendance Modal */}
+      <EditAttendanceModal
+        visible={editModalVisible}
+        onClose={() => setEditModalVisible(false)}
+        initialData={editInitialData}
+        title="Mark Attendance by Supervisor"
+        onSuccess={() => {
+          if (editInitialData?.driverId) {
+            setFilteredData((prevData) =>
+              prevData.filter(
+                (d) =>
+                  d.id !== editInitialData.driverId &&
+                  d._id !== editInitialData.driverId,
+              ),
+            )
+          }
+          queryClient.invalidateQueries(['driverlist'])
+          Swal.fire('Success!', 'Attendance marked successfully.', 'success')
         }}
       />
 

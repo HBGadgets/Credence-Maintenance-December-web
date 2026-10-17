@@ -31,24 +31,23 @@ export const getDriverListApi = async (userId = null, TOKEN) => {
   }))
 }
 
-// Get API for Mark Attendance Fromm Supervisor.
+// API for Mark Attendance From Supervisor (delegates to PUT /edit-by-supervisor/:id?)
+export const markAttendanceBySupervisorApi = async (id, customPayload = null) => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const today = `${year}-${month}-${day}`
 
-export const markAttendanceBySupervisorApi = async (id) => {
-  try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/attendance/mark-by-supervisor/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-        },
-      },
-    )
-    console.log('This is today marked present Driver list : ', response.data)
-    return response.data
-  } catch (error) {
-    console.error('Error:', error.message?.data || error.message)
-    throw error
+  const payload = customPayload || {
+    driverId: id,
+    date: today,
+    status: 'Present',
+    punchInTime: '09:30 AM',
+    punchOutTime: '06:30 PM',
+    supervisorComment: '',
   }
+  return editAttendanceBySupervisorApi(null, payload)
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -1007,5 +1006,48 @@ export const getDriverAttendanceDetailedApi = async ({
       return data
     }
     throw err
+  }
+}
+
+// PUT API for Edit Attendance by Supervisor
+export const editAttendanceBySupervisorApi = async (id, payload) => {
+  try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
+
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+    const hasValidId = id && !String(id).startsWith('not-marked-')
+    const primaryUrl = hasValidId
+      ? `${baseUrl}/api/attendance/edit-by-supervisor/${id}`
+      : `${baseUrl}/api/attendance/edit-by-supervisor`
+
+    try {
+      const response = await axios.put(primaryUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      console.log('Attendance edit by supervisor response:', response.data)
+      return response.data
+    } catch (primaryErr) {
+      if (primaryErr?.response?.status === 404) {
+        const fallbackUrl = hasValidId
+          ? `${baseUrl}/edit-by-supervisor/${id}`
+          : `${baseUrl}/edit-by-supervisor`
+        const response = await axios.put(fallbackUrl, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        console.log('Attendance edit by supervisor fallback response:', response.data)
+        return response.data
+      }
+      throw primaryErr
+    }
+  } catch (error) {
+    console.error('Error in editAttendanceBySupervisorApi:', error.response?.data || error.message)
+    throw error
   }
 }
