@@ -221,6 +221,17 @@ const AllDriverAttendance = () => {
   const [totalRecords, setTotalRecords] = useState(0)
   const [attendanceFilter, setAttendanceFilter] = useState(null)
 
+  // Export loading & progress state
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportType, setExportType] = useState('')
+  const [exportProgress, setExportProgress] = useState({
+    percent: 0,
+    message: '',
+    current: 0,
+    total: 0,
+    driverName: '',
+  })
+
   const [selectedMonth, setSelectedMonth] = useState(() => {
     return sessionStorage.getItem('allDriverAttendanceMonth') || new Date().toISOString().slice(0, 7)
   })
@@ -774,8 +785,9 @@ const AllDriverAttendance = () => {
     }
   }
 
-  // Shared data preparation for Excel and PDF exports
-  const prepareAttendanceExportData = async () => {
+  // Shared data preparation for Excel and PDF exports with live progress reporting
+  const prepareAttendanceExportData = async (onProgress, exportTypeLabel = 'report') => {
+    onProgress?.({ percent: 10, message: `Fetching detailed attendance records for ${exportTypeLabel}...` })
     let detailedData = null
     try {
       detailedData = await getDriverAttendanceDetailedApi({
@@ -837,8 +849,9 @@ const AllDriverAttendance = () => {
       (targetY === today.getFullYear() && today.getMonth() + 1 > targetM)
 
     const preparedDrivers = []
+    const totalDrivers = driversToExport.length
 
-    for (let i = 0; i < driversToExport.length; i++) {
+    for (let i = 0; i < totalDrivers; i++) {
       const driver = driversToExport[i]
       const rawAttendance = driver.attendanceDetails || []
       const totalDaysInMonth =
@@ -906,6 +919,19 @@ const AllDriverAttendance = () => {
       const employeeName = driver.driverName || driver.name || 'Driver'
       const role = driver.role || 'Driver'
 
+      const currentDriverNum = i + 1
+      const progressPercent = Math.min(
+        88,
+        Math.round(15 + (i / totalDrivers) * 73)
+      )
+      onProgress?.({
+        percent: progressPercent,
+        message: `Resolving location addresses for ${employeeName} (${currentDriverNum} of ${totalDrivers})...`,
+        current: currentDriverNum,
+        total: totalDrivers,
+        driverName: employeeName,
+      })
+
       const workingDays = totalDaysInMonth
       const presentDays = driver.presentCount ?? driver.presentDays ?? 0
       const absentDays = driver.absentCount ?? driver.absentDays ?? 0
@@ -917,8 +943,12 @@ const AllDriverAttendance = () => {
         const dateCol = formatDate(record.date) || '--'
         const checkinCol = formatCheckinDateTimeForExport(record.date, record.checkInTime)
         const checkoutCol = formatCheckoutDateTimeForExport(record.checkoutTime)
-        const startLocCol = await resolveAddressForExport(record.checkInLocation)
-        const endLocCol = await resolveAddressForExport(record.checkOutLocation)
+
+        // Resolve start and end location addresses concurrently
+        const [startLocCol, endLocCol] = await Promise.all([
+          resolveAddressForExport(record.checkInLocation),
+          resolveAddressForExport(record.checkOutLocation),
+        ])
         const statusCol = record.status || (record.isNotMarked ? 'Not Marked' : 'Absent')
 
         processedDaily.push({
@@ -944,6 +974,8 @@ const AllDriverAttendance = () => {
       })
     }
 
+    onProgress?.({ percent: 90, message: 'Compiling report data...' })
+
     return {
       targetM,
       targetY,
@@ -953,10 +985,16 @@ const AllDriverAttendance = () => {
 
   // Handle detailed Excel export matching requested multi-driver layout
   const handleDownloadExcel = async () => {
+    if (isExporting) return
+    setIsExporting(true)
+    setExportType('Excel')
+    setExportProgress({ percent: 5, message: 'Initializing Excel export...' })
+
     try {
       toast.info('Preparing detailed attendance sheet for export...')
-      const { targetM, targetY, drivers } = await prepareAttendanceExportData()
+      const { targetM, targetY, drivers } = await prepareAttendanceExportData(setExportProgress, 'Excel')
 
+      setExportProgress({ percent: 92, message: 'Generating Excel workbook...' })
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Attendance Report')
 
@@ -1063,6 +1101,7 @@ const AllDriverAttendance = () => {
       }
 
       // Write and trigger download
+      setExportProgress({ percent: 98, message: 'Finalizing Excel file download...' })
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1072,15 +1111,24 @@ const AllDriverAttendance = () => {
     } catch (error) {
       console.error('Error exporting Excel sheet:', error)
       toast.error('Failed to export Excel sheet: ' + (error?.message || 'Unknown error'))
+    } finally {
+      setIsExporting(false)
+      setExportProgress({ percent: 0, message: '', current: 0, total: 0, driverName: '' })
     }
   }
 
   // Handle detailed PDF export matching the multi-driver sheet layout
   const handleDownloadPDF = async () => {
+    if (isExporting) return
+    setIsExporting(true)
+    setExportType('PDF')
+    setExportProgress({ percent: 5, message: 'Initializing PDF export...' })
+
     try {
       toast.info('Preparing detailed attendance PDF for export...')
-      const { targetM, targetY, drivers } = await prepareAttendanceExportData()
+      const { targetM, targetY, drivers } = await prepareAttendanceExportData(setExportProgress, 'PDF')
 
+      setExportProgress({ percent: 92, message: 'Formatting PDF document...' })
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -1264,11 +1312,15 @@ const AllDriverAttendance = () => {
         )
       }
 
+      setExportProgress({ percent: 98, message: 'Finalizing PDF file download...' })
       doc.save(`Driver_Attendance_Report_${targetM}_${targetY}.pdf`)
       toast.success('PDF downloaded successfully!')
     } catch (error) {
       console.error('Error exporting PDF:', error)
       toast.error('Failed to export PDF: ' + (error?.message || 'Unknown error'))
+    } finally {
+      setIsExporting(false)
+      setExportProgress({ percent: 0, message: '', current: 0, total: 0, driverName: '' })
     }
   }
 
@@ -1378,6 +1430,66 @@ const AllDriverAttendance = () => {
         initialData={editInitialData}
         onSuccess={() => queryClient.invalidateQueries(['DriverAttendacne'])}
       />
+
+      {/* Exporting Progress Loader Modal */}
+      <CModal
+        visible={isExporting}
+        backdrop="static"
+        keyboard={false}
+        alignment="center"
+        className="shadow-lg border-0"
+      >
+        <CModalBody className="p-4 text-center">
+          <div className="d-flex flex-column align-items-center justify-content-center py-2">
+            <div className="mb-3 position-relative d-inline-flex align-items-center justify-content-center">
+              <CSpinner color="primary" style={{ width: '3.2rem', height: '3.2rem' }} />
+            </div>
+
+            <h5 className="fw-bold mb-1 text-dark">
+              Preparing {exportType ? `${exportType} ` : ''}Report to Export
+            </h5>
+            <p className="text-muted small mb-3">
+              Please wait while attendance records and location addresses are being fetched.
+            </p>
+
+            {/* Progress bar */}
+            <div className="w-100 px-3 mb-2">
+              <div
+                className="progress"
+                style={{ height: '8px', borderRadius: '4px', backgroundColor: '#e9ecef' }}
+              >
+                <div
+                  className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                  role="progressbar"
+                  style={{
+                    width: `${exportProgress.percent || 0}%`,
+                    transition: 'width 0.3s ease',
+                  }}
+                  aria-valuenow={exportProgress.percent || 0}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                />
+              </div>
+            </div>
+
+            <div
+              className="d-flex justify-content-between align-items-center w-100 px-3 text-muted"
+              style={{ fontSize: '12px' }}
+            >
+              <span className="text-truncate text-start" style={{ maxWidth: '80%' }}>
+                {exportProgress.message || 'Fetching addresses and preparing report...'}
+              </span>
+              <span className="fw-semibold text-primary ms-2">
+                {exportProgress.percent || 0}%
+              </span>
+            </div>
+
+            <div className="mt-3 text-muted" style={{ fontSize: '11px' }}>
+              Please do not close or navigate away from this page.
+            </div>
+          </div>
+        </CModalBody>
+      </CModal>
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />
