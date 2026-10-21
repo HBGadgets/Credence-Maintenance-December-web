@@ -161,9 +161,7 @@ export const getVehicleShiftLogsApi = async (params = {}) => {
     if (!authToken) throw new Error('Authentication token not found')
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const url = baseUrl.endsWith('/api')
-      ? `${baseUrl}/shift-logs/vehicle/all`
-      : `${baseUrl}/api/shift-logs/vehicle/all`
+    const url = `${baseUrl}/api/shift-logs/vehicle/all`
 
     // Clean params
     const queryParams = {}
@@ -266,9 +264,7 @@ export const getDriverShiftLogsApi = async (params = {}) => {
     if (!authToken) throw new Error('Authentication token not found')
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const url = baseUrl.endsWith('/api')
-      ? `${baseUrl}/shift-logs/driver/all`
-      : `${baseUrl}/api/shift-logs/driver/all`
+    const url = `${baseUrl}/api/shift-logs/driver/all`
 
     // Clean params
     const queryParams = {}
@@ -377,9 +373,7 @@ export const getDriverFullReportApi = async (driverId, params = {}) => {
     if (!authToken) throw new Error('Authentication token not found')
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const url = baseUrl.endsWith('/api')
-      ? `${baseUrl}/shift-logs/driver/${driverId}`
-      : `${baseUrl}/api/shift-logs/driver/${driverId}`
+    const url = `${baseUrl}/api/shift-logs/driver/${driverId}`
 
     const queryParams = {}
     if (params.month) queryParams.month = params.month
