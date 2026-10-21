@@ -780,9 +780,7 @@ export const assignVehicleToDriverApi = async ({ driverId, vehicleId, remarks })
     }
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
-    const primaryUrl = baseUrl.endsWith('/api')
-      ? `${baseUrl}/drivers/assign-vehicle`
-      : `${baseUrl}/api/drivers/assign-vehicle`
+    const primaryUrl =`${baseUrl}/api/drivers/assign-vehicle`
 
     try {
       const { data: response } = await axios.post(primaryUrl, payload, {

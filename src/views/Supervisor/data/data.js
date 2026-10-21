@@ -1017,9 +1017,7 @@ export const editAttendanceBySupervisorApi = async (id, payload) => {
 
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
     const hasValidId = id && !String(id).startsWith('not-marked-')
-    const primaryUrl = hasValidId
-      ? `${baseUrl}/api/attendance/edit-by-supervisor/${id}`
-      : `${baseUrl}/api/attendance/edit-by-supervisor`
+    const primaryUrl = `${baseUrl}/api/attendance/edit-by-supervisor`
 
     try {
       const response = await axios.put(primaryUrl, payload, {
