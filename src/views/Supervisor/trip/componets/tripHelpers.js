@@ -85,8 +85,9 @@ export const handleAddHelper = async (tripData, fetchTripData, refetch) => {
 // Edit Trip
 export const handleEditHelper = async (formData, fetchTripData, refetch) => {
     try {
+        const tripId = formData._id || formData.id
         const updatePayload = {
-            id: formData._id,
+            id: tripId,
             driverId: sanitizeValue(formData.driverId),
             vehicleId: sanitizeValue(formData.vehicleId),
             vehicleName: sanitizeValue(formData.vehicleName),
@@ -105,7 +106,7 @@ export const handleEditHelper = async (formData, fetchTripData, refetch) => {
             clientAdvance: sanitizeNumber(formData.clientAdvance),
         }
 
-        const res = await patchTripApi(formData._id, updatePayload)
+        const res = await patchTripApi(tripId, updatePayload)
         if (res?.status === false || res?.success === false || res?.error) {
             throw new Error(res?.message || res?.error || 'Failed to update trip.')
         }

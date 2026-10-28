@@ -45,7 +45,8 @@ export const fetchVehicles = async (params) => {
       name: vehicle.name || 'N/A',
       model: vehicle.model || 'N/A',
       category: vehicle.category || 'N/A',
-      id: vehicle._id || 'N/A',
+      id: vehicle._id || vehicle.id || 'N/A',
+      _id: vehicle._id || vehicle.id || 'N/A',
       username: vehicle.users?.[0]?.username || 'N/A',
     }))
   } catch (error) {

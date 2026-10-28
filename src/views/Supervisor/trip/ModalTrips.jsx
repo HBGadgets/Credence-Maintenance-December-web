@@ -91,35 +91,110 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         }
       }
 
-      // Find driver and vehicle by their names
-      const driver = drivers.find((d) => d.name === selectedTrip.driverName)
-      const vehicle = vehicles.find((v) => v.name === selectedTrip.vehicleName)
+      // Find driver by id or name
+      const driver =
+        drivers.find(
+          (d) =>
+            selectedTrip.driverId &&
+            (d.id === selectedTrip.driverId || d._id === selectedTrip.driverId),
+        ) ||
+        drivers.find(
+          (d) =>
+            d.name &&
+            selectedTrip.driverName &&
+            d.name.trim().toLowerCase() === selectedTrip.driverName.trim().toLowerCase(),
+        )
+
+      // Find vehicle by id or name
+      const vehicle =
+        vehicles.find(
+          (v) =>
+            selectedTrip.vehicleId &&
+            (v.id === selectedTrip.vehicleId || v._id === selectedTrip.vehicleId),
+        ) ||
+        vehicles.find(
+          (v) =>
+            v.name &&
+            selectedTrip.vehicleName &&
+            v.name.trim().toLowerCase() === selectedTrip.vehicleName.trim().toLowerCase(),
+        )
 
       // Find company by its id or name
       const company =
         companyList?.find((c) => c.id === selectedTrip.companyId) ||
         companyList?.find((c) => c.companyName === selectedTrip.companyName)
 
+      const rawStatus =
+        typeof selectedTrip.rawStatus === 'string'
+          ? selectedTrip.rawStatus
+          : typeof selectedTrip.status === 'string'
+          ? selectedTrip.status
+          : ''
+
+      const resolvedVehicleId =
+        selectedTrip.vehicleId || vehicle?.id || vehicle?._id || ''
+      const resolvedVehicleName =
+        (selectedTrip.vehicleName && selectedTrip.vehicleName !== 'N/A'
+          ? selectedTrip.vehicleName
+          : vehicle?.name) || ''
+
+      const resolvedDriverId =
+        selectedTrip.driverId || driver?.id || driver?._id || ''
+      const resolvedDriverName =
+        (selectedTrip.driverName && selectedTrip.driverName !== 'N/A'
+          ? selectedTrip.driverName
+          : driver?.name) || ''
+
       setTripData({
-        _id: selectedTrip.id || '',
+        _id: selectedTrip.id || selectedTrip._id || '',
         date: formattedDate,
-        driverId: driver?.id || '',
-        driverName: selectedTrip.driverName || '',
-        vehicleId: vehicle?.id || '',
-        vehicleName: selectedTrip.vehicleName || '',
-        startLocation: selectedTrip.startLocation || '',
-        endLocation: selectedTrip.endLocation || '',
-        budgetAllocated: selectedTrip.budgetAllocated || '',
-        materialType: selectedTrip.materialType || '',
-        status: selectedTrip.status || '',
+        driverId: resolvedDriverId,
+        driverName: resolvedDriverName,
+        vehicleId: resolvedVehicleId,
+        vehicleName: resolvedVehicleName,
+        startLocation:
+          selectedTrip.startLocation && selectedTrip.startLocation !== 'N/A'
+            ? selectedTrip.startLocation
+            : '',
+        endLocation:
+          selectedTrip.endLocation && selectedTrip.endLocation !== 'N/A'
+            ? selectedTrip.endLocation
+            : '',
+        budgetAllocated:
+          selectedTrip.budgetAllocated && selectedTrip.budgetAllocated !== '0'
+            ? selectedTrip.budgetAllocated
+            : '',
+        materialType:
+          selectedTrip.materialType && selectedTrip.materialType !== 'Not Assign'
+            ? selectedTrip.materialType
+            : '',
+        status: rawStatus,
         // 🔹 Add these missing fields
-        transportMode: selectedTrip.transportMode || '',
-        clientName: selectedTrip.clientName || '',
-        clientNumber: selectedTrip.clientNumber || '',
-        companyId: company?.id || '',
-        companyName: company?.companyName || selectedTrip.companyName || '',
-        coastPerKm: selectedTrip.coastPerKm || '',
-        clientAdvance: selectedTrip.clientAdvance || '',
+        transportMode:
+          selectedTrip.transportMode && selectedTrip.transportMode !== 'N/A'
+            ? selectedTrip.transportMode
+            : '',
+        clientName:
+          selectedTrip.clientName && selectedTrip.clientName !== 'N/A'
+            ? selectedTrip.clientName
+            : '',
+        clientNumber:
+          selectedTrip.clientNumber && selectedTrip.clientNumber !== 'N/A'
+            ? selectedTrip.clientNumber
+            : '',
+        companyId: company?.id || selectedTrip.companyId || '',
+        companyName:
+          company?.companyName ||
+          (selectedTrip.companyName !== 'N/A' ? selectedTrip.companyName : '') ||
+          '',
+        coastPerKm:
+          selectedTrip.coastPerKm && selectedTrip.coastPerKm !== '0'
+            ? selectedTrip.coastPerKm
+            : '',
+        clientAdvance:
+          selectedTrip.clientAdvance && selectedTrip.clientAdvance !== '0'
+            ? selectedTrip.clientAdvance
+            : '',
       })
     }
   }, [mode, selectedTrip, drivers, vehicles, companyList])
@@ -127,21 +202,32 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target
-    console.log('valueeeeeeeeeeeeeee', value) // Debugging
-    console.log('dataaaaa', tripData)
+    console.log('handleChange:', name, value)
     if (name === 'vehicleName') {
-      const selectedVehicle = vehicles.find((v) => v.name === value)
+      const selectedVehicle = vehicles.find(
+        (v) =>
+          v.id === value ||
+          v._id === value ||
+          v.name === value ||
+          (v.name && value && v.name.trim().toLowerCase() === value.trim().toLowerCase()),
+      )
       setTripData((prev) => ({
         ...prev,
-        vehicleName: value,
-        vehicleId: selectedVehicle?.id || '', // auto-set vehicleId
+        vehicleName: selectedVehicle?.name || value,
+        vehicleId: selectedVehicle?.id || selectedVehicle?._id || prev.vehicleId || '',
       }))
     } else if (name === 'driverName') {
-      const selectedDriver = drivers.find((d) => d.name === value)
+      const selectedDriver = drivers.find(
+        (d) =>
+          d.id === value ||
+          d._id === value ||
+          d.name === value ||
+          (d.name && value && d.name.trim().toLowerCase() === value.trim().toLowerCase()),
+      )
       setTripData((prev) => ({
         ...prev,
-        driverName: value,
-        driverId: selectedDriver?.id || '',
+        driverName: selectedDriver?.name || value,
+        driverId: selectedDriver?.id || selectedDriver?._id || prev.driverId || '',
       }))
     } else {
       setTripData((prev) => ({ ...prev, [name]: value }))
@@ -153,18 +239,64 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     e.target.blur()
   }
 
-  //   Handle Submit
+  // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
+      let finalVehicleId = tripData.vehicleId
+      if (!finalVehicleId && tripData.vehicleName) {
+        const match = vehicles.find(
+          (v) =>
+            v.name === tripData.vehicleName ||
+            (v.name &&
+              v.name.trim().toLowerCase() === tripData.vehicleName.trim().toLowerCase()),
+        )
+        if (match) {
+          finalVehicleId = match.id || match._id || ''
+        }
+      }
+
+      let finalDriverId = tripData.driverId
+      if (!finalDriverId && tripData.driverName) {
+        const match = drivers.find(
+          (d) =>
+            d.name === tripData.driverName ||
+            (d.name &&
+              d.name.trim().toLowerCase() === tripData.driverName.trim().toLowerCase()),
+        )
+        if (match) {
+          finalDriverId = match.id || match._id || ''
+        }
+      }
+
+      let finalCompanyId = tripData.companyId
+      if (!finalCompanyId && tripData.companyName) {
+        const match = companyList?.find(
+          (c) =>
+            c.companyName === tripData.companyName ||
+            (c.companyName &&
+              c.companyName.trim().toLowerCase() === tripData.companyName.trim().toLowerCase()),
+        )
+        if (match) {
+          finalCompanyId = match.id || match._id || ''
+        }
+      }
+
+      const submissionData = {
+        ...tripData,
+        vehicleId: finalVehicleId || tripData.vehicleId,
+        driverId: finalDriverId || tripData.driverId,
+        companyId: finalCompanyId || tripData.companyId,
+      }
+
       if (onSubmit) {
-        await onSubmit(tripData)
+        await onSubmit(submissionData)
       } else {
         if (mode === 'add') {
-          await handleAddHelper(tripData, fetchTripData)
+          await handleAddHelper(submissionData, fetchTripData)
         } else {
-          await handleEditHelper(tripData, fetchTripData)
+          await handleEditHelper(submissionData, fetchTripData)
         }
         if (onClose) onClose()
       }
@@ -368,20 +500,53 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                 <Select
                   name="driverName"
                   value={
-                    tripData.driverName
-                      ? { label: tripData.driverName, value: tripData.driverName }
+                    tripData.driverName || tripData.driverId
+                      ? {
+                          label:
+                            tripData.driverName ||
+                            drivers.find(
+                              (d) =>
+                                d.id === tripData.driverId || d._id === tripData.driverId,
+                            )?.name ||
+                            '',
+                          value:
+                            tripData.driverId ||
+                            tripData.driverName ||
+                            '',
+                        }
                       : null
                   }
-                  onChange={(selected) =>
-                    handleChange({
-                      target: { name: 'driverName', value: selected?.value || '' },
-                    })
-                  }
+                  onChange={(selected) => {
+                    if (selected) {
+                      const selectedDriver = drivers.find(
+                        (d) =>
+                          d.id === selected.value ||
+                          d._id === selected.value ||
+                          d.name === selected.value ||
+                          d.name === selected.label,
+                      )
+                      setTripData((prev) => ({
+                        ...prev,
+                        driverName: selectedDriver?.name || selected.label || '',
+                        driverId:
+                          selectedDriver?.id ||
+                          selectedDriver?._id ||
+                          selected.value ||
+                          '',
+                      }))
+                    } else {
+                      setTripData((prev) => ({
+                        ...prev,
+                        driverName: '',
+                        driverId: '',
+                      }))
+                    }
+                  }}
                   options={drivers.map((driver) => ({
                     label: driver.name,
-                    value: driver.name,
+                    value: driver.id || driver._id || driver.name,
                   }))}
-                  placeholder={isLoading ? 'Loading drivers...' : 'Select driver'}
+                  placeholder={drivers.length === 0 ? 'Loading drivers...' : 'Select driver'}
                   isClearable
                 />
               </Form.Group>
@@ -394,20 +559,53 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                 <Select
                   name="vehicleName"
                   value={
-                    tripData.vehicleName
-                      ? { label: tripData.vehicleName, value: tripData.vehicleName }
+                    tripData.vehicleName || tripData.vehicleId
+                      ? {
+                          label:
+                            tripData.vehicleName ||
+                            vehicles.find(
+                              (v) =>
+                                v.id === tripData.vehicleId || v._id === tripData.vehicleId,
+                            )?.name ||
+                            '',
+                          value:
+                            tripData.vehicleId ||
+                            tripData.vehicleName ||
+                            '',
+                        }
                       : null
                   }
-                  onChange={(selected) =>
-                    handleChange({
-                      target: { name: 'vehicleName', value: selected?.value || '' },
-                    })
-                  }
+                  onChange={(selected) => {
+                    if (selected) {
+                      const selectedVehicle = vehicles.find(
+                        (v) =>
+                          v.id === selected.value ||
+                          v._id === selected.value ||
+                          v.name === selected.value ||
+                          v.name === selected.label,
+                      )
+                      setTripData((prev) => ({
+                        ...prev,
+                        vehicleName: selectedVehicle?.name || selected.label || '',
+                        vehicleId:
+                          selectedVehicle?.id ||
+                          selectedVehicle?._id ||
+                          selected.value ||
+                          '',
+                      }))
+                    } else {
+                      setTripData((prev) => ({
+                        ...prev,
+                        vehicleName: '',
+                        vehicleId: '',
+                      }))
+                    }
+                  }}
                   options={vehicles.map((vehicle) => ({
                     label: vehicle.name,
-                    value: vehicle.name,
+                    value: vehicle.id || vehicle._id || vehicle.name,
                   }))}
-                  placeholder={isLoading ? 'Loading vehicles...' : 'Select vehicle'}
+                  placeholder={vehicles.length === 0 ? 'Loading vehicles...' : 'Select vehicle'}
                   isClearable
                 />
               </Form.Group>

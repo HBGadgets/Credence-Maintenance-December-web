@@ -234,16 +234,38 @@ export const getTripListApi = async (userId = null, token) => {
         ? TripsList.endOdometerReading.toFixed(2)
         : 'Trip In-Progress'
 
+    const rawVehicleId = TripsList.vehicleId || TripsList.vehicle
+    const vehicleId =
+      typeof rawVehicleId === 'object' && rawVehicleId !== null
+        ? rawVehicleId._id || rawVehicleId.id || ''
+        : rawVehicleId || ''
+
+    const rawDriverId = TripsList.driverId || TripsList.driver
+    const driverId =
+      typeof rawDriverId === 'object' && rawDriverId !== null
+        ? rawDriverId._id || rawDriverId.id || ''
+        : rawDriverId || ''
+
+    const rawCompanyId = TripsList.companyId || TripsList.company
+    const companyId =
+      typeof rawCompanyId === 'object' && rawCompanyId !== null
+        ? rawCompanyId._id || rawCompanyId.id || ''
+        : rawCompanyId || ''
+
     return {
       id: TripsList._id,
+      _id: TripsList._id,
       orginalDate: TripsList.date,
       date: formatDateToDDMMYYYY(TripsList.date),
       transportMode: TripsList.transportMode || 'N/A',
       clientName: TripsList.clientName || 'N/A',
       clientNumber: TripsList.clientNumber || 'N/A',
-      companyName: TripsList.companyName || 'N/A',
-      driverName: TripsList?.driverId?.name || 'N/A',
-      vehicleName: TripsList.vehicleName || 'N/A',
+      companyId: companyId,
+      companyName: TripsList.companyName || TripsList.companyId?.companyName || 'N/A',
+      driverId: driverId,
+      driverName: TripsList?.driverId?.name || TripsList.driverName || 'N/A',
+      vehicleId: vehicleId,
+      vehicleName: TripsList.vehicleName || (typeof rawVehicleId === 'object' ? rawVehicleId?.name : '') || 'N/A',
       startLocation: TripsList.startLocation || 'N/A',
       startOdometerReading: startKM,
       endLocation: TripsList.endLocation || 'N/A',
