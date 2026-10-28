@@ -54,7 +54,7 @@
 import { io } from "socket.io-client";
 import Cookies from "js-cookie";
 
-export const socket = io(import.meta.env.VITE_API_URL, {
+export const socket = io(import.meta.env.VITE_SOCKET_URL, {
     autoConnect: false,
     auth: {
         token: Cookies.get("crdnsMaintToken"),
