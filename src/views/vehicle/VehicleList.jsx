@@ -383,14 +383,14 @@
 
 // new with fetch api
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
 import { useContext, useEffect, useMemo, useState, useCallback } from 'react'
-import { fetchVehicles } from './data/VehicleListData'
+import { fetchVehicles, updateVehicleCarModel } from './data/VehicleListData'
 import SearchInput from '../components/SearchInput'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
@@ -400,16 +400,34 @@ import useExcelExporter from '../customhooks/useExcelExporter'
 import SingleSelectDropdown from '../components/SingleSelectDropdown' // Make sure this exists
 import { TokenContext } from '../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
+import {
+  CButton,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+  CSpinner,
+} from '@coreui/react'
 
 const VehicleList = () => {
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
+  const queryClient = useQueryClient()
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedName, setSelectedName] = useState(null)
   const [nameOptions, setNameOptions] = useState([])
+
+  // Modal states for editing car model
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [carModelInput, setCarModelInput] = useState('')
 
   // superadmin role
   const token = useContext(TokenContext)
@@ -423,6 +441,58 @@ const VehicleList = () => {
     queryFn: () => fetchVehicles({ search: searchQuery }),
     staleTime: 1000 * 60 * 5,
   })
+
+  // Mutation for updating car model
+  const { mutate: updateCarModelMutation, isPending, isLoading } = useMutation({
+    mutationFn: ({ id, carModel }) => updateVehicleCarModel(id, carModel),
+    onSuccess: (res, variables) => {
+      toast.success(res?.message || 'Car model updated successfully!')
+      setFilteredData((prev) =>
+        prev.map((item) => {
+          if ((item.id || item._id) === variables.id) {
+            return {
+              ...item,
+              carModel: variables.carModel || 'N/A',
+            }
+          }
+          return item
+        }),
+      )
+      queryClient.invalidateQueries(['vehicles'])
+      setEditModalVisible(false)
+      setSelectedVehicle(null)
+      setCarModelInput('')
+    },
+    onError: (err) => {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update car model'
+      toast.error(msg)
+    },
+  })
+
+  const isUpdatingCarModel = isPending || isLoading
+
+  const handleEditCarModel = (id) => {
+    const record =
+      filteredData.find((item) => (item.id || item._id) === id) ||
+      vehicles.find((item) => (item.id || item._id) === id)
+    if (record) {
+      setSelectedVehicle(record)
+      const currentVal =
+        record.carModel && record.carModel !== 'N/A'
+          ? record.carModel
+          : ''
+      setCarModelInput(currentVal)
+      setEditModalVisible(true)
+    }
+  }
+
+  const handleSaveCarModel = (e) => {
+    if (e) e.preventDefault()
+    if (!selectedVehicle) return
+    const trimmed = carModelInput.trim()
+    const targetId = selectedVehicle.id || selectedVehicle._id
+    updateCarModelMutation({ id: targetId, carModel: trimmed })
+  }
 
   // Set name filter options
   useEffect(() => {
@@ -457,12 +527,11 @@ const VehicleList = () => {
     return Math.max(1, Math.ceil(filteredData.length / (itemsPerPage > 0 ? itemsPerPage : 10)))
   }, [filteredData.length, itemsPerPage])
 
-
   const columns = [
     { label: 'Vehicle', key: 'name', sortable: true },
     { label: 'Model', key: 'model', sortable: true },
     { label: 'Category', key: 'category', sortable: true },
-    { label: 'Username', key: 'username', sortable: true },
+    { label: 'Car Model', key: 'carModel', sortable: true },
   ]
 
   const handleSearch = useCallback((query) => {
@@ -581,6 +650,8 @@ const VehicleList = () => {
           itemsPerPage={itemsPerPage}
           viewButton={true}
           handleViewButton={handleViewButton}
+          editButton={true}
+          handleEditButton={handleEditCarModel}
           isFetching={isFetching}
           action="Details"
           showPagination={false}
@@ -598,6 +669,83 @@ const VehicleList = () => {
           }}
         />
       </div>
+
+      {/* Edit Car Model Modal */}
+      <CModal
+        visible={editModalVisible}
+        onClose={() => {
+          if (!isUpdatingCarModel) {
+            setEditModalVisible(false)
+            setSelectedVehicle(null)
+            setCarModelInput('')
+          }
+        }}
+        backdrop="static"
+        alignment="center"
+      >
+        <CModalHeader closeButton={!isUpdatingCarModel}>
+          <CModalTitle className="fs-5 fw-bold">
+            {selectedVehicle?.carModel && selectedVehicle?.carModel !== 'N/A'
+              ? 'Edit Car Model'
+              : 'Add Car Model'}
+          </CModalTitle>
+        </CModalHeader>
+        <CForm onSubmit={handleSaveCarModel}>
+          <CModalBody>
+            <div className="mb-3">
+              <CFormLabel className="fw-semibold text-muted small">Vehicle Name / Number</CFormLabel>
+              <CFormInput
+                type="text"
+                value={selectedVehicle?.name || 'N/A'}
+                disabled
+                readOnly
+                className="bg-light fw-medium"
+              />
+            </div>
+            <div className="mb-3">
+              <CFormLabel className="fw-semibold small">
+                Car Model <span className="text-danger">*</span>
+              </CFormLabel>
+              <CFormInput
+                type="text"
+                placeholder="Enter car model (e.g. Swift, Bolero, Tata Ace, Innova)"
+                value={carModelInput}
+                onChange={(e) => setCarModelInput(e.target.value)}
+                autoFocus
+                disabled={isUpdatingCarModel}
+                required
+              />
+            </div>
+          </CModalBody>
+          <CModalFooter>
+            <CButton
+              color="secondary"
+              variant="ghost"
+              onClick={() => {
+                setEditModalVisible(false)
+                setSelectedVehicle(null)
+                setCarModelInput('')
+              }}
+              disabled={isUpdatingCarModel}
+            >
+              Cancel
+            </CButton>
+            <CButton
+              color="primary"
+              type="submit"
+              disabled={isUpdatingCarModel || !carModelInput.trim()}
+            >
+              {isUpdatingCarModel ? (
+                <>
+                  <CSpinner size="sm" className="me-2" /> Saving...
+                </>
+              ) : (
+                'Save'
+              )}
+            </CButton>
+          </CModalFooter>
+        </CForm>
+      </CModal>
 
       {/* Floating Dropdown */}
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">

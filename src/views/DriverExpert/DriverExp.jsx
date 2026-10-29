@@ -260,18 +260,12 @@ function DriversPage() {
       label: 'License Expiry Date',
       type: 'date',
     },
-
-    // not show in edit from
-    ...(!editMode
-      ? [
-          {
-            name: 'aadharNumber',
-            label: 'Aadhar Number',
-            type: 'text',
-            Placeholder: 'Enter Driver Aadhar Number',
-          },
-        ]
-      : []),
+    {
+      name: 'aadharNumber',
+      label: 'Aadhar Number',
+      type: 'text',
+      Placeholder: 'Enter Driver Aadhar Number',
+    },
   ]
 
   // Table columns
@@ -394,6 +388,7 @@ function DriversPage() {
                 : record.licenseExpiryDate
             })()
           : '',
+      aadharNumber: record?.aadharNumber === 'N/A' ? '' : (record?.aadharNumber || ''),
     })
     setShowModalFrom(true)
   }
@@ -423,6 +418,10 @@ function DriversPage() {
 
     if (data.licenseNumber === 'N/A') {
       data.licenseNumber = ''
+    }
+
+    if (data.aadharNumber === 'N/A') {
+      data.aadharNumber = ''
     }
 
     if (editMode && editingUser?.id) {

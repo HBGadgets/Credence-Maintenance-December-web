@@ -44,6 +44,7 @@ export const fetchVehicles = async (params) => {
     return vehicles.map((vehicle) => ({
       name: vehicle.name || 'N/A',
       model: vehicle.model || 'N/A',
+      carModel: vehicle.carModel || 'N/A',
       category: vehicle.category || 'N/A',
       id: vehicle._id || vehicle.id || 'N/A',
       _id: vehicle._id || vehicle.id || 'N/A',
@@ -51,6 +52,33 @@ export const fetchVehicles = async (params) => {
     }))
   } catch (error) {
     console.error(error)
+    throw error
+  }
+}
+
+// Update Car Model for Vehicle
+export const updateVehicleCarModel = async (id, carModel) => {
+  try {
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
+
+    const payload = {
+      carModel: carModel,
+    }
+
+    const { data: response } = await axios.put(
+      `${import.meta.env.VITE_API_URL}/api/vehicle/update/${id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+    return response
+  } catch (error) {
+    console.error('Error updating vehicle car model:', error)
     throw error
   }
 }
