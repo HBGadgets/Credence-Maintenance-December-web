@@ -858,34 +858,87 @@ export const getVehicleServiceBillApi = async (serviceImg) => {
 
 // get vehicle expery
 
-export const fetchDocAlerts = async () => {
+export const fetchDocAlerts = async (params) => {
   try {
-    if (!TOKEN) throw new Error('Authentication token not found')
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    if (!token) throw new Error('Authentication token not found')
+
+    let type = ''
+    let search = ''
+
+    if (typeof params === 'string') {
+      type = params
+    } else if (params && typeof params === 'object') {
+      type = params.type || params.category || ''
+      search = params.search || params.searchQuery || ''
+      if (params.queryKey) {
+        const [_key, queryType, querySearch] = params.queryKey
+        if (typeof queryType === 'string') {
+          type = queryType
+        } else if (queryType && typeof queryType === 'object') {
+          type = queryType.type || queryType.category || ''
+          search = queryType.search || search
+        }
+        if (typeof querySearch === 'string') {
+          search = querySearch
+        } else if (querySearch && typeof querySearch === 'object') {
+          search = querySearch.search || search
+        }
+      }
+    }
+
+    const config = {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {},
+    }
+
+    if (type && type !== 'all') {
+      config.params.type = type.trim()
+      config.params.category = type.trim()
+    }
+
+    if (search && search.trim()) {
+      config.params.search = search.trim()
+    }
+
+    if (Object.keys(config.params).length === 0) {
+      delete config.params
+    }
 
     const { data } = await axios.get(
       `${import.meta.env.VITE_API_URL}/api/vehicle-documents/get-expiring-documents`,
-      {
-        headers: { Authorization: `Bearer ${TOKEN}` },
-      },
+      config,
     )
 
-    const docTypes = ['Insurance', 'fitnessCertificate', 'puc', 'rc']
     const flattenedData = []
+    const expiringDocs = Array.isArray(data) ? data : data?.expiringDocuments || data?.data || []
 
-    data.expiringDocuments.forEach((docAlert) => {
-      docTypes.forEach((type) => {
-        const doc = docAlert.documents?.[type]
-        if (doc && Object.keys(doc).length > 0) {
+    expiringDocs.forEach((docAlert) => {
+      if (!docAlert?.documents) return
+
+      Object.entries(docAlert.documents).forEach(([type, doc]) => {
+        if (doc && typeof doc === 'object' && Object.keys(doc).length > 0) {
+          const isDriverDoc =
+            type.toLowerCase().includes('license') ||
+            type.toLowerCase().includes('driver') ||
+            Boolean(doc.driverName) ||
+            Boolean(docAlert.driverId) ||
+            Boolean(docAlert.driver) ||
+            docAlert.targetType === 'driver' ||
+            docAlert.type === 'driver'
+
           flattenedData.push({
             id: `${docAlert._id}_${type}`,
             vehicleId: docAlert.vehicleId,
-            vehicleName: docAlert.vehicleName,
+            vehicleName: docAlert.vehicleName || 'N/A',
             documentNames: type,
-            companyName: doc.companyName,
-            issueDate: formatDateToDDMMYYYY(doc.issueDate),
-            expiryDate: formatDateToDDMMYYYY(doc.expiryDate),
+            companyName: doc.companyName || doc.driverName || 'N/A',
+            issueDate: formatDateToDDMMYYYY(doc.issueDate) || 'N/A',
+            expiryDate: formatDateToDDMMYYYY(doc.expiryDate) || 'N/A',
             status: getStatus(doc.expiryDate),
             supervisor: docAlert.users,
+            docCategory: isDriverDoc ? 'driver' : 'vehicle',
+            category: isDriverDoc ? 'driver' : 'vehicle',
           })
         }
       })
@@ -893,14 +946,16 @@ export const fetchDocAlerts = async () => {
 
     return flattenedData
   } catch (error) {
-    alert(error.message)
+    console.error('Error fetching doc alerts:', error)
     throw error
   }
 }
 
 const getStatus = (expiryDate) => {
+  if (!expiryDate) return 'Expired'
   const today = new Date()
   const expiry = new Date(expiryDate)
+  if (isNaN(expiry.getTime())) return 'Expired'
   const daysLeft = (expiry - today) / (1000 * 60 * 60 * 24)
 
   if (daysLeft < 0) return 'Expired'

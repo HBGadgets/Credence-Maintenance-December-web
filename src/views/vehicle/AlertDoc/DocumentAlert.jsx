@@ -9,31 +9,26 @@ import SearchInput from '../../components/SearchInput'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import { TokenContext } from '../../../context/TokenContext'
 import { jwtDecode } from 'jwt-decode'
-import DocumentStatusCard from './DocumentStatusCard'
+import { CNav, CNavItem, CNavLink } from '@coreui/react'
+import { FaTruck, FaUserTie } from 'react-icons/fa'
 
 const DocumentAlert = () => {
   const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('vehicle') // 'vehicle' by default
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedName, setSelectedName] = useState(null)
-  const [selectedStatus, setSelectedStatus] = useState(null)
-
-  const [statusCounts, setStatusCounts] = useState({
-    Valid: 0,
-    'Expiring Soon': 0,
-    Expired: 0,
-  })
 
   const token = useContext(TokenContext)
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
   const { data: docAlertData, isFetching } = useQuery({
-    queryKey: ['docAlert'],
-    queryFn: fetchDocAlerts,
-    staleTime: 1000 * 60 * 30,
+    queryKey: ['docAlert', activeTab, searchQuery],
+    queryFn: () => fetchDocAlerts({ type: activeTab, search: searchQuery }),
+    staleTime: 1000 * 60 * 5,
   })
 
   const { data: supervisorOptions = [] } = useQuery({
@@ -43,28 +38,37 @@ const DocumentAlert = () => {
   })
 
   useEffect(() => {
-    if (!docAlertData || docAlertData.length === 0) return
+    if (!docAlertData || docAlertData.length === 0) {
+      setFilteredData([])
+      return
+    }
 
-    let counts = { Valid: 0, 'Expiring Soon': 0, Expired: 0 }
-
-    // First calculate full status counts (from full docAlertData)
-    docAlertData.forEach((item) => {
-      if (item.status === 'Valid') counts.Valid++
-      else if (item.status === 'Expiring Soon') counts['Expiring Soon']++
-      else if (item.status === 'Expired') counts.Expired++
-    })
-
-    setStatusCounts(counts)
-
-    // Then apply filters
+    // Apply filters
     let filtered = [...docAlertData]
+
+    if (activeTab) {
+      filtered = filtered.filter((item) => item.docCategory === activeTab)
+    }
 
     if (selectedName?.value) {
       filtered = filtered.filter((item) => item.supervisor?.includes(selectedName.value))
     }
 
-    if (selectedStatus) {
-      filtered = filtered.filter((item) => item.status === selectedStatus)
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (item) =>
+          item.vehicleName?.toLowerCase().includes(q) ||
+          item.driverName?.toLowerCase().includes(q) ||
+          item.documentNames?.toLowerCase().includes(q) ||
+          item.companyName?.toLowerCase().includes(q) ||
+          item.status?.toLowerCase().includes(q) ||
+          item.issueDate?.toLowerCase().includes(q) ||
+          item.expiryDate?.toLowerCase().includes(q) ||
+          Object.values(item).some(
+            (val) => typeof val === 'string' && val.toLowerCase().includes(q),
+          ),
+      )
     }
 
     // Then map styled data
@@ -99,78 +103,96 @@ const DocumentAlert = () => {
     })
 
     setFilteredData(styledData)
-    setStatusCounts(counts)
-  }, [docAlertData, selectedName, selectedStatus])
+  }, [docAlertData, selectedName, activeTab, searchQuery])
 
   const totalPages = Math.ceil(itemsPerPage === -1 ? 1 : (filteredData?.length || 0) / itemsPerPage)
 
   const columns = [
-    { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
+    {
+      label: activeTab === 'driver' ? 'Driver Name' : 'Vehicle Name',
+      key: 'vehicleName',
+      sortable: true,
+      render: (row) =>
+        activeTab === 'driver'
+          ? (row.driverName || row.companyName || row.vehicleName || 'N/A')
+          : (row.vehicleName || 'N/A'),
+    },
     { label: 'Document Type', key: 'documentNames', sortable: true },
     { label: 'Issue Date', key: 'issueDate', sortable: true },
     { label: 'Expiry Date', key: 'expiryDate', sortable: true },
-    { label: 'Company Name', key: 'companyName', sortable: true },
+    {
+      label: activeTab === 'driver' ? 'Vehicle Assigned' : 'Company Name',
+      key: 'companyName',
+      sortable: true,
+      render: (row) => (activeTab === 'driver' ? (row.vehicleName || 'N/A') : (row.companyName || 'N/A')),
+    },
     { label: 'Status', key: 'status', sortable: true },
   ]
 
   const handleSearch = (query) => {
     setSearchQuery(query)
+    setCurrentPage(1)
   }
 
   const handleViewButton = (id) => {
     const selectedRow = filteredData.find((item) => item.id === id)
     if (selectedRow?.vehicleId) {
       navigate(`/VehicleProfile/${selectedRow.vehicleId}`)
+    } else if (selectedRow?.driverId) {
+      navigate(`/DriverProfile/${selectedRow.driverId}`)
     } else {
-      alert('Vehicle ID not found')
+      alert('Profile ID not found')
     }
   }
 
-  const handleStatusClick = (status) => {
-    setSelectedStatus((prev) => (prev === status ? null : status))
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setCurrentPage(1)
+  }
+
+  const handleSupervisorChange = (selected) => {
+    setSelectedName(selected)
+    setCurrentPage(1)
   }
 
   return (
     <div>
-      {/* Status Pills */}
-      <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-        {/* Left: Pills + Dropdown */}
-        <div className="d-flex align-items-center gap-2 flex-wrap">
-          <DocumentStatusCard
-            label="ALL"
-            count={statusCounts.Valid + statusCounts['Expiring Soon'] + statusCounts.Expired}
-            status={null}
-            isSelected={selectedStatus === null}
-            onClick={handleStatusClick}
-          />
-          <DocumentStatusCard
-            label="Valid"
-            count={statusCounts.Valid}
-            status="Valid"
-            isSelected={selectedStatus === 'Valid'}
-            onClick={handleStatusClick}
-          />
-          <DocumentStatusCard
-            label="Expiring Soon"
-            count={statusCounts['Expiring Soon']}
-            status="Expiring Soon"
-            isSelected={selectedStatus === 'Expiring Soon'}
-            onClick={handleStatusClick}
-          />
-          <DocumentStatusCard
-            label="Expired"
-            count={statusCounts.Expired}
-            status="Expired"
-            isSelected={selectedStatus === 'Expired'}
-            onClick={handleStatusClick}
-          />
+      {/* Navigation Tabs */}
+      <CNav variant="tabs" className="mb-3 border-bottom">
+        <CNavItem>
+          <CNavLink
+            active={activeTab === 'vehicle'}
+            onClick={() => handleTabChange('vehicle')}
+            style={{ cursor: 'pointer', fontWeight: 600 }}
+            className="d-flex align-items-center gap-2"
+          >
+            <FaTruck size={16} />
+            <span>Vehicle Expiration</span>
+          </CNavLink>
+        </CNavItem>
+        <CNavItem>
+          <CNavLink
+            active={activeTab === 'driver'}
+            onClick={() => handleTabChange('driver')}
+            style={{ cursor: 'pointer', fontWeight: 600 }}
+            className="d-flex align-items-center gap-2"
+          >
+            <FaUserTie size={16} />
+            <span>Driver Expiration</span>
+          </CNavLink>
+        </CNavItem>
+      </CNav>
 
+      {/* Filters & Search */}
+      <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+        {/* Left: Supervisor Dropdown (for superadmin) */}
+        <div>
           {userRole === 'superadmin' && (
             <div style={{ width: '160px' }}>
               <SingleSelectDropdown
                 options={supervisorOptions}
                 value={selectedName}
-                onChange={setSelectedName}
+                onChange={handleSupervisorChange}
                 isClearable
                 placeholder="Supervisor"
               />
@@ -186,7 +208,7 @@ const DocumentAlert = () => {
 
       {/* Table */}
       <Table
-        title="Vehicle Document Expiring"
+        title={activeTab === 'driver' ? 'Driver Document Expiring' : 'Vehicle Document Expiring'}
         columns={columns}
         filteredData={filteredData}
         setFilteredData={setFilteredData}

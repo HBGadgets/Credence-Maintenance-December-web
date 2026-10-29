@@ -61,19 +61,67 @@ export const getAllTripListApi = async (userId = null) => {
   }))
 }
 
-// GET API for Daily Trip Logs
-export const getDailyTripLogsApi = async ({ queryKey }) => {
-  const [_key, token, page, limit, search] = queryKey
+// GET API for Daily Trip Logs / Delivery Trips
+export const getDailyTripLogsApi = async (paramsOrContext = {}) => {
+  let authToken = Cookies.get('crdnsMaintToken') || token
+  let page = 1
+  let limit = 10
+  let search = ''
+  let status = ''
+  let supervisorId = ''
+  let startDate = ''
+  let endDate = ''
 
-  if (!token) throw new Error('Authentication token not found')
+  if (paramsOrContext?.queryKey) {
+    const [_key, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8] = paramsOrContext.queryKey
+    if (typeof arg1 === 'object' && arg1 !== null) {
+      if (arg1.token) authToken = arg1.token
+      if (arg1.page) page = arg1.page
+      if (arg1.limit) limit = arg1.limit
+      if (arg1.search !== undefined) search = arg1.search
+      if (arg1.status !== undefined) status = arg1.status
+      if (arg1.supervisorId) supervisorId = arg1.supervisorId
+      if (arg1.startDate) startDate = arg1.startDate
+      if (arg1.endDate) endDate = arg1.endDate
+    } else {
+      if (arg1) authToken = arg1
+      if (arg2) page = arg2
+      if (arg3) limit = arg3
+      if (arg4 !== undefined) search = arg4
+      if (arg5) supervisorId = arg5
+      if (arg6) startDate = arg6
+      if (arg7) endDate = arg7
+      if (arg8 !== undefined) status = arg8
+    }
+  } else if (typeof paramsOrContext === 'object' && paramsOrContext !== null) {
+    if (paramsOrContext.token) authToken = paramsOrContext.token
+    if (paramsOrContext.page) page = paramsOrContext.page
+    if (paramsOrContext.limit) limit = paramsOrContext.limit
+    if (paramsOrContext.search !== undefined) search = paramsOrContext.search
+    if (paramsOrContext.status !== undefined) status = paramsOrContext.status
+    if (paramsOrContext.supervisorId) supervisorId = paramsOrContext.supervisorId
+    if (paramsOrContext.startDate) startDate = paramsOrContext.startDate
+    if (paramsOrContext.endDate) endDate = paramsOrContext.endDate
+  }
+
+  if (!authToken) throw new Error('Authentication token not found')
+
+  const queryParams = new URLSearchParams()
+  queryParams.append('search', search || '')
+  queryParams.append('status', status || '')
+  queryParams.append('page', String(page || 1))
+  queryParams.append('limit', String(limit === -1 ? 10000 : limit || 10))
+  if (supervisorId) queryParams.append('supervisorId', supervisorId)
+  if (startDate) queryParams.append('startDate', startDate)
+  if (endDate) queryParams.append('endDate', endDate)
 
   const { data } = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver?search=${search || ''}&status=&page=${page || 1}&limit=${limit || 10}`,
+    `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver?${queryParams.toString()}`,
     {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
-    }
+    },
   )
 
   return data
