@@ -1,15 +1,23 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
+import Swal from 'sweetalert2'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Table from '../components/Table'
 import SmartPagination from '../components/SmartPagination'
 import ReusableModal from '../components/ReusableModal'
 import AddButton from '../components/AddButton'
-import { getAllDailyReadingApi, postDailyReadingApi, patchDailyReadingApi } from './data'
+import {
+  getAllDailyReadingApi,
+  postDailyReadingApi,
+  patchDailyReadingApi,
+  deleteDailyTripApi,
+  verifyPasswordApi,
+} from './data'
 import { fetchDrivers, fetchSupervisor } from '../DriverExpert/data/drivers'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
 import SearchInput from '../components/SearchInput'
 import { TokenContext } from '../../context/TokenContext'
+import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import usePdfExporter from '../customhooks/usePdfExporter'
@@ -46,8 +54,10 @@ const DailyTrips = () => {
 
   // superadmin role
   const token = useContext(TokenContext)
-  const decodedToken = token ? jwtDecode(token) : null
+  const effectiveToken = token || Cookies.get('crdnsMaintToken')
+  const decodedToken = effectiveToken ? jwtDecode(effectiveToken) : null
   const userRole = decodedToken?.role
+  const isSuperAdmin = userRole === 'superadmin' || userRole?.toLowerCase() === 'superadmin'
 
   // Status options for dropdown
   const statusOptions = [
@@ -211,6 +221,124 @@ const DailyTrips = () => {
       setShowModalFrom(true)
     } else {
       toast.error('Record not found on current page. Please search for it.')
+    }
+  }
+
+  // Handle Delete Trip with Password Verification (Superadmin only)
+  const handleDeleteButton = async (id) => {
+    if (!isSuperAdmin) {
+      toast.error('Only superadmin is authorized to delete daily trips.')
+      return
+    }
+
+    const selected = dailyTrips.find((item) => item.id === id) || {}
+
+    // Step 1: Warning and Consequences Confirmation
+    const warningResult = await Swal.fire({
+      title: '<span style="color: #dc3545; font-weight: 700;">⚠️ High-Risk Action: Delete Daily Trip</span>',
+      html: `
+        <div style="text-align: left; font-size: 13.5px; line-height: 1.6;">
+          ${
+            selected.driverName
+              ? `<div style="background: #f8f9fa; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid #e9ecef;">
+                  <div><strong>Driver:</strong> ${selected.driverName}</div>
+                  <div><strong>Vehicle:</strong> ${selected.vehicleNumber}</div>
+                  <div><strong>Date:</strong> ${selected.createdAt}</div>
+                  <div><strong>Distance:</strong> ${selected.totalDistance || '-'} KM (Odo: ${selected.odometerStart || '-'} - ${selected.odometerEnd || '-'})</div>
+                </div>`
+              : ''
+          }
+          <div class="alert alert-danger py-2 px-3 small" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 12px;">
+            <strong>CRITICAL WARNING:</strong> Deleting this daily trip is a permanent and irreversible administrative action.
+          </div>
+          <div style="font-weight: 600; margin-bottom: 6px; color: #212529;">Consequences of deleting this trip:</div>
+          <ul style="padding-left: 20px; margin-bottom: 12px; color: #495057;">
+            <li style="margin-bottom: 4px;"><strong>Irreversible Data Loss:</strong> This daily trip record will be permanently deleted from the database and cannot be recovered or restored.</li>
+            <li style="margin-bottom: 4px;"><strong>Driver Shift & Reports Impact:</strong> Total kilometers travelled, monthly trip count, and driver shift logs will lose this entry, altering historical summaries.</li>
+            <li style="margin-bottom: 4px;"><strong>Odometer Continuity Gap:</strong> The start and end odometer sequence for this vehicle will show an unaccounted gap in fleet maintenance history.</li>
+            <li style="margin-bottom: 4px;"><strong>Audit & Inspection Discrepancy:</strong> Associated trip time and GPS kilometer logs will be removed, potentially causing audit mismatches.</li>
+          </ul>
+          <p style="color: #c53030; font-weight: 700; font-size: 13px; margin: 0; text-align: center; border-top: 1px dashed #feb2b2; padding-top: 8px;">
+            Do you acknowledge these risks and want to proceed to security authorization?
+          </p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'I Understand the Consequences, Proceed',
+      cancelButtonText: 'Abort! Keep Trip Safe',
+      reverseButtons: true,
+      focusCancel: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    })
+
+    if (!warningResult.isConfirmed) {
+      return
+    }
+
+    // Step 2: Password Verification & Permanent Deletion
+    const passwordResult = await Swal.fire({
+      title: '<span style="color: #dc3545; font-weight: 700;">Superadmin Security Authorization</span>',
+      html: `
+        <p class="mb-2">Enter your Superadmin password to authorize permanent deletion of this trip:</p>
+        <div class="alert alert-danger py-2 px-3 text-start small mb-0" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+          <strong>Final Confirmation:</strong> Once password is verified, this trip will be permanently erased.
+        </div>
+      `,
+      icon: 'warning',
+      input: 'password',
+      inputPlaceholder: 'Enter your password...',
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off',
+        'aria-label': 'Enter password',
+      },
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Verify & Permanently Delete',
+      cancelButtonText: 'Cancel',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Password is required!'
+        }
+      },
+      preConfirm: async (password) => {
+        const pass = password ? password.trim() : ''
+        try {
+          const res = await verifyPasswordApi(pass)
+          if (res?.status === false || res?.success === false || res?.valid === false) {
+            throw new Error(res?.message || res?.error || 'Password verification failed.')
+          }
+
+          await deleteDailyTripApi(id)
+          return true
+        } catch (err) {
+          const errorMessage =
+            (Array.isArray(err.response?.data?.message)
+              ? err.response.data.message.join(', ')
+              : err.response?.data?.message) ||
+            err.response?.data?.error ||
+            (typeof err.response?.data === 'string' ? err.response.data : null) ||
+            err.message ||
+            'Verification or deletion failed. Please try again.'
+
+          Swal.showValidationMessage(errorMessage)
+          return false
+        }
+      },
+    })
+
+    if (passwordResult.isConfirmed) {
+      toast.success('Daily trip deleted successfully')
+      refetch()
+      queryClient.invalidateQueries(['dailyTrips'])
     }
   }
 
@@ -412,6 +540,8 @@ const DailyTrips = () => {
         isFetching={isFetching}
         editButton={true}
         handleEditButton={handleEditButton}
+        deleteButton={isSuperAdmin}
+        handleDeleteButton={handleDeleteButton}
       />
 
       <SmartPagination

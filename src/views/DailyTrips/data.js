@@ -4,6 +4,7 @@ import { formatDateToDDMMYYYY } from "../customhooks/useFormattedDate";
 
 // Global token (from cookie)
 const TOKEN = Cookies.get("crdnsMaintToken");
+const getToken = () => Cookies.get("crdnsMaintToken") || TOKEN;
 
 // Get API trip reading
 export const getAllDailyReadingApi = async ({
@@ -15,7 +16,8 @@ export const getAllDailyReadingApi = async ({
     limit = "",
 }) => {
     try {
-        if (!TOKEN) throw new Error("Authentication token not found");
+        const token = getToken();
+        if (!token) throw new Error("Authentication token not found");
 
         // Build params object conditionally
         const params = {
@@ -39,7 +41,7 @@ export const getAllDailyReadingApi = async ({
             `${import.meta.env.VITE_API_URL}/api/daily/tripgetbydriver`,
             {
                 params,
-                headers: { Authorization: `Bearer ${TOKEN}` },
+                headers: { Authorization: `Bearer ${token}` },
             }
         );
 
@@ -100,12 +102,15 @@ export const getAllDailyReadingApi = async ({
 // Post for all Daily trips reading
 export const postDailyReadingApi = async (id, dailyReadingData) => {
     try {
+        const token = getToken();
+        if (!token) throw new Error("Authentication token not found");
+
         const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/api/daily/tripstartbydriver?driverId=${id}`,
             dailyReadingData,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                 },
             }
         )
@@ -132,14 +137,15 @@ export const postDailyReadingApi = async (id, dailyReadingData) => {
 
 export const patchDailyReadingApi = async (rowId, driverId, data) => {
     try {
-        if (!TOKEN) throw new Error('Authentication token not found')
+        const token = getToken();
+        if (!token) throw new Error('Authentication token not found')
 
         const { data: response } = await axios.patch(
             `${import.meta.env.VITE_API_URL}/api/daily/tripendbydriver/${rowId}?driverId=${driverId}`,
             data,
             {
                 headers: {
-                    Authorization: `Bearer ${TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                 },
             },
         )
@@ -150,4 +156,87 @@ export const patchDailyReadingApi = async (rowId, driverId, data) => {
         throw error
     }
 }
+
+// Verify Password API
+export const verifyPasswordApi = async (password) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error("Authentication token not found");
+
+        const backendUrl = (
+            import.meta.env.VITE_API_CREDENCE_BACKEND || "https://vts.credencetracker.com/backend"
+        ).replace(/\/+$/, "");
+
+        const primaryUrl = `${backendUrl}/api/superadmin/verifypassword`;
+
+        try {
+            const response = await axios.post(
+                primaryUrl,
+                { password },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            if (error?.response?.status === 404) {
+                const fallbackUrl = `${backendUrl}/superadmin/verifypassword`;
+                const fallbackResponse = await axios.post(
+                    fallbackUrl,
+                    { password },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                return fallbackResponse.data;
+            }
+            throw error;
+        }
+    } catch (error) {
+        console.error("Password verification failed:", error);
+        throw error;
+    }
+};
+
+// Delete Daily Trip API
+export const deleteDailyTripApi = async (id) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error("Authentication token not found");
+
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        };
+
+        try {
+            const response = await axios.delete(
+                `${import.meta.env.VITE_API_URL}/api/daily/daily-trip-delete/${id}`,
+                { headers }
+            );
+            return response.data;
+        } catch (err) {
+            if (err?.response?.status === 405) {
+                const postResponse = await axios.post(
+                    `${import.meta.env.VITE_API_URL}/api/daily/daily-trip-delete/${id}`,
+                    {},
+                    { headers }
+                );
+                return postResponse.data;
+            }
+            throw err;
+        }
+    } catch (error) {
+        console.error("Delete daily trip failed:", error);
+        throw error;
+    }
+};
+
+export const deleteDailyReadingApi = deleteDailyTripApi;
+
 
