@@ -27,7 +27,7 @@ import {
   cilMoon,
   cilSun,
 } from '@coreui/icons';
-import { User, Headset, LogOut, Volume2, VolumeX, PanelLeftClose, PanelLeftOpen, Menu, ChevronDown } from 'lucide-react';
+import { User, Headset, LogOut, Volume2, VolumeX, PanelLeftClose, PanelLeftOpen, Menu, ChevronDown, ExternalLink } from 'lucide-react';
 import '../index.css';
 import './header.css';
 import routes from '../routes';
@@ -397,6 +397,10 @@ const AppHeader = () => {
   }, [currentPathname, dispatch, filteredNav]);
 
   const handleNavbarOptionClick = (item) => {
+    if (item.href || item.external) {
+      window.open(item.href || item.to, '_blank', 'noopener,noreferrer');
+      return;
+    }
     if (item.items && item.items.length > 0) {
       if (activeSection.trim().toLowerCase() === item.name.trim().toLowerCase()) {
         // Toggle sidebar if clicking the already active section
@@ -467,13 +471,26 @@ const AppHeader = () => {
 
               return (
                 <li key={index}>
-                  <button
-                    type="button"
-                    onClick={() => handleNavbarOptionClick(item)}
-                    className={`pill-nav-item ${isSectionActive ? 'active' : ''}`}
-                  >
-                    {item.name.trim()}
-                  </button>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target={item.target || '_blank'}
+                      rel={item.rel || 'noopener noreferrer'}
+                      className="pill-nav-item text-decoration-none d-inline-flex align-items-center gap-1"
+                      title={item.name.trim()}
+                    >
+                      <span>{item.name.trim()}</span>
+                      <ExternalLink size={13} className="opacity-75" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleNavbarOptionClick(item)}
+                      className={`pill-nav-item ${isSectionActive ? 'active' : ''}`}
+                    >
+                      {item.name.trim()}
+                    </button>
+                  )}
                 </li>
               );
             })}

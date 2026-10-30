@@ -1,6 +1,6 @@
 import React from 'react'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { LayoutDashboard, LucideClipboardList } from 'lucide-react'
+import { LayoutDashboard, LucideClipboardList, MapPin } from 'lucide-react'
 import { LuMessageSquareQuote, LuReceiptText } from 'react-icons/lu'
 import { PiUserListBold, PiWarehouseDuotone } from 'react-icons/pi'
 import { HiOutlineTicket } from 'react-icons/hi2'
@@ -311,6 +311,22 @@ const _nav = [
         ),
       },
     ],
+  },
+
+  // VTS Tracking (External Portal)
+  {
+    component: CNavItem,
+    name: 'VTS Tracking',
+    href: 'https://vts.credencetracker.com/login',
+    external: true,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: (
+      <MapPin
+        className="nav-icon"
+        style={{ color: '#ec7426', marginRight: '10px', fill: 'none', pointerEvents: 'none' }}
+      />
+    ),
   },
 ]
 
