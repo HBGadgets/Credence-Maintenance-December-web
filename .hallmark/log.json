@@ -1,0 +1,31 @@
+[
+ {
+  "shape": "Conversational FAQ",
+  "theme": "furrow",
+  "axes": "light/grotesk-sans/warm",
+  "hero": "corridor",
+  "nav": "edge-aligned",
+  "footer": "colophon block",
+  "imagery": "none",
+  "photos": [],
+  "entry": "src/views/pages/privacy/PrivacyPolicy.jsx",
+  "fingerprint": "privacy-policy-fms",
+  "sections": [
+   "hero",
+   "scope",
+   "data-collected",
+   "operational-use",
+   "retention-ledger",
+   "security",
+   "third-parties",
+   "user-rights",
+   "contact",
+   "footer"
+  ],
+  "signature": "waterproof field registry ledger",
+  "waived": [],
+  "prompt": "Fleet Management System privacy policy page",
+  "date": "2026-10-31",
+  "mode": "build"
+ }
+]

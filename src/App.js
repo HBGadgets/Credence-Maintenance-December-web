@@ -77,6 +77,7 @@ import { fetchUserActiveStatus } from './views/pages/login/data'
 // Lazy-loaded containers and pages
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 const Login = React.lazy(() => import('./views/pages/login/Login'))
+const PrivacyPolicy = React.lazy(() => import('./views/pages/privacy/PrivacyPolicy'))
 
 //Token check for dashboard
 const RequireAuth = ({ children }) => {
@@ -141,6 +142,10 @@ const AppContent = React.memo(() => {
           </RedirectIfAuth>
         }
       />
+
+      {/* Public Privacy Policy */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
 
       {/* Protected dashboard */}
       <Route

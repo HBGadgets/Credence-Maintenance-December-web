@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -249,6 +249,16 @@ const Login = () => {
             >
               {loading ? 'Logging in...' : 'Login'}
             </CButton>
+
+            {/* Public Links */}
+            <div className="text-center mt-3">
+              <Link
+                to="/privacy-policy"
+                style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.85rem', textDecoration: 'none' }}
+              >
+                Privacy Policy
+              </Link>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>
