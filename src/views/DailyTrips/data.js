@@ -239,4 +239,28 @@ export const deleteDailyTripApi = async (id) => {
 
 export const deleteDailyReadingApi = deleteDailyTripApi;
 
+// Duty Slip API for Daily Trips
+export const getDailyDutySlipApi = async (id, customToken) => {
+    try {
+        const token = customToken || getToken();
+        if (!token) throw new Error("Authentication token not found");
+
+        const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/daily/get-dutySlip-by-daily-trip-id/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        return res.data;
+    } catch (error) {
+        console.error("Error fetching daily duty slip:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const getDutySlipApi = getDailyDutySlipApi;
+
+
 

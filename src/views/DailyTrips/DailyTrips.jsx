@@ -12,6 +12,7 @@ import {
   patchDailyReadingApi,
   deleteDailyTripApi,
   verifyPasswordApi,
+  getDailyDutySlipApi,
 } from './data'
 import { fetchDrivers, fetchSupervisor } from '../DriverExpert/data/drivers'
 import DateRangeFilterCredence from '../../components/DateRangeFilterCredence'
@@ -25,6 +26,8 @@ import useExcelExporter from '../customhooks/useExcelExporter'
 import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../Supervisor/IconDropdown'
+import { Modal } from 'react-bootstrap'
+import DutySlip from '../Supervisor/trip/DutySlip'
 
 const DailyTrips = () => {
   const queryClient = useQueryClient()
@@ -45,6 +48,11 @@ const DailyTrips = () => {
   const [pdfBase64, setPdfBase64] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
+
+  // Duty slip model
+  const [dutySlipData, setDutySlipData] = useState(null)
+  const [showDutySlipModal, setShowDutySlipModal] = useState(false)
+  const [loadingDutySlip, setLoadingDutySlip] = useState(false)
 
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
@@ -342,6 +350,25 @@ const DailyTrips = () => {
     }
   }
 
+  // Handle reports of duty slip
+  const handleReportButton = async (id) => {
+    try {
+      setLoadingDutySlip(true)
+      const data = await getDailyDutySlipApi(id, effectiveToken)
+      setDutySlipData(data)
+      setShowDutySlipModal(true)
+      toast.success('Duty slip loaded successfully!')
+    } catch (error) {
+      console.error('Failed to fetch duty slip:', error)
+      const errorMsg =
+        error.response?.data?.message ||
+        "Trip is not completed yet. You can't generate slip until the trip is completed."
+      toast.error(errorMsg)
+    } finally {
+      setLoadingDutySlip(false)
+    }
+  }
+
   // Dynamic Form Fields
   const fields = [
     {
@@ -542,6 +569,8 @@ const DailyTrips = () => {
         handleEditButton={handleEditButton}
         deleteButton={isSuperAdmin}
         handleDeleteButton={handleDeleteButton}
+        reportButton={true}
+        handleReportButton={handleReportButton}
       />
 
       <SmartPagination
@@ -566,6 +595,22 @@ const DailyTrips = () => {
         }}
         totalItems={itemsPerPage === -1 ? displayData.length : totalItems}
       />
+
+      {/* DutySlip Modal */}
+      <Modal show={showDutySlipModal} onHide={() => setShowDutySlipModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Duty Slip</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {loadingDutySlip ? (
+            <p>Loading...</p>
+          ) : dutySlipData ? (
+            <DutySlip invoiceData={dutySlipData} />
+          ) : (
+            <p>No duty slip data available.</p>
+          )}
+        </Modal.Body>
+      </Modal>
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
         <IconDropdown items={dropdownItems} />

@@ -211,11 +211,29 @@ export const patchDriverSalaryApi = async (id, updatedData) => {
 // --------------------------------------------------------------------------------------------------------------------------------
 
 // GET API for Trip List.
-export const getTripListApi = async (userId = null, token) => {
+export const getTripListApi = async (userIdOrParams = null, tokenParam = null, extraParams = {}) => {
+  let token = tokenParam
+  const params = {}
+
+  if (userIdOrParams && typeof userIdOrParams === 'object') {
+    const { userId, id, token: t, status, ...rest } = userIdOrParams
+    if (userId || id) params.id = userId || id
+    if (status) params.status = status
+    Object.assign(params, rest)
+    if (t) token = t
+  } else if (typeof userIdOrParams === 'string' && userIdOrParams) {
+    params.id = userIdOrParams
+  }
+
+  if (extraParams && typeof extraParams === 'object') {
+    Object.assign(params, extraParams)
+  }
+
+  token = token || Cookies.get('crdnsMaintToken') || TOKEN
   if (!token) throw new Error('Authentication token not found')
 
-  const query = userId ? `?id=${userId}` : ''
-  const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/trips/get${query}`, {
+  const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/trips/get`, {
+    params,
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -24,45 +24,75 @@ const DutySlip = ({ invoiceData }) => {
     startOdometerReading,
     endOdometerReading,
     mileage,
+    // Daily trip specific fields
+    odometerStart,
+    odometerEnd,
+    totalDistance,
+    vehicleNumber,
+    driverName: rawDriverName,
+    driverContact: rawDriverContact,
+    createdAt,
+    startTime,
+    endTime,
   } = invoiceData || {}
+
+  const effectiveStartOdo = startOdometerReading ?? odometerStart ?? 'N/A'
+  const effectiveEndOdo = endOdometerReading ?? odometerEnd ?? 'N/A'
 
   // Calculate total km & fuel consumption
   const { totalKmReading, fuelConsumption } = useMemo(() => {
-    const totalKm =
-      endOdometerReading && startOdometerReading
-        ? (endOdometerReading - startOdometerReading).toFixed(2)
-        : 0
-    const fuel = mileage && totalKm ? (totalKm / mileage).toFixed(2) : 0
+    let totalKm = 0
+    if (endOdometerReading && startOdometerReading) {
+      totalKm = (Number(endOdometerReading) - Number(startOdometerReading)).toFixed(2)
+    } else if (
+      odometerEnd !== undefined &&
+      odometerStart !== undefined &&
+      odometerEnd !== '-' &&
+      odometerStart !== '-' &&
+      !isNaN(odometerEnd) &&
+      !isNaN(odometerStart)
+    ) {
+      totalKm = (Number(odometerEnd) - Number(odometerStart)).toFixed(2)
+    } else if (totalDistance && totalDistance !== '-') {
+      totalKm = Number(totalDistance).toFixed(2)
+    }
+    const fuel = mileage && Number(totalKm) > 0 ? (Number(totalKm) / mileage).toFixed(2) : 0
     return { totalKmReading: totalKm, fuelConsumption: fuel }
-  }, [startOdometerReading, endOdometerReading, mileage])
+  }, [startOdometerReading, endOdometerReading, odometerStart, odometerEnd, totalDistance, mileage])
+
+  const formatSlipDate = (d) => {
+    if (!d || d === 'N/A' || d === '-') return 'N/A'
+    const parsed = new Date(d)
+    return isNaN(parsed.getTime()) ? d : parsed.toLocaleDateString()
+  }
 
   // Mapped fields
   const mappedData = {
-    companyName: companyId?.companyName || 'N/A',
+    companyName: companyId?.companyName || 'Credence Fleet Management',
     companyAddress: companyId?.address || 'N/A',
     companyEmail: companyId?.email || 'N/A',
     companyMobile: companyId?.mobileNumber || 'N/A',
     companyOffice: companyId?.officeNumber || 'N/A',
     companyGST: companyId?.gstNumber || 'N/A',
 
-    lorryNumber: vehicleId,
-    date: date ? new Date(date).toLocaleDateString() : 'N/A',
-    endDate: updatedAt ? new Date(updatedAt).toLocaleDateString() : 'N/A',
+    lorryNumber: vehicleId || vehicleNumber || vehicleName || 'N/A',
+    date: formatSlipDate(date || startTime || createdAt),
+    endDate: formatSlipDate(updatedAt || endTime),
 
-    vehicleName,
-    driverName: driverId?.name || 'N/A',
-    contactNumber: driverId?.contactNumber || 'N/A',
-    startLocation,
-    endLocation,
+    vehicleName: vehicleName || vehicleNumber || (typeof vehicleId === 'string' ? vehicleId : 'N/A'),
+    driverName: driverId?.name || rawDriverName || 'N/A',
+    contactNumber: driverId?.contactNumber || rawDriverContact || 'N/A',
+    startLocation: startLocation || 'Origin / Base',
+    endLocation: endLocation || 'Destination / Return',
     itemName: materialType || 'N/A',
-    customerName: clientName,
+    customerName: clientName || 'Daily Operational Assignment',
     customerContact: clientNumber || 'N/A',
-    customerRate: coastPerKm,
-    customerFreight: clientAdvance,
-    transporterFreight: budgetAllocated,
+    customerRate: coastPerKm || '0',
+    customerFreight: clientAdvance || '0',
+    transporterFreight: budgetAllocated || '0',
 
-    startOdometerReading,
-    endOdometerReading,
+    startOdometerReading: effectiveStartOdo,
+    endOdometerReading: effectiveEndOdo,
     totalKmReading,
     fuelConsumption,
   }
@@ -78,7 +108,7 @@ const DutySlip = ({ invoiceData }) => {
 
     const opt = {
       margin: 0,
-      filename: `DutySlip-${mappedData.lorryNumber || 'Bill'}.pdf`,
+      filename: `DutySlip-${mappedData.vehicleName || 'Bill'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 3, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -112,9 +142,6 @@ const DutySlip = ({ invoiceData }) => {
           <div className="chunky-card">
             <h3>Vehicle Details</h3>
             <p>
-              <strong>Slip Number:</strong> {mappedData.lorryNumber}
-            </p>
-            <p>
               <strong>Vehicle Name:</strong> {mappedData.vehicleName}
             </p>
             <p>
@@ -137,7 +164,7 @@ const DutySlip = ({ invoiceData }) => {
         </div>
 
         {/* Material */}
-        {invoiceData.transportMode === 'transport' && (
+        {invoiceData?.transportMode === 'transport' && (
           <div className="slice-zone">
             <div className="chunky-card">
               <h3>Materials Details</h3>

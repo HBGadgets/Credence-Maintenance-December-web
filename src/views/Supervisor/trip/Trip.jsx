@@ -53,6 +53,16 @@ const Trip = () => {
   // for supervisor select
   const [selectedName, setSelectedName] = useState(null)
 
+  // for status filter
+  const [selectedStatus, setSelectedStatus] = useState(null)
+
+  // Status options for dropdown
+  const statusOptions = [
+    { label: 'In Progress', value: 'in-progress' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' },
+  ]
+
   const token = Cookies.get('crdnsMaintToken')
 
   // superadmin role
@@ -67,8 +77,14 @@ const Trip = () => {
     isLoading, // Add this to check loading state
     error, // Add error handling
   } = useQuery({
-    queryKey: ['TripsList', token], // Add token to queryKey to refetch when token changes
-    queryFn: () => getTripListApi(null, token),
+    queryKey: ['TripsList', token, selectedStatus?.value], // Add selectedStatus to queryKey to refetch when status filter changes
+    queryFn: () => {
+      const params = {}
+      if (selectedStatus?.value) {
+        params.status = selectedStatus.value
+      }
+      return getTripListApi(params, token)
+    },
     staleTime: 0, // Changed from 30 minutes to 0 to always consider data stale
     cacheTime: 1000 * 60 * 5, // Keep cache for 5 minutes
     enabled: !!token, // Only run if token is available
@@ -101,14 +117,37 @@ const Trip = () => {
     }
   }, [token, refetch]) // Refetch when token becomes available
 
+  // Reset to page 1 when filters change
   useEffect(() => {
-    if (!TripsList || TripsList.length === 0) return
+    setCurrentPage(1)
+  }, [selectedName, selectedStatus, searchQuery, dateRange])
+
+  useEffect(() => {
+    if (!TripsList) {
+      setFilteredData([])
+      return
+    }
 
     let filtered = TripsList
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
       filtered = filtered.filter((trip) => trip.supervisorId === selectedName.value)
+    }
+
+    // Filter by status if selected
+    if (selectedStatus?.value) {
+      const target = selectedStatus.value.toLowerCase().replace(/[\s-_]/g, '')
+      filtered = filtered.filter((trip) => {
+        const current = (trip.rawStatus || trip.status || '')
+          .toString()
+          .toLowerCase()
+          .replace(/[\s-_]/g, '')
+        if (target === 'cancelled') {
+          return current.startsWith('cancel')
+        }
+        return current === target
+      })
     }
 
     // Filter by date range if available
@@ -144,17 +183,17 @@ const Trip = () => {
 
       return {
         ...data,
-        rawStatus: data.status,
+        rawStatus: data.rawStatus || data.status,
         remainingAmount: (
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
-        status: <span className={getStatusBadge(data.status)}>{data.status}</span>,
+        status: <span className={getStatusBadge(data.rawStatus || data.status)}>{data.rawStatus || data.status}</span>,
         totalRunningKM: totalRunning,
       }
     })
 
     setFilteredData(styledData)
-  }, [TripsList, dateRange, searchQuery, selectedName])
+  }, [TripsList, dateRange, searchQuery, selectedName, selectedStatus])
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
@@ -350,7 +389,10 @@ const Trip = () => {
       toast.success('Duty slip loaded successfully!')
     } catch (error) {
       console.error('Failed to fetch duty slip:', error)
-      toast.error('Trip in Progress!')
+      const errorMsg =
+        error.response?.data?.message ||
+        "Trip is not completed yet. You can't generate slip until the trip is completed."
+      toast.error(errorMsg)
     } finally {
       setLoadingDutySlip(false)
     }
@@ -387,7 +429,7 @@ const Trip = () => {
     <>
       <ToastContainer />
       <div>
-        <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div className="d-flex flex-wrap align-items-center gap-2">
             <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
             {userRole === 'superadmin' && (
@@ -401,9 +443,18 @@ const Trip = () => {
                 />
               </div>
             )}
+            <div style={{ width: '160px' }}>
+              <SingleSelectDropdown
+                options={statusOptions}
+                value={selectedStatus}
+                onChange={setSelectedStatus}
+                isClearable
+                placeholder="Filter Status.."
+              />
+            </div>
           </div>
 
-          <div className="d-flex justify-content-end align-items-center gap-2 w-75">
+          <div className="d-flex justify-content-end align-items-center gap-2">
             <SearchInput searchQuery={searchQuery} setSearchQuery={handleSearch} />
             <Button variant="primary" onClick={handleAdd}>
               Add Trip
