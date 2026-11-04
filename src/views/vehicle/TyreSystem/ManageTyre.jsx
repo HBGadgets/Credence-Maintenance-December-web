@@ -9,13 +9,15 @@ import {
   getTyerSystemBillApi,
   getTyreSystemApi,
 } from '../data/VehicleListData'
+import { verifyPasswordApi } from '../../DailyTrips/data'
 import Swal from 'sweetalert2'
 import TyreAssignModal from './component/TyreAssignModal'
 import BillShow from '../../components/BillModal/BillShow'
 import { toast, ToastContainer } from 'react-toastify'
-import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
+import { FaArrowUp, FaExchangeAlt, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
+import { CTooltip } from '@coreui/react'
 import usePdfExporter from '../../customhooks/usePdfExporter'
 import useExcelExporter from '../../customhooks/useExcelExporter'
 import IconDropdown from '../../Supervisor/IconDropdown'
@@ -37,6 +39,7 @@ const ManageTyre = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedTyreLabel, setSelectedTyreLabel] = useState('')
   const [editTyreData, setEditTyreData] = useState(null)
+  const [isChangeMode, setIsChangeMode] = useState(false)
 
   const formatDateToInput = (dateStr) => {
     if (!dateStr) return ''
@@ -87,7 +90,9 @@ const ManageTyre = () => {
               ? '#F44336' // Vivid Red
               : s.includes('second-hand')
                 ? '#FF9800' // Orange
-                : '#9E9E9E', // Default Grey
+                : s.includes('change')
+                  ? '#6f42c1' // Purple
+                  : '#9E9E9E', // Default Grey
       color: 'white',
     }
   }
@@ -188,40 +193,115 @@ const ManageTyre = () => {
         ...tyreToEdit,
         installationDate: formatDateToInput(tyreToEdit.installationDate),
       })
+      setIsChangeMode(false)
+      setShowModal(true)
+    }
+  }
+
+  // handle change tyre
+  const handleChangeTyreButton = (rowOrId) => {
+    const tyre =
+      typeof rowOrId === 'object' && rowOrId !== null
+        ? rowOrId
+        : filteredData.find((item) => item.id === rowOrId)
+
+    if (tyre) {
+      setSelectedTyreLabel(tyre.position || '')
+      setEditTyreData(tyre)
+      setIsChangeMode(true)
+      setShowModal(true)
+    } else {
+      setSelectedTyreLabel('')
+      setEditTyreData(null)
+      setIsChangeMode(true)
       setShowModal(true)
     }
   }
 
   // handle delete
   const handleDeleteButton = async (id) => {
+    const selectedTyre = filteredData.find((item) => item.id === id)
+    const tyreDesc = selectedTyre
+      ? `${selectedTyre.brandName || 'Tyre'} (Position: ${selectedTyre.position || 'N/A'}, Sr: ${selectedTyre.tyreSerialNumber || 'N/A'})`
+      : 'this tyre record'
+
     const confirm = await Swal.fire({
       title: 'Are you sure?',
-      text: 'This will delete the tyre record permanently!',
+      html: `You are about to delete <strong>${tyreDesc}</strong>.<br/>This action will permanently erase the tyre record!`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, proceed to delete',
+      cancelButtonText: 'Cancel',
     })
 
-    if (confirm.isConfirmed) {
-      try {
-        await deleteTyreSystemApi(id)
-        await Swal.fire({
-          icon: 'success',
-          title: 'Deleted!',
-          text: 'The tyre record has been deleted.',
-          timer: 1500,
-          showConfirmButton: false,
-        })
-        refetch()
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Delete Failed',
-          text: error?.response?.data?.message || 'An error occurred while deleting.',
-        })
-      }
+    if (!confirm.isConfirmed) return
+
+    const passwordResult = await Swal.fire({
+      title: '<span style="color: #dc3545; font-weight: 700;">Security Authorization</span>',
+      html: `
+        <p class="mb-2">Enter your password to authorize permanent deletion of <strong>${tyreDesc}</strong>:</p>
+        <div class="alert alert-danger py-2 px-3 text-start small mb-0" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+          <strong>Warning:</strong> Once verified, this tyre record will be permanently deleted and cannot be recovered.
+        </div>
+      `,
+      icon: 'warning',
+      input: 'password',
+      inputPlaceholder: 'Enter your password...',
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off',
+        'aria-label': 'Enter password',
+      },
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Verify & Delete',
+      cancelButtonText: 'Cancel',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Password is required!'
+        }
+      },
+      preConfirm: async (password) => {
+        const pass = password ? password.trim() : ''
+        try {
+          const res = await verifyPasswordApi(pass)
+          if (res?.status === false || res?.success === false || res?.valid === false) {
+            throw new Error(res?.message || res?.error || 'Password verification failed.')
+          }
+
+          await deleteTyreSystemApi(id)
+          return true
+        } catch (err) {
+          const errorMessage =
+            (Array.isArray(err.response?.data?.message)
+              ? err.response.data.message.join(', ')
+              : err.response?.data?.message) ||
+            err.response?.data?.error ||
+            (typeof err.response?.data === 'string' ? err.response.data : null) ||
+            err.message ||
+            'Verification or deletion failed. Please try again.'
+
+          Swal.showValidationMessage(errorMessage)
+          return false
+        }
+      },
+    })
+
+    if (passwordResult.isConfirmed) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'The tyre record has been permanently deleted.',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      window.location.reload()
     }
   }
 
@@ -315,6 +395,14 @@ const ManageTyre = () => {
           {tyresystem?.[0]?.vehicleName && (
             <span className="fw-bold fs-4">Vehicle Name: {tyresystem[0].vehicleName}</span>
           )}
+          <button
+            className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
+            onClick={() => handleChangeTyreButton(null)}
+            style={{ fontWeight: '500', borderRadius: '6px' }}
+          >
+            <FaExchangeAlt size={14} />
+            <span>Change Tyre</span>
+          </button>
         </div>
       </div>
 
@@ -340,6 +428,32 @@ const ManageTyre = () => {
         deleteButton={true}
         handleDeleteButton={handleDeleteButton}
         viewButtonLabel="Image"
+        renderActions={(row) => (
+          <CTooltip content="Change Tyre" placement="top">
+            <button
+              className="action-button"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleChangeTyreButton(row)
+              }}
+              aria-label="Change Tyre"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#e7f1ff',
+                color: '#0d6efd',
+                border: '1px solid #b6d4fe',
+                borderRadius: '6px',
+                width: '32px',
+                height: '32px',
+                cursor: 'pointer',
+              }}
+            >
+              <FaExchangeAlt size={14} color="#0d6efd" />
+            </button>
+          </CTooltip>
+        )}
       />
       <SmartPagination
         totalPages={totalPages}
@@ -365,12 +479,16 @@ const ManageTyre = () => {
       {/* Add this modal component */}
       <TyreAssignModal
         show={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false)
+          setIsChangeMode(false)
+        }}
         tyreLabel={selectedTyreLabel}
         vehicleId={vehicleId}
         category={editTyreData?.category || filteredData[0]?.category}
         refetchData={refetch}
         initialData={editTyreData}
+        isChange={isChangeMode}
       />
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">

@@ -26,7 +26,12 @@ import { TbTruckDelivery } from 'react-icons/tb'
 import { RiMoneyRupeeCircleFill } from 'react-icons/ri'
 import { TokenContext } from '../../context/TokenContext'
 import { useQuery } from '@tanstack/react-query'
-import { fetchAllAdmin, fetchDashboardData, getAllTripListApi, getDailyTripLogsApi } from './data/data'
+import {
+  fetchAllAdmin,
+  fetchDashboardData,
+  getAllTripListApi,
+  getDailyTripLogsApi,
+} from './data/data'
 import { getGodownTPApi } from '../Warehouse Section/data/data'
 import SingleSelectDropdown from '../components/SingleSelectDropdown'
 import { jwtDecode } from 'jwt-decode'
@@ -52,46 +57,83 @@ import expenseIcon from 'src/assets/images/expense-icon.png'
 import liveOnWorkIcon from 'src/assets/images/live-on-work-icon.png'
 import documentAlertIcon from 'src/assets/images/document-alert-icon.png'
 import transportReceiptIcon from 'src/assets/images/transport-receipt-icon.png'
+import usePermissionStore from '../../store/permission'
+import { getMySupervisorPermissions } from '../Supervisor/data/supervisorRoleService'
 
-const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceiptsData }) => {
+const FleetAnalyticsChart = ({
+  data,
+  tripsData,
+  dailyTripsData,
+  transportReceiptsData,
+  canShowTransportReceipt = true,
+  canShowDrivers = true,
+  canShowVehicles = true,
+}) => {
   const [overviewMode, setOverviewMode] = useState('Resource Overview')
   const [filterCategory, setFilterCategory] = useState('All')
   const [tripCategory, setTripCategory] = useState('Trip')
 
+  useEffect(() => {
+    if (!canShowTransportReceipt) {
+      if (overviewMode === 'Transport Receipt') setOverviewMode('Resource Overview')
+      if (filterCategory === 'Transport Receipt') setFilterCategory('All')
+      if (tripCategory === 'Transport Receipt') setTripCategory('Trip')
+    }
+    if (!canShowDrivers && filterCategory === 'Drivers') {
+      setFilterCategory('All')
+    }
+    if (!canShowVehicles && filterCategory === 'Vehicles') {
+      setFilterCategory('All')
+    }
+  }, [
+    canShowTransportReceipt,
+    canShowDrivers,
+    canShowVehicles,
+    overviewMode,
+    filterCategory,
+    tripCategory,
+  ])
+
   const tripStats = useMemo(() => {
-    let pending = 0, started = 0, completed = 0;
-    (tripsData || []).forEach(trip => {
-      const st = trip.status?.toLowerCase() || '';
-      if (st.includes('pending')) pending++;
-      else if (st.includes('start') || st.includes('live') || st.includes('ongoing')) started++;
-      else if (st.includes('complete') || st.includes('finish')) completed++;
-      else pending++; // fallback
+    let pending = 0,
+      started = 0,
+      completed = 0
+    ;(tripsData || []).forEach((trip) => {
+      const st = trip.status?.toLowerCase() || ''
+      if (st.includes('pending')) pending++
+      else if (st.includes('start') || st.includes('live') || st.includes('ongoing')) started++
+      else if (st.includes('complete') || st.includes('finish')) completed++
+      else pending++ // fallback
     })
     return { pending, started, completed }
   }, [tripsData])
 
   const dailyTripStats = useMemo(() => {
-    let started = 0, completed = 0;
-    (dailyTripsData || []).forEach(trip => {
-      const st = trip.status?.toLowerCase() || '';
+    let started = 0,
+      completed = 0
+    ;(dailyTripsData || []).forEach((trip) => {
+      const st = trip.status?.toLowerCase() || ''
       if (st.includes('complete') || st.includes('finish')) {
-        completed++;
+        completed++
       } else {
-        started++; // 'started' hi 'pending' h
+        started++ // 'started' hi 'pending' h
       }
     })
     return { started, completed }
   }, [dailyTripsData])
 
   const transportReceiptStats = useMemo(() => {
-    let pending = 0, completed = 0, cancelled = 0;
-    (transportReceiptsData || []).forEach(item => {
-      const st = item.status?.toLowerCase() || '';
-      if (st.includes('complete')) completed++;
-      else if (st.includes('cancel')) cancelled++;
-      else pending++;
+    let pending = 0,
+      completed = 0,
+      cancelled = 0
+    ;(transportReceiptsData || []).forEach((item) => {
+      const st = item.status?.toLowerCase() || ''
+      if (st.includes('complete')) completed++
+      else if (st.includes('cancel')) cancelled++
+      else pending++
     })
-    const totalCount = (transportReceiptsData || []).length || Number(data?.totalGodownLorryReceiptCount) || 0
+    const totalCount =
+      (transportReceiptsData || []).length || Number(data?.totalGodownLorryReceiptCount) || 0
     const todayCount = Number(data?.todayGodownLorryReceiptCount) || 0
     return { pending, completed, cancelled, total: totalCount, today: todayCount }
   }, [transportReceiptsData, data])
@@ -107,7 +149,11 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
       }
       return [
         { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
-        { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
+        {
+          name: 'Previous Pass',
+          value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today),
+          color: '#6c757d',
+        },
       ]
     }
 
@@ -133,7 +179,11 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
         }
         return [
           { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
-          { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
+          {
+            name: 'Previous Pass',
+            value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today),
+            color: '#6c757d',
+          },
         ]
       }
     } else {
@@ -153,7 +203,11 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
         case 'Documents':
           return [
             { name: 'Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-            { name: 'Safe', value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)), color: '#28a745' },
+            {
+              name: 'Safe',
+              value: Math.max(0, (data?.totalVehicles || 0) - (data?.documentAlerts || 0)),
+              color: '#28a745',
+            },
           ]
         case 'Transport Receipt':
           if ((transportReceiptsData || []).length > 0) {
@@ -165,19 +219,50 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
           }
           return [
             { name: 'Today Pass', value: transportReceiptStats.today, color: '#0d6efd' },
-            { name: 'Previous Pass', value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today), color: '#6c757d' },
+            {
+              name: 'Previous Pass',
+              value: Math.max(0, transportReceiptStats.total - transportReceiptStats.today),
+              color: '#6c757d',
+            },
           ]
         case 'All':
         default:
           return [
-            { name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' },
-            { name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' },
+            ...(canShowVehicles
+              ? [{ name: 'Vehicles', value: data?.totalVehicles || 0, color: '#17a2b8' }]
+              : []),
+            ...(canShowDrivers
+              ? [{ name: 'Drivers', value: data?.totalDrivers || 0, color: '#28a745' }]
+              : []),
             { name: 'Doc Alerts', value: data?.documentAlerts || 0, color: '#dc3545' },
-            { name: 'Transport Receipts', value: Number(data?.totalGodownLorryReceiptCount) || (transportReceiptStats.total || 0), color: '#0d6efd' },
+            ...(canShowTransportReceipt
+              ? [
+                  {
+                    name: 'Transport Receipts',
+                    value:
+                      Number(data?.totalGodownLorryReceiptCount) ||
+                      transportReceiptStats.total ||
+                      0,
+                    color: '#0d6efd',
+                  },
+                ]
+              : []),
           ]
       }
     }
-  }, [overviewMode, filterCategory, tripCategory, data, tripStats, dailyTripStats, transportReceiptStats, transportReceiptsData])
+  }, [
+    overviewMode,
+    filterCategory,
+    tripCategory,
+    data,
+    tripStats,
+    dailyTripStats,
+    transportReceiptStats,
+    transportReceiptsData,
+    canShowTransportReceipt,
+    canShowDrivers,
+    canShowVehicles,
+  ])
 
   const areaData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
@@ -216,7 +301,7 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
         >
           <option value="Resource Overview">Resource Overview</option>
           <option value="Trips Overview">Trips Overview</option>
-          <option value="Transport Receipt">Transport Receipt</option>
+          {canShowTransportReceipt && <option value="Transport Receipt">Transport Receipt</option>}
         </select>
 
         {overviewMode === 'Resource Overview' ? (
@@ -227,10 +312,12 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
             onChange={(e) => setFilterCategory(e.target.value)}
           >
             <option value="All">All Overview</option>
-            <option value="Vehicles">Vehicles</option>
-            <option value="Drivers">Drivers</option>
+            {canShowVehicles && <option value="Vehicles">Vehicles</option>}
+            {canShowDrivers && <option value="Drivers">Drivers</option>}
             <option value="Documents">Documents</option>
-            <option value="Transport Receipt">Transport Receipt</option>
+            {canShowTransportReceipt && (
+              <option value="Transport Receipt">Transport Receipt</option>
+            )}
           </select>
         ) : overviewMode === 'Trips Overview' ? (
           <select
@@ -241,12 +328,17 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
           >
             <option value="Trip">Trips</option>
             <option value="Daily Trip">Daily Trips Logs</option>
-            <option value="Transport Receipt">Transport Receipt</option>
+            {canShowTransportReceipt && (
+              <option value="Transport Receipt">Transport Receipt</option>
+            )}
           </select>
         ) : null}
       </div>
 
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100" style={{ flex: 1 }}>
+      <div
+        className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 w-100"
+        style={{ flex: 1 }}
+      >
         <div style={{ width: '100%', height: '180px', flex: 1 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -266,8 +358,19 @@ const FleetAnalyticsChart = ({ data, tripsData, dailyTripsData, transportReceipt
           </ResponsiveContainer>
         </div>
 
-        <div style={{ width: '100%', height: '200px', flex: 1.5, display: 'flex', flexDirection: 'column' }}>
-          <div className="d-flex justify-content-center flex-wrap gap-3 mb-2" style={{ fontSize: '12px', fontWeight: '500' }}>
+        <div
+          style={{
+            width: '100%',
+            height: '200px',
+            flex: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <div
+            className="d-flex justify-content-center flex-wrap gap-3 mb-2"
+            style={{ fontSize: '12px', fontWeight: '500' }}
+          >
             {pieData.map((item) => (
               <div key={item.name} className="d-flex align-items-center gap-1">
                 <div
@@ -317,7 +420,9 @@ const Dashboard = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const activeSection = useSelector((state) => state.activeSection || 'Dashboard')
   // The sidebar is rendered only when sidebarShow is true AND the active section has sub-items (i.e. not Dashboard)
-  const isSidebarOpen = Boolean(sidebarShow && activeSection && activeSection.trim().toLowerCase() !== 'dashboard')
+  const isSidebarOpen = Boolean(
+    sidebarShow && activeSection && activeSection.trim().toLowerCase() !== 'dashboard',
+  )
 
   const [splitView, setSplitView] = useState('both')
   const [messages, setMessages] = useState({})
@@ -430,11 +535,143 @@ const Dashboard = () => {
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
+  const isSuperAdmin = useMemo(() => {
+    const roleLower = (userRole || '').toString().toLowerCase().trim()
+    return roleLower === 'superadmin' || roleLower.includes('superadmin') || roleLower === 'admin'
+  }, [userRole])
+
+  const permissions = usePermissionStore((state) => state.permissions)
+
   const isWorker = !!(
     Cookies.get('workerInfo') ||
     decodedToken?.worker ||
     decodedToken?.role === 'worker'
   )
+
+  useEffect(() => {
+    if (!isSuperAdmin && !permissions && token && !isWorker) {
+      getMySupervisorPermissions()
+        .then((res) => {
+          if (res?.permissions) {
+            usePermissionStore.getState().setPermissions(res.permissions)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isSuperAdmin, permissions, token, isWorker])
+
+  const canShowTransportReceipt = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.transportPass?.receipt?.read ?? permissions?.transporterPass?.receipt?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowDrivers = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.masters?.driver?.read ??
+        permissions?.masters?.drivers?.read ??
+        permissions?.driver?.read ??
+        permissions?.drivers?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowVehicles = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.masters?.vehicle?.read ??
+        permissions?.masters?.vehicles?.read ??
+        permissions?.vehicle?.read ??
+        permissions?.vehicles?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowAttendance = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.masters?.attendance?.read ??
+        permissions?.master?.attendance?.read ??
+        permissions?.attendance?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowMaintenance = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.reports?.serviceLog?.read ??
+        permissions?.report?.serviceLog?.read ??
+        permissions?.serviceLog?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowTrip = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.masters?.trip?.read ??
+        permissions?.master?.trip?.read ??
+        permissions?.trip?.read ??
+        permissions?.masters?.trips?.read ??
+        permissions?.master?.trips?.read ??
+        permissions?.trips?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowExpenses = useMemo(() => {
+    if (isSuperAdmin) return true
+    return Boolean(canShowDrivers || canShowVehicles)
+  }, [isSuperAdmin, canShowDrivers, canShowVehicles])
+
+  const canShowDocumentAlert = useMemo(() => {
+    if (isSuperAdmin) return true
+    return Boolean(canShowDrivers || canShowVehicles)
+  }, [isSuperAdmin, canShowDrivers, canShowVehicles])
+
+  const canShowDailyTrips = useMemo(() => {
+    if (isSuperAdmin) return true
+    if (!permissions) return false
+    return Boolean(
+      permissions?.dailyTrips?.read ??
+        permissions?.reports?.dailyLog?.read ??
+        permissions?.dailyLog?.read,
+    )
+  }, [isSuperAdmin, permissions])
+
+  const canShowAnyTable = canShowTrip || canShowDailyTrips || canShowTransportReceipt
+
+  useEffect(() => {
+    if (tableMode === 'Trip' && !canShowTrip) {
+      if (canShowDailyTrips) {
+        setTableMode('Daily Trip Logs')
+        setCurrentPage(1)
+      } else if (canShowTransportReceipt) {
+        setTableMode('Transport Receipt')
+        setCurrentPage(1)
+      }
+    } else if (tableMode === 'Daily Trip Logs' && !canShowDailyTrips) {
+      if (canShowTrip) {
+        setTableMode('Trip')
+        setCurrentPage(1)
+      } else if (canShowTransportReceipt) {
+        setTableMode('Transport Receipt')
+        setCurrentPage(1)
+      }
+    } else if (tableMode === 'Transport Receipt' && !canShowTransportReceipt) {
+      if (canShowTrip) {
+        setTableMode('Trip')
+        setCurrentPage(1)
+      } else if (canShowDailyTrips) {
+        setTableMode('Daily Trip Logs')
+        setCurrentPage(1)
+      }
+    }
+  }, [canShowTrip, canShowDailyTrips, canShowTransportReceipt, tableMode])
 
   // Fetch dashboard data using React Query
   const { data } = useQuery({
@@ -456,7 +693,7 @@ const Dashboard = () => {
     queryKey: ['TripsList', token],
     queryFn: getAllTripListApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken && !isWorker,
+    enabled: !!token && !!decodedToken && !isWorker && canShowTrip,
   })
 
   // Fetch Daily Trip Logs
@@ -464,7 +701,12 @@ const Dashboard = () => {
     queryKey: ['DailyTripLogs', token, currentPage, itemsPerPage, searchQuery],
     queryFn: getDailyTripLogsApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken && tableMode === 'Daily Trip Logs' && !isWorker,
+    enabled:
+      !!token &&
+      !!decodedToken &&
+      tableMode === 'Daily Trip Logs' &&
+      !isWorker &&
+      canShowDailyTrips,
   })
 
   const DailyTripLogsList = DailyTripLogsResponse?.data || EMPTY_ARRAY
@@ -483,7 +725,12 @@ const Dashboard = () => {
     ],
     queryFn: getGodownTPApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken && tableMode === 'Transport Receipt' && !isWorker,
+    enabled:
+      !!token &&
+      !!decodedToken &&
+      tableMode === 'Transport Receipt' &&
+      !isWorker &&
+      canShowTransportReceipt,
   })
 
   const TransportReceiptsList = TransportReceiptsResponse?.receipts || EMPTY_ARRAY
@@ -512,7 +759,7 @@ const Dashboard = () => {
     ],
     queryFn: getGodownTPApi,
     staleTime: 1000 * 60 * 30,
-    enabled: !!token && !!decodedToken && !isWorker,
+    enabled: !!token && !!decodedToken && !isWorker && canShowTransportReceipt,
   })
 
   const transportReceiptsAnalyticsList = TransportReceiptsAnalyticsData?.receipts || EMPTY_ARRAY
@@ -593,7 +840,7 @@ const Dashboard = () => {
         : tableMode === 'Daily Trip Logs'
           ? DailyTripLogsList
           : TransportReceiptsList
-    
+
     if (!activeList || activeList.length === 0) {
       setFilteredData((prev) => (prev.length === 0 ? prev : EMPTY_ARRAY))
       return
@@ -620,9 +867,10 @@ const Dashboard = () => {
       end.setHours(23, 59, 59, 999)
 
       filtered = filtered.filter((item) => {
-        const dateStr = item.originalDate || item.date || item.orginalDate || item.createdAt || item.startDate
+        const dateStr =
+          item.originalDate || item.date || item.orginalDate || item.createdAt || item.startDate
         if (!dateStr) return false
-        
+
         const itemDate = new Date(dateStr)
         if (isNaN(itemDate.getTime())) return true
         return itemDate >= start && itemDate <= end
@@ -644,11 +892,15 @@ const Dashboard = () => {
       if (tableMode === 'Daily Trip Logs') {
         return {
           ...data,
-          status: data.status ? <span className={getStatusBadge(data.status)}>{data.status}</span> : data.status,
+          status: data.status ? (
+            <span className={getStatusBadge(data.status)}>{data.status}</span>
+          ) : (
+            data.status
+          ),
           driverName: data.driverId?.name || 'N/A',
           contactNumber: data.driverId?.contactNumber || 'N/A',
           vehicleName: data.driverId?.currentVehicleName || 'N/A',
-          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A'
+          startTime: data.startTime ? new Date(data.startTime).toLocaleString() : 'N/A',
         }
       }
 
@@ -691,7 +943,15 @@ const Dashboard = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, DailyTripLogsList, TransportReceiptsList, selectedName, searchQuery, dateRange, tableMode])
+  }, [
+    TripsList,
+    DailyTripLogsList,
+    TransportReceiptsList,
+    selectedName,
+    searchQuery,
+    dateRange,
+    tableMode,
+  ])
 
   // Table view
   const baseTripColumns = [
@@ -804,128 +1064,218 @@ const Dashboard = () => {
   // cards details
 
   const cards = [
-    {
-      label: 'Drivers',
-      icon: <img src={driversIcon} alt="Drivers" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableDrivers ?? 0}
-          <br />
-          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableDrivers ?? 0}
-        </>
-      ),
-      count: dashboardData?.totalDrivers ?? 0,
-      borders: {
-        borderTop: '2px solid #28a745',
-        borderLeft: '2px solid #28a745',
-        borderBottom: '2px solid #dc3545',
-        borderRight: '2px solid #dc3545',
-      },
-      shadow: 'inset 0 0 20px rgba(40, 167, 69, 0.4)',
-      onClick: () => handleDriveStatus('Drivers Aavailablity'),
-    },
-    {
-      label: 'Vehicles',
-      icon: <img src={vehiclesIcon} alt="Vehicles" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail : {dashboardData?.availableVehicles ?? 0}
-          <br />
-          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail : {dashboardData?.unavailableVehicles ?? 0}
-        </>
-      ),
-      count: dashboardData?.totalVehicles ?? 0,
-      borders: { border: '2px solid #17a2b8' },
-      shadow: 'inset 0 0 20px rgba(23, 162, 184, 0.5)',
-      onClick: () => handleViewVehicles('Vehicles'),
-    },
-    {
-      label: 'Maintenance',
-      icon: <img src={maintenanceIcon} alt="Maintenance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy: {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
-          <br />
-          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert: {dashboardData?.vehiclesUnderMaintenance ?? 0}
-        </>
-      ),
-      count: dashboardData?.totalVehicles ?? 0,
-      borders: { border: '2px solid #2b5c8c' },
-      shadow: 'inset 0 0 20px rgba(43, 92, 140, 0.5)',
-      onClick: () => handleViewServicelog('Maintenance'),
-    },
-    {
-      label: 'Attendance',
-      icon: <img src={attendanceIcon} alt="Attendance" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present: {dashboardData?.driverLocations ?? 0}
-        </>
-      ),
-      count: dashboardData?.driverLocations ?? 0,
-      borders: { border: '2px solid #4b2c82' },
-      shadow: 'inset 0 0 20px rgba(75, 44, 130, 0.5)',
-      onClick: () => handleDriverLoc('Driver Attendance Location'),
-    },
-    {
-      label: 'Expenses',
-      icon: <img src={expenseIcon} alt="Expenses" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹{dashboardData?.expenses?.total?.toLocaleString() ?? 0}
-        </>
-      ),
-      count: dashboardData?.expenses?.total >= 1000
-        ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
-        : `₹${dashboardData?.expenses?.total ?? 0}`,
-      borders: { border: '2px solid #fd7e14' },
-      shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
-      onClick: () => handleExpenses('Expenses'),
-    },
-    {
-      label: 'Live on Work',
-      icon: <img src={liveOnWorkIcon} alt="Live on Work" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty: {dashboardData?.driversLiveOnWork ?? 0}
-          <br />
-          <span style={{ color: '#6c757d', fontSize: '10px' }}>●</span> Total: {dashboardData?.totalDrivers ?? 0}
-        </>
-      ),
-      count: dashboardData?.driversLiveOnWork ?? 0,
-      borders: { border: '2px solid #008080' },
-      shadow: 'inset 0 0 20px rgba(0, 128, 128, 0.5)',
-      onClick: () => handleViewDrives('Live on Work'),
-    },
-    {
-      label: 'Document Alert',
-      icon: <img src={documentAlertIcon} alt="Document Alert" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
-        </>
-      ),
-      count: dashboardData?.documentAlerts ?? 0,
-      borders: { border: '2px solid #dc3545' },
-      shadow: 'inset 0 0 20px rgba(220, 53, 69, 0.5)',
-      onClick: () => handleDocExp('Insurance Alert'),
-    },
-    {
-      label: 'Transport Receipt',
-      icon: <img src={transportReceiptIcon} alt="Transport Receipt" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />,
-      subtext: (
-        <>
-          <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass: {dashboardData?.todayGodownLorryReceiptCount || '0'}
-        </>
-      ),
-      count: dashboardData?.totalGodownLorryReceiptCount || '0',
-      borders: { border: '2px solid #0d6efd' },
-      shadow: 'inset 0 0 20px rgba(13, 110, 253, 0.5)',
-      onClick: () => handleTP('Transport Receipt'),
-    },
+    ...(canShowDrivers
+      ? [
+          {
+            label: 'Drivers',
+            icon: (
+              <img
+                src={driversIcon}
+                alt="Drivers"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Avail :{' '}
+                {dashboardData?.availableDrivers ?? 0}
+                <br />
+                <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail :{' '}
+                {dashboardData?.unavailableDrivers ?? 0}
+              </>
+            ),
+            count: dashboardData?.totalDrivers ?? 0,
+            borders: {
+              borderTop: '2px solid #28a745',
+              borderLeft: '2px solid #28a745',
+              borderBottom: '2px solid #dc3545',
+              borderRight: '2px solid #dc3545',
+            },
+            shadow: 'inset 0 0 20px rgba(40, 167, 69, 0.4)',
+            onClick: () => handleDriveStatus('Drivers Aavailablity'),
+          },
+        ]
+      : []),
+    ...(canShowVehicles
+      ? [
+          {
+            label: 'Vehicles',
+            icon: (
+              <img
+                src={vehiclesIcon}
+                alt="Vehicles"
+                style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Avail :{' '}
+                {dashboardData?.availableVehicles ?? 0}
+                <br />
+                <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Unavail :{' '}
+                {dashboardData?.unavailableVehicles ?? 0}
+              </>
+            ),
+            count: dashboardData?.totalVehicles ?? 0,
+            borders: { border: '2px solid #17a2b8' },
+            shadow: 'inset 0 0 20px rgba(23, 162, 184, 0.5)',
+            onClick: () => handleViewVehicles('Vehicles'),
+          },
+        ]
+      : []),
+    ...(canShowMaintenance
+      ? [
+          {
+            label: 'Maintenance',
+            icon: (
+              <img
+                src={maintenanceIcon}
+                alt="Maintenance"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy:{' '}
+                {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
+                <br />
+                <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert:{' '}
+                {dashboardData?.vehiclesUnderMaintenance ?? 0}
+              </>
+            ),
+            count: dashboardData?.totalVehicles ?? 0,
+            borders: { border: '2px solid #2b5c8c' },
+            shadow: 'inset 0 0 20px rgba(43, 92, 140, 0.5)',
+            onClick: () => handleViewServicelog('Maintenance'),
+          },
+        ]
+      : []),
+    ...(canShowAttendance
+      ? [
+          {
+            label: 'Attendance',
+            icon: (
+              <img
+                src={attendanceIcon}
+                alt="Attendance"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#4b2c82', fontSize: '10px' }}>●</span> Present:{' '}
+                {dashboardData?.driverLocations ?? 0}
+              </>
+            ),
+            count: dashboardData?.driverLocations ?? 0,
+            borders: { border: '2px solid #4b2c82' },
+            shadow: 'inset 0 0 20px rgba(75, 44, 130, 0.5)',
+            onClick: () => handleDriverLoc('Driver Attendance Location'),
+          },
+        ]
+      : []),
+    ...(canShowExpenses
+      ? [
+          {
+            label: 'Expenses',
+            icon: (
+              <img
+                src={expenseIcon}
+                alt="Expenses"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹
+                {dashboardData?.expenses?.total?.toLocaleString() ?? 0}
+              </>
+            ),
+            count:
+              dashboardData?.expenses?.total >= 1000
+                ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
+                : `₹${dashboardData?.expenses?.total ?? 0}`,
+            borders: { border: '2px solid #fd7e14' },
+            shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
+            onClick: () => handleExpenses('Expenses'),
+          },
+        ]
+      : []),
+    ...(canShowTrip
+      ? [
+          {
+            label: 'Live on Work',
+            icon: (
+              <img
+                src={liveOnWorkIcon}
+                alt="Live on Work"
+                style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#008080', fontSize: '10px' }}>●</span> On Duty:{' '}
+                {dashboardData?.driversLiveOnWork ?? 0}
+                <br />
+                <span style={{ color: '#6c757d', fontSize: '10px' }}>●</span> Total:{' '}
+                {dashboardData?.totalDrivers ?? 0}
+              </>
+            ),
+            count: dashboardData?.driversLiveOnWork ?? 0,
+            borders: { border: '2px solid #008080' },
+            shadow: 'inset 0 0 20px rgba(0, 128, 128, 0.5)',
+            onClick: () => handleViewDrives('Live on Work'),
+          },
+        ]
+      : []),
+    ...(canShowDocumentAlert
+      ? [
+          {
+            label: 'Document Alert',
+            icon: (
+              <img
+                src={documentAlertIcon}
+                alt="Document Alert"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Expiring Soon
+              </>
+            ),
+            count: dashboardData?.documentAlerts ?? 0,
+            borders: { border: '2px solid #dc3545' },
+            shadow: 'inset 0 0 20px rgba(220, 53, 69, 0.5)',
+            onClick: () => handleDocExp('Insurance Alert'),
+          },
+        ]
+      : []),
+    ...(canShowTransportReceipt
+      ? [
+          {
+            label: 'Transport Receipt',
+            icon: (
+              <img
+                src={transportReceiptIcon}
+                alt="Transport Receipt"
+                style={{ width: '46px', height: '46px', objectFit: 'contain' }}
+              />
+            ),
+            subtext: (
+              <>
+                <span style={{ color: '#0d6efd', fontSize: '10px' }}>●</span> Today Pass:{' '}
+                {dashboardData?.todayGodownLorryReceiptCount || '0'}
+              </>
+            ),
+            count: dashboardData?.totalGodownLorryReceiptCount || '0',
+            borders: { border: '2px solid #0d6efd' },
+            shadow: 'inset 0 0 20px rgba(13, 110, 253, 0.5)',
+            onClick: () => handleTP('Transport Receipt'),
+          },
+        ]
+      : []),
   ]
-
-
 
   // ── Worker Dashboard ─────────────────────────────────────────────
   if (isWorker) {
@@ -1255,9 +1605,7 @@ const Dashboard = () => {
                   }}
                 >
                   <CCardBody className="p-2 d-flex align-items-center">
-                    <div className="me-2 flex-shrink-0">
-                      {card.icon}
-                    </div>
+                    <div className="me-2 flex-shrink-0">{card.icon}</div>
                     <div className="card-details overflow-hidden">
                       <div className="card-label">{card.label}</div>
                       <div className="card-subtext">{card.subtext}</div>
@@ -1298,33 +1646,73 @@ const Dashboard = () => {
 
       <CContainer className="px-2 dashboard-main-container pb-3" fluid>
         <div className="row h-100">
-          {splitView !== 'analytics' && (
-            <div className={`position-relative dashboard-main-col ${splitView === 'table' ? "col-12" : "col-12 col-xl-7"}`}>
+          {splitView !== 'analytics' && canShowAnyTable && (
+            <div
+              className={`position-relative dashboard-main-col ${splitView === 'table' ? 'col-12' : 'col-12 col-xl-7'}`}
+            >
               {/* Expand Handle */}
               {splitView === 'both' && (
                 <button
                   className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
                   style={{
-                    position: 'absolute', top: 'calc(50% + 18px)', right: '-15px', transform: 'translateY(-50%)',
-                    zIndex: 10, width: '32px', height: '32px'
+                    position: 'absolute',
+                    top: 'calc(50% + 18px)',
+                    right: '-15px',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10,
+                    width: '32px',
+                    height: '32px',
                   }}
                   onClick={() => setSplitView('table')}
                   title="Expand Table"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-chevrons-right"
+                  >
+                    <path d="m6 17 5-5-5-5"></path>
+                    <path d="m13 17 5-5-5-5"></path>
+                  </svg>
                 </button>
               )}
               {splitView === 'table' && (
                 <button
                   className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
                   style={{
-                    position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)',
-                    zIndex: 10, width: '32px', height: '32px'
+                    position: 'absolute',
+                    top: '50%',
+                    right: '15px',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10,
+                    width: '32px',
+                    height: '32px',
                   }}
                   onClick={() => setSplitView('both')}
                   title="Collapse Table"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-chevrons-left"
+                  >
+                    <path d="m11 17-5-5 5-5"></path>
+                    <path d="m18 17-5-5 5-5"></path>
+                  </svg>
                 </button>
               )}
 
@@ -1332,18 +1720,28 @@ const Dashboard = () => {
                 title={
                   <div className="d-flex w-100 flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 pe-4">
                     <div className="d-flex align-items-center gap-2">
-                      <select 
+                      <select
                         className="form-select form-select-sm shadow-sm bg-light"
-                        style={{ width: '185px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.05rem', border: '1px solid #ccc' }}
+                        style={{
+                          width: '185px',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '1.05rem',
+                          border: '1px solid #ccc',
+                        }}
                         value={tableMode}
                         onChange={(e) => {
                           setTableMode(e.target.value)
                           setCurrentPage(1)
                         }}
                       >
-                        <option value="Trip">Trips Details</option>
-                        <option value="Daily Trip Logs">Daily Trip Logs</option>
-                        <option value="Transport Receipt">Transport Receipt</option>
+                        {canShowTrip && <option value="Trip">Trips Details</option>}
+                        {canShowDailyTrips && (
+                          <option value="Daily Trip Logs">Daily Trip Logs</option>
+                        )}
+                        {canShowTransportReceipt && (
+                          <option value="Transport Receipt">Transport Receipt</option>
+                        )}
                       </select>
                     </div>
                     <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -1370,7 +1768,9 @@ const Dashboard = () => {
                       : isFetchingTransportReceipts
                 }
                 onViewReport={() => handleViewDetailedReport()}
-                serverPagination={tableMode === 'Daily Trip Logs' || tableMode === 'Transport Receipt'}
+                serverPagination={
+                  tableMode === 'Daily Trip Logs' || tableMode === 'Transport Receipt'
+                }
                 totalServerItems={
                   tableMode === 'Daily Trip Logs'
                     ? totalDailyTripLogs
@@ -1383,32 +1783,72 @@ const Dashboard = () => {
           )}
 
           {splitView !== 'table' && (
-            <div className={`position-relative dashboard-main-col ${splitView === 'analytics' ? "col-12" : "col-12 col-xl-5"}`}>
+            <div
+              className={`position-relative dashboard-main-col ${splitView === 'analytics' || !canShowAnyTable ? 'col-12' : 'col-12 col-xl-5'}`}
+            >
               {/* Expand Handle */}
-              {splitView === 'both' && (
+              {splitView === 'both' && canShowAnyTable && (
                 <button
                   className="btn btn-sm rounded-circle shadow d-none d-xl-flex align-items-center justify-content-center side-handle-btn"
                   style={{
-                    position: 'absolute', top: 'calc(50% - 18px)', left: '-15px', transform: 'translateY(-50%)',
-                    zIndex: 10, width: '32px', height: '32px'
+                    position: 'absolute',
+                    top: 'calc(50% - 18px)',
+                    left: '-15px',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10,
+                    width: '32px',
+                    height: '32px',
                   }}
                   onClick={() => setSplitView('analytics')}
                   title="Expand Analytics"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-chevrons-left"
+                  >
+                    <path d="m11 17-5-5 5-5"></path>
+                    <path d="m18 17-5-5 5-5"></path>
+                  </svg>
                 </button>
               )}
               {splitView === 'analytics' && (
                 <button
                   className="btn btn-sm rounded-circle shadow d-flex align-items-center justify-content-center side-handle-btn"
                   style={{
-                    position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)',
-                    zIndex: 10, width: '32px', height: '32px'
+                    position: 'absolute',
+                    top: '50%',
+                    left: '15px',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10,
+                    width: '32px',
+                    height: '32px',
                   }}
                   onClick={() => setSplitView('both')}
                   title="Collapse Analytics"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-chevrons-right"
+                  >
+                    <path d="m6 17 5-5-5-5"></path>
+                    <path d="m13 17 5-5-5-5"></path>
+                  </svg>
                 </button>
               )}
 
@@ -1422,6 +1862,9 @@ const Dashboard = () => {
                     tripsData={TripsList}
                     dailyTripsData={dailyTripsAnalyticsList}
                     transportReceiptsData={transportReceiptsAnalyticsList}
+                    canShowTransportReceipt={canShowTransportReceipt}
+                    canShowDrivers={canShowDrivers}
+                    canShowVehicles={canShowVehicles}
                   />
                 </CCardBody>
               </CCard>

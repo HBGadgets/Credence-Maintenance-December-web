@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import TyreAssignModal from './TyreAssignModal'
 import { deleteTyreSystemApi } from '../../data/VehicleListData'
+import { verifyPasswordApi } from '../../../DailyTrips/data'
 import wheelImg from '../../../../assets/tyre/wheel1.png'
 
 const TyreAlign = ({
@@ -31,6 +32,7 @@ const TyreAlign = ({
   const [leftWheels, setLeftWheels] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedTyreLabel, setSelectedTyreLabel] = useState('')
+  const [isChangeMode, setIsChangeMode] = useState(false)
   const isHeavyVehicle = ['truck', 'bus', 'other'].includes(category?.toLowerCase())
 
   const isTyreAssigned = (label) => !!assignedTyres[label]
@@ -86,48 +88,151 @@ const TyreAlign = ({
     const assigned = assignedTyres[label]
 
     if (assigned) {
-      const result = await Swal.fire({
-        title: `Tyre already assigned to ${label}`,
-        text: 'Do you want to edit or delete this tyre?',
+      let selectedAction = null
+
+      await Swal.fire({
+        title: `Tyre at ${label}`,
         icon: 'question',
-        showDenyButton: true,
+        html: `
+          <p class="text-muted mb-3" style="font-size: 14px;">Choose an option for this tyre:</p>
+          <div style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+            <button id="swal-btn-change" type="button" class="btn btn-primary py-2 px-3 text-start d-flex align-items-center justify-content-between" style="border-radius: 8px;">
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">🔄 Change Tyre</div>
+                <div style="font-size: 12px; opacity: 0.9;">Install new / replacement tyre</div>
+              </div>
+              <span style="font-size: 18px;">➔</span>
+            </button>
+            <button id="swal-btn-edit" type="button" class="btn btn-light border py-2 px-3 text-start d-flex align-items-center justify-content-between" style="border-radius: 8px;">
+              <div>
+                <div style="font-weight: 600; font-size: 14px; color: #212529;">✏️ Edit Tyre Details</div>
+                <div style="font-size: 12px; color: #6c757d;">Update existing tyre information</div>
+              </div>
+              <span style="font-size: 18px; color: #6c757d;">➔</span>
+            </button>
+            <button id="swal-btn-delete" type="button" class="btn btn-outline-danger py-2 px-3 text-start d-flex align-items-center justify-content-between" style="border-radius: 8px;">
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">🗑️ Delete Tyre</div>
+                <div style="font-size: 12px; opacity: 0.85;">Remove tyre from this position</div>
+              </div>
+              <span style="font-size: 18px;">➔</span>
+            </button>
+          </div>
+        `,
+        showConfirmButton: false,
         showCancelButton: true,
-        confirmButtonText: 'Edit',
-        denyButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#6c757d',
+        didOpen: () => {
+          document.getElementById('swal-btn-change')?.addEventListener('click', () => {
+            selectedAction = 'change'
+            Swal.close()
+          })
+          document.getElementById('swal-btn-edit')?.addEventListener('click', () => {
+            selectedAction = 'edit'
+            Swal.close()
+          })
+          document.getElementById('swal-btn-delete')?.addEventListener('click', () => {
+            selectedAction = 'delete'
+            Swal.close()
+          })
+        },
       })
 
-      if (result.isConfirmed) {
-        // Open edit modal
+      if (selectedAction === 'change') {
         setSelectedTyreLabel(label)
+        setIsChangeMode(true)
         setShowModal(true)
-      } else if (result.isDenied) {
+      } else if (selectedAction === 'edit') {
+        setSelectedTyreLabel(label)
+        setIsChangeMode(false)
+        setShowModal(true)
+      } else if (selectedAction === 'delete') {
+        const tyreDesc = `${assigned.brandName || 'Tyre'} (Position: ${label}, Sr: ${assigned.tyreSerialNumber || 'N/A'})`
+
         const confirmDelete = await Swal.fire({
           title: 'Are you sure?',
-          text: `This will delete the tyre assigned to ${label}`,
+          html: `You are about to delete <strong>${tyreDesc}</strong>.<br/>This action will permanently erase the tyre record!`,
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonText: 'Yes, delete it!',
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, proceed to delete',
           cancelButtonText: 'Cancel',
         })
 
-        if (confirmDelete.isConfirmed) {
-          try {
-            await deleteTyreSystemApi(assigned.id)
-            Swal.fire('Deleted!', `Tyre removed from ${label}`, 'success')
-            setAssignedTyres((prev) => {
-              const updated = { ...prev }
-              delete updated[label]
-              return updated
-            })
-            refetchData()
-          } catch (error) {
-            Swal.fire('Error', 'Failed to delete tyre', 'error')
-          }
+        if (!confirmDelete.isConfirmed) return
+
+        const passwordResult = await Swal.fire({
+          title: '<span style="color: #dc3545; font-weight: 700;">Security Authorization</span>',
+          html: `
+            <p class="mb-2">Enter your password to authorize permanent deletion of <strong>${tyreDesc}</strong>:</p>
+            <div class="alert alert-danger py-2 px-3 text-start small mb-0" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+              <strong>Warning:</strong> Once verified, this tyre will be permanently deleted and removed from ${label}.
+            </div>
+          `,
+          icon: 'warning',
+          input: 'password',
+          inputPlaceholder: 'Enter your password...',
+          inputAttributes: {
+            autocapitalize: 'off',
+            autocorrect: 'off',
+            'aria-label': 'Enter password',
+          },
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Verify & Delete',
+          cancelButtonText: 'Cancel',
+          showLoaderOnConfirm: true,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          inputValidator: (value) => {
+            if (!value || !value.trim()) {
+              return 'Password is required!'
+            }
+          },
+          preConfirm: async (password) => {
+            const pass = password ? password.trim() : ''
+            try {
+              const res = await verifyPasswordApi(pass)
+              if (res?.status === false || res?.success === false || res?.valid === false) {
+                throw new Error(res?.message || res?.error || 'Password verification failed.')
+              }
+
+              await deleteTyreSystemApi(assigned.id)
+              return true
+            } catch (err) {
+              const errorMessage =
+                (Array.isArray(err.response?.data?.message)
+                  ? err.response.data.message.join(', ')
+                  : err.response?.data?.message) ||
+                err.response?.data?.error ||
+                (typeof err.response?.data === 'string' ? err.response.data : null) ||
+                err.message ||
+                'Verification or deletion failed. Please try again.'
+
+              Swal.showValidationMessage(errorMessage)
+              return false
+            }
+          },
+        })
+
+        if (passwordResult.isConfirmed) {
+          await Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: `Tyre permanently removed from ${label}.`,
+            timer: 1500,
+            showConfirmButton: false,
+          })
+          window.location.reload()
         }
       }
     } else {
       // Show assign modal
       setSelectedTyreLabel(label)
+      setIsChangeMode(false)
       setShowModal(true)
     }
   }
@@ -402,15 +507,20 @@ const TyreAlign = ({
 
       <TyreAssignModal
         show={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false)
+          setIsChangeMode(false)
+        }}
         tyreLabel={selectedTyreLabel}
         vehicleId={vehicleId}
         category={category}
         refetchData={refetchData}
         initialData={assignedTyres[selectedTyreLabel] || null}
+        isChange={isChangeMode}
         onAssign={(label) => {
           setAssignedTyres((prev) => ({ ...prev, [label]: true }))
           setShowModal(false)
+          setIsChangeMode(false)
           Swal.fire('Assigned!', `Tyre assigned to ${label}`, 'success')
         }}
       />

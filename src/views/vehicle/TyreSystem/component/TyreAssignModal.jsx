@@ -16,6 +16,7 @@ const TyreAssignModal = ({
   refetchData = () => {},
   initialData = null,
   size = 'lg',
+  isChange = false,
 }) => {
   const [formData, setFormData] = useState({
     serialNo: '',
@@ -87,6 +88,42 @@ const TyreAssignModal = ({
     },
   })
 
+  // Change Tyre (Post or Update fallback)
+  const changeMutation = useMutation({
+    mutationFn: async (data) => {
+      try {
+        return await postTyreSystemApi(data)
+      } catch (err) {
+        if (
+          initialData?.id &&
+          (err?.response?.data?.message?.toLowerCase().includes('already') ||
+            err?.response?.status === 400 ||
+            err?.response?.status === 409)
+        ) {
+          return await updateDriver(initialData.id, data)
+        }
+        throw err
+      }
+    },
+    onSuccess: async () => {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Tyre Changed Successfully',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      if (refetchData) await refetchData()
+      onClose()
+    },
+    onError: (err) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err?.response?.data?.message || 'Tyre change failed',
+      })
+    },
+  })
+
   // tyre position options -----
   const positionOptions = []
 
@@ -139,7 +176,22 @@ const TyreAssignModal = ({
   ]
 
   useEffect(() => {
-    if (initialData) {
+    if (isChange) {
+      setFormData({
+        serialNo: '',
+        brandName: '',
+        category: initialData?.category || category || 'truck',
+        tyreStatus: 'new',
+        installationDate: new Date().toISOString().split('T')[0],
+        vendorName: '',
+        location: '',
+        tyreSize: initialData?.tyreSize || '',
+        billImg: null,
+        amount: '',
+        paymentMode: '',
+        position: initialData?.position || tyreLabel || '',
+      })
+    } else if (initialData) {
       setFormData({
         serialNo: initialData?.tyreSerialNumber || '',
         brandName: initialData?.brandName || '',
@@ -170,7 +222,7 @@ const TyreAssignModal = ({
         position: tyreLabel || '',
       })
     }
-  }, [initialData, tyreLabel, category, show])
+  }, [initialData, tyreLabel, category, show, isChange])
 
   const handleSubmit = async () => {
     const requiredFields = [
@@ -210,16 +262,22 @@ const TyreAssignModal = ({
 
     setErrors({}) // Clear errors if all fields are valid
 
-    const isEditing = !!initialData?.position
+    const isEditing = !isChange && !!initialData?.position
 
     const confirm = await Swal.fire({
-      title: isEditing ? 'Update Tyre Assignment?' : 'Assign Tyre?',
-      text: isEditing
-        ? `Do you want to update the tyre at position ${tyreLabel}?`
-        : `Do you want to assign the tyre to position ${tyreLabel}?`,
+      title: isChange ? 'Change Tyre?' : isEditing ? 'Update Tyre Assignment?' : 'Assign Tyre?',
+      text: isChange
+        ? `Do you want to change the tyre at position ${formData.position || tyreLabel}?`
+        : isEditing
+          ? `Do you want to update the tyre at position ${formData.position || tyreLabel}?`
+          : `Do you want to assign the tyre to position ${formData.position || tyreLabel}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: isEditing ? 'Yes, update it!' : 'Yes, assign it!',
+      confirmButtonText: isChange
+        ? 'Yes, change it!'
+        : isEditing
+          ? 'Yes, update it!'
+          : 'Yes, assign it!',
       cancelButtonText: 'Cancel',
     })
 
@@ -249,19 +307,41 @@ const TyreAssignModal = ({
       dataToSend.append('billImg', formData.billImg)
     }
 
-    if (isEditing) {
+    if (isChange) {
+      changeMutation.mutate(dataToSend)
+    } else if (isEditing) {
       updateMutation.mutate({ id: initialData?.id, data: dataToSend })
     } else {
       mutate(dataToSend)
     }
   }
 
+  const isEditing = !isChange && !!initialData?.position
+
   return (
     <Modal show={show} onHide={onClose} centered scrollable size={size}>
       <Modal.Header closeButton>
-        <Modal.Title>Assign Tyre</Modal.Title>
+        <Modal.Title>
+          {isChange
+            ? `Change Tyre ${formData.position || tyreLabel ? `(${formData.position || tyreLabel})` : ''}`
+            : isEditing
+              ? `Edit Tyre (${formData.position || tyreLabel})`
+              : 'Assign Tyre'}
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        {isChange && initialData && (
+          <div
+            className="alert alert-primary py-2 px-3 mb-3 d-flex align-items-center justify-content-between"
+            style={{ fontSize: '13px' }}
+          >
+            <div>
+              <span className="fw-bold">Current Tyre:</span> {initialData.brandName || 'N/A'}{' '}
+              {initialData.tyreSerialNumber ? `(Sr: ${initialData.tyreSerialNumber})` : ''}
+            </div>
+            <span className="badge bg-primary">Position: {formData.position || tyreLabel}</span>
+          </div>
+        )}
         <Form>
           <Form.Group className="mb-2">
             <Form.Label>
@@ -362,6 +442,7 @@ const TyreAssignModal = ({
               <option value="new">New Tyre</option>
               <option value="in-use">In Use / Repaired Tyre</option>
               <option value="second-hand">Second Hand Tyre</option>
+              <option value="change-tyre">Change Tyre</option>
               <option value="need-replacement">Need Replacement</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">Status is required.</Form.Control.Feedback>
@@ -475,14 +556,22 @@ const TyreAssignModal = ({
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="success" onClick={handleSubmit} disabled={isLoading}>
-          {initialData?.position
-            ? isLoading
-              ? 'Updating...'
-              : 'Update'
-            : isLoading
-              ? 'Assigning...'
-              : 'Assign'}
+        <Button
+          variant="success"
+          onClick={handleSubmit}
+          disabled={isLoading || updateMutation.isLoading || changeMutation.isLoading}
+        >
+          {isChange
+            ? changeMutation.isLoading
+              ? 'Changing...'
+              : 'Change Tyre'
+            : isEditing
+              ? updateMutation.isLoading
+                ? 'Updating...'
+                : 'Update'
+              : isLoading
+                ? 'Assigning...'
+                : 'Assign'}
         </Button>
       </Modal.Footer>
     </Modal>
