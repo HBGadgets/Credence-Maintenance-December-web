@@ -1137,7 +1137,8 @@ const Dashboard = () => {
             subtext: (
               <>
                 <span style={{ color: '#28a745', fontSize: '10px' }}>●</span> Healthy:{' '}
-                {(dashboardData?.totalVehicles ?? 0) - (dashboardData?.vehiclesUnderMaintenance ?? 0)}
+                {(dashboardData?.totalVehicles ?? 0) -
+                  (dashboardData?.vehiclesUnderMaintenance ?? 0)}
                 <br />
                 <span style={{ color: '#dc3545', fontSize: '10px' }}>●</span> Alert:{' '}
                 {dashboardData?.vehiclesUnderMaintenance ?? 0}

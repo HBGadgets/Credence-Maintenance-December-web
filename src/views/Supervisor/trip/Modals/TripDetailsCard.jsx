@@ -56,12 +56,12 @@ const TripDetailsCard = ({ mainTrip }) => {
           <div className="trip-info-row">
             <FaMoneyBill className="trip-icon" />
             <span className="trip-label">Budget:</span>
-            <span className="trip-value">₹{mainTrip.budgetAllocated.toLocaleString()}</span>
+            <span className="trip-value">₹{Number(mainTrip.budgetAllocated || 0).toLocaleString()}</span>
           </div>
           <div className="trip-info-row">
             <FaReceipt className="trip-icon" />
             <span className="trip-label">Spent:</span>
-            <span className="trip-value">₹{mainTrip.spentAmount.toLocaleString()}</span>
+            <span className="trip-value">₹{Number(mainTrip.spentAmount || 0).toLocaleString()}</span>
           </div>
           <div className="trip-info-row">
             <FaInfoCircle className="trip-icon" />

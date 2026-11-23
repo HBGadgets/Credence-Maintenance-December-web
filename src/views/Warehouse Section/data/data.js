@@ -341,7 +341,17 @@ export const deleteInventoryProductListApi = async (id) => {
 export const getGodownTPApi = async ({ queryKey }) => {
   const [
     _key,
-    { search, page, limit, consignorId, consigneeId, companyId, workerId, status, supervisorId } = {},
+    {
+      search,
+      page,
+      limit,
+      consignorId,
+      consigneeId,
+      companyId,
+      workerId,
+      status,
+      supervisorId,
+    } = {},
   ] = queryKey
 
   const authToken = Cookies.get('crdnsMaintToken') || TOKEN
