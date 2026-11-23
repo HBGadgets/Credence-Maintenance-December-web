@@ -71,13 +71,15 @@ export const getAllDailyReadingApi = async ({
             id: item._id,
             driverName: item.driverId?.name || "N/A",
             driverContact: item.driverId?.contactNumber || "N/A",
-            vehicleNumber: item.driverId?.currentVehicleName || "N/A",
+            vehicleNumber: item.vehicleNumber || item.vehicleName || item.driverId?.currentVehicleName || "N/A",
             odometerStart: item.odometerStart ?? "-",
             odometerEnd: item.odometerEnd ?? "-",
             totalDistance: item.totalDistance ?? "-",
             gpsKM: item.gpsKM ?? "-",
             startTime: formatDate(item.startTime) || "-",
             endTime: formatDate(item.endTime) || "-",
+            rawStartTime: item.startTime || null,
+            rawEndTime: item.endTime || null,
             createdAt: formatDateToDDMMYYYY(item.createdAt) || "-",
             driverId: item.driverId?._id || "",
             supervisorId: item.supervisorId || "--",
@@ -133,15 +135,14 @@ export const postDailyReadingApi = async (id, dailyReadingData) => {
     }
 }
 
-// Patch for all Driver
-
-export const patchDailyReadingApi = async (rowId, driverId, data) => {
+// Patch Daily Trip (Edit API)
+export const patchDailyReadingApi = async (id, data) => {
     try {
         const token = getToken();
         if (!token) throw new Error('Authentication token not found')
 
         const { data: response } = await axios.patch(
-            `${import.meta.env.VITE_API_URL}/api/daily/tripendbydriver/${rowId}?driverId=${driverId}`,
+            `${import.meta.env.VITE_API_URL}/api/daily/daily-trip-update/${id}`,
             data,
             {
                 headers: {
@@ -156,6 +157,8 @@ export const patchDailyReadingApi = async (rowId, driverId, data) => {
         throw error
     }
 }
+
+export const updateDailyTripApi = patchDailyReadingApi;
 
 // Verify Password API
 export const verifyPasswordApi = async (password) => {

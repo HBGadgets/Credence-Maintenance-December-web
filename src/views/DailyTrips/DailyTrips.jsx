@@ -188,13 +188,108 @@ const DailyTrips = () => {
     // Note: currentPage is reset in useEffect above
   }
 
+  // Helper to format date for datetime-local input
+  const formatForDatetimeLocal = (dateString) => {
+    if (!dateString || dateString === '-' || dateString === 'N/A') return ''
+    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateString)) {
+      return dateString.slice(0, 16)
+    }
+    const parsed = new Date(dateString)
+    if (!isNaN(parsed.getTime())) {
+      const pad = (n) => String(n).padStart(2, '0')
+      return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`
+    }
+    if (typeof dateString === 'string' && dateString.includes('/')) {
+      const [datePart, timePart = '00:00:00'] = dateString.split(' ')
+      const [day, month, year] = datePart.split('/')
+      if (day && month && year) {
+        const pad = (n) => String(n).padStart(2, '0')
+        const [h = '00', m = '00'] = timePart.split(':')
+        return `${year}-${pad(month)}-${pad(day)}T${pad(h)}:${pad(m)}`
+      }
+    }
+    return ''
+  }
+
+  // Helper to get current datetime in local format for datetime-local input
+  const getNowDatetimeLocal = () => {
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+  }
+
   // Handle Add/Edit Submit
   const handleFormSubmit = async (formData) => {
     try {
       setIsSubmitting(true)
       if (editMode) {
-        await patchDailyReadingApi(editingUser.id, editingUser.driverId, formData)
-        toast.success('Trip End Reading Updated Successfully')
+        const now = new Date()
+        if (formData.startTime && new Date(formData.startTime) > now) {
+          toast.error('Start Trip time cannot be in the future')
+          setIsSubmitting(false)
+          return
+        }
+        if (formData.endTime && new Date(formData.endTime) > now) {
+          toast.error('End Trip time cannot be in the future')
+          setIsSubmitting(false)
+          return
+        }
+        if (
+          formData.startTime &&
+          formData.endTime &&
+          new Date(formData.startTime) > new Date(formData.endTime)
+        ) {
+          toast.error('Start Trip time cannot be after End Trip time')
+          setIsSubmitting(false)
+          return
+        }
+
+        const startOdo =
+          formData.odometerStart !== '' &&
+          formData.odometerStart !== null &&
+          formData.odometerStart !== undefined
+            ? Number(formData.odometerStart)
+            : undefined
+        const endOdo =
+          formData.odometerEnd !== '' &&
+          formData.odometerEnd !== null &&
+          formData.odometerEnd !== undefined
+            ? Number(formData.odometerEnd)
+            : undefined
+
+        let autoTotalDistance = undefined
+        if (startOdo !== undefined && endOdo !== undefined) {
+          if (endOdo < startOdo) {
+            toast.error('End Odometer cannot be less than Start Odometer')
+            setIsSubmitting(false)
+            return
+          }
+          autoTotalDistance = endOdo - startOdo
+        } else if (
+          formData.totalDistance !== '' &&
+          formData.totalDistance !== null &&
+          formData.totalDistance !== undefined
+        ) {
+          autoTotalDistance = Number(formData.totalDistance)
+        }
+
+        const payload = {
+          startTime: formData.startTime || undefined,
+          odometerStart: startOdo,
+          endTime: formData.endTime || undefined,
+          odometerEnd: endOdo,
+          totalDistance: autoTotalDistance,
+          status: formData.status,
+        }
+
+        Object.keys(payload).forEach((key) => {
+          if (payload[key] === undefined) {
+            delete payload[key]
+          }
+        })
+
+        await patchDailyReadingApi(editingUser.id, payload)
+        toast.success('Daily Trip Updated Successfully')
       } else {
         const driverId = selectedDriverId || formData.driverId
         await postDailyReadingApi(driverId, formData)
@@ -219,12 +314,40 @@ const DailyTrips = () => {
     // We need to find the record in the current page's data
     const record = dailyTrips.find((item) => item.id === id)
     if (record) {
-      const driver = drivers.find((d) => d.name === record.driverName)
+      const driver = drivers.find(
+        (d) => d.id === record.driverId || d._id === record.driverId || d.name === record.driverName,
+      )
+      const parsedStart = parseFloat(record.odometerStart)
+      const parsedEnd = parseFloat(record.odometerEnd)
+      let initialTotalDistance =
+        record.totalDistance !== '-' && record.totalDistance !== undefined
+          ? record.totalDistance
+          : ''
+      if (!isNaN(parsedStart) && !isNaN(parsedEnd) && parsedEnd >= parsedStart) {
+        initialTotalDistance = parsedEnd - parsedStart
+      }
+
       setEditMode(true)
       setEditingUser({
         ...record,
         driverId: driver?.id || record.driverId || '',
-        odometerEnd: record.odometerEnd || '',
+        driverName: record.driverName !== 'N/A' ? record.driverName : '',
+        vehicleNumber:
+          record.vehicleNumber && record.vehicleNumber !== 'N/A' && record.vehicleNumber !== '-'
+            ? record.vehicleNumber
+            : '',
+        odometerStart:
+          record.odometerStart !== '-' && record.odometerStart !== undefined
+            ? record.odometerStart
+            : '',
+        odometerEnd:
+          record.odometerEnd !== '-' && record.odometerEnd !== undefined
+            ? record.odometerEnd
+            : '',
+        totalDistance: initialTotalDistance,
+        startTime: formatForDatetimeLocal(record.rawStartTime || record.startTime),
+        endTime: formatForDatetimeLocal(record.rawEndTime || record.endTime),
+        status: record.status && record.status !== 'N/A' ? record.status : 'started',
       })
       setShowModalFrom(true)
     } else {
@@ -370,38 +493,111 @@ const DailyTrips = () => {
   }
 
   // Dynamic Form Fields
-  const fields = [
-    {
-      name: 'driverId',
-      label: 'Driver Name',
-      type: 'select',
-      options: drivers?.map((drv) => ({ label: drv.name, value: drv.id })) || [],
-      required: true,
-      disabled: editMode,
-      onChange: (e) => setSelectedDriverId(e.target.value),
-    },
-    ...(!editMode
-      ? [
-          {
-            name: 'odometerStart',
-            label: 'Start Odometer Reading',
-            type: 'number',
-            placeholder: 'Enter Start Odometer',
-            required: true,
-            min: 0,
+  const fields = !editMode
+    ? [
+        {
+          name: 'driverId',
+          label: 'Driver Name',
+          type: 'select',
+          options: drivers?.map((drv) => ({ label: drv.name, value: drv.id })) || [],
+          required: true,
+          onChange: (e) => setSelectedDriverId(e?.value || e?.target?.value || e),
+        },
+        {
+          name: 'odometerStart',
+          label: 'Start Odometer Reading',
+          type: 'number',
+          placeholder: 'Enter Start Odometer',
+          required: true,
+          min: 0,
+        },
+      ]
+    : [
+        {
+          name: 'startTime',
+          label: 'Start Trip',
+          type: 'datetime-local',
+          placeholder: 'Select Start Trip Time',
+          max: () => getNowDatetimeLocal(),
+          onChange: (val, updated) => {
+            const nowStr = getNowDatetimeLocal()
+            if (val && new Date(val) > new Date(nowStr)) {
+              toast.error('Start Trip time cannot be in the future')
+              return { startTime: nowStr }
+            }
+            if (val && updated.endTime && new Date(val) > new Date(updated.endTime)) {
+              toast.error('Start Trip time cannot be after End Trip time')
+              return { startTime: updated.endTime }
+            }
           },
-        ]
-      : [
-          {
-            name: 'odometerEnd',
-            label: 'End Odometer Reading',
-            type: 'number',
-            placeholder: 'Enter End Odometer',
-            required: true,
-            min: 0,
+        },
+        {
+          name: 'odometerStart',
+          label: 'Start Odometer',
+          type: 'number',
+          placeholder: 'Enter Start Odometer',
+          min: 0,
+          onChange: (val, updated) => {
+            const start = parseFloat(val)
+            const end = parseFloat(updated.odometerEnd)
+            if (!isNaN(start) && !isNaN(end)) {
+              return { totalDistance: Math.max(0, end - start) }
+            } else {
+              return { totalDistance: '' }
+            }
           },
-        ]),
-  ]
+        },
+        {
+          name: 'endTime',
+          label: 'End Trip',
+          type: 'datetime-local',
+          placeholder: 'Select End Trip Time',
+          max: () => getNowDatetimeLocal(),
+          min: (fd) => fd.startTime || undefined,
+          onChange: (val, updated) => {
+            const nowStr = getNowDatetimeLocal()
+            if (val && new Date(val) > new Date(nowStr)) {
+              toast.error('End Trip time cannot be in the future')
+              return { endTime: nowStr }
+            }
+            if (val && updated.startTime && new Date(val) < new Date(updated.startTime)) {
+              toast.error('End Trip time cannot be before Start Trip time')
+              return { endTime: updated.startTime }
+            }
+          },
+        },
+        {
+          name: 'odometerEnd',
+          label: 'End Odometer',
+          type: 'number',
+          placeholder: 'Enter End Odometer',
+          min: 0,
+          onChange: (val, updated) => {
+            const start = parseFloat(updated.odometerStart)
+            const end = parseFloat(val)
+            if (!isNaN(start) && !isNaN(end)) {
+              return { totalDistance: Math.max(0, end - start) }
+            } else {
+              return { totalDistance: '' }
+            }
+          },
+        },
+        {
+          name: 'totalDistance',
+          label: 'Total KM',
+          type: 'number',
+          placeholder: 'Auto-calculated (End Odo - Start Odo)',
+          readOnly: true,
+          min: 0,
+          helperText: 'Auto-calculated: End Odometer - Start Odometer',
+        },
+        {
+          name: 'status',
+          label: 'Status',
+          type: 'select',
+          options: statusOptions,
+        },
+      ]
 
   // status color
   const getStatusStyle = (status) => {
@@ -501,6 +697,7 @@ const DailyTrips = () => {
             title="Date Range"
             onDateRangeChange={handleDateRangeChange}
             value={dateRange}
+            maxDate={new Date()}
           />
           {userRole === 'superadmin' && (
             <div style={{ width: '150px' }}>
@@ -544,7 +741,7 @@ const DailyTrips = () => {
 
       <ReusableModal
         show={showModalFrom}
-        title={editMode ? 'End Trip Reading' : 'Start Trip Reading'}
+        title={editMode ? 'Edit Daily Trip' : 'Start Trip Reading'}
         initialData={editMode ? editingUser : null}
         onClose={() => {
           setShowModalFrom(false)

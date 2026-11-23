@@ -138,6 +138,13 @@ const ReusableModal = ({
     const field = fields.find((f) => f.name === name)
     let newValue = type === 'file' ? files[0] : value
 
+    if ((field?.type === 'datetime-local' || field?.type === 'date' || field?.type === 'time') && field?.max) {
+      const maxVal = typeof field.max === 'function' ? field.max(formData) : field.max
+      if (maxVal && newValue && new Date(newValue) > new Date(maxVal)) {
+        newValue = maxVal
+      }
+    }
+
     if (field?.numericOnly && typeof newValue === 'string') {
       newValue = newValue.replace(/\D/g, '')
       if (field.maxLength) {
@@ -217,6 +224,36 @@ const ReusableModal = ({
         const strVal = String(formData[field.name]).trim()
         if (strVal && !/^[a-zA-Z\s]+$/.test(strVal)) {
           newErrors[field.name] = `${field.label} must contain only letters`
+        }
+      }
+
+      if (field.max !== undefined && formData[field.name]) {
+        const maxVal = typeof field.max === 'function' ? field.max(formData) : field.max
+        if (maxVal) {
+          if (field.type === 'datetime-local' || field.type === 'date' || field.type === 'time') {
+            if (new Date(formData[field.name]) > new Date(maxVal)) {
+              newErrors[field.name] = `${field.label} cannot be in the future`
+            }
+          } else if (field.type === 'number') {
+            if (Number(formData[field.name]) > Number(maxVal)) {
+              newErrors[field.name] = `${field.label} cannot be greater than ${maxVal}`
+            }
+          }
+        }
+      }
+
+      if (field.min !== undefined && formData[field.name]) {
+        const minVal = typeof field.min === 'function' ? field.min(formData) : field.min
+        if (minVal) {
+          if (field.type === 'datetime-local' || field.type === 'date' || field.type === 'time') {
+            if (new Date(formData[field.name]) < new Date(minVal)) {
+              newErrors[field.name] = `${field.label} cannot be before ${String(minVal).replace('T', ' ')}`
+            }
+          } else if (field.type === 'number') {
+            if (Number(formData[field.name]) < Number(minVal)) {
+              newErrors[field.name] = `${field.label} cannot be less than ${minVal}`
+            }
+          }
         }
       }
     })
@@ -329,8 +366,8 @@ const ReusableModal = ({
                       : undefined)
                   }
                   step={field.step || (field.type === 'number' ? 'any' : undefined)}
-                  min={field.min}
-                  max={field.max}
+                  min={typeof field.min === 'function' ? field.min(formData) : field.min}
+                  max={typeof field.max === 'function' ? field.max(formData) : field.max}
                   className={field.readOnly ? 'bg-light' : ''}
                 />
               )}

@@ -7,6 +7,7 @@ import { handleAddHelper, handleEditHelper } from './componets/tripHelpers'
 import Select from 'react-select'
 import { useQuery } from '@tanstack/react-query'
 import { getCompanyNameApi } from '../../TransportPass/data/data'
+import { toast } from 'react-toastify'
 
 const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) => {
   const [drivers, setDrivers] = useState([])
@@ -241,6 +242,13 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (tripData.date) {
+      const todayStr = new Date().toISOString().split('T')[0]
+      if (tripData.date > todayStr) {
+        toast.error('Date cannot be in the future')
+        return
+      }
+    }
     setIsSubmitting(true)
     try {
       let finalVehicleId = tripData.vehicleId
@@ -574,6 +582,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                   name="date"
                   value={tripData.date}
                   onChange={handleChange}
+                  max={new Date().toISOString().split('T')[0]}
                   required
                 />
               </Form.Group>
