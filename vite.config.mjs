@@ -41,7 +41,7 @@ export default defineConfig(() => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.scss'],
     },
     server: {
-      port: 5000,
+      port: 9000,
       proxy: {
         // https://vitejs.dev/config/server-options.html
       },

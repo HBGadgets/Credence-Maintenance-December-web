@@ -1188,14 +1188,21 @@ const Dashboard = () => {
             ),
             subtext: (
               <>
-                <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Today: ₹
-                {dashboardData?.expenses?.total?.toLocaleString() ?? 0}
+                <span style={{ color: '#17a2b8', fontSize: '10px' }}>●</span> Vehicle: ₹
+                {(dashboardData?.expenses?.vehicleExpenses ?? 0).toLocaleString()}
+                <br />
+                <span style={{ color: '#fd7e14', fontSize: '10px' }}>●</span> Driver: ₹
+                {(dashboardData?.expenses?.driverExpenses ?? 0).toLocaleString()}
               </>
             ),
-            count:
-              dashboardData?.expenses?.total >= 1000
-                ? `₹${(dashboardData.expenses.total / 1000).toFixed(1)}K`
-                : `₹${dashboardData?.expenses?.total ?? 0}`,
+            count: (
+              <span title={`Total Expenses: ₹${(dashboardData?.expenses?.total ?? 0).toLocaleString()}`}>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#6c757d', marginRight: '4px' }}>
+                  Total:
+                </span>
+                ₹{(dashboardData?.expenses?.total ?? 0).toLocaleString()}
+              </span>
+            ),
             borders: { border: '2px solid #fd7e14' },
             shadow: 'inset 0 0 20px rgba(253, 126, 20, 0.5)',
             onClick: () => handleExpenses('Expenses'),
