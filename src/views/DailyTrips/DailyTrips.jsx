@@ -153,7 +153,8 @@ const DailyTrips = () => {
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers'],
     queryFn: fetchDrivers,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   // supervisor fetch
@@ -297,6 +298,9 @@ const DailyTrips = () => {
       }
       await refetch()
       queryClient.invalidateQueries(['dailyTrips'])
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
       setShowModalFrom(false)
       setEditMode(false)
       setEditingUser(null)
@@ -470,6 +474,9 @@ const DailyTrips = () => {
       toast.success('Daily trip deleted successfully')
       refetch()
       queryClient.invalidateQueries(['dailyTrips'])
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
     }
   }
 

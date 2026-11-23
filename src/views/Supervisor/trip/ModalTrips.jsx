@@ -5,11 +5,12 @@ import { fetchVehicles } from '../../vehicle/data/VehicleListData'
 import { CSpinner } from '@coreui/react'
 import { handleAddHelper, handleEditHelper } from './componets/tripHelpers'
 import Select from 'react-select'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCompanyNameApi } from '../../TransportPass/data/data'
 import { toast } from 'react-toastify'
 
 const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) => {
+  const queryClient = useQueryClient()
   const [drivers, setDrivers] = useState([])
   const [vehicles, setVehicles] = useState([])
   const [transportMode, setTransportMode] = useState()
@@ -307,6 +308,10 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
         }
         if (onClose) onClose()
       }
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
     } catch (error) {
       console.error('Submit Error:', error?.message || error)
       // Form does not close on any error

@@ -71,6 +71,10 @@ const TableSubTrip = () => {
     mutationFn: ({ id, data }) => postSubtripApi(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['subtrips', id])
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
       setShowModalFrom(false)
       Swal.fire('Success', 'Subtrip created successfully', 'success')
     },
@@ -84,6 +88,10 @@ const TableSubTrip = () => {
     mutationFn: ({ id, data }) => patchSubtripApi(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['subtrips', id])
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
       setShowModalFrom(false)
       Swal.fire('Updated', 'Subtrip updated successfully', 'success')
     },
@@ -97,6 +105,10 @@ const TableSubTrip = () => {
     mutationFn: deleteSubtripApi,
     onSuccess: () => {
       queryClient.invalidateQueries(['subtrips', id])
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
       Swal.fire('Deleted!', 'Subtrip deleted successfully', 'success')
     },
     onError: (error) => {

@@ -28,7 +28,9 @@ const DriverStatus = () => {
   const { data: driverStatusData, isFetching } = useQuery({
     queryKey: ['driverStatus'],
     queryFn: fetchDriverStatus,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   // supervisor fetch

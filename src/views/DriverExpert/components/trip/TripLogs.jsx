@@ -29,7 +29,9 @@ const TripLogs = () => {
   const { data: DriverTripData = [], isFetching } = useQuery({
     queryKey: ['trip', id],
     queryFn: () => driverTripDetails(id),
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     retry: 0,
   })
 

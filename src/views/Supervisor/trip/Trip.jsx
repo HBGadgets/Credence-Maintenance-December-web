@@ -1,7 +1,7 @@
 // Trip.jsx - Updated version
 
 import React, { useState, useEffect, useContext } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Table from '../../components/Table'
 import SmartPagination from '../../components/SmartPagination'
 import { getDutySlipApi, getTripListApi, patchTripApi } from '../data/data'
@@ -33,6 +33,7 @@ import DutySlip from './DutySlip'
 import Cookies from 'js-cookie'
 
 const Trip = () => {
+  const queryClient = useQueryClient()
   const { exportToPDF } = usePdfExporter()
   const { exportToExcel } = useExcelExporter()
   const [filteredData, setFilteredData] = useState([])
@@ -287,6 +288,10 @@ const Trip = () => {
         }
         await refetch()
       }
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
       setIsModalOpen(false)
     } catch (error) {
       console.error('Submit failed in Trip component:', error)
@@ -296,18 +301,28 @@ const Trip = () => {
   }
 
   // Handle Delete button
-  const handleDeleteButton = (id, fieldName) => {
-    handleDeleteHelper(id, refetch, fieldName)
+  const handleDeleteButton = async (id, fieldName) => {
+    await handleDeleteHelper(id, refetch, fieldName)
+    queryClient.invalidateQueries(['drivers'])
+    queryClient.invalidateQueries(['driverStatus'])
+    queryClient.invalidateQueries(['trip'])
+    queryClient.invalidateQueries(['TripsList'])
   }
 
   // Handle Cancel Trip button
-  const handleCancelTrip = (id, row) => {
+  const handleCancelTrip = async (id, row) => {
     const selected = row || filteredData.find((trip) => trip.id === id || trip._id === id)
     if (selected?.rawStatus?.toLowerCase() === 'cancelled') {
       toast.info('Trip is already cancelled!')
       return
     }
-    handleCancelHelper(id, refetch)
+    const res = await handleCancelHelper(id, refetch)
+    if (res) {
+      queryClient.invalidateQueries(['drivers'])
+      queryClient.invalidateQueries(['driverStatus'])
+      queryClient.invalidateQueries(['trip'])
+      queryClient.invalidateQueries(['TripsList'])
+    }
   }
 
   // Handle View button

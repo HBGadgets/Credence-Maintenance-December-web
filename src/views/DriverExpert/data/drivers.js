@@ -33,10 +33,11 @@ export const addDriver = async (data) => {
 
 export const fetchDrivers = async () => {
   try {
-    if (!token) throw new Error('Authentication token not found')
+    const authToken = Cookies.get('crdnsMaintToken') || token
+    if (!authToken) throw new Error('Authentication token not found')
 
     const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/drivers/all`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${authToken}` },
     })
 
     return data.map((driver) => ({

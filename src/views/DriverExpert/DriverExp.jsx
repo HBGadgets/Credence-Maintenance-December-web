@@ -65,10 +65,12 @@ function DriversPage() {
   const userRole = decodedToken?.role
 
   // Fetch driver
-  const { data: drivers = [], isFetching } = useQuery({
+  const { data: drivers = [], isFetching, refetch: refetchDrivers } = useQuery({
     queryKey: ['drivers'],
     queryFn: fetchDrivers,
-    staleTime: 1000 * 60 * 30, // Cache data for 5 minutes
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   // supervisor fetch
@@ -190,7 +192,7 @@ function DriversPage() {
   }
 
   useEffect(() => {
-    let filtered = drivers.reverse()
+    let filtered = [...drivers].reverse()
 
     // Filter by supervisor if selected
     if (selectedName?.value) {
