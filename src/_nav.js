@@ -135,12 +135,12 @@ const _nav = [
         to: '/VehicleExpensesBill',
         permission: 'reports.vehicleExp',
       },
-      {
-        component: CNavItem,
-        name: 'All Drivers Logbooks',
-        to: '/AllDailyLogbook',
-        permission: 'reports.dailyLog',
-      },
+      // {
+      //   component: CNavItem,
+      //   name: 'All Drivers Logbooks',
+      //   to: '/AllDailyLogbook',
+      //   permission: 'reports.dailyLog',
+      // },
       {
         component: CNavItem,
         name: 'Driver/Vehicle Shift Logs',
