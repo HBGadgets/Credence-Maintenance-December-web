@@ -84,6 +84,7 @@ export const getAllDailyReadingApi = async ({
             driverId: item.driverId?._id || "",
             supervisorId: item.supervisorId || "--",
             status: item.status || "N/A",
+            signatureImage: item.signatureImage || item.signature || item.signatureImg || null,
         }));
 
         return {
@@ -141,13 +142,20 @@ export const patchDailyReadingApi = async (id, data) => {
         const token = getToken();
         if (!token) throw new Error('Authentication token not found')
 
+        const isFormData = typeof FormData !== 'undefined' && data instanceof FormData
+
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        }
+        if (isFormData) {
+            headers['Content-Type'] = 'multipart/form-data'
+        }
+
         const { data: response } = await axios.patch(
             `${import.meta.env.VITE_API_URL}/api/daily/daily-trip-update/${id}`,
             data,
             {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers,
             },
         )
 

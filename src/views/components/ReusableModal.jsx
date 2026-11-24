@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
 import Select from 'react-select'
+import SignaturePadInput from './SignaturePadInput'
 
 const ReusableModal = ({
   show,
@@ -19,7 +20,7 @@ const ReusableModal = ({
   const initialFormState = fields.reduce((acc, field) => {
     if (field.type === 'multiselect') acc[field.name] = []
     else if (field.type === 'select') acc[field.name] = null
-    else if (field.type === 'file') acc[field.name] = null
+    else if (field.type === 'file' || field.type === 'signature') acc[field.name] = null
     else acc[field.name] = ''
     return acc
   }, {})
@@ -202,10 +203,11 @@ const ReusableModal = ({
         const isEmpty =
           (field.type === 'select' && !value) ||
           (field.type === 'multiselect' && (!value || value.length === 0)) ||
-          (field.type === 'file' && !value) ||
+          ((field.type === 'file' || field.type === 'signature') && !value) ||
           (field.type !== 'select' &&
             field.type !== 'multiselect' &&
             field.type !== 'file' &&
+            field.type !== 'signature' &&
             (value === '' || value === undefined || value === null || (typeof value === 'string' && value.trim() === '')))
 
         if (isEmpty) {
@@ -320,6 +322,18 @@ const ReusableModal = ({
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                     menu: (base) => ({ ...base, zIndex: 9999 }),
                   }}
+                />
+              ) : field.type === 'signature' ? (
+                /* SIGNATURE PAD (DRAW DIRECTLY OR UPLOAD FILE) */
+                <SignaturePadInput
+                  value={formData[field.name]}
+                  onChange={(file) => {
+                    setFormData((prev) => ({ ...prev, [field.name]: file }))
+                    if (errors[field.name]) {
+                      setErrors((prev) => ({ ...prev, [field.name]: null }))
+                    }
+                  }}
+                  disabled={field.disabled || field.readOnly}
                 />
               ) : field.type === 'file' ? (
                 /* FILE INPUT */

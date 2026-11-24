@@ -49,6 +49,10 @@ const DailyTrips = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
 
+  // Signature preview modal state
+  const [showSignatureModal, setShowSignatureModal] = useState(false)
+  const [selectedSignature, setSelectedSignature] = useState(null)
+
   // Duty slip model
   const [dutySlipData, setDutySlipData] = useState(null)
   const [showDutySlipModal, setShowDutySlipModal] = useState(false)
@@ -219,6 +223,23 @@ const DailyTrips = () => {
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
   }
 
+  // Helper to get full signature image URL
+  const getSignatureUrl = (imgPath) => {
+    if (!imgPath) return ''
+    if (
+      imgPath.startsWith('http://') ||
+      imgPath.startsWith('https://') ||
+      imgPath.startsWith('data:')
+    ) {
+      return imgPath
+    }
+    const baseUrl = import.meta.env.VITE_API_URL || ''
+    if (imgPath.startsWith('/')) {
+      return `${baseUrl}${imgPath}`
+    }
+    return `${baseUrl}/${imgPath}`
+  }
+
   // Handle Add/Edit Submit
   const handleFormSubmit = async (formData) => {
     try {
@@ -274,22 +295,34 @@ const DailyTrips = () => {
           autoTotalDistance = Number(formData.totalDistance)
         }
 
-        const payload = {
-          startTime: formData.startTime || undefined,
-          odometerStart: startOdo,
-          endTime: formData.endTime || undefined,
-          odometerEnd: endOdo,
-          totalDistance: autoTotalDistance,
-          status: formData.status,
+        const formPayload = new FormData()
+        if (formData.startTime) {
+          formPayload.append('startTime', formData.startTime)
+        }
+        if (startOdo !== undefined) {
+          formPayload.append('odometerStart', startOdo)
+        }
+        if (formData.endTime) {
+          formPayload.append('endTime', formData.endTime)
+        }
+        if (endOdo !== undefined) {
+          formPayload.append('odometerEnd', endOdo)
+        }
+        if (autoTotalDistance !== undefined) {
+          formPayload.append('totalDistance', autoTotalDistance)
+        }
+        const statusValue =
+          typeof formData.status === 'object' && formData.status !== null
+            ? formData.status.value
+            : formData.status
+        if (statusValue) {
+          formPayload.append('status', statusValue)
+        }
+        if (formData.signature) {
+          formPayload.append('signature', formData.signature)
         }
 
-        Object.keys(payload).forEach((key) => {
-          if (payload[key] === undefined) {
-            delete payload[key]
-          }
-        })
-
-        await patchDailyReadingApi(editingUser.id, payload)
+        await patchDailyReadingApi(editingUser.id, formPayload)
         toast.success('Daily Trip Updated Successfully')
       } else {
         const driverId = selectedDriverId || formData.driverId
@@ -352,6 +385,7 @@ const DailyTrips = () => {
         startTime: formatForDatetimeLocal(record.rawStartTime || record.startTime),
         endTime: formatForDatetimeLocal(record.rawEndTime || record.endTime),
         status: record.status && record.status !== 'N/A' ? record.status : 'started',
+        signature: null,
       })
       setShowModalFrom(true)
     } else {
@@ -604,6 +638,11 @@ const DailyTrips = () => {
           type: 'select',
           options: statusOptions,
         },
+        {
+          name: 'signature',
+          label: 'Driver Signature',
+          type: 'signature',
+        },
       ]
 
   // status color
@@ -640,6 +679,60 @@ const DailyTrips = () => {
     { label: 'Total KM', key: 'totalDistance', sortable: true },
     { label: 'GPS Km', key: 'gpsKM', sortable: true },
     {
+      label: 'Signature',
+      key: 'signatureImage',
+      render: (row) => {
+        if (!row.signatureImage) {
+          return (
+            <span
+              className="badge bg-light text-secondary border"
+              style={{ fontSize: '11px', padding: '3px 6px', fontWeight: 'normal' }}
+            >
+              No Sign
+            </span>
+          )
+        }
+        const fullUrl = getSignatureUrl(row.signatureImage)
+        return (
+          <div className="d-flex align-items-center">
+            <img
+              src={fullUrl}
+              alt="Signature"
+              style={{
+                width: '54px',
+                height: '32px',
+                objectFit: 'contain',
+                borderRadius: '4px',
+                border: '1px solid #ced4da',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+                padding: '2px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.15)'
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+              onClick={() => {
+                setSelectedSignature({
+                  url: fullUrl,
+                  driverName: row.driverName,
+                  vehicleNumber: row.vehicleNumber,
+                  date: row.createdAt,
+                })
+                setShowSignatureModal(true)
+              }}
+              title="Click to view signature preview"
+            />
+          </div>
+        )
+      },
+    },
+    {
       label: 'Status',
       key: 'status',
       render: (row) => <span style={getStatusStyle(row.status)}>{row.status}</span>,
@@ -652,14 +745,17 @@ const DailyTrips = () => {
       icon: FaRegFilePdf,
       label: 'Download PDF',
       onClick: () => {
-        const cleanedData = displayData.map(({ status, ...rest }) => ({
+        const cleanedData = displayData.map(({ status, signatureImage, ...rest }) => ({
           ...rest,
+          signatureImage: signatureImage ? 'Available' : 'N/A',
           status: typeof status === 'string' ? status : status?.props?.children || '',
         }))
 
         exportToPDF({
           title: 'Daily Trips Report',
-          columns: columns,
+          columns: columns.map((col) =>
+            col.key === 'signatureImage' ? { label: col.label, key: col.key } : col,
+          ),
           data: cleanedData,
           fileName: 'Daily_Trips_Report',
         })
@@ -669,14 +765,17 @@ const DailyTrips = () => {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
       onClick: () => {
-        const cleanedData = displayData.map(({ status, ...rest }) => ({
+        const cleanedData = displayData.map(({ status, signatureImage, ...rest }) => ({
           ...rest,
+          signatureImage: signatureImage ? 'Available' : 'N/A',
           status: typeof status === 'string' ? status : status?.props?.children || '',
         }))
 
         exportToExcel({
           title: 'Daily Trips Report',
-          columns: columns,
+          columns: columns.map((col) =>
+            col.key === 'signatureImage' ? { label: col.label, key: col.key } : col,
+          ),
           data: cleanedData,
           fileName: 'Daily_Trips_Report',
         })
@@ -814,6 +913,49 @@ const DailyTrips = () => {
             <p>No duty slip data available.</p>
           )}
         </Modal.Body>
+      </Modal>
+
+      {/* Signature Preview Modal */}
+      <Modal
+        show={showSignatureModal}
+        onHide={() => setShowSignatureModal(false)}
+        centered
+        size="md"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontSize: '18px', fontWeight: '600' }}>
+            Signature
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center p-4 bg-light">
+          {selectedSignature?.url ? (
+            <div className="p-3 bg-white rounded border shadow-sm d-inline-block">
+              <img
+                src={selectedSignature.url}
+                alt="Signature Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '60vh',
+                  objectFit: 'contain',
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-muted m-0">No signature image available.</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="d-flex justify-content-between align-items-center">
+          <small className="text-muted">
+            {selectedSignature?.vehicleNumber && `Vehicle: ${selectedSignature.vehicleNumber}`}
+            {selectedSignature?.date && ` • ${selectedSignature.date}`}
+          </small>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowSignatureModal(false)}
+          >
+            Close
+          </button>
+        </Modal.Footer>
       </Modal>
 
       <div className="position-fixed bottom-0 end-0 mb-1 m-3 z-5">
