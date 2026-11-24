@@ -182,9 +182,19 @@ const Trip = () => {
       const endKM = Number(data.endOdometerReading) || 0
       const totalRunning = endKM - startKM > 0 ? (endKM - startKM).toFixed(2) : '0'
 
+      const isCheckedIn =
+        data.rawDriverCheckIn !== undefined
+          ? Boolean(data.rawDriverCheckIn)
+          : data.driverCheckIn === 'Checked In' ||
+            data.driverCheckIn === 'Yes' ||
+            data.driverCheckIn === true ||
+            data.driverCheckIn === 'true'
+
       return {
         ...data,
         rawStatus: data.rawStatus || data.status,
+        rawDriverCheckIn: isCheckedIn,
+        driverCheckIn: isCheckedIn ? 'Checked In' : 'Not Checked In',
         remainingAmount: (
           <span style={{ color: remaining < 0 ? 'red' : 'inherit' }}>{remaining.toFixed(2)}</span>
         ),
@@ -206,7 +216,25 @@ const Trip = () => {
     { label: 'Company Name', key: 'companyName', sortable: true },
     { label: 'Driver Name', key: 'driverName', sortable: true },
     { label: 'Vehicle Name', key: 'vehicleName', sortable: true },
-    { label: 'Driver CheckIn', key: 'driverCheckIn', sortable: true },
+    {
+      label: 'Driver Check-In',
+      key: 'driverCheckIn',
+      sortable: true,
+      render: (row) => {
+        const isChecked =
+          row.rawDriverCheckIn !== undefined
+            ? Boolean(row.rawDriverCheckIn)
+            : row.driverCheckIn === 'Checked In' ||
+              row.driverCheckIn === 'Yes' ||
+              row.driverCheckIn === true ||
+              row.driverCheckIn === 'true'
+        return (
+          <span className={`badge ${isChecked ? 'bg-success' : 'bg-secondary'}`}>
+            {isChecked ? 'Checked In' : 'Not Checked In'}
+          </span>
+        )
+      },
+    },
     { label: 'Start Location', key: 'startLocation', sortable: true },
     { label: 'Start Odometer KM', key: 'startOdometerReading', sortable: true },
     { label: 'End Location', key: 'endLocation', sortable: true },
@@ -337,8 +365,12 @@ const Trip = () => {
       icon: FaRegFilePdf,
       label: 'Download PDF',
       onClick: () => {
-        const cleanedData = filteredData.map(({ status, remainingAmount, ...rest }) => ({
+        const cleanedData = filteredData.map(({ status, remainingAmount, driverCheckIn, ...rest }) => ({
           ...rest,
+          driverCheckIn:
+            typeof driverCheckIn === 'string'
+              ? driverCheckIn
+              : driverCheckIn?.props?.children || (rest.rawDriverCheckIn ? 'Checked In' : 'Not Checked In'),
           status: typeof status === 'string' ? status : status?.props?.children || '',
           remainingAmount:
             typeof remainingAmount === 'string' || typeof remainingAmount === 'number'
@@ -359,8 +391,12 @@ const Trip = () => {
       icon: PiMicrosoftExcelLogo,
       label: 'Download Excel',
       onClick: () => {
-        const cleanedData = filteredData.map(({ status, remainingAmount, ...rest }) => ({
+        const cleanedData = filteredData.map(({ status, remainingAmount, driverCheckIn, ...rest }) => ({
           ...rest,
+          driverCheckIn:
+            typeof driverCheckIn === 'string'
+              ? driverCheckIn
+              : driverCheckIn?.props?.children || (rest.rawDriverCheckIn ? 'Checked In' : 'Not Checked In'),
           status: typeof status === 'string' ? status : status?.props?.children || '',
           remainingAmount:
             typeof remainingAmount === 'string' || typeof remainingAmount === 'number'
