@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
 import { fetchDrivers } from '../../DriverExpert/data/drivers'
 import { fetchVehicles } from '../../vehicle/data/VehicleListData'
@@ -320,6 +320,126 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
     }
   }
 
+  // Driver options with assigned vehicle and trip status info
+  const driverOptions = useMemo(() => {
+    const currentTripId = selectedTrip?.id || selectedTrip?._id
+
+    return (drivers || []).map((driver) => {
+      const driverId = driver.id || driver._id || driver.name
+
+      // Determine vehicle name / assignment
+      let vehicleName =
+        driver.currentVehicleName ||
+        driver.assignedVehicleName ||
+        (typeof driver.currentVehicle === 'object' && driver.currentVehicle
+          ? driver.currentVehicle.name || driver.currentVehicle.vehicleNumber
+          : null) ||
+        (typeof driver.assignedVehicle === 'object' && driver.assignedVehicle
+          ? driver.assignedVehicle.name || driver.assignedVehicle.vehicleNumber
+          : null)
+
+      if (!vehicleName && driver.currentVehicle && typeof driver.currentVehicle === 'string') {
+        const found = vehicles.find((v) => (v.id || v._id) === driver.currentVehicle)
+        if (found?.name) vehicleName = found.name
+      }
+
+      if (!vehicleName && driver.assignedVehicle && typeof driver.assignedVehicle === 'string') {
+        const found = vehicles.find((v) => (v.id || v._id) === driver.assignedVehicle)
+        if (found?.name) vehicleName = found.name
+      }
+
+      const hasVehicle = Boolean(vehicleName || driver.currentVehicle || driver.assignedVehicle)
+      const displayVehicleName = vehicleName || 'Assigned'
+
+      // Determine trip assignment
+      const trip = driver.currentTripId
+      let hasTrip = false
+      let isCurrentTrip = false
+
+      if (trip) {
+        if (typeof trip === 'object') {
+          const tId = trip._id || trip.id
+          if (mode === 'edit' && currentTripId && tId && String(tId) === String(currentTripId)) {
+            isCurrentTrip = true
+            hasTrip = true
+          } else {
+            const s = (trip.status || '').toLowerCase().trim()
+            if (!s || (s !== 'cancelled' && s !== 'completed')) {
+              hasTrip = true
+            }
+          }
+        } else if (typeof trip === 'string' && trip.trim()) {
+          if (mode === 'edit' && currentTripId && String(trip).trim() === String(currentTripId).trim()) {
+            isCurrentTrip = true
+            hasTrip = true
+          } else {
+            hasTrip = true
+          }
+        }
+      } else if (
+        mode === 'edit' &&
+        currentTripId &&
+        ((selectedTrip.driverId &&
+          (String(driverId) === String(selectedTrip.driverId) ||
+            String(driver._id) === String(selectedTrip.driverId))) ||
+          (driver.name &&
+            selectedTrip.driverName &&
+            driver.name.trim().toLowerCase() === selectedTrip.driverName.trim().toLowerCase()))
+      ) {
+        isCurrentTrip = true
+        hasTrip = true
+      } else if (driver.tripStatus === 'Assigned to Trip') {
+        hasTrip = true
+      }
+
+      const vehicleLabel = hasVehicle ? `Vehicle: ${displayVehicleName}` : 'No Vehicle'
+      const tripLabel = isCurrentTrip
+        ? 'Assigned to this Trip'
+        : hasTrip
+        ? 'Trip Assigned'
+        : 'Trip Not Assigned'
+
+      return {
+        value: driverId,
+        label: `${driver.name} (${vehicleLabel} • ${tripLabel})`,
+        driverName: driver.name,
+        contactNumber:
+          driver.contactNumber && driver.contactNumber !== 'N/A'
+            ? driver.contactNumber
+            : null,
+        hasVehicle,
+        vehicleName: displayVehicleName,
+        hasTrip,
+        isCurrentTrip,
+        tripLabel,
+        driver,
+      }
+    })
+  }, [drivers, vehicles, mode, selectedTrip])
+
+  // Selected driver option for react-select
+  const selectedDriverOption = useMemo(() => {
+    if (!tripData.driverId && !tripData.driverName) return null
+
+    if (tripData.driverId) {
+      const matchById = driverOptions.find((opt) => opt.value === tripData.driverId)
+      if (matchById) return matchById
+    }
+
+    if (tripData.driverName) {
+      const matchByName = driverOptions.find(
+        (opt) => opt.driverName?.trim().toLowerCase() === tripData.driverName.trim().toLowerCase(),
+      )
+      if (matchByName) return matchByName
+    }
+
+    return {
+      value: tripData.driverId || tripData.driverName,
+      label: tripData.driverName || 'Selected Driver',
+      driverName: tripData.driverName,
+    }
+  }, [driverOptions, tripData.driverId, tripData.driverName])
+
   // const isLoading = vehicleStatus === 'loading' || drivers.length === 0
 
   return (
@@ -438,35 +558,21 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                 <Form.Label>Driver Name</Form.Label>
                 <Select
                   name="driverName"
-                  value={
-                    tripData.driverName || tripData.driverId
-                      ? {
-                          label:
-                            tripData.driverName ||
-                            drivers.find(
-                              (d) =>
-                                d.id === tripData.driverId || d._id === tripData.driverId,
-                            )?.name ||
-                            '',
-                          value:
-                            tripData.driverId ||
-                            tripData.driverName ||
-                            '',
-                        }
-                      : null
-                  }
+                  value={selectedDriverOption}
                   onChange={(selected) => {
                     if (selected) {
-                      const selectedDriver = drivers.find(
-                        (d) =>
-                          d.id === selected.value ||
-                          d._id === selected.value ||
-                          d.name === selected.value ||
-                          d.name === selected.label,
-                      )
+                      const selectedDriver =
+                        selected.driver ||
+                        drivers.find(
+                          (d) =>
+                            d.id === selected.value ||
+                            d._id === selected.value ||
+                            d.name === selected.value ||
+                            d.name === selected.driverName,
+                        )
                       setTripData((prev) => ({
                         ...prev,
-                        driverName: selectedDriver?.name || selected.label || '',
+                        driverName: selectedDriver?.name || selected.driverName || selected.label || '',
                         driverId:
                           selectedDriver?.id ||
                           selectedDriver?._id ||
@@ -481,10 +587,161 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                       }))
                     }
                   }}
-                  options={drivers.map((driver) => ({
-                    label: driver.name,
-                    value: driver.id || driver._id || driver.name,
-                  }))}
+                  options={driverOptions}
+                  formatOptionLabel={(option, { context }) => {
+                    if (context === 'value') {
+                      return (
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                          <span className="fw-medium text-dark">{option.driverName || option.label}</span>
+                          {option.hasVehicle && (
+                            <span
+                              className="badge text-white"
+                              style={{
+                                backgroundColor: '#0d6efd',
+                                color: '#ffffff',
+                                fontSize: '10px',
+                                padding: '2px 7px',
+                                fontWeight: '600',
+                                letterSpacing: '0.3px',
+                              }}
+                            >
+                              🚗 {option.vehicleName}
+                            </span>
+                          )}
+                          {option.isCurrentTrip ? (
+                            <span
+                              className="badge text-white"
+                              style={{
+                                backgroundColor: '#0d6efd',
+                                color: '#ffffff',
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              This Trip
+                            </span>
+                          ) : option.hasTrip ? (
+                            <span
+                              className="badge text-dark"
+                              style={{
+                                backgroundColor: '#ffc107',
+                                color: '#000000',
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                fontWeight: '600',
+                              }}
+                            >
+                              Trip Assigned
+                            </span>
+                          ) : option.hasTrip === false ? (
+                            <span
+                              className="badge"
+                              style={{
+                                backgroundColor: '#f8f9fa',
+                                color: '#6c757d',
+                                border: '1px solid #dee2e6',
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Trip Not Assigned
+                            </span>
+                          ) : null}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="d-flex justify-content-between align-items-center py-1 flex-wrap gap-2">
+                        <div>
+                          <div className="fw-medium text-dark">{option.driverName || option.label}</div>
+                          {option.contactNumber && (
+                            <small className="text-muted" style={{ fontSize: '11px' }}>
+                              📞 {option.contactNumber}
+                            </small>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center gap-1 ms-2 flex-wrap justify-end">
+                          {option.hasVehicle ? (
+                            <span
+                              className="badge text-white shadow-sm"
+                              style={{
+                                backgroundColor: '#0d6efd',
+                                color: '#ffffff',
+                                fontSize: '11px',
+                                padding: '3px 8px',
+                                fontWeight: '600',
+                                letterSpacing: '0.4px',
+                              }}
+                              title={`Assigned Vehicle: ${option.vehicleName}`}
+                            >
+                              🚗 {option.vehicleName}
+                            </span>
+                          ) : (
+                            <span
+                              className="badge"
+                              style={{
+                                backgroundColor: '#f8f9fa',
+                                color: '#6c757d',
+                                border: '1px solid #dee2e6',
+                                fontSize: '11px',
+                                padding: '3px 7px',
+                                fontWeight: 'normal',
+                              }}
+                            >
+                              No Vehicle
+                            </span>
+                          )}
+                          {option.isCurrentTrip ? (
+                            <span
+                              className="badge text-white"
+                              style={{
+                                backgroundColor: '#0d6efd',
+                                color: '#ffffff',
+                                fontSize: '11px',
+                                padding: '3px 7px',
+                                fontWeight: '500',
+                              }}
+                              title="Currently assigned to this trip"
+                            >
+                              This Trip
+                            </span>
+                          ) : option.hasTrip ? (
+                            <span
+                              className="badge text-dark"
+                              style={{
+                                backgroundColor: '#ffc107',
+                                color: '#000000',
+                                fontSize: '11px',
+                                padding: '3px 7px',
+                                fontWeight: '600',
+                              }}
+                              title="Currently assigned to an active trip"
+                            >
+                              Trip Assigned
+                            </span>
+                          ) : (
+                            <span
+                              className="badge"
+                              style={{
+                                backgroundColor: '#f8f9fa',
+                                color: '#6c757d',
+                                border: '1px solid #dee2e6',
+                                fontSize: '11px',
+                                padding: '3px 7px',
+                                fontWeight: '500',
+                              }}
+                              title="No trip currently assigned"
+                            >
+                              Trip Not Assigned
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }}
                   placeholder={drivers.length === 0 ? 'Loading drivers...' : 'Select driver'}
                   isClearable
                 />
