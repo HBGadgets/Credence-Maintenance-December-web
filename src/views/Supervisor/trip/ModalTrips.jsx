@@ -16,7 +16,8 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   const [transportMode, setTransportMode] = useState()
   const [tripData, setTripData] = useState({
     _id: '', // optional but helpful
-    date: '',
+    startDate: '',
+    endDate: '',
     driverId: '',
     driverName: '',
     vehicleId: '',
@@ -76,21 +77,34 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   // Prefill form with selected trip data when in edit mode
   useEffect(() => {
     if (mode === 'edit' && selectedTrip) {
-      console.log('selectedTrip.date (raw):', selectedTrip.date)
-
-      let formattedDate = ''
-      if (selectedTrip.date) {
-        // Convert DD/MM/YYYY → YYYY-MM-DD
-        const [day, month, year] = selectedTrip.date.split('/')
-        const isoDateString = `${year}-${month}-${day}`
-
-        const parsedDate = new Date(isoDateString)
-        if (!isNaN(parsedDate.getTime())) {
-          formattedDate = parsedDate.toISOString().split('T')[0]
-        } else {
-          console.warn('⚠️ Still invalid after conversion:', isoDateString)
+      const formatToInputDate = (val) => {
+        if (!val || val === 'N/A') return ''
+        if (typeof val === 'string' && val.includes('/')) {
+          const [day, month, year] = val.split('/')
+          if (day && month && year) {
+            const isoDateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+            const parsedDate = new Date(isoDateString)
+            if (!isNaN(parsedDate.getTime())) {
+              return parsedDate.toISOString().split('T')[0]
+            }
+          }
         }
+        const parsedDate = new Date(val)
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toISOString().split('T')[0]
+        }
+        return ''
       }
+
+      const formattedStartDate = formatToInputDate(
+        selectedTrip.rawStartDate ||
+          selectedTrip.startDate ||
+          selectedTrip.orginalDate ||
+          selectedTrip.date,
+      )
+      const formattedEndDate = formatToInputDate(
+        selectedTrip.rawEndDate || selectedTrip.endDate,
+      )
 
       // Find driver by id or name
       const driver =
@@ -148,7 +162,8 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
 
       setTripData({
         _id: selectedTrip.id || selectedTrip._id || '',
-        date: formattedDate,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
         driverId: resolvedDriverId,
         driverName: resolvedDriverName,
         vehicleId: resolvedVehicleId,
@@ -243,12 +258,9 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (tripData.date) {
-      const todayStr = new Date().toISOString().split('T')[0]
-      if (tripData.date > todayStr) {
-        toast.error('Date cannot be in the future')
-        return
-      }
+    if (tripData.startDate && tripData.endDate && tripData.endDate < tripData.startDate) {
+      toast.error('End date cannot be earlier than start date')
+      return
     }
     setIsSubmitting(true)
     try {
@@ -835,17 +847,30 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
               </Form.Group>
             </div>
 
-            {/* Date */}
+            {/* Start Date */}
             <div className="col-md-6 mb-3">
               <Form.Group>
-                <Form.Label>Date</Form.Label>
+                <Form.Label>Start Date</Form.Label>
                 <Form.Control
                   type="date"
-                  name="date"
-                  value={tripData.date}
+                  name="startDate"
+                  value={tripData.startDate}
                   onChange={handleChange}
-                  max={new Date().toISOString().split('T')[0]}
                   required
+                />
+              </Form.Group>
+            </div>
+
+            {/* End Date */}
+            <div className="col-md-6 mb-3">
+              <Form.Group>
+                <Form.Label>End Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="endDate"
+                  value={tripData.endDate}
+                  onChange={handleChange}
+                  min={tripData.startDate || undefined}
                 />
               </Form.Group>
             </div>

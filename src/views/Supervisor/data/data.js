@@ -239,7 +239,9 @@ export const getTripListApi = async (userIdOrParams = null, tokenParam = null, e
     },
   })
 
-  const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date))
+  const sortedData = data.sort(
+    (a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date),
+  )
 
   return sortedData.map((TripsList) => {
     const startKM =
@@ -273,8 +275,12 @@ export const getTripListApi = async (userIdOrParams = null, tokenParam = null, e
     return {
       id: TripsList._id,
       _id: TripsList._id,
-      orginalDate: TripsList.date,
-      date: formatDateToDDMMYYYY(TripsList.date),
+      orginalDate: TripsList.startDate || TripsList.date,
+      rawStartDate: TripsList.startDate || TripsList.date || null,
+      rawEndDate: TripsList.endDate || null,
+      date: formatDateToDDMMYYYY(TripsList.startDate || TripsList.date),
+      startDate: formatDateToDDMMYYYY(TripsList.startDate || TripsList.date),
+      endDate: TripsList.endDate ? formatDateToDDMMYYYY(TripsList.endDate) : 'N/A',
       transportMode: TripsList.transportMode || 'N/A',
       clientName: TripsList.clientName || 'N/A',
       clientNumber: TripsList.clientNumber || 'N/A',
