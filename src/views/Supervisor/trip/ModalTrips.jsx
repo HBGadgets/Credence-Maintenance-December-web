@@ -340,6 +340,14 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
       const driverId = driver.id || driver._id || driver.name
 
       // Determine vehicle name / assignment
+      const rawVehicle = driver.currentVehicle || driver.assignedVehicle
+      const rawVehicleId =
+        typeof rawVehicle === 'object' && rawVehicle
+          ? rawVehicle._id || rawVehicle.id || ''
+          : typeof rawVehicle === 'string'
+          ? rawVehicle
+          : ''
+
       let vehicleName =
         driver.currentVehicleName ||
         driver.assignedVehicleName ||
@@ -350,16 +358,18 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
           ? driver.assignedVehicle.name || driver.assignedVehicle.vehicleNumber
           : null)
 
-      if (!vehicleName && driver.currentVehicle && typeof driver.currentVehicle === 'string') {
-        const found = vehicles.find((v) => (v.id || v._id) === driver.currentVehicle)
-        if (found?.name) vehicleName = found.name
+      const matchedVehicle =
+        (rawVehicleId && vehicles.find((v) => (v.id || v._id) === rawVehicleId)) ||
+        (vehicleName &&
+          vehicles.find(
+            (v) => v.name && v.name.trim().toLowerCase() === vehicleName.trim().toLowerCase(),
+          ))
+
+      if (!vehicleName && matchedVehicle?.name) {
+        vehicleName = matchedVehicle.name
       }
 
-      if (!vehicleName && driver.assignedVehicle && typeof driver.assignedVehicle === 'string') {
-        const found = vehicles.find((v) => (v.id || v._id) === driver.assignedVehicle)
-        if (found?.name) vehicleName = found.name
-      }
-
+      const resolvedVehicleId = matchedVehicle?.id || matchedVehicle?._id || rawVehicleId || ''
       const hasVehicle = Boolean(vehicleName || driver.currentVehicle || driver.assignedVehicle)
       const displayVehicleName = vehicleName || 'Assigned'
 
@@ -420,6 +430,7 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
             ? driver.contactNumber
             : null,
         hasVehicle,
+        vehicleId: resolvedVehicleId,
         vehicleName: displayVehicleName,
         hasTrip,
         isCurrentTrip,
@@ -582,6 +593,18 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                             d.name === selected.value ||
                             d.name === selected.driverName,
                         )
+                      const shouldAutoAssignVehicle =
+                        mode === 'add' &&
+                        selected.hasVehicle &&
+                        !selected.hasTrip &&
+                        (selected.vehicleId ||
+                          (selected.vehicleName && selected.vehicleName !== 'Assigned'))
+
+                      const autoVehicleName =
+                        selected.vehicleName && selected.vehicleName !== 'Assigned'
+                          ? selected.vehicleName
+                          : vehicles.find((v) => (v.id || v._id) === selected.vehicleId)?.name || ''
+
                       setTripData((prev) => ({
                         ...prev,
                         driverName: selectedDriver?.name || selected.driverName || selected.label || '',
@@ -590,6 +613,12 @@ const ModalTrips = ({ mode, selectedTrip, onClose, onSubmit, fetchTripData }) =>
                           selectedDriver?._id ||
                           selected.value ||
                           '',
+                        ...(shouldAutoAssignVehicle
+                          ? {
+                              vehicleId: selected.vehicleId || '',
+                              vehicleName: autoVehicleName,
+                            }
+                          : {}),
                       }))
                     } else {
                       setTripData((prev) => ({
