@@ -369,11 +369,14 @@ export const deleteDailyLogApi = async (id) => {
 
 // ------------------------------------------------------------------------------------
 
-export const driverSalary = async (id) => {
+export const driverSalary = async (id, params = {}) => {
   try {
     if (!token) throw new Error('Authentication token not found')
 
+    const { paginated, ...queryParams } = params && typeof params === 'object' ? params : {}
+
     const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/salary/get/${id}`, {
+      params: queryParams,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -381,7 +384,9 @@ export const driverSalary = async (id) => {
 
     // console.log("all data salaray", response.data)
 
-    return data.map((salary) => ({
+    const rawList = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []
+
+    const mappedData = rawList.map((salary) => ({
       id: salary._id,
       driverId: salary.driverId,
       basicPay: salary.basicPay,
@@ -393,6 +398,20 @@ export const driverSalary = async (id) => {
       date: useSplitTimeDate(salary.date),
       originalDate: salary.date,
     }))
+
+    if (paginated) {
+      return {
+        data: mappedData,
+        total: typeof data?.total === 'number' ? data.total : mappedData.length,
+        currentPage:
+          typeof data?.currentPage === 'number'
+            ? data.currentPage
+            : Number(queryParams.page) || 1,
+        totalPages: typeof data?.totalPages === 'number' ? data.totalPages : 1,
+      }
+    }
+
+    return mappedData
   } catch (error) {
     console.error('Error:', error.response?.data || error.message)
     throw error

@@ -14,6 +14,8 @@ import { FaArrowUp, FaPrint, FaRegFilePdf } from 'react-icons/fa'
 import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
 import IconDropdown from '../../../Supervisor/IconDropdown'
+import SearchInput from '../../../components/SearchInput'
+import useDebounce from '../../../customhooks/useDebounce'
 
 const Salary = ({ id }) => {
   const navigate = useNavigate()
@@ -24,23 +26,44 @@ const Salary = ({ id }) => {
 
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [selectedSalary, setSelectedSalary] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 400)
 
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearch, dateRange.startDate, dateRange.endDate])
+
   const {
-    data: driverSalaryData,
+    data: salaryResponse = { data: [], total: 0, currentPage: 1, totalPages: 1 },
     isFetching,
     isFetched,
     isError,
   } = useQuery({
-    queryKey: ['DriverSalary', id],
-    queryFn: () => driverSalary(id),
+    queryKey: ['DriverSalary', id, currentPage, itemsPerPage, debouncedSearch],
+    queryFn: () => {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
+        paginated: true,
+      }
+      if (debouncedSearch && debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim()
+      }
+      return driverSalary(id, params)
+    },
+    keepPreviousData: true,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     enabled: !!id,
   })
+
+  const driverSalaryData = salaryResponse?.data || []
+  const totalItems = salaryResponse?.total ?? driverSalaryData.length
+  const totalPages = itemsPerPage === -1 ? 1 : salaryResponse?.totalPages || 1
 
   const filteredData = useMemo(() => {
     if (!driverSalaryData || driverSalaryData.length === 0) {
@@ -60,12 +83,6 @@ const Salary = ({ id }) => {
 
     return filtered
   }, [driverSalaryData, dateRange.startDate, dateRange.endDate])
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  )
 
   const columns = [
     { label: 'Date', key: 'date', sortable: true },
@@ -163,17 +180,19 @@ const Salary = ({ id }) => {
       <ToastContainer />
 
       <CContainer className="px-2" fluid>
-        {/* <div className="mb-2 d-flex justify-content-between align-items-center">
-          <DateRangeFilterCredence title="Date Range" onDateRangeChange={handleDateRangeChange} />
-        </div> */}
+        <div className="mb-2 d-flex justify-content-end align-items-center">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        </div>
         <>
           <Table
             title="Driver Salary"
             columns={columns}
-            filteredData={paginatedData}
+            filteredData={filteredData}
             setFilteredData={() => {}}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
+            serverPagination={true}
+            totalServerItems={totalItems}
             isFetching={isFetching}
             isFetched={isFetched}
             isError={isError}
@@ -182,20 +201,16 @@ const Salary = ({ id }) => {
             action="Images"
           />
 
-          {/* <SmartPagination
+          <SmartPagination
             totalPages={totalPages}
             currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={(value) => {
-              if (value === -1) {
-                setItemsPerPage(filteredData.length)
-                setCurrentPage(1)
-              } else {
-                setItemsPerPage(value)
-                setCurrentPage(1)
-              }
+              setItemsPerPage(value)
+              setCurrentPage(1)
             }}
-          /> */}
+          />
         </>
 
         <SalaryInvoiceModal

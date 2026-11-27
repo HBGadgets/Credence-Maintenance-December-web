@@ -31,6 +31,7 @@ import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import DutySlip from './DutySlip'
 import Cookies from 'js-cookie'
+import useDebounce from '../../customhooks/useDebounce'
 
 const Trip = () => {
   const queryClient = useQueryClient()
@@ -43,6 +44,7 @@ const Trip = () => {
   const [modalMode, setModalMode] = useState('add')
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 400)
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
   const navigate = useNavigate()
 
@@ -70,28 +72,40 @@ const Trip = () => {
   const decodedToken = token ? jwtDecode(token) : null
   const userRole = decodedToken?.role
 
-  // Fetch Data - Add refetchInterval or staleTime to ensure data refresh
+  // Fetch Data with server-side pagination
   const {
-    data: TripsList = [],
+    data: tripsResponse = { data: [], total: 0, currentPage: 1, totalPages: 1 },
     isFetching,
     refetch,
     isLoading, // Add this to check loading state
     error, // Add error handling
   } = useQuery({
-    queryKey: ['TripsList', token, selectedStatus?.value], // Add selectedStatus to queryKey to refetch when status filter changes
+    queryKey: ['TripsList', token, currentPage, itemsPerPage, debouncedSearch, selectedStatus?.value],
     queryFn: () => {
-      const params = {}
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
+        paginated: true,
+      }
+      if (debouncedSearch && debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim()
+      }
       if (selectedStatus?.value) {
         params.status = selectedStatus.value
       }
       return getTripListApi(params, token)
     },
+    keepPreviousData: true,
     staleTime: 0, // Changed from 30 minutes to 0 to always consider data stale
     cacheTime: 1000 * 60 * 5, // Keep cache for 5 minutes
     enabled: !!token, // Only run if token is available
     retry: 2, // Retry failed requests twice
     retryDelay: 1000, // Wait 1 second between retries
   })
+
+  const TripsList = tripsResponse?.data || []
+  const totalItems = tripsResponse?.total ?? TripsList.length
+  const totalPages = itemsPerPage === -1 ? 1 : tripsResponse?.totalPages || 1
 
   // Log for debugging
   useEffect(() => {
@@ -121,7 +135,7 @@ const Trip = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedName, selectedStatus, searchQuery, dateRange])
+  }, [selectedName, selectedStatus, debouncedSearch, dateRange])
 
   useEffect(() => {
     if (!TripsList) {
@@ -159,16 +173,6 @@ const Trip = () => {
       })
     }
 
-    // Apply search query filter
-    if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase()
-      filtered = filtered.filter((item) =>
-        Object.values(item).some(
-          (value) => typeof value === 'string' && value.toLowerCase().includes(lowercasedQuery),
-        ),
-      )
-    }
-
     // Apply remaining amount calculation and status badge styling
     const styledData = filtered.map((data) => {
       const budgetAllocated = Number(data.budgetAllocated) || 0
@@ -204,9 +208,7 @@ const Trip = () => {
     })
 
     setFilteredData(styledData)
-  }, [TripsList, dateRange, searchQuery, selectedName, selectedStatus])
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  }, [TripsList, dateRange, selectedName, selectedStatus])
 
   const columns = [
     { label: 'Start Date', key: 'date', sortable: true },
@@ -529,6 +531,8 @@ const Trip = () => {
           setFilteredData={setFilteredData}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
+          serverPagination={true}
+          totalServerItems={totalItems}
           viewButton={true}
           handleViewButton={handleViewButton}
           editButton={true}
@@ -549,9 +553,10 @@ const Trip = () => {
         <SmartPagination
           totalPages={totalPages}
           currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={(value) => {
-            setItemsPerPage(value === -1 ? filteredData.length : value)
+            setItemsPerPage(value)
             setCurrentPage(1)
           }}
         />

@@ -21,6 +21,7 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../IconDropdown.js'
 import usePdfExporter from '../../customhooks/usePdfExporter.js'
 import useExcelExporter from '../../customhooks/useExcelExporter.js'
+import useDebounce from '../../customhooks/useDebounce.js'
 import PermissionService from '../../Services/Service'
 
 const DriverSalary = () => {
@@ -28,6 +29,7 @@ const DriverSalary = () => {
   const { exportToExcel } = useExcelExporter()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 400)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
@@ -81,24 +83,39 @@ const DriverSalary = () => {
   //   retry: 1,
   // })
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [month, debouncedSearch])
+
   const {
-    data: salaryData = [],
+    data: salaryResponse = { data: [], total: 0, currentPage: 1, totalPages: 1 },
     isFetching,
     isError,
     error, // make sure to destructure this
   } = useQuery({
-    queryKey: ['driverSalaries', month],
-    queryFn: async () => {
-      console.log(`Fetching driver salaries for month: ${month}`)
-      const response = await getDriverSalaryListApiByMonth(month)
-      return response || []
+    queryKey: ['driverSalaries', month, currentPage, itemsPerPage, debouncedSearch],
+    queryFn: () => {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
+        paginated: true,
+      }
+      if (debouncedSearch && debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim()
+      }
+      return getDriverSalaryListApiByMonth(month, params)
     },
+    keepPreviousData: true,
     staleTime: 1000 * 60 * 5, // 5 minutes caching
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     enabled: Boolean(month), // only run if month is truthy
     retry: 1,
   })
+
+  const salaryData = salaryResponse?.data || []
+  const totalItems = salaryResponse?.total ?? salaryData.length
+  const totalPages = itemsPerPage === -1 ? 1 : salaryResponse?.totalPages || 1
 
   const transformedData = useMemo(
     () =>
@@ -138,18 +155,8 @@ const DriverSalary = () => {
   )
 
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredData(transformedData)
-    } else {
-      const filtered = transformedData.filter((item) =>
-        item.driverName.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-      setFilteredData(filtered)
-    }
-  }, [searchQuery, transformedData])
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+    setFilteredData(transformedData)
+  }, [transformedData])
 
   // Function to refresh salary list POST SUBMIT
   const handleSalarySubmit = async (submittedData) => {
@@ -323,8 +330,11 @@ const DriverSalary = () => {
         title="Driver Salary Generation"
         columns={columns}
         filteredData={filteredData}
+        setFilteredData={setFilteredData}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
+        serverPagination={true}
+        totalServerItems={totalItems}
         isFetching={isFetching}
         errorMessage={
           isError
@@ -340,6 +350,7 @@ const DriverSalary = () => {
         <SmartPagination
           totalPages={totalPages}
           currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={(value) => {
             setItemsPerPage(value)

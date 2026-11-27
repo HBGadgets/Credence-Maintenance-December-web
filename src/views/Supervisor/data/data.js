@@ -103,15 +103,18 @@ export const updateLeaveRequestStatus = async (id, status) => {
 // -----------------------------------------------------------------------------------------------------------------------------------
 
 //  GET API FOR Driver Salary List.
-export const getDriverSalaryListApiByMonth = async (month) => {
+export const getDriverSalaryListApiByMonth = async (month, params = {}) => {
   try {
     console.log(`Fetching Driver Salary List for month: ${month}`)
+    const token = Cookies.get('crdnsMaintToken') || TOKEN
+    const { paginated, ...queryParams } = params && typeof params === 'object' ? params : {}
 
     const response = await axios.get(
       `${import.meta.env.VITE_API_URL}/api/salary/get-by-month/${month}`,
       {
+        params: queryParams,
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
       },
     )
@@ -120,10 +123,33 @@ export const getDriverSalaryListApiByMonth = async (month) => {
       throw new Error('Invalid response from server')
     }
 
-    console.log('Driver Salary List:', response.data)
-    return response.data
+    const resData = response.data
+    const rawList = Array.isArray(resData)
+      ? resData
+      : Array.isArray(resData?.data)
+        ? resData.data
+        : []
+
+    console.log('Driver Salary List:', resData)
+
+    if (paginated) {
+      return {
+        data: rawList,
+        total: typeof resData?.total === 'number' ? resData.total : rawList.length,
+        currentPage:
+          typeof resData?.currentPage === 'number'
+            ? resData.currentPage
+            : Number(queryParams.page) || 1,
+        totalPages: typeof resData?.totalPages === 'number' ? resData.totalPages : 1,
+      }
+    }
+
+    return rawList
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message)
+    if (params?.paginated) {
+      return { data: [], total: 0, currentPage: 1, totalPages: 1 }
+    }
     return [] // Return an empty array to prevent crashes
   }
 }
@@ -214,11 +240,13 @@ export const patchDriverSalaryApi = async (id, updatedData) => {
 export const getTripListApi = async (userIdOrParams = null, tokenParam = null, extraParams = {}) => {
   let token = tokenParam
   const params = {}
+  let returnPaginated = false
 
   if (userIdOrParams && typeof userIdOrParams === 'object') {
-    const { userId, id, token: t, status, ...rest } = userIdOrParams
+    const { userId, id, token: t, status, paginated, ...rest } = userIdOrParams
     if (userId || id) params.id = userId || id
     if (status) params.status = status
+    if (paginated) returnPaginated = true
     Object.assign(params, rest)
     if (t) token = t
   } else if (typeof userIdOrParams === 'string' && userIdOrParams) {
@@ -226,7 +254,9 @@ export const getTripListApi = async (userIdOrParams = null, tokenParam = null, e
   }
 
   if (extraParams && typeof extraParams === 'object') {
-    Object.assign(params, extraParams)
+    const { paginated, ...restExtra } = extraParams
+    if (paginated) returnPaginated = true
+    Object.assign(params, restExtra)
   }
 
   token = token || Cookies.get('crdnsMaintToken') || TOKEN
@@ -239,11 +269,13 @@ export const getTripListApi = async (userIdOrParams = null, tokenParam = null, e
     },
   })
 
-  const sortedData = data.sort(
+  const rawList = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []
+
+  const sortedData = [...rawList].sort(
     (a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date),
   )
 
-  return sortedData.map((TripsList) => {
+  const mappedData = sortedData.map((TripsList) => {
     const startKM =
       typeof TripsList.startOdometerReading === 'number'
         ? TripsList.startOdometerReading.toFixed(2)
@@ -307,6 +339,18 @@ export const getTripListApi = async (userIdOrParams = null, tokenParam = null, e
       updatedAt: TripsList.updatedAt,
     }
   })
+
+  if (returnPaginated) {
+    return {
+      data: mappedData,
+      total: typeof data?.total === 'number' ? data.total : mappedData.length,
+      currentPage:
+        typeof data?.currentPage === 'number' ? data.currentPage : Number(params.page) || 1,
+      totalPages: typeof data?.totalPages === 'number' ? data.totalPages : 1,
+    }
+  }
+
+  return mappedData
 }
 
 // POST API for Trip.
