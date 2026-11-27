@@ -61,7 +61,7 @@ const SearchInput = ({
 
       {/* Clear Button (only when input has text) */}
       {inputValue && (
-        <CButton color="light" onClick={handleClear} style={{ border: 'none' }}>
+        <CButton type="button" color="light" onClick={handleClear} style={{ border: 'none' }}>
           <CIcon icon={cilX} />
         </CButton>
       )}

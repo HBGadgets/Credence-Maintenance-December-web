@@ -21,7 +21,6 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import IconDropdown from '../IconDropdown.js'
 import usePdfExporter from '../../customhooks/usePdfExporter.js'
 import useExcelExporter from '../../customhooks/useExcelExporter.js'
-import useDebounce from '../../customhooks/useDebounce.js'
 import PermissionService from '../../Services/Service'
 
 const DriverSalary = () => {
@@ -29,7 +28,6 @@ const DriverSalary = () => {
   const { exportToExcel } = useExcelExporter()
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 400)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [filteredData, setFilteredData] = useState([])
@@ -85,7 +83,7 @@ const DriverSalary = () => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [month, debouncedSearch])
+  }, [month, searchQuery])
 
   const {
     data: salaryResponse = { data: [], total: 0, currentPage: 1, totalPages: 1 },
@@ -93,20 +91,20 @@ const DriverSalary = () => {
     isError,
     error, // make sure to destructure this
   } = useQuery({
-    queryKey: ['driverSalaries', month, currentPage, itemsPerPage, debouncedSearch],
+    queryKey: ['driverSalaries', month, currentPage, itemsPerPage, searchQuery],
     queryFn: () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
         paginated: true,
       }
-      if (debouncedSearch && debouncedSearch.trim()) {
-        params.search = debouncedSearch.trim()
+      if (searchQuery && searchQuery.trim()) {
+        params.search = searchQuery.trim()
       }
       return getDriverSalaryListApiByMonth(month, params)
     },
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 5, // 5 minutes caching
+    staleTime: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     enabled: Boolean(month), // only run if month is truthy

@@ -15,7 +15,6 @@ import { PiMicrosoftExcelLogo } from 'react-icons/pi'
 import { HiOutlineLogout } from 'react-icons/hi'
 import IconDropdown from '../../../Supervisor/IconDropdown'
 import SearchInput from '../../../components/SearchInput'
-import useDebounce from '../../../customhooks/useDebounce'
 
 const Salary = ({ id }) => {
   const navigate = useNavigate()
@@ -27,13 +26,12 @@ const Salary = ({ id }) => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [selectedSalary, setSelectedSalary] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 400)
 
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null }) // Add date range state
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [debouncedSearch, dateRange.startDate, dateRange.endDate])
+  }, [searchQuery, dateRange.startDate, dateRange.endDate])
 
   const {
     data: salaryResponse = { data: [], total: 0, currentPage: 1, totalPages: 1 },
@@ -41,19 +39,20 @@ const Salary = ({ id }) => {
     isFetched,
     isError,
   } = useQuery({
-    queryKey: ['DriverSalary', id, currentPage, itemsPerPage, debouncedSearch],
+    queryKey: ['DriverSalary', id, currentPage, itemsPerPage, searchQuery],
     queryFn: () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
         paginated: true,
       }
-      if (debouncedSearch && debouncedSearch.trim()) {
-        params.search = debouncedSearch.trim()
+      if (searchQuery && searchQuery.trim()) {
+        params.search = searchQuery.trim()
       }
       return driverSalary(id, params)
     },
     keepPreviousData: true,
+    staleTime: 0,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

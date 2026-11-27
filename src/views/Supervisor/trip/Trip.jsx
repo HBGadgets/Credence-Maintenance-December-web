@@ -31,7 +31,6 @@ import SingleSelectDropdown from '../../components/SingleSelectDropdown'
 import { fetchSupervisor } from '../../DriverExpert/data/drivers'
 import DutySlip from './DutySlip'
 import Cookies from 'js-cookie'
-import useDebounce from '../../customhooks/useDebounce'
 
 const Trip = () => {
   const queryClient = useQueryClient()
@@ -44,7 +43,6 @@ const Trip = () => {
   const [modalMode, setModalMode] = useState('add')
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 400)
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null })
   const navigate = useNavigate()
 
@@ -80,15 +78,15 @@ const Trip = () => {
     isLoading, // Add this to check loading state
     error, // Add error handling
   } = useQuery({
-    queryKey: ['TripsList', token, currentPage, itemsPerPage, debouncedSearch, selectedStatus?.value],
+    queryKey: ['TripsList', token, currentPage, itemsPerPage, searchQuery, selectedStatus?.value],
     queryFn: () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage === -1 ? 10000 : itemsPerPage,
         paginated: true,
       }
-      if (debouncedSearch && debouncedSearch.trim()) {
-        params.search = debouncedSearch.trim()
+      if (searchQuery && searchQuery.trim()) {
+        params.search = searchQuery.trim()
       }
       if (selectedStatus?.value) {
         params.status = selectedStatus.value
@@ -135,7 +133,7 @@ const Trip = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedName, selectedStatus, debouncedSearch, dateRange])
+  }, [selectedName, selectedStatus, searchQuery, dateRange])
 
   useEffect(() => {
     if (!TripsList) {
